@@ -28,9 +28,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/LASloader.o \
 	${OBJECTDIR}/quadtreestructs.o \
 	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/TwoDeeOverview.o \
 	${OBJECTDIR}/quadtreenode.o \
 	${OBJECTDIR}/lidar_loader.o \
-	${OBJECTDIR}/quadtree.o
+	${OBJECTDIR}/quadtree.o \
+	${OBJECTDIR}/test.o
 
 # C Compiler Flags
 CFLAGS=
@@ -46,11 +48,11 @@ FFLAGS=
 LDLIBSOPTIONS=
 
 # Build Targets
-.build-conf: ${BUILD_SUBPROJECTS} dist/Release/GNU-Linux-x86/lidar_point_practise_1.1
+.build-conf: ${BUILD_SUBPROJECTS} dist/Release/GNU-Linux-x86/svncheckoutstuff
 
-dist/Release/GNU-Linux-x86/lidar_point_practise_1.1: ${OBJECTFILES}
+dist/Release/GNU-Linux-x86/svncheckoutstuff: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
-	${LINK.cc} -o dist/Release/GNU-Linux-x86/lidar_point_practise_1.1 ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o dist/Release/GNU-Linux-x86/svncheckoutstuff ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/LASloader.o: LASloader.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -64,6 +66,10 @@ ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/main.o main.cpp
 
+${OBJECTDIR}/TwoDeeOverview.o: TwoDeeOverview.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/TwoDeeOverview.o TwoDeeOverview.cpp
+
 ${OBJECTDIR}/quadtreenode.o: quadtreenode.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/quadtreenode.o quadtreenode.cpp
@@ -76,13 +82,17 @@ ${OBJECTDIR}/quadtree.o: quadtree.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/quadtree.o quadtree.cpp
 
+${OBJECTDIR}/test.o: test.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/test.o test.cpp
+
 # Subprojects
 .build-subprojects:
 
 # Clean Targets
 .clean-conf:
 	${RM} -r build/Release
-	${RM} dist/Release/GNU-Linux-x86/lidar_point_practise_1.1
+	${RM} dist/Release/GNU-Linux-x86/svncheckoutstuff
 
 # Subprojects
 .clean-subprojects:

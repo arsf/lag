@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=lidar_point_practise_1.1
+PROJECTNAME=svncheckoutstuff
 
 # Active Configuration
 DEFAULTCONF=Debug
