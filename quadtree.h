@@ -15,6 +15,7 @@
 #include "quadloader.h"
 #include "quadtreenode.h"
 #include <vector>
+#include "laspointloader.h"
 using namespace std;
 
 class quadtree{
@@ -24,9 +25,11 @@ class quadtree{
     
 public:
    // constructor that builds a new tree from a Las file
-   quadtree(const char *filename, int cap, int nth);
+   quadtree(laspointloader *l, int cap, int nth);
+   quadtree(laspointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY);
    // constructor that builds a new tree with user defined dimensions
    quadtree(double sx, double sy, double bx, double by, int cap);
+   
    ~quadtree();
    // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
    void insert(point newP);
@@ -36,7 +39,8 @@ public:
    bool isEmpty();
    // loads points from a Las file from the filename given, nth defines how many points to
    // ignore per point, ie nth = 9 means every 10th point is loaded, 0 means every point is loaded
-   void load(const char *filename, int nth);
+   void load(laspointloader *l, int nth);
+   void load(laspointloader *l, int nth, double minX, double minY, double maxX, double maxY);
    // for a given area this method returns a pointer to a vector which contains
    // pointers to all the buckets that could contain points falling within this area
    vector<pointbucket*>* subset(double minX, double minY, double maxX, double maxY);

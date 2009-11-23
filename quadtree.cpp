@@ -3,24 +3,38 @@
 #include "lidar_loader.h"
 #include <stdlib.h>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 
 using namespace std;
 
 // this constructor creates a quadtree straight from a file 
 // and uses the file to determine the boundery
-quadtree::quadtree(const char *filename,int cap, int nth)
+quadtree::quadtree(laspointloader *l,int cap, int nth)
 {
    capacity = cap;
    root = NULL;
-   loader = new lidar_loader();
+
    // get the boundary of the file points
-   boundary *b = loader->getboundary(filename);
+   boundary *b = l->getboundary();
+   // use boundary to create new tree that incompasses all points
+   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
+  
+   load(l, nth);   
+}
+
+quadtree::quadtree(laspointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
+{
+   capacity = cap;
+   root = NULL;
+
+   // get the boundary of the file points
+   boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
 
-   loader->load(filename, this, nth);
+   
+   load(l, nth, minX, minY, maxX, maxY);
      
 }
 
@@ -172,20 +186,75 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 
 
 // load a new flight line into the quad tree, nth is the nth points to load
-void quadtree::load(const char *filename, int nth)
+void quadtree::load(laspointloader *l, int nth)
 {
    // get current boundary and new flight boundary
-   boundary *nb = loader->getboundary(filename);
+   boundary *nb = l->getboundary();
    
+   int arraysize = 10000;
    
+   point *temp = new point[arraysize];
    root = expandboundary(root, nb);
  
    delete nb;
    
-   loader->load(filename, this, nth);
+   int pointcounter;
+   do
+   {
+      pointcounter = l->load(arraysize, nth, temp);
+      cout << pointcounter << endl;
+      for(int k=0; k<pointcounter; k++)
+      {
+         insert(temp[k]);
+      }
+   }
+   while (pointcounter == arraysize);
+   
+   
+   delete[] temp;
+}
+
+
+void quadtree::load(laspointloader *l, int nth, double minX, double minY, double maxX, double maxY)
+{
+   // get new flight boundary
+   boundary *nb = l->getboundary();
+   
+   if ((minX > nb->maxX && maxX > nb->maxX) || (minX < nb->minX && maxX < nb->minX))
+   {
+      throw "area of interest falls outside new file";
+   }
+   
+   if ((minY > nb->maxY && maxY > nb->maxY) || (minY < nb->minY && maxY < nb->minY))
+   {
+      throw "area of interest falls outside new file";
+   }
+   
+   nb->minX = minX;
+   nb->maxX = maxX;
+   nb->minY = minY;
+   nb->maxY = maxY;
+   point *temp = new point[500];
+   root = expandboundary(root, nb);
+ 
+   delete nb;
+   
+   int pointcount;
+   do
+   {
+      pointcount = l->load(500, nth, temp, minX, minY, maxX, maxY);
+      for(int k=0; k<pointcount; k++)
+      {
+         insert(temp[k]);
+      }
+   }
+   while (pointcount == 500);
    
    
 }
+
+
+
 
 
 //deconstructor
@@ -326,17 +395,18 @@ void quadtree::sort(char v)
    }
 }
 
-
+// this method takes 2 points and a width, the points denote a line which is the center line
+// of a rectangle whos width is defined by the width
 vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, double y2, double width)
 {
-   
+   // check its a line
    if(x1==x2 && y1 == y2)
    {
       throw "muppet, thats a point not a line";
    }
    
    // work out from the 2 points and the forumula of the line they describe the four point of
-   // the subset
+   // the subset rectangle
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    double m;
    if ( x1 > x2)
