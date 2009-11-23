@@ -10,13 +10,13 @@
 #include <unistd.h>
 #include "quadtree.h"
 #include "quadtreestructs.h"
+#include "LASloader.h"
 #include "liblas/laspoint.hpp"
 #include "liblas/lasreader.hpp"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include "TwoDeeOverview.h"
-#include "LASloader.h"
 using namespace std;
 
 quadtree* lidardata; 
@@ -63,9 +63,10 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-    //glutInit(&argc, argv);
-    LASloader *l = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110312_1.LAS");
-    lidardata = new quadtree(l, 10000, 0);
+    glutInit(&argc, argv);
+//    LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110650_1.LAS");
+    LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110312_1.LAS");
+    lidardata = new quadtree(loader,1000,0);
 //    lidardata->load("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110650_1.LAS",0);
 //    lidardata->load("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_111020_1.LAS",0);
    return GUIset(argc, argv);

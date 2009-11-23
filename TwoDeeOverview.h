@@ -32,8 +32,13 @@ protected:
   double xdif,ydif;
   double ratio;
   bool heightcolour;
+  bool heightbrightness;
+  double zoffset;
+  double zfloor;
+  bool intensitycolour;
   bool intensitybrightness;
   double intensityoffset;
+  double intensityfloor;
   double panstartx,panstarty;
   void on_realize();
   bool on_configure_event(GdkEventConfigure* event);
@@ -45,4 +50,6 @@ protected:
   bool on_pan_start(GdkEventButton* event);
   bool on_pan(GdkEventMotion* event);
   bool on_pan_end(GdkEventButton* event);
+  void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);
+  void brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue,double& col1,double& col2,double& col3);
 };
