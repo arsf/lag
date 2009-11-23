@@ -45,7 +45,7 @@ protected:
   bool on_expose_event(GdkEventExpose* event);
   void make_image();
   void resetview();
-  bool draw();
+  bool draw(int listno);
   bool on_zoom(GdkEventScroll* event);
   bool on_pan_start(GdkEventButton* event);
   bool on_pan(GdkEventMotion* event);
