@@ -29,7 +29,7 @@ using namespace std;
 /*
  * 
  */
-int main(int argc, char** argv) {
+/*int main(int argc, char** argv) {
     
     cout << "hello world";
     cout << " int " << sizeof(int) << endl;
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
          cout << c << endl;
       }
     //  bob = new quadtree("/home/scratch/LDR090601_115048_1.LAS", 100000, 0);
-   /* bob = new quadtree(0, 0, 10, 10, 5);
+    bob = new quadtree(0, 0, 10, 10, 5);
     
     point temp;
     temp.x = 1;
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     temp.x = 1;
     temp.y = 3;
     temp.z = 7.7;
-    bob->insert(temp);*/
+    bob->insert(temp);
     
     //bob->print();
     //newloader *bibble = new newloader("/home/scratch/LDR090601_110650_1.LAS");
@@ -148,5 +148,5 @@ int main(int argc, char** argv) {
     cout << "numbers deleted" << endl;
     //delete bill;
     return (EXIT_SUCCESS);
-}
+}*/
 

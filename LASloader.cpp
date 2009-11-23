@@ -118,7 +118,6 @@ int LASloader::load(int n, int nth, point *points)
       numpoints++;
    
    }
-   cout << numpoints << endl;
    return pointcounter;
 }
    
@@ -139,8 +138,8 @@ boundary* LASloader::getboundary()
    // create a new boundary with the above values and return it
    boundary* newboundary = new boundary;
    newboundary->minX=header.GetMinX()-1;
-   newboundary->minY=header.GetMaxX()+1;
-   newboundary->maxX=header.GetMinY()-1;
+   newboundary->minY=header.GetMinY()-1;
+   newboundary->maxX=header.GetMaxX()+1;
    newboundary->maxY=header.GetMaxY()+1;
    return newboundary;
 }

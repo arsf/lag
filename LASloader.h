@@ -12,7 +12,7 @@
 #include "liblas/lasreader.hpp"
 #include "quadtreestructs.h"
 #include <fstream>
-#include "laspointloader.h"
+#include "lidarpointloader.h"
 
 using namespace std;
 

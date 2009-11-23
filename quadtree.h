@@ -15,7 +15,7 @@
 #include "quadloader.h"
 #include "quadtreenode.h"
 #include <vector>
-#include "laspointloader.h"
+#include "lidarpointloader.h"
 using namespace std;
 
 class quadtree{

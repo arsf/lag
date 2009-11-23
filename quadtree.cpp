@@ -18,8 +18,10 @@ quadtree::quadtree(laspointloader *l,int cap, int nth)
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
+   cout << b ->minX << "," << b ->minY << "," << b ->maxX << "," << b ->maxY << endl;
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
-  
+   boundary *temp = root->getbound();
+   cout << temp ->minX << "," << temp ->minY << "," << temp ->maxX << "," << temp ->maxY << endl;
    load(l, nth);   
 }
 
@@ -195,14 +197,13 @@ void quadtree::load(laspointloader *l, int nth)
    
    point *temp = new point[arraysize];
    root = expandboundary(root, nb);
- 
+   cout << nb ->minX << "," << nb ->minY << "," << nb ->maxX << "," << nb ->maxY << endl;
    delete nb;
    
    int pointcounter;
    do
    {
       pointcounter = l->load(arraysize, nth, temp);
-      cout << pointcounter << endl;
       for(int k=0; k<pointcounter; k++)
       {
          insert(temp[k]);
@@ -210,6 +211,8 @@ void quadtree::load(laspointloader *l, int nth)
    }
    while (pointcounter == arraysize);
    
+   boundary *bob = root->getbound();
+   cout << bob->minX << "," << bob->minY << "," << bob->maxX << "," << bob->maxY << endl;
    
    delete[] temp;
 }
@@ -234,7 +237,9 @@ void quadtree::load(laspointloader *l, int nth, double minX, double minY, double
    nb->maxX = maxX;
    nb->minY = minY;
    nb->maxY = maxY;
-   point *temp = new point[500];
+   
+   int arraysize = 10000;
+   point *temp = new point[arraysize];
    root = expandboundary(root, nb);
  
    delete nb;
@@ -242,13 +247,13 @@ void quadtree::load(laspointloader *l, int nth, double minX, double minY, double
    int pointcount;
    do
    {
-      pointcount = l->load(500, nth, temp, minX, minY, maxX, maxY);
+      pointcount = l->load(arraysize, nth, temp, minX, minY, maxX, maxY);
       for(int k=0; k<pointcount; k++)
       {
          insert(temp[k]);
       }
    }
-   while (pointcount == 500);
+   while (pointcount == arraysize);
    
    
 }
