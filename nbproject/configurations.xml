@@ -48,7 +48,7 @@
       </toolsSet>
       <compileType>
         <ccCompilerTool>
-          <commandLine>-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` </commandLine>
+          <commandLine>-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g</commandLine>
           <warningLevel>2</warningLevel>
         </ccCompilerTool>
         <linkerTool>

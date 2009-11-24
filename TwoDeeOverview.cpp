@@ -84,7 +84,8 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       double tempx=centrex;
       double tempy=centrey;
       tempx = tempx - (event->x-panstartx)*ratio/zoomlevel;
-      tempy = tempy + (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
+      tempy = tempy + (event->y-panstarty)*ratio/zoomlevel;
+//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       centrex = tempx;
       centrey = tempy;
       panstartx=event->x;
@@ -115,7 +116,8 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    double tempx=centrex;
    double tempy=centrey;
    tempx = tempx + (event->x-get_width()/2)*ratio/zoomlevel;
-   tempy = tempy - (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
+   tempy = tempy - (event->y-get_height()/2)*ratio/zoomlevel;
+//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    if(zoomlevel>=1){
       if(event->direction==GDK_SCROLL_UP)zoomlevel+=sqrt(zoomlevel)/2;
       else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=sqrt(zoomlevel)/2;
@@ -157,11 +159,13 @@ void TwoDeeOverview::make_image(){
   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
   if (!glwindow->gl_begin(get_gl_context()))return;
   glColor3f(0.0,1.0,0.0);
-  vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);
+  //vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);
+  vector<pointbucket*> *pointvector = lidardata->advsubset(lidarboundary->minX,lidarboundary->maxY-1000,lidarboundary->maxX,lidarboundary->maxY-1000,300);
   double maxz = pointvector->at(0)->maxz,minz = pointvector->at(0)->minz;
   double maxintensity = pointvector->at(0)->maxintensity;
   double minintensity = pointvector->at(0)->minintensity;
-  for(int i=0;i<pointvector->size();i++){//Perhaps need a better method in order to find 10th and 90th percentiles instead:
+  for(int i=0;i<pointvector->size();i++){
+//Perhaps need a better method in order to find 10th and 90th percentiles instead:
      if(maxz<pointvector->at(i)->maxz)maxz = pointvector->at(i)->maxz;
      if(minz>pointvector->at(i)->minz)minz = pointvector->at(i)->minz;
      if(maxintensity<pointvector->at(i)->maxintensity)maxintensity = pointvector->at(i)->maxintensity;
@@ -175,32 +179,54 @@ void TwoDeeOverview::make_image(){
   glNewList(1, GL_COMPILE);
      glBegin(GL_POINTS);
 	for(int i=0;i<pointvector->size();i++){
+      red=green=blue=1;
+      glColor3d(red,green,blue);
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(pointvector->at(i)->minx, pointvector->at(i)->miny);
+      glVertex2d(pointvector->at(i)->minx, pointvector->at(i)->maxy);
+      glVertex2d(pointvector->at(i)->maxx, pointvector->at(i)->maxy);
+      glVertex2d(pointvector->at(i)->maxx, pointvector->at(i)->miny);
+      glEnd();
+   }
+   glBegin(GL_POINTS);
+   for(int i=0;i<pointvector->size();i++){
 	   for(int j=0;j<pointvector->at(i)->numberofpoints;j++){
 	      red = 0.0; green = 1.0; blue = 0.0;
 	      if(heightcolour)colour_by(pointvector->at(i)->points[j].z,maxz,minz,red,green,blue);
 	      else if(intensitycolour)colour_by(pointvector->at(i)->points[j].intensity,maxintensity,minintensity,red,green,blue);
 	      if(intensitybrightness)brightness_by(pointvector->at(i)->points[j].intensity,maxintensity,minintensity,intensityoffset,intensityfloor,red,green,blue);
 	      else if(heightbrightness)brightness_by(pointvector->at(i)->points[j].z,maxz,minz,zoffset,zfloor,red,green,blue);
-	      glColor4d(red,green,blue,(double)pointvector->at(i)->points[j].intensity/(double)pointvector->at(i)->maxintensity);
+	      glColor3d(red,green,blue);
 	      glVertex2d(pointvector->at(i)->points[j].x,pointvector->at(i)->points[j].y);
 	   }
 	}
      glEnd();
+     
+     glBegin(GL_LINE_LOOP);
+  glVertex2d(lidarboundary->minX, lidarboundary->maxY-1150);
+  glVertex2d(lidarboundary->minX, lidarboundary->maxY-850);
+  glVertex2d(lidarboundary->maxX, lidarboundary->maxY-850);
+  glVertex2d(lidarboundary->maxX, lidarboundary->maxY-1150);
+  glEnd();
+  
   glEndList();
   glNewList(2, GL_COMPILE);
      glBegin(GL_POINTS);
-	for(int i=0;i<pointvector->size();i++){
-	   for(int j=0;j<pointvector->at(i)->numberofpoints;j+=100){
+	for(int i=0;i<pointvector->size();i++)
+   {
+	   for(int j=0;j<pointvector->at(i)->numberofpoints;j+=50)
+      {
 	      red = 0.0; green = 1.0; blue = 0.0;
 	      if(heightcolour)colour_by(pointvector->at(i)->points[j].z,maxz,minz,red,green,blue);
 	      else if(intensitycolour)colour_by(pointvector->at(i)->points[j].intensity,maxintensity,minintensity,red,green,blue);
 	      if(intensitybrightness)brightness_by(pointvector->at(i)->points[j].intensity,maxintensity,minintensity,intensityoffset,intensityfloor,red,green,blue);
 	      else if(heightbrightness)brightness_by(pointvector->at(i)->points[j].z,maxz,minz,zoffset,zfloor,red,green,blue);
-	      glColor4d(red,green,blue,(double)pointvector->at(i)->points[j].intensity/(double)pointvector->at(i)->maxintensity);
+	      glColor3d(red,green,blue);
 	      glVertex2d(pointvector->at(i)->points[j].x,pointvector->at(i)->points[j].y);
 	   }
 	}
      glEnd();
+   
   glEndList();
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glClearDepth(1.0);

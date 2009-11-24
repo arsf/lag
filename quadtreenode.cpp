@@ -152,10 +152,10 @@ quadtreenode* quadtreenode::pickchild(point newP)
 void quadtreenode::subset(double minX, double minY, double maxX, double maxY, vector<pointbucket*> *buckets)
 {
    // check if this bucket contains any part of the subset
-   if (this->minX > maxX) return;
-   if (this->maxX < minX) return;
-   if (this->minY > maxY) return;
-   if (this->maxY < minY) return;
+   if (this->minX >= maxX) return;
+   if (this->maxX <= minX) return;
+   if (this->minY >= maxY) return;
+   if (this->maxY <= minY) return;
    
    
    if (!leaf)
@@ -248,7 +248,7 @@ bool quadtreenode::insert(point newP)
          // insert new point
          if (bucket == NULL)
          {
-            bucket = new pointbucket(capacity);
+            bucket = new pointbucket(capacity, minX, minY, maxX, maxY);
          }
          if (bucket->numberofpoints == 0)
          {
@@ -518,7 +518,7 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
          return;
       }
    }
-   else
+  /* else
    {
       // if either of the lines is vertical or horizontal this means that the 
       // search area is orientated to the axis and the subset method can be used
@@ -545,7 +545,7 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
       // axis orientated box is almost identical to a call to subset.
       subset(sx,sy,bx,by,buckets);
       return;
-   }
+   }*/
 
    
    

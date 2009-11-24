@@ -414,11 +414,58 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    // the subset rectangle
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    double m;
-   if ( x1 > x2)
+   
+   if(x1 == x2 || y1 == y2)
+   {
+      double sx = x1;
+      double sy = y1;
+      double bx = x1;
+      double by = y1;
+      // as it is not known which of the subset points is which the smallest and largest 
+      // must be found and the bottom left and top right cords found
+      if (x1 == x2 && y1 > y2)
+      {
+         sx = x1 - (width / 2);
+         sy = y2;
+         bx = x2 + (width / 2);
+         by = y1; 
+      }
+      if (x1 == x2 && y1 < y2)
+      {
+         sx = x1 - (width / 2);
+         sy = y1;
+         bx = x2 + (width / 2);
+         by = y2; 
+      }
+      
+      // as it is not known which of the subset points is which the smallest and largest 
+      // must be found and the bottom left and top right cords found   
+      if (y1 == y2 && x1 > x2)
+      {
+         sx = x2;
+         sy = y2 - (width / 2);
+         bx = x1;
+         by = y2 + (width / 2);
+      }
+      if (y1 == y2 && x1 < x2)
+      {
+         sx = x1;
+         sy = y2 - (width / 2);
+         bx = x2;
+         by = y2 + (width / 2);
+      }
+      
+      // call the subset method. the recursion will continue through this now
+      // NOTE : this will only ever happen in the root node as it will
+      // be picked up immediatly, this means that a call to advsubset with a 
+      // axis orientated box is almost identical to a call to subset.
+      root->subset(sx,sy,bx,by,buckets);
+   }
+   else if ( x1 > x2)
    {
       m =  (y1 - y2) / (x1 - x2);
    }
-   if ( x1 < x2)
+   else if ( x1 < x2)
    {
       m =  (y2 - y1) / (x2 - x1);
    }

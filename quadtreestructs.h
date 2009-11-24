@@ -45,7 +45,9 @@ public:
    unsigned short int minintensity,maxintensity;
    double minz,maxz;
    point *points;
-   pointbucket(int cap);
+   double minx,miny,maxx,maxy;
+
+   pointbucket(int cap, double minx,  double miny,  double maxx,  double maxy);
    ~pointbucket();
 };
 

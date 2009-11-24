@@ -38,8 +38,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2`  
-CXXFLAGS=-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2`  
+CCFLAGS=-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g 
+CXXFLAGS=-I /users/rsg/chrfi/liblas_x64/include -O4 -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g 
 
 # Fortran Compiler Flags
 FFLAGS=
