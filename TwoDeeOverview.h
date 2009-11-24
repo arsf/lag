@@ -40,6 +40,7 @@ protected:
   double intensityoffset;
   double intensityfloor;
   double panstartx,panstarty;
+  bool showbuckets;
   void on_realize();
   bool on_configure_event(GdkEventConfigure* event);
   bool on_expose_event(GdkEventExpose* event);

@@ -18,7 +18,7 @@ sort by time + sort by elevation ***
 6. draw profiles, ruler ***
 5. slow draw/colour by time ?  **
 
-4. colour by flightline, elevation, intensity, classification, colour by return***	Done for elevation, currently do brightness for intensity.
+4. colour by flightline, elevation, intensity, classification, colour by return***	Partly done.
 12. select which returns, clasifications etc *
 19. turn on/off flight lines without load/unload **
 
