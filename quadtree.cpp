@@ -18,10 +18,10 @@ quadtree::quadtree(laspointloader *l,int cap, int nth)
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
-   cout << b ->minX << "," << b ->minY << "," << b ->maxX << "," << b ->maxY << endl;
+
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
    boundary *temp = root->getbound();
-   cout << temp ->minX << "," << temp ->minY << "," << temp ->maxX << "," << temp ->maxY << endl;
+
    load(l, nth);   
 }
 
@@ -197,7 +197,7 @@ void quadtree::load(laspointloader *l, int nth)
    
    point *temp = new point[arraysize];
    root = expandboundary(root, nb);
-   cout << nb ->minX << "," << nb ->minY << "," << nb ->maxX << "," << nb ->maxY << endl;
+
    delete nb;
    
    int pointcounter;
@@ -212,7 +212,7 @@ void quadtree::load(laspointloader *l, int nth)
    while (pointcounter == arraysize);
    
    boundary *bob = root->getbound();
-   cout << bob->minX << "," << bob->minY << "," << bob->maxX << "," << bob->maxY << endl;
+
    
    delete[] temp;
 }
