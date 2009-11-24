@@ -16,7 +16,7 @@
 
 using namespace std;
 
-class LASloader : public laspointloader
+class LASloader : public lidarpointloader
 {
    const char *filename;
    ifstream ifs;

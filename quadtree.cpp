@@ -1,6 +1,6 @@
 
 #include "quadtree.h"
-#include "lidar_loader.h"
+
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
@@ -8,9 +8,8 @@
 
 using namespace std;
 
-// this constructor creates a quadtree straight from a file 
-// and uses the file to determine the boundery
-quadtree::quadtree(laspointloader *l,int cap, int nth)
+// this constructor creates a quadtree using a 
+quadtree::quadtree(lidarpointloader *l,int cap, int nth)
 {
    capacity = cap;
    root = NULL;
@@ -20,12 +19,11 @@ quadtree::quadtree(laspointloader *l,int cap, int nth)
    // use boundary to create new tree that incompasses all points
 
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
-   boundary *temp = root->getbound();
 
    load(l, nth);   
 }
 
-quadtree::quadtree(laspointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
 {
    capacity = cap;
    root = NULL;
@@ -47,7 +45,7 @@ quadtree::quadtree(laspointloader *l,int cap, int nth, double minX, double minY,
 quadtree::quadtree(double sx, double sy, double bx, double by, int cap)
 {
    capacity = cap;
-   loader = new lidar_loader();
+
    root = new quadtreenode(sx,sy,bx,by,capacity);
 }
 
@@ -188,7 +186,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 
 
 // load a new flight line into the quad tree, nth is the nth points to load
-void quadtree::load(laspointloader *l, int nth)
+void quadtree::load(lidarpointloader *l, int nth)
 {
    // get current boundary and new flight boundary
    boundary *nb = l->getboundary();
@@ -211,14 +209,14 @@ void quadtree::load(laspointloader *l, int nth)
    }
    while (pointcounter == arraysize);
    
-   boundary *bob = root->getbound();
+
 
    
    delete[] temp;
 }
 
 
-void quadtree::load(laspointloader *l, int nth, double minX, double minY, double maxX, double maxY)
+void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, double maxX, double maxY)
 {
    // get new flight boundary
    boundary *nb = l->getboundary();

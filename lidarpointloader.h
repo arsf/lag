@@ -12,7 +12,7 @@
 #include "quadtreestructs.h"
 
  // see quadloader.h
-class laspointloader
+class lidarpointloader
 {
 public:
    virtual int load(int n, int nth, point *points, double minX, double minY, double maxX, double maxY) = 0;

@@ -166,14 +166,23 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
       c->subset(minX, minY, maxX, maxY, buckets);
       d->subset(minX, minY, maxX, maxY, buckets);
    }
-   else
-   {
+   
+   
       if (bucket != NULL)
       {
          // add bucket to the vector of buckets
          buckets->push_back(bucket);
       }
-   }
+      // HACK : this is a HACK
+      else
+      {
+         pointbucket *hackbucket; 
+         hackbucket = new pointbucket(capacity, this->minX, this->minY, this->maxX, this->maxY);
+         buckets->push_back(hackbucket);
+      }
+   
+   
+      
 }
 
 
@@ -291,7 +300,7 @@ void quadtreenode::sort(int ( * comparator ) ( const void *, const void * ))
    qsort(bucket->points, bucket->numberofpoints, sizeof(point), comparator);
 }
 
-// if this is a leaf and the bucket is NULL then it is empty
+// if this is a leaf and the bucket is NULL then it is empty,
 // sort of, WARNING: this dosen't take account of the damn constructor setting
 // childs with no thought for the consiquences
 bool quadtreenode::isEmpty()
@@ -444,6 +453,7 @@ void quadtreenode::addsubset(double x1, double y1, double x2, double y2, double 
          // add bucket to the vector of buckets
          buckets->push_back(bucket);
       }
+      
    }
    
 }
