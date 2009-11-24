@@ -5,7 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>LASloader.h</itemPath>
-      <itemPath>laspointloader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h</itemPath>
       <itemPath>quadtree.h</itemPath>
       <itemPath>quadtreenode.h</itemPath>
       <itemPath>quadtreestructs.h</itemPath>
@@ -60,6 +60,9 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h">
+        <itemTool>3</itemTool>
+      </item>
       <item path="LASloader.cpp">
         <itemTool>1</itemTool>
       </item>
@@ -70,9 +73,6 @@
         <itemTool>1</itemTool>
       </item>
       <item path="TwoDeeOverview.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="laspointloader.h">
         <itemTool>3</itemTool>
       </item>
       <item path="lidar_loader.cpp">
@@ -132,6 +132,9 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h">
+        <itemTool>3</itemTool>
+      </item>
       <item path="LASloader.cpp">
         <itemTool>1</itemTool>
       </item>
@@ -142,9 +145,6 @@
         <itemTool>1</itemTool>
       </item>
       <item path="TwoDeeOverview.h">
-        <itemTool>3</itemTool>
-      </item>
-      <item path="laspointloader.h">
         <itemTool>3</itemTool>
       </item>
       <item path="lidar_loader.cpp">

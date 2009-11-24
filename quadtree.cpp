@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// this constructor creates a quadtree using a 
+// this constructor creates a quadtree using a loader object
 quadtree::quadtree(lidarpointloader *l,int cap, int nth)
 {
    capacity = cap;
@@ -23,17 +23,18 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    load(l, nth);   
 }
 
+// this constructor creates a quadtree using a loader object for a given area of intrest
 quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
 {
    capacity = cap;
    root = NULL;
 
-   // get the boundary of the file points
-   boundary *b = l->getboundary();
-   // use boundary to create new tree that incompasses all points
-   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
+ 
 
-   
+   // use area of intrest to create new tree that incompasses all points
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity);
+
+   // use area of intrest load
    load(l, nth, minX, minY, maxX, maxY);
      
 }
@@ -191,14 +192,19 @@ void quadtree::load(lidarpointloader *l, int nth)
    // get current boundary and new flight boundary
    boundary *nb = l->getboundary();
    
+   // size of each block of points loaded
    int arraysize = 10000;
    
    point *temp = new point[arraysize];
+   
+   // resize the array to accomadate new points 
    root = expandboundary(root, nb);
 
    delete nb;
-   
    int pointcounter;
+   
+   // while there are new points, pull a new block of points from the loader
+   // and push them into the tree
    do
    {
       pointcounter = l->load(arraysize, nth, temp);
@@ -216,11 +222,12 @@ void quadtree::load(lidarpointloader *l, int nth)
 }
 
 
+// this method loads points from a flightline that fall within an area of intrest
 void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, double maxX, double maxY)
 {
    // get new flight boundary
    boundary *nb = l->getboundary();
-   
+
    if ((minX > nb->maxX && maxX > nb->maxX) || (minX < nb->minX && maxX < nb->minX))
    {
       throw "area of interest falls outside new file";
@@ -238,10 +245,13 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
    
    int arraysize = 10000;
    point *temp = new point[arraysize];
+   // expand boundary to cover new points
    root = expandboundary(root, nb);
  
    delete nb;
    
+   // while there are new points, pull a new block of points from the loader
+   // and push them into the tree
    int pointcount;
    do
    {
@@ -467,6 +477,8 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    {
       m =  (y2 - y1) / (x2 - x1);
    }
+   
+   // black magic maths to find the four corners of the rectangle
    double pm = -1/m;
    double theta = atan(pm);
    double L = width/2;

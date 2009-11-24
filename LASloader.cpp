@@ -42,9 +42,10 @@ int LASloader::load(int n, int nth, point *points, double minX, double minY, dou
       }
       
       
-      // for each point make a new struct and initlisise it
+      
       p = reader->GetPoint();
       
+      // check if point falls within area of intrest
       if (p.GetX() < minX || p.GetX() > maxX || p.GetY() < minY || p.GetY() > maxY)
       {
          continue;
@@ -60,16 +61,17 @@ int LASloader::load(int n, int nth, point *points, double minX, double minY, dou
       temp.rnumber = p.GetReturnNumber();
       temp.time = p.GetTime();
       
-      // try and insert point into quad tree, print error 
-      
+       
+      // copy temp into the array
       points[pointcounter] = temp;
+      
+      // keep track of the number of pointsloaded
       pointcounter++;
       numpoints++;
     
       counter=0;
    
    }
-   cout << numpoints << endl;
    return pointcounter;
    
 }
@@ -97,8 +99,6 @@ int LASloader::load(int n, int nth, point *points)
       
       // for each point make a new struct and initlisise it
       p = reader->GetPoint();
-  
-      
       temp.x = p.GetX() ;
       temp.y = p.GetY() ;
       temp.z = p.GetZ() ;
@@ -108,8 +108,8 @@ int LASloader::load(int n, int nth, point *points)
       temp.rnumber = p.GetReturnNumber();
       temp.time = p.GetTime();
       
-      // try and insert point into quad tree, print error 
-      
+     
+      // copy temp into the array
       points[pointcounter] = temp;
       pointcounter++;
       
@@ -134,8 +134,6 @@ boundary* LASloader::getboundary()
    // it and the lidar points (-+ 1/1000)
    // (boundry and header have different accuracys) 
 
-   
-   // create a new boundary with the above values and return it
    boundary* newboundary = new boundary;
    newboundary->minX=header.GetMinX()-1;
    newboundary->minY=header.GetMinY()-1;

@@ -467,9 +467,8 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
 
    // calculate the equations for the lines
    
-   // if the lines are not vertical or horizontal
-   if(x1 != x2 && y1 != y2)
-   {
+   //  NOTE : there is no check for axis orientated lines, this is handled by the quadtree
+   
       // work out the forumla for each of the four lines described by the four points (y=mx+c)
       double m1,c1,m2,c2,m3,c3,m4,c4;
       if (x1>x2)
@@ -527,35 +526,8 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
          addsubset(x1,y1,x2,y2,x3,y3,x4,y4,buckets);
          return;
       }
-   }
-  /* else
-   {
-      // if either of the lines is vertical or horizontal this means that the 
-      // search area is orientated to the axis and the subset method can be used
-      // (and is faster as it can make assumptions and skips checks)
-      // for this the minx,miny,max,maxy for the subset area are needed
-      
-      double sx = x1;
-      double sy = y1;
-      double bx = x1;
-      double by = y1;
-      // as it is not known which of the subset points is which the smallest and largest 
-      // must be found
-      if (x2<sx){sx=x2;}else if(x2>bx){bx=x2;}
-      if (x3<sx){sx=x3;}else if(x3>bx){bx=x3;}
-      if (x4<sx){sx=x4;}else if(x4>bx){bx=x4;}
-      
-      if (y2<sy){sy=y2;}else if(y2>by){by=y2;}
-      if (y3<sy){sy=y3;}else if(y3>by){by=y3;}
-      if (y4<sy){sy=y4;}else if(y4>by){by=y4;}
-      
-      // call the subset method. the recursion will continue through this now
-      // NOTE : this will only ever happen in the root node as it will
-      // be picked up immediatly, this means that a call to advsubset with a 
-      // axis orientated box is almost identical to a call to subset.
-      subset(sx,sy,bx,by,buckets);
-      return;
-   }*/
+   
+
 
    
    
