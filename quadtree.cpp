@@ -134,7 +134,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       // the old node then needs to be expanded into its new quater
       quadtreenode* bl = expandboundary(oldnode, subboundary);
       delete subboundary;
-      quadtreenode* br = new quadtreenode(b->maxX, b->maxY, newbx2, newby2, capacity);
+      quadtreenode* br = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity);
       delete b;
       return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br);
    }
