@@ -70,9 +70,9 @@ int main(int argc, char** argv) {
 
     LASloader* loader2 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_111020_1.LAS");
     LASloader* loader3 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110312_1.LAS");
-    lidardata = new quadtree(loader,100000,3);
-    lidardata->load(loader2,3);
-    lidardata->load(loader3,3);
+    lidardata = new quadtree(loader,100000,0);
+    lidardata->load(loader2,0);
+    lidardata->load(loader3,0);
     
    return GUIset(argc, argv);
 }

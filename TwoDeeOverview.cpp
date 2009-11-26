@@ -71,7 +71,7 @@ void TwoDeeOverview::resetview(){
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
-bool TwoDeeOverview::on_expose_event(GdkEventExpose* event){ return draw(1); }
+bool TwoDeeOverview::on_expose_event(GdkEventExpose* event){ return drawviewable(); }
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
@@ -91,6 +91,11 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       panstarty=event->y;
       resetview();
       return draw(2);
+//   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+//   if (!glwindow->gl_begin(get_gl_context()))return false;
+//   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+//   else glFlush();
+//   return true;
 }
 
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
@@ -104,14 +109,14 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
       panstartx=event->x;
       panstarty=event->y;
       resetview();
-      return draw(1);
+      return drawviewable();
    }
    else return false;
 }
 
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
-//   drawviewable();
-   draw(1);
+   drawviewable();
+//   draw(1);
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
@@ -134,9 +139,9 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){return true;}
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return true;}
 
 bool TwoDeeOverview::drawviewable(){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+//   if (!glwindow->gl_begin(get_gl_context()))return false;
+//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    double minx = centrex-get_width()/2*ratio/zoomlevel;
    double maxx = centrex+get_width()/2*ratio/zoomlevel;
    double miny = centrey-get_height()/2*ratio/zoomlevel;
@@ -158,8 +163,8 @@ bool TwoDeeOverview::drawviewable(){
 //      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
 //   }
    mainimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity);
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
+//   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+//   else glFlush();
    return true;
 }
 
@@ -184,7 +189,8 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrey = tempy;
    cout << zoomlevel << endl;
    resetview();
-   return draw(1);
+//   return draw(1);
+   return drawviewable();
 }
 
 bool TwoDeeOverview::draw(int listno){
@@ -193,13 +199,13 @@ bool TwoDeeOverview::draw(int listno){
 //   glHint(GL_CLIP_VOLUME_CLIPPING_HINT_EXT,GL_FASTEST);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    if(showbuckets)glCallList(3);
-   if(sigpan.blocked())glCallList(4);
+//   if(sigpan.blocked())glCallList(4);
    if(listno==2)glCallList(listno);
-   else{
-      int* lists = new int[numbuckets];
-      for(int i=0;i<numbuckets;i++)lists[i]=100+i;
-      glCallLists(numbuckets,GL_INT,lists);
-   }
+//   else{
+//      int* lists = new int[numbuckets];
+//      for(int i=0;i<numbuckets;i++)lists[i]=100+i;
+//      glCallLists(numbuckets,GL_INT,lists);
+//   }
 //   for(int i=0;i<numbuckets;i++){
 //      glCallList(100+i);
       if (glwindow->is_double_buffered())glwindow->swap_buffers();
@@ -235,8 +241,11 @@ void TwoDeeOverview::bucketimage(pointbucket** buckets,int numbuckets){
 void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity){
    double red,green,blue;
    double x=0,y=0,z=0,intensity=0;
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+//   if (!glwindow->gl_begin(get_gl_context()))return false;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    for(int i=0;i<numbuckets;i++){
-      glNewList(100+i,GL_COMPILE);
+  //    glNewList(100+i,GL_COMPILE);
 	 for(int j=0;j<buckets[i]->numberofpoints;j++){
 	    red = 0.0; green = 1.0; blue = 0.0;
 	    x = buckets[i]->points[j].x;
@@ -252,7 +261,9 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,
 	    glVertex3d(x,y,z);
 	    glEnd();
 	 }
-      glEndList();
+//      glEndList();
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();
+      else glFlush();
    }
    glBegin(GL_LINE_LOOP);
       glVertex2d(lidarboundary->minX, lidarboundary->minY);
