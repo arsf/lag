@@ -194,10 +194,12 @@ bool TwoDeeOverview::draw(int listno){
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    if(showbuckets)glCallList(3);
    if(sigpan.blocked())glCallList(4);
-//   glCallList(listno);
-   int* lists = new int[numbuckets];
-   for(int i=0;i<numbuckets;i++)lists[i]=100+i;
-   glCallLists(numbuckets,GL_INT,lists);
+   if(listno==2)glCallList(listno);
+   else{
+      int* lists = new int[numbuckets];
+      for(int i=0;i<numbuckets;i++)lists[i]=100+i;
+      glCallLists(numbuckets,GL_INT,lists);
+   }
 //   for(int i=0;i<numbuckets;i++){
 //      glCallList(100+i);
       if (glwindow->is_double_buffered())glwindow->swap_buffers();
