@@ -23,6 +23,7 @@
 #include "liblas/lasreader.hpp"
 #include "lidar_loader.h"
 #include "LASloader.h"
+#include "ASCIIloader.h"
 using namespace std;
 
 
@@ -47,18 +48,19 @@ using namespace std;
     //bob->toString();
     cout << "construction begun" << endl;
     quadtree *bob; 
-    LASloader *l = new LASloader("/home/scratch/LDR090601_115048_1.LAS");
+    ASCIIloader *l = new ASCIIloader("/home/scratch/LDR-GB08_02-200928101.txt" , " txyzicr#");
     boundary *b = l->getboundary();
+    cout << b->minX << " " << b->minY << " " << b->maxX << " " << b->maxY << endl;
     try 
     {
-      bob = new quadtree(l, 500, 0, b->minX, b->minY+2000, b->maxX, b->maxY-2000);
+      bob = new quadtree(l, 500, 0);
      }
          catch (char const* c)
       {
          cout << c << endl;
       }
     //  bob = new quadtree("/home/scratch/LDR090601_115048_1.LAS", 100000, 0);
-    bob = new quadtree(0, 0, 10, 10, 5);
+    
     
     point temp;
     temp.x = 1;

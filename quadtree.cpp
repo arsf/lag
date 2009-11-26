@@ -202,7 +202,7 @@ void quadtree::load(lidarpointloader *l, int nth)
 
    delete nb;
    int pointcounter;
-   
+  
    // while there are new points, pull a new block of points from the loader
    // and push them into the tree
    do
@@ -212,6 +212,7 @@ void quadtree::load(lidarpointloader *l, int nth)
       {
          insert(temp[k]);
       }
+     
    }
    while (pointcounter == arraysize);
    
