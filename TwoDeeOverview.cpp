@@ -9,12 +9,18 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include "TwoDeeOverview.h"
+#include "MathFuncs.cpp"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    lidarboundary = lidardata->getboundary();
    zoomlevel=1;
    showbuckets=false;
+   profwidth=300;
+   previewindex=25;
+   maxz=minz=0;
+   maxintensity=minintensity=0;
+   numbuckets=0;
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
    centrex = lidarboundary->minX+xdif/2;
@@ -29,20 +35,26 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    if(xratio>yratio)ratio = xratio;
    else ratio = yratio;
    //Coloouring and shading:
-   heightcolour = false;
+   heightcolour = true;
    heightbrightness = false;
    zoffset=0;
    zfloor=0.25;
    intensitycolour = false;
-   intensitybrightness = false;
+   intensitybrightness = true;
    intensityoffset = 0.0/3;
    intensityfloor = 0;
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
-   signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_start));
-   signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan));
-   signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_end));
+   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_start));
+   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan));
+   sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_end));
+   sigprofstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_start));
+   sigprof = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof));
+   sigprofend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_end));
+   sigprofstart.block();
+   sigprof.block();
+   sigprofend.block();
 }
 
 TwoDeeOverview::~TwoDeeOverview(){}
@@ -55,7 +67,7 @@ void TwoDeeOverview::resetview(){
           centrex+get_width()/2*ratio/zoomlevel,
 	  centrey-get_height()/2*ratio/zoomlevel,
 	  centrey+get_height()/2*ratio/zoomlevel,
-	  -10.0,5.0);
+	  -1000.0,50000.0);
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
@@ -97,6 +109,60 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    else return false;
 }
 
+bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
+//   drawviewable();
+   draw(1);
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
+   profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   glColor3f(1.0,1.0,1.0);
+   glNewList(4,GL_COMPILE_AND_EXECUTE);
+   glBegin(GL_LINE_LOOP);
+      glVertex3d(profstartx-profwidth/2,profstarty,-0.1);
+      glVertex3d(profstartx-profwidth/2,profendy,-0.1);
+      glVertex3d(profstartx+profwidth/2,profendy,-0.1);
+      glVertex3d(profstartx+profwidth/2,profstarty,-0.1);
+   glEnd();
+   glEndList();
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glwindow->gl_end();
+   return true;
+}
+bool TwoDeeOverview::on_prof(GdkEventMotion* event){return true;}
+bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return true;}
+
+bool TwoDeeOverview::drawviewable(){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   double minx = centrex-get_width()/2*ratio/zoomlevel;
+   double maxx = centrex+get_width()/2*ratio/zoomlevel;
+   double miny = centrey-get_height()/2*ratio/zoomlevel;
+   double maxy = centrey+get_height()/2*ratio/zoomlevel;
+   vector<pointbucket*> *pointvector = lidardata->subset(minx,miny,maxx,maxy);
+   unsigned long numbuckets = pointvector->size();
+   pointbucket** buckets = new pointbucket*[numbuckets];
+   for(unsigned long int i=0;i<numbuckets;i++){
+      buckets[i]=pointvector->at(i);
+   }
+//   double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
+//   double maxintensity = buckets[0]->maxintensity;
+//   double minintensity = buckets[0]->minintensity;
+//   for(unsigned long int i=0;i<numbuckets;i++){
+////Perhaps need a better method in order to find 10th and 90th percentiles instead:
+//      if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
+//      if(minz>buckets[i]->minz)minz = buckets[i]->minz;
+//      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
+//      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
+//   }
+   mainimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity);
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   return true;
+}
+
 bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    double tempx=centrex;
    double tempy=centrey;
@@ -116,25 +182,28 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    tempy = tempy + (event->y-get_height()/2)*ratio/zoomlevel;
    centrex = tempx;
    centrey = tempy;
+   cout << zoomlevel << endl;
    resetview();
    return draw(1);
 }
 
 bool TwoDeeOverview::draw(int listno){
-   cout << "Getting gl_window." << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
-   cout << "Clearing buffers." << endl;
+//   glHint(GL_CLIP_VOLUME_CLIPPING_HINT_EXT,GL_FASTEST);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   cout << "Calling lists." << endl;
    if(showbuckets)glCallList(3);
-   glCallList(listno);
-   cout << "Flushing." << endl;
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
-   cout << "Ending gl session." << endl;
+   if(sigpan.blocked())glCallList(4);
+//   glCallList(listno);
+   int* lists = new int[numbuckets];
+   for(int i=0;i<numbuckets;i++)lists[i]=100+i;
+   glCallLists(numbuckets,GL_INT,lists);
+//   for(int i=0;i<numbuckets;i++){
+//      glCallList(100+i);
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();
+      else glFlush();
+//   }
    glwindow->gl_end();
-   cout << "Drawn." << endl;
    return true;
 }
 
@@ -147,9 +216,8 @@ bool TwoDeeOverview::on_configure_event(GdkEventConfigure* event){
   return true;
 }
 
-void TwoDeeOverview::bucketimage(pointbucket** buckets,unsigned long numbuckets){
+void TwoDeeOverview::bucketimage(pointbucket** buckets,int numbuckets){
    double red,green,blue;
-   glNewList(3, GL_COMPILE);
       for(int i=0;i<numbuckets;i++){
          red=green=blue=1;
 	 glColor3d(red,green,blue);
@@ -160,29 +228,30 @@ void TwoDeeOverview::bucketimage(pointbucket** buckets,unsigned long numbuckets)
  	    glVertex2d(buckets[i]->maxx, buckets[i]->miny);
  	 glEnd();
       }
-   glEndList();
 }
 
-void TwoDeeOverview::mainimage(pointbucket** buckets,unsigned long numbuckets,double maxz,double minz,double maxintensity,double minintensity){
+void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity){
    double red,green,blue;
-   double z=0,intensity=0;
-   glNewList(1, GL_COMPILE);
-   glBegin(GL_POINTS);
+   double x=0,y=0,z=0,intensity=0;
    for(int i=0;i<numbuckets;i++){
-     for(int j=0;j<buckets[i]->numberofpoints;j++){
-         red = 0.0; green = 1.0; blue = 0.0;
-         z = buckets[i]->points[j].z;
-         intensity = buckets[i]->points[j].intensity;
-         if(heightcolour)colour_by(z,maxz,minz,red,green,blue);
-         else if(intensitycolour)colour_by(intensity,maxintensity,minintensity,red,green,blue);
-         if(intensitybrightness)brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor,red,green,blue);
-         else if(heightbrightness)brightness_by(z,maxz,minz,zoffset,zfloor,red,green,blue);
-         glColor3d(red,green,blue);
-         glVertex2d(buckets[i]->points[j].x,buckets[i]->points[j].y);
-      }
+      glNewList(100+i,GL_COMPILE);
+	 for(int j=0;j<buckets[i]->numberofpoints;j++){
+	    red = 0.0; green = 1.0; blue = 0.0;
+	    x = buckets[i]->points[j].x;
+	    y = buckets[i]->points[j].y;
+	    z = buckets[i]->points[j].z;
+	    intensity = buckets[i]->points[j].intensity;
+	    if(heightcolour)colour_by(z,maxz,minz,red,green,blue);
+	    else if(intensitycolour)colour_by(intensity,maxintensity,minintensity,red,green,blue);
+	    if(intensitybrightness)brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor,red,green,blue);
+	    else if(heightbrightness)brightness_by(z,maxz,minz,zoffset,zfloor,red,green,blue);
+	    glBegin(GL_POINTS);
+	    glColor3d(red,green,blue);
+	    glVertex3d(x,y,z);
+	    glEnd();
+	 }
+      glEndList();
    }
-      glEnd();
-     
    glBegin(GL_LINE_LOOP);
       glVertex2d(lidarboundary->minX, lidarboundary->minY);
       glVertex2d(lidarboundary->minX, lidarboundary->maxY);
@@ -190,17 +259,17 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,unsigned long numbuckets,do
       glVertex2d(lidarboundary->maxX, lidarboundary->minY);
    glEnd();
   
-   glEndList();
 }
 
-void TwoDeeOverview::previewimage(pointbucket** buckets,unsigned long numbuckets,double maxz,double minz,double maxintensity,double minintensity){
+void TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity){
    double red,green,blue;
-   double z=0,intensity=0;
-   glNewList(2, GL_COMPILE);
+   double x=0,y=0,z=0,intensity=0;
       glBegin(GL_POINTS);
 	 for(int i=0;i<numbuckets;i++){
-	    for(int j=0;j<buckets[i]->numberofpoints;j+=25){
+	    for(int j=0;j<buckets[i]->numberofpoints;j+=previewindex){
                red = 0.0; green = 1.0; blue = 0.0;
+	       x = buckets[i]->points[j].x;
+	       y = buckets[i]->points[j].y;
 	       z = buckets[i]->points[j].z;
 	       intensity = buckets[i]->points[j].intensity;
 	       red = 0.0; green = 1.0; blue = 0.0;
@@ -209,11 +278,10 @@ void TwoDeeOverview::previewimage(pointbucket** buckets,unsigned long numbuckets
 	       if(intensitybrightness)brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor,red,green,blue);
 	       else if(heightbrightness)brightness_by(z,maxz,minz,zoffset,zfloor,red,green,blue);
 	       glColor3d(red,green,blue);
-	       glVertex2d(buckets[i]->points[j].x,buckets[i]->points[j].y);
+	       glVertex3d(x,y,z);
 	    }
  	 }
       glEnd();
-   glEndList();
 }
 
 void TwoDeeOverview::make_image(){
@@ -224,15 +292,16 @@ void TwoDeeOverview::make_image(){
    vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);
    //vector<pointbucket*> *pointvector = lidardata->advsubset(lidarboundary->minX,lidarboundary->maxY-1000,lidarboundary->maxX,lidarboundary->maxY-1000,300);
    cout << "Converting vector." << endl;
-   unsigned long numbuckets = pointvector->size();
+   numbuckets = pointvector->size();
    pointbucket** buckets = new pointbucket*[numbuckets];
    for(int i=0;i<numbuckets;i++){
       buckets[i]=pointvector->at(i);
    }
    cout << "Finding maxima and minima." << endl;
-   double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
-   double maxintensity = buckets[0]->maxintensity;
-   double minintensity = buckets[0]->minintensity;
+   maxz = buckets[0]->maxz;
+   minz = buckets[0]->minz;
+   maxintensity = buckets[0]->maxintensity;
+   minintensity = buckets[0]->minintensity;
    for(int i=0;i<numbuckets;i++){
 //Perhaps need a better method in order to find 10th and 90th percentiles instead:
       if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
@@ -241,15 +310,40 @@ void TwoDeeOverview::make_image(){
       if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
    }
    if(maxz<=minz)maxz=minz+1;
+   else{
+      double* zdata = new double[numbuckets];
+      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->maxz;
+      double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
+      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->minz;
+      double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
+      maxz=(maxz+highperc)/2;
+      minz=(minz+lowperc)/2;
+      delete zdata;
+   }
+//   if(maxintensity<=minintensity)maxintensity=minintensity+1;
+//   else{
+//      double* intensitydata = new double[numbuckets];
+//      for(int i=0;i<numbuckets;i++)intensitydata[i]=buckets[i]->maxintensity;
+//      double lowperc = percentilevalue(intensitydata,numbuckets,0.01,minintensity,maxintensity);
+//      for(int i=0;i<numbuckets;i++)intensitydata[i]=buckets[i]->minintensity;
+//      double highperc = percentilevalue(intensitydata,numbuckets,99.99,minintensity,maxintensity);
+//      maxintensity=(maxintensity+highperc)/2;
+//      minintensity=(minintensity+lowperc)/2;
+//      delete intensitydata;
+//   }
    cout << "Getting bucket image." << endl;
-   double red,green,blue;
-   double z=0,intensity=0;
+   glNewList(3, GL_COMPILE);
    bucketimage(buckets,numbuckets);
+   glEndList();
    cout << "Getting main image." << endl;
+//   glNewList(1, GL_COMPILE);
    mainimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity);
+//   glEndList();
    cout << "Getting preview image." << endl;
+   glNewList(2, GL_COMPILE);
    previewimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity);
    cout << "Getting clear colour and depth." << endl;
+   glEndList();
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
 /*   glEnable(GL_POINT_SMOOTH);     //Antialiasing stuff, for use later, possibly.
@@ -302,6 +396,7 @@ void TwoDeeOverview::colour_by(double value,double maxvalue,double minvalue,doub
   }
   else{//Cyan to White:
      col1 = 6*(value-minvalue)/range - 5.0;
+     if(col1>1.0)col1=1.0;
      col2 = 1.0;
      col3 = 1.0;
   }

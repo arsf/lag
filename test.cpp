@@ -8,6 +8,13 @@
 using namespace std;
 
 quadtree* lidardata; 
+Gtk::ToggleToolButton *profiletoggle = NULL;
+TwoDeeOverview *tdo = NULL;
+
+void on_profiletoggle(){
+   if(profiletoggle->get_active())tdo->setupprofile();
+   else tdo->unsetupprofile();
+}
 
 int GUIset(int argc,char *argv[]){
    Gtk::Main gtkmain(argc, argv);
@@ -29,10 +36,16 @@ int GUIset(int argc,char *argv[]){
       refXml->get_widget("window2", window2);
       window2->set_title("Window2");
       window2->set_reallocate_redraws(true);
-      TwoDeeOverview tdo(glconfig,lidardata);
-      tdo.set_size_request(200,200);
-      window2->add(tdo);
+      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata);
+      tdo = tdo1;
+      tdo->set_size_request(200,200);
+//      window2->add(tdo);
+      Gtk::VBox *vboxtdo;
+      refXml->get_widget("vboxtdo",vboxtdo);
+      vboxtdo->pack_end(*tdo,true,true);
       window2->show_all();
+      refXml->get_widget("profiletoggle",profiletoggle);
+      profiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_profiletoggle));
 //      Gtk::Window *window3 = NULL;
 //      refXml->get_widget("window3", window3);
 //      window3->set_title("Window3");
@@ -51,14 +64,16 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
+//    LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110312_1.LAS");
+//    lidardata = new quadtree(loader,10000,0);
     LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110650_1.LAS");
 
-    LASloader* loader2 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110650_1.LAS");
-    lidardata = new quadtree(loader,10000,0);
-    lidardata->load(loader2,0);
+    LASloader* loader2 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_111020_1.LAS");
+    LASloader* loader3 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110312_1.LAS");
+    lidardata = new quadtree(loader,100000,3);
+    lidardata->load(loader2,3);
+    lidardata->load(loader3,3);
     
-//    lidardata->load("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_110650_1.LAS",0);
-//    lidardata->load("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proclaser/LDR090601_111020_1.LAS",0);
    return GUIset(argc, argv);
 }
 
