@@ -59,59 +59,75 @@ int ASCIIloader::load(int n, int nth, point *points, double minX, double minY, d
             continue;
          }
          
-        tok = strtok(line, delim);
-        wordcounter=0;
-        while (tok != NULL)
-        {
+         
+         
+         temp.x = NULL;
+         temp.y = NULL;
+         temp.z = NULL;
+         temp.time = NULL;
+         temp.intensity = NULL;
+         temp.classification = NULL;
+         temp.rnumber = NULL;
+                 
+         
+         tok = strtok(line, delim);
+         wordcounter=0;
+         while (tok != NULL)
+         {
 
-           wordcounter++;
+            wordcounter++;
+           
+           
 
-
-           switch(formatstring[wordcounter])
-           {
-              case 'x':
-              {
-                 temp.x = atof(tok);
-                 break;
-              }
+            switch(formatstring[wordcounter])
+            {
+               case 'x':
+               {
+                  temp.x = atof(tok);
+                  break;
+               }
                case 'y':
-              {
-                 temp.y = atof(tok);
-                 break;
-              }
-              case 'z':
-              {
-                 temp.z = atof(tok);
-                 break;
-              }
-              case 'i':
-              {
-                 temp.intensity = atoi(tok);
-                 break;
-              }
-              case 'c':
-              {
-                 temp.classification = atoi(tok);
-                 break;
-              }
-              case 'r':
-              {
-                 temp.rnumber = atoi(tok);
-                 break;
-              }
-              case 't':
-              {
-                 temp.time = atof(tok);
-                 break;
-              }
-              default:
-              {
-              }
-           }
-           tok = strtok (NULL, delim);
-        }
+               {
+                  temp.y = atof(tok);
+                  break;
+               }
+               case 'z':
+               {
+                  temp.z = atof(tok);
+                  break;
+               }
+               case 'i':
+               {
+                  temp.intensity = atoi(tok);
+                  break;
+               }
+               case 'c':
+               {
+                  temp.classification = atoi(tok);
+                  break;
+               }
+               case 'r':
+               {
+                  temp.rnumber = atoi(tok);
+                  break;
+               }
+               case 't':
+               {
+                  temp.time = atof(tok);
+                  break;
+               }
+               default:
+               {
+               }
+            }
+            tok = strtok (NULL, delim);
+         }
    
-   
+      // check if point falls within area of intrest
+      if (temp.x < minX || temp.x > maxX || temp.y < minY || temp.y > maxY)
+      {
+         continue;
+      }
    
 
       points[pointcounter] = temp;
