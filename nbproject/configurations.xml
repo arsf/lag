@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.h</itemPath>
       <itemPath>LASloader.h</itemPath>
       <itemPath>/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h</itemPath>
       <itemPath>quadtree.h</itemPath>
@@ -23,6 +24,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp</itemPath>
       <itemPath>LASloader.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
       <itemPath>quadtree.cpp</itemPath>
@@ -48,7 +50,7 @@
       </toolsSet>
       <compileType>
         <ccCompilerTool>
-          <commandLine>-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g</commandLine>
+          <commandLine>-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g </commandLine>
           <warningLevel>2</warningLevel>
         </ccCompilerTool>
         <linkerTool>
@@ -60,6 +62,12 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp">
+        <itemTool>1</itemTool>
+      </item>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.h">
+        <itemTool>3</itemTool>
+      </item>
       <item path="/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h">
         <itemTool>3</itemTool>
       </item>
@@ -132,6 +140,12 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp">
+        <itemTool>1</itemTool>
+      </item>
+      <item path="/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.h">
+        <itemTool>3</itemTool>
+      </item>
       <item path="/users/rsg/chrfi/svncheckoutstuff/lidarpointloader.h">
         <itemTool>3</itemTool>
       </item>

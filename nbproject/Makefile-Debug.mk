@@ -26,6 +26,7 @@ OBJECTDIR=build/Debug/GNU-Linux-x86
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/LASloader.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o \
 	${OBJECTDIR}/quadtreestructs.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/TwoDeeOverview.o \
@@ -38,8 +39,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g 
-CXXFLAGS=-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g 
+CCFLAGS=-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g  
+CXXFLAGS=-I /users/rsg/chrfi/liblas_x64/include -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` -g  
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -57,6 +58,10 @@ dist/Debug/GNU-Linux-x86/svncheckoutstuff: ${OBJECTFILES}
 ${OBJECTDIR}/LASloader.o: LASloader.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.cc) -g -Wall -o ${OBJECTDIR}/LASloader.o LASloader.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o: /users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff
+	$(COMPILE.cc) -g -Wall -o ${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o /users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp
 
 ${OBJECTDIR}/quadtreestructs.o: quadtreestructs.cpp 
 	${MKDIR} -p ${OBJECTDIR}

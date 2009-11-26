@@ -26,6 +26,7 @@ OBJECTDIR=build/Release/GNU-Linux-x86
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/LASloader.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o \
 	${OBJECTDIR}/quadtreestructs.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/TwoDeeOverview.o \
@@ -57,6 +58,10 @@ dist/Release/GNU-Linux-x86/svncheckoutstuff: ${OBJECTFILES}
 ${OBJECTDIR}/LASloader.o: LASloader.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/LASloader.o LASloader.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o: /users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff
+	$(COMPILE.cc) -O2 -o ${OBJECTDIR}/_ext/users/rsg/chrfi/svncheckoutstuff/ASCIIloader.o /users/rsg/chrfi/svncheckoutstuff/ASCIIloader.cpp
 
 ${OBJECTDIR}/quadtreestructs.o: quadtreestructs.cpp 
 	${MKDIR} -p ${OBJECTDIR}
