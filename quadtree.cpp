@@ -17,23 +17,19 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
-
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
 
    load(l, nth);   
 }
 
-// this constructor creates a quadtree using a loader object for a given area of intrest
+// this constructor creates a quadtree using a loader object for a given area of interest
 quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
 {
    capacity = cap;
    root = NULL;
 
- 
-
-   // use area of intrest to create new tree that incompasses all points
+   // use area of interest to create new tree that incompasses all points
    root = new quadtreenode(minX, minY, maxX, maxY, capacity);
-
    // use area of intrest load
    load(l, nth, minX, minY, maxX, maxY);
      
@@ -49,12 +45,6 @@ quadtree::quadtree(double sx, double sy, double bx, double by, int cap)
 
    root = new quadtreenode(sx,sy,bx,by,capacity);
 }
-
-/*quadtree::quadtree(quadtreenode *newRoot, int cap)
-{
-   capacity = cap;
-   root = newRoot;
-}*/
 
 
 // this method expands a quadtree to encompass a new boundary
@@ -85,7 +75,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    double cy = newby1+((newby2-newby1)/2);
    
    // find the distance from each of the 4 corners of the nodes boundary to the new center point
-   // (work out the general location of the node within the new boundary (top left, top right etc)
+   // (work out the general location of the node within the new boundary (top left, top right etc))
    double topleftdistance = sqrt(pow(abs(cx-b->minX),2) + pow((abs(cy-b->maxY)),2));
    double toprightdistance = sqrt(pow(abs(cx-b->maxX),2) + pow((abs(cy-b->maxY)),2));
    double bottomleftdistance = sqrt(pow(abs(cx-b->minX),2) + pow((abs(cy-b->minY)),2));
@@ -106,9 +96,9 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       subboundary->maxX = newbx2;
       subboundary->maxY = b->maxY;
       
-      // the old node then needs to be expanded into its new quater (this is to deal with
+      // the old node then needs to be expanded into its new quarter (this is to deal with
       // instances where the old node only touches one side of the new boundary and 
-      // therefore only fills half its new quater.
+      // therefore only fills half its new quarter.
       quadtreenode* br = expandboundary(oldnode, subboundary);
       delete subboundary;
       delete b;
@@ -130,7 +120,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       subboundary->maxX = b->maxX;
       subboundary->maxY = b->maxY;
       
-      // the old node then needs to be expanded into its new quater
+      // the old node then needs to be expanded into its new quarter
       quadtreenode* bl = expandboundary(oldnode, subboundary);
       delete subboundary;
       quadtreenode* br = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity);
@@ -151,7 +141,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       subboundary->maxX = newbx2;
       subboundary->maxY = newby2;
       
-      // the old node then needs to be expanded into its new quater
+      // the old node then needs to be expanded into its new quarter
       quadtreenode* tr = expandboundary(oldnode, subboundary);
       delete subboundary;
       quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->minY, capacity);
@@ -169,7 +159,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       subboundary->maxX = b->maxX;
       subboundary->maxY = newby2;
       
-      // the old node then needs to be expanded into its new quater
+      // the old node then needs to be expanded into its new quarter
       quadtreenode* tl = expandboundary(oldnode, subboundary);
       delete subboundary;
       
@@ -189,7 +179,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 // load a new flight line into the quad tree, nth is the nth points to load
 void quadtree::load(lidarpointloader *l, int nth)
 {
-   // get current boundary and new flight boundary
+   // get new flight boundary
    boundary *nb = l->getboundary();
    
    // size of each block of points loaded
@@ -302,7 +292,7 @@ void quadtree::insert(point newP)
    }
    
    // this counter simple keeps track of the total points inserted
-   // WARNING, debug code, dosen't take account of deleteions
+   // WARNING : debug code, dosen't take account of deleteions
    static int counter;
    counter++;
    
@@ -347,7 +337,7 @@ void quadtree::insert(point newP)
    // there is a bug in the insert method
    if (!current->insert(newP))
    {
-      throw "point out of bounds error";
+      throw "point out of bounds error, insert broken";
    }
    
    guessbucket = current;

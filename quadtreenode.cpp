@@ -45,7 +45,7 @@ quadtreenode::quadtreenode(double sx, double sy, double bx, double by, int cap)
          throw "node argument d does not fit within paraent node";
    
    
-   // TODO: add checking that the new child node takes up 1 quater of the parent node
+   
    
    
    leaf = false;
@@ -174,12 +174,12 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
          buckets->push_back(bucket);
       }
       // HACK : this is a HACK
-      else
+    /*  else
       {
          pointbucket *hackbucket; 
          hackbucket = new pointbucket(capacity, this->minX, this->minY, this->maxX, this->maxY);
          buckets->push_back(hackbucket);
-      }
+      }*/
    
    
       
@@ -188,7 +188,7 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
 
 // this method inserts a point into the node. 
 // NOTE: this method does not contain functionality for finding the correct node to insert into
-// save when the correct node overflows and 4 children need to be created and reporting
+// save for when the correct node overflows and 4 children need to be created and reporting
 // wrong nodes.
 bool quadtreenode::insert(point newP)
 {
@@ -220,14 +220,14 @@ bool quadtreenode::insert(point newP)
 
          for (int k=0; k<currentCap; k++)
          {
-            // attept to insert each pointer in turn into the child nodes
+            // attept to insert each point in turn into the child nodes
             if(a->insert(bucket->points[k]))          
             {}else if(b->insert(bucket->points[k]))
             {}else if(c->insert(bucket->points[k]))
             {}else if(d->insert(bucket->points[k]))
             {}else
             {
-               throw "failed to insert into any of the four child nodes, big problem";
+               throw "failed to insert old point into any of the four child nodes, big problem";
             }
             
          }
@@ -243,7 +243,7 @@ bool quadtreenode::insert(point newP)
          if (b->insert(newP)){ return true;}
          if (c->insert(newP)){ return true;}
          if (d->insert(newP)){ return true;}
-         throw "failed to insert into any of the four child nodes, big problem";
+         throw "failed to insert new point into any of the four child nodes, big problem";
       }
       
       // if the node falls within the boundary but this node isn't not a leaf
@@ -313,10 +313,6 @@ bool quadtreenode::isEmpty()
 }
 
 
-void quadtreenode::setboundary(double sx, double sy, double bx, double by)
-{
-   minX = sx; minY = sy; maxX = bx; maxY = by;
-}
 
 
 //  checks for line line intersection between lines (x1,y1 -> x2,y2) , (x3,y3 -> x4,y4)
