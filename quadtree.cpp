@@ -459,6 +459,7 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
       // be picked up immediatly, this means that a call to advsubset with a 
       // axis orientated box is almost identical to a call to subset.
       root->subset(sx,sy,bx,by,buckets);
+      return buckets;
    }
    else if ( x1 > x2)
    {
