@@ -66,3 +66,5 @@ use glade-3 to build gui, use opengl to draw display within gui
 Importance undefined: 
 
 Ability to have lines instead of points on the profiles. Also, maybe we should have a rolling average or some other smoothing system for the profiles as well, if what users are interested in is "average" difference?
+
+Split the draw operation into threads, and split away from interface. Should be embarrassingly parallel, as drawing is split into bits (buckets) anyway.

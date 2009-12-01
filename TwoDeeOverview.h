@@ -10,7 +10,7 @@ public:
   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata);
   ~TwoDeeOverview();
    //Short, status changing methods:
-   void setupprofile(){
+   void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
       sigpan.block();
       sigpanend.block();
@@ -18,8 +18,9 @@ public:
       sigprof.unblock();
       sigprofend.unblock();
       this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      profiling=true;
    }
-   void unsetupprofile(){
+   void unsetupprofile(){//Blocks profile signals and unblocks pan signals:
       sigpanstart.unblock();
       sigpan.unblock();
       sigpanend.unblock();
@@ -27,19 +28,13 @@ public:
       sigprof.block();
       sigprofend.block();
       this->get_window()->set_cursor();
+      profiling=false;
    }
 protected:
-  double profstartx, profstarty;
-  double profendx, profendy;
-  double profwidth;
-  int previewindex;
-  double maxz,minz;
-  double maxintensity,minintensity;
-  int numbuckets;
   //Point data and related stuff:
   quadtree* lidardata;//The point data is stored here.
   boundary* lidarboundary;//This stores the boundary of the file opened.
-  bool showbuckets;//True if want to display bucket boundaries on image.
+  int numbuckets;//The number of buckets currently being viewed.
 
   //Position variables:
   double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%.
@@ -56,6 +51,20 @@ protected:
   bool intensitybrightness;//True if want to shade by intensity.
   double intensityoffset;//A minimum intensity brightness value that also scales higher values.
   double intensityfloor;//As above, but does not scale anything.
+  double maxz,minz;//The maximum and minimum heights, for colour by elevation etc..
+  double maxintensity,minintensity;//The maximum and minimum intensity, for brightness by intensity etc..
+  double rmaxz,rminz;
+  double rmaxintensity,rminintensity;
+  double* colourheightarray;
+  double* colourintensityarray;
+  double* brightnessheightarray;
+  double* brightnessintensityarray;
+  
+  //Profiling:
+  double profstartx, profstarty;//The start coordinates for the profile.
+  double profendx, profendy;//The end coordinates for the profile.
+  double profwidth;//The width of the profile.
+  bool profiling;//Determines whether or not the profile should be drawn.
 
   //Signal handlers:
   //Panning:
@@ -71,11 +80,9 @@ protected:
 
   void on_realize();//Realises drawing area and calls make_image().
   void make_image();//Reads from subset of quadtree and prepares image for drawing.
-  void bucketimage(pointbucket** buckets,int numbuckets);
-  void mainimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity);
-  void previewimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity);
-  bool draw(int listno);//Draws the image. listno determines which version of the image to draw.
-  bool drawviewable();
+  bool mainimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity,int detail);//Draw the main image
+  bool previewimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity,int detail);//Draw the preview (for panning etc.).
+  bool drawviewable(int imagetype);//Draw the viewable part of the image.
   bool on_configure_event(GdkEventConfigure* event);//Handles resizing of the window. Calls resetview().
   bool on_expose_event(GdkEventExpose* event);//Calls draw on an exose event.
 
@@ -89,7 +96,7 @@ protected:
 
   //Colouring and shading:
   void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);//Colours by a numeric variable.
-  void brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue,double& col1,double& col2,double& col3);//Shades by a numberic variable.
+  double brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue);//Shades by a numeric variable.
 
    //Profiling:
    bool on_prof_start(GdkEventButton* event);
