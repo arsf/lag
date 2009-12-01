@@ -412,8 +412,8 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    // work out from the 2 points and the forumula of the line they describe the four point of
    // the subset rectangle
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
-   double m;
    
+   double m = NULL;
    if(x1 == x2 || y1 == y2)
    {
       double sx = x1;
