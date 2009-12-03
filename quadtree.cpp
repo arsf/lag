@@ -18,7 +18,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
-   flightlinenum = 0;
+   flightlinenum = -1;
    load(l, nth);   
 }
 
@@ -30,7 +30,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 
    // use area of interest to create new tree that incompasses all points
    root = new quadtreenode(minX, minY, maxX, maxY, capacity);
-   flightlinenum = 0;
+   flightlinenum = -1;
    // use area of intrest load
    load(l, nth, minX, minY, maxX, maxY);
      
