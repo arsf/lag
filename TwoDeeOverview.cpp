@@ -11,13 +11,13 @@
 #include "TwoDeeOverview.h"
 #include "MathFuncs.cpp"
 
-TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata)  : Gtk::GL::DrawingArea(config){
+TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    lidarboundary = lidardata->getboundary();
    zoomlevel=1;
-   profwidth=300;
+   profwidth=30;
    profiling=false;
-   numbuckets=0;
+   this->bucketlimit = bucketlimit;
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
    centrex = lidarboundary->minX+xdif/2;
@@ -31,8 +31,8 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    ratio = 0;
    if(xratio>yratio)ratio = xratio;
    else ratio = yratio;
-   //Coloouring and shading:
-   heightcolour = true;
+   //Colouring and shading:
+   heightcolour = false;
    heightbrightness = false;
    zoffset=0;
    zfloor=0.25;
@@ -40,10 +40,13 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    intensitybrightness = true;
    intensityoffset = 0.0/3;
    intensityfloor = 0;
-   maxz=minz=0;
-   maxintensity=minintensity=0;
    rmaxz=rminz=0;
    rmaxintensity=rminintensity=0;
+   linecolour = true;
+   colourheightarray = new double[2];
+   colourintensityarray = new double[2];
+   brightnessheightarray = new double[2];
+   brightnessintensityarray = new double[2];
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
@@ -66,11 +69,11 @@ TwoDeeOverview::~TwoDeeOverview(){
 void TwoDeeOverview::resetview(){
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(centrex-get_width()/2*ratio/zoomlevel,
-          centrex+get_width()/2*ratio/zoomlevel,
-	  centrey-get_height()/2*ratio/zoomlevel,
-	  centrey+get_height()/2*ratio/zoomlevel,
-	  -1000.0,50000.0);
+  glOrtho(centrex-(get_width()/2)*ratio/zoomlevel,
+          centrex+(get_width()/2)*ratio/zoomlevel,
+          centrey-(get_height()/2)*ratio/zoomlevel,
+          centrey+(get_height()/2)*ratio/zoomlevel,
+          -1000.0,50000.0);
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
@@ -102,35 +105,54 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    else return false;
 }
 
-//At the beginning of profiling, defines the start point and, for the moment, the end point of the profile, prepares the profile box for drawing and then calls the drawing method.
+//At the beginning of profiling, defines the start point and, for the moment, the end point of the profile, Prepares the profile box for drawing and then calls the drawing method.
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   glColor3f(1.0,1.0,1.0);
    glNewList(4,GL_COMPILE);
+   glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINE_LOOP);
       glVertex3d(profstartx-profwidth/2,profstarty,-0.1);
       glVertex3d(profstartx-profwidth/2,profendy,-0.1);
-      glVertex3d(profstartx+profwidth/2,profendy,-0.1);
-      glVertex3d(profstartx+profwidth/2,profstarty,-0.1);
+      glVertex3d(profendx+profwidth/2,profendy,-0.1);
+      glVertex3d(profendx+profwidth/2,profstarty,-0.1);
    glEnd();
    glEndList();
-   drawviewable(2);
-   return true;
+   return drawviewable(2);
 }
-bool TwoDeeOverview::on_prof(GdkEventMotion* event){return true;}
-bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return true;}
 
-//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls the mainimage function, which actually draws the dat to the screen.
+//Updates the end point of the profile and then gets the vertical and horisontal differences betweent the start and end points. These are used to determine the length of the profile and hence the positions of the vertices of the profile rectangle. The rectangle is prepared and then the drawing method is called.
+bool TwoDeeOverview::on_prof(GdkEventMotion* event){
+   profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
+   profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   double breadth = profendx - profstartx;
+   double height = profendy - profstarty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   glNewList(4,GL_COMPILE);
+   glColor3f(1.0,1.0,1.0);
+   glBegin(GL_LINE_LOOP);
+      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,-0.1);
+      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,-0.1);
+      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,-0.1);
+      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,-0.1);
+   glEnd();
+   glEndList();
+   return drawviewable(2);
+}
+
+//Draw the full image at the end of selecting a profile.
+bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
+
+//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the dat to the screen.
 bool TwoDeeOverview::drawviewable(int imagetype){
    double minx = centrex-get_width()/2*ratio/zoomlevel;
    double maxx = centrex+get_width()/2*ratio/zoomlevel;
    double miny = centrey-get_height()/2*ratio/zoomlevel;
    double maxy = centrey+get_height()/2*ratio/zoomlevel;
-   vector<pointbucket*> *pointvector = lidardata->subset(minx,miny,maxx,maxy);
-   numbuckets = pointvector->size();
+   vector<pointbucket*> *pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+   int numbuckets = pointvector->size();
    pointbucket** buckets = new pointbucket*[numbuckets];
-   for(int i=0;i<numbuckets;i++){
+   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
       buckets[i]=pointvector->at(i);
    }
 //This is for possible use later if it is needed to see how heights vary only in the viewable area:
@@ -144,16 +166,16 @@ bool TwoDeeOverview::drawviewable(int imagetype){
 //      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
 //      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
 //   }
-   int detail=1;
+   int detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
    if(imagetype==1){
       detail=numbuckets/100;
       if(detail<1)detail=1;
-      mainimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity,detail);
+      mainimage(buckets,numbuckets,detail);
    }
    else if(imagetype==2){
       detail=numbuckets*1;
       if(detail<1)detail=1;
-      previewimage(buckets,numbuckets,maxz,minz,maxintensity,minintensity,detail);
+      previewimage(buckets,numbuckets,detail);
    }
    delete[] buckets;
    delete pointvector;
@@ -201,88 +223,75 @@ bool TwoDeeOverview::on_configure_event(GdkEventConfigure* event){
  *
  *
  * */
-bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity,int detail){
+bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
-   double x=0,y=0,z=0,intensity=0;
-   int bucketlimit = 100000;
-   float* vertices = new float[3*bucketlimit];
-   float* colours = new float[3*bucketlimit];
-   glEnableClientState(GL_VERTEX_ARRAY);
-   glEnableClientState(GL_COLOR_ARRAY);
-   glVertexPointer(3, GL_FLOAT, 0, vertices);
-   glColorPointer(3, GL_FLOAT, 0, colours);
-   for(int i=0;i<numbuckets;i++){
-      int count=0;
-      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){
-	 red = 0.0; green = 1.0; blue = 0.0;//For some reason, the colours go wrong if this is moved or removed.
-	 x = buckets[i]->points[j].x;
-	 y = buckets[i]->points[j].y;
-	 z = buckets[i]->points[j].z;
-	 intensity = buckets[i]->points[j].intensity;
-//	 if(heightcolour){
-//	    red = colourheightarray[3*(int)z];
-//	    green = colourheightarray[3*(int)z + 1];
-//	    blue = colourheightarray[3*(int)z + 2];
-//	 }
-//	 else if(intensitycolour){
-//	    red = colourintensityarray[3*(int)intensity];
-//	    green = colourintensityarray[3*(int)intensity + 1];
-//	    blue = colourintensityarray[3*(int)intensity + 2];
-//	 }
-//	 if(heightbrightness){
-//	    red *= brightnessheightarray[(int)z];
-//	    green *= brightnessheightarray[(int)z];
-//	    blue *= brightnessheightarray[(int)z];
-//	 }
-//	 else if(intensitybrightness){
-//	    red *= brightnessintensityarray[(int)intensity];
-//	    green *= brightnessintensityarray[(int)intensity];
-//	    blue *= brightnessintensityarray[(int)intensity];
-//	 }
-	 if(heightcolour){
-	    red = colourheightarray[3*(int)(z-rminz)];
-	    green = colourheightarray[3*(int)(z-rminz) + 1];
-	    blue = colourheightarray[3*(int)(z-rminz) + 2];
-	 }
-	 else if(intensitycolour){
-	    red = colourintensityarray[3*(int)(intensity-rminintensity)];
-	    green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-	    blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-	 }
-	 if(heightbrightness){
-	    red *= brightnessheightarray[(int)(z-rminz)];
-	    green *= brightnessheightarray[(int)(z-rminz)];
-	    blue *= brightnessheightarray[(int)(z-rminz)];
-	 }
-	 else if(intensitybrightness){
-	    red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	    green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	    blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	 }
-	 vertices[3*count]=x;
-	 vertices[3*count+1]=y;
-	 vertices[3*count+2]=z;
-	 colours[3*count]=red;
-	 colours[3*count+1]=green;
-	 colours[3*count+2]=blue;
-//	 glBegin(GL_POINTS);
-//	 glColor3d(red,green,blue);
-//	 glVertex3d(x,y,z);
-//	 glEnd();
+   double x=0,y=0,z=0;
+   int line=0,intensity=0;
+   float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
+   float* colours = new float[3*bucketlimit];//...
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+      int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
+      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
+         red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+         x = buckets[i]->points[j].x;
+         y = buckets[i]->points[j].y;
+         z = buckets[i]->points[j].z;
+         intensity = buckets[i]->points[j].intensity;
+         if(heightcolour){//Colour by elevation.
+            red = colourheightarray[3*(int)(z-rminz)];
+            green = colourheightarray[3*(int)(z-rminz) + 1];
+            blue = colourheightarray[3*(int)(z-rminz) + 2];
+         }
+         else if(intensitycolour){//Colour by intensity.
+            red = colourintensityarray[3*(int)(intensity-rminintensity)];
+            green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
+            blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
+         }
+         else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+             line = buckets[i]->points[j].flightline;
+             int index = line % 6;
+             switch(index){
+                case 0:red=0;green=1;blue=0;break;//Green
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=1;green=0;blue=0;break;//Red
+                case 3:red=0;green=1;blue=1;break;//Cyan
+                case 4:red=1;green=1;blue=0;break;//Yellow
+                case 5:red=1;green=0;blue=1;break;//Purple
+             }
+         }
+         if(heightbrightness){//Shade by height.
+            red *= brightnessheightarray[(int)(z-rminz)];
+            green *= brightnessheightarray[(int)(z-rminz)];
+            blue *= brightnessheightarray[(int)(z-rminz)];
+         }
+         else if(intensitybrightness){//Shade by intensity.
+            red *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            green *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
+         }
+         vertices[3*count]=x;
+         vertices[3*count+1]=y;
+         vertices[3*count+2]=z;
+         colours[3*count]=red;
+         colours[3*count+1]=green;
+         colours[3*count+2]=blue;
          count++;
       }
       glDrawArrays(GL_POINTS,0,count);
-      if (glwindow->is_double_buffered())glwindow->swap_buffers();
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
       else glFlush();
    }
-//   if(profiling){
-      glCallList(4);
-      if (glwindow->is_double_buffered())glwindow->swap_buffers();
-      else glFlush();
-//   }
+//   glCallList(4);
+   if(profiling)glCallList(4);//Draw the profile box if profile mode is on.
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
@@ -291,6 +300,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,
    return true;
 }
 
+//NOTE: This method is almost identical to the mainimage method. Only two lines are different, and could easily be replace with an if statement. The methods are kept separate as this one might change in the future to make it faster and/or more detailed.
 /*This method draws the preview used in panning etc.. Basically, if something must be drawn quickly, this method is used. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
  *
  *   for every bucket:
@@ -305,64 +315,71 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,double maxz,
  *
  *
  * */
-bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,double maxz,double minz,double maxintensity,double minintensity,int detail){
+bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
-   double x=0,y=0,z=0,intensity=0;
-   int bucketlimit = 100000;
-   float* vertices = new float[3*bucketlimit];
-   float* colours = new float[3*bucketlimit];
-   glEnableClientState(GL_VERTEX_ARRAY);
-   glEnableClientState(GL_COLOR_ARRAY);
-   glVertexPointer(3, GL_FLOAT, 0, vertices);
-   glColorPointer(3, GL_FLOAT, 0, colours);
-   for(int i=0;i<numbuckets;i++){
-      int count=0;
-      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){
-	 red = 0.0; green = 1.0; blue = 0.0;//For some reason, the colours go wrong if this is moved or removed.
-	 x = buckets[i]->points[j].x;
-	 y = buckets[i]->points[j].y;
-	 z = buckets[i]->points[j].z;
-	 intensity = buckets[i]->points[j].intensity;
-	 if(heightcolour){
-	    red = colourheightarray[3*(int)(z-rminz)];
-	    green = colourheightarray[3*(int)(z-rminz) + 1];
-	    blue = colourheightarray[3*(int)(z-rminz) + 2];
-	 }
-	 else if(intensitycolour){
-	    red = colourintensityarray[3*(int)(intensity-rminintensity)];
-	    green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-	    blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-	 }
-	 if(heightbrightness){
-	    red *= brightnessheightarray[(int)(z-rminz)];
-	    green *= brightnessheightarray[(int)(z-rminz)];
-	    blue *= brightnessheightarray[(int)(z-rminz)];
-	 }
-	 else if(intensitybrightness){
-	    red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	    green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	    blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-	 }
-	 vertices[3*count]=x;
-	 vertices[3*count+1]=y;
-	 vertices[3*count+2]=z;
-	 colours[3*count]=red;
-	 colours[3*count+1]=green;
-	 colours[3*count+2]=blue;
-//	 glBegin(GL_POINTS);
-//	 glColor3d(red,green,blue);
-//	 glVertex3d(x,y,z);
-//	 glEnd();
-	 count++;
+   double x=0,y=0,z=0;
+   int line=0,intensity=0;
+   float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
+   float* colours = new float[3*bucketlimit];//...
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+      int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
+      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
+         red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+         x = buckets[i]->points[j].x;
+         y = buckets[i]->points[j].y;
+         z = buckets[i]->points[j].z;
+         intensity = buckets[i]->points[j].intensity;
+         if(heightcolour){//Colour by elevation.
+            red = colourheightarray[3*(int)(z-rminz)];
+            green = colourheightarray[3*(int)(z-rminz) + 1];
+            blue = colourheightarray[3*(int)(z-rminz) + 2];
+         }
+         else if(intensitycolour){//Colour by intensity.
+            red = colourintensityarray[3*(int)(intensity-rminintensity)];
+            green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
+            blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
+         }
+         else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+             line = buckets[i]->points[j].flightline;
+             int index = line % 6;
+             switch(index){
+                case 0:red=0;green=1;blue=0;break;//Green
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=1;green=0;blue=0;break;//Red
+                case 3:red=0;green=1;blue=1;break;//Cyan
+                case 4:red=1;green=1;blue=0;break;//Yellow
+                case 5:red=1;green=0;blue=1;break;//Purple
+             }
+         }
+         if(heightbrightness){//Shade by height.
+            red *= brightnessheightarray[(int)(z-rminz)];
+            green *= brightnessheightarray[(int)(z-rminz)];
+            blue *= brightnessheightarray[(int)(z-rminz)];
+         }
+         else if(intensitybrightness){//Shade by intensity.
+            red *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            green *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
+         }
+         vertices[3*count]=x;
+         vertices[3*count+1]=y;
+         vertices[3*count+2]=z;
+         colours[3*count]=red;
+         colours[3*count+1]=green;
+         colours[3*count+2]=blue;
+         count++;
       }
       glDrawArrays(GL_POINTS,0,count);
-//      if (glwindow->is_double_buffered())glwindow->swap_buffers();
-//      else glFlush();
    }
-   glCallList(4);
+//   glCallList(4);
+   if(profiling)glCallList(4);//Draw the profile box if profile mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -373,45 +390,72 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,double ma
    return true;
 }
 
-void TwoDeeOverview::make_image(){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return;
-   glColor3f(0.0,1.0,0.0);
-   vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);
-   numbuckets = pointvector->size();
+//Prepares the arrays for looking up the colours and shades of the points.
+void TwoDeeOverview::coloursandshades(double maxz,double minz,int maxintensity,int minintensity){
+   delete[] colourheightarray;
+   delete[] colourintensityarray;
+   delete[] brightnessheightarray;
+   delete[] brightnessintensityarray;
+   double red=0.0,green=0.0,blue=0.0;
+   int z=0,intensity=0;
+   colourheightarray = new double[3*(int)(rmaxz-rminz+4)];
+   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height colour array:
+      z = i + (int)rminz;
+      colour_by(z,maxz,minz,red,green,blue);
+      colourheightarray[3*i]=red;
+      colourheightarray[3*i+1]=green;
+      colourheightarray[3*i+2]=blue;
+   }
+   colourintensityarray = new double[3*(int)(rmaxintensity-rminintensity+4)];
+   for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity colour array:
+      intensity = i + rminintensity;
+      colour_by(intensity,maxintensity,minintensity,red,green,blue);
+      colourintensityarray[3*i]=red;
+      colourintensityarray[3*i+1]=green;
+      colourintensityarray[3*i+2]=blue;
+   }
+   brightnessheightarray = new double[(int)(rmaxz-rminz+4)];
+   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
+      z = i + (int)rminz;
+      brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
+   }
+   brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
+   for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity brightness array:
+      intensity = i + rminintensity;
+      brightnessintensityarray[i] = brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor);
+   }
+}
+
+//This method prepares the image for drawing and sets up OpenGl. It gets the data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets ups anti-aliasing, clearing and the initial view.
+void TwoDeeOverview::prepare_image(){
+   vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
+   int numbuckets = pointvector->size();
    pointbucket** buckets = new pointbucket*[numbuckets];
    for(int i=0;i<numbuckets;i++){
       buckets[i]=pointvector->at(i);
    }
-   maxz = buckets[0]->maxz;
-   minz = buckets[0]->minz;
-   maxintensity = buckets[0]->maxintensity;
-   minintensity = buckets[0]->minintensity;
-   for(int i=0;i<numbuckets;i++){
-//Perhaps need a better method in order to find 10th and 90th percentiles instead:
+   double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
+   int maxintensity = buckets[0]->maxintensity,minintensity = buckets[0]->minintensity;
+   for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
       if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
       if(minz>buckets[i]->minz)minz = buckets[i]->minz;
       if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
       if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
    }
-   rmaxz = maxz;
-   rminz = minz;
-   rmaxintensity = maxintensity;
-   rminintensity = minintensity;
-   cout << rmaxz << " " << rminz << " " << rmaxintensity << " " <<rminintensity << endl;
+   rmaxz = maxz; rminz = minz;
+   rmaxintensity = maxintensity; rminintensity = minintensity;
    if(maxz<=minz)maxz=minz+1;
-   else{
+   else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the buckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
       double* zdata = new double[numbuckets];
       for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->maxz;
       double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
       for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->minz;
       double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
-//      maxz=(maxz+highperc)/2;
-//      minz=(minz+lowperc)/2;
       maxz=highperc;
       minz=lowperc;
       delete[] zdata;
    }
+//Might want this later:
 //   if(maxintensity<=minintensity)maxintensity=minintensity+1;
 //   else{
 //      double* intensitydata = new double[numbuckets];
@@ -423,58 +467,31 @@ void TwoDeeOverview::make_image(){
 //      minintensity=(minintensity+lowperc)/2;
 //      delete intensitydata;
 //   }
-   double red,green,blue;
-   int z=0;
-   int intensity=0;
-   colourheightarray = new double[3*(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){
-      red=0.0;green=0.0;blue=0.0;
-      z = i + (int)rminz;
-      colour_by(z,maxz,minz,red,green,blue);
-      colourheightarray[3*i]=red;
-      colourheightarray[3*i+1]=green;
-      colourheightarray[3*i+2]=blue;
-   }
-   colourintensityarray = new double[3*(int)(rmaxintensity-rminintensity+4)];
-   for(int i=0;i<(int)(rmaxintensity-rminintensity)+3;i++){
-      red=0.0;green=0.0;blue=0.0;
-      intensity = i + (int)rminintensity;
-      colour_by(intensity,maxintensity,minintensity,red,green,blue);
-      colourintensityarray[3*i]=red;
-      colourintensityarray[3*i+1]=green;
-      colourintensityarray[3*i+2]=blue;
-   }
-   brightnessheightarray = new double[(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){
-      z = i + (int)rminz;
-      brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
-   }
-   brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
-   for(int i=0;i<(int)(rmaxintensity-rminintensity)+3;i++){
-      intensity = i + (int)rminintensity;
-      brightnessintensityarray[i] = brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor);
-   }
+   coloursandshades(maxz,minz,maxintensity,minintensity);//Prepare colour and shading arrays.
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return;
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
-   glEnable(GL_POINT_SMOOTH);     //Antialiasing stuff, for use later, possibly.
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
+   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly.
+   glEnable(GL_LINE_SMOOTH);//...
+   glEnable(GL_BLEND);//...
+   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
+   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
+   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
    glViewport(0, 0, get_width(), get_height());
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
    resetview();
-   glwindow->gl_end();
    delete[] buckets;
    delete pointvector;
    glwindow->gl_end();
 }
 
+//Prepare the image when the widget is first realised.
 void TwoDeeOverview::on_realize(){
   Gtk::GL::DrawingArea::on_realize();
-  make_image();
+  prepare_image();
 }
 
+//Given maximum and minimum values, find out the colour a certain value should be mapped to.
 void TwoDeeOverview::colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3){//Following comments assume col1=red, col2=green and col3=blue.
   double range = maxvalue-minvalue;
   if(value<=minvalue+range/6){//Green to Yellow:
@@ -510,6 +527,7 @@ void TwoDeeOverview::colour_by(double value,double maxvalue,double minvalue,doub
   }
 }
 
+//Given maximum and minimum values, find out the brightness a certain value should be mapped to.
 double TwoDeeOverview::brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue){
   double multiplier = floorvalue + offsetvalue + (1.0 - offsetvalue)*(value-minvalue)/(maxvalue-minvalue);
   return multiplier;

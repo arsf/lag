@@ -10,6 +10,7 @@ using namespace std;
 quadtree* lidardata; 
 Gtk::ToggleToolButton *profiletoggle = NULL;
 TwoDeeOverview *tdo = NULL;
+int bucketlimit = 100000;
 
 void on_profiletoggle(){
    if(profiletoggle->get_active())tdo->setupprofile();
@@ -36,7 +37,7 @@ int GUIset(int argc,char *argv[]){
       refXml->get_widget("window2", window2);
       window2->set_title("Window2");
       window2->set_reallocate_redraws(true);
-      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata);
+      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
       tdo = tdo1;
       tdo->set_size_request(200,200);
 //      window2->add(tdo);
@@ -64,13 +65,11 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-//    LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proc_laser/LDR090601_110312_1.LAS");
-//    lidardata = new quadtree(loader,10000,0);
     LASloader* loader = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proc_laser/LDR090601_110650_1.LAS");
 
     LASloader* loader2 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proc_laser/LDR090601_111020_1.LAS");
     LASloader* loader3 = new LASloader("/users/rsg/arsf/workspace/GB08_12-2009_152a_Borth_Bog/leica/proc_laser/LDR090601_110312_1.LAS");
-    lidardata = new quadtree(loader,100000,0);
+    lidardata = new quadtree(loader,bucketlimit,0);
     lidardata->load(loader2,0);
     lidardata->load(loader3,0);
     
