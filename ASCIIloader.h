@@ -28,8 +28,8 @@ public:
    // see lidarpointloader.h
    ASCIIloader(const char *filename, const char *formatstring);
    ~ASCIIloader();
-   int load(int n, int nth, point *points, double minX, double minY, double maxX, double maxY);
-   int load(int n, int nth, point *points);
+   int load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY);
+   int load(int n, int nth, point *points, int flightlinenum);
    // WARNING: placeholder
    bool compatibleCheck(const char *filename){return false;};
    boundary* getboundary();

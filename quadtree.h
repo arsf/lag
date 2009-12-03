@@ -21,7 +21,7 @@ using namespace std;
 class quadtree{
     quadtreenode *root;   
     int capacity;
-    
+    int flightlinenum;
 public:
    // constructor that builds a new tree from a loader object
    quadtree(lidarpointloader *l, int cap, int nth);

@@ -31,7 +31,7 @@ ASCIIloader::~ASCIIloader()
 }
    
    
-int ASCIIloader::load(int n, int nth, point *points, double minX, double minY, double maxX, double maxY)
+int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY)
 {
    
    
@@ -45,7 +45,7 @@ int ASCIIloader::load(int n, int nth, point *points, double minX, double minY, d
    char *tok;
    char line[300];
    
-
+   temp.flightline = flightlinenum;
    // get each line till enough points are loaded or the file ends
    while (pointcounter != n && fgets(line, 300, fp) != NULL) 
    {
@@ -142,7 +142,7 @@ int ASCIIloader::load(int n, int nth, point *points, double minX, double minY, d
 }
    
    
-int ASCIIloader::load(int n, int nth, point *points)
+int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
 {
 
    
@@ -156,7 +156,7 @@ int ASCIIloader::load(int n, int nth, point *points)
    int pointcounter = 0;
    char *tok;
    char line[300];
-   
+   temp.flightline = flightlinenum;
    
    // get each line till enough points are loaded or the file ends
    while (pointcounter != n && fgets(line, 300, fp) != NULL) 

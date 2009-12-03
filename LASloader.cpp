@@ -22,7 +22,7 @@ LASloader::~LASloader()
 }
 
 
-int LASloader::load(int n, int nth, point *points, double minX, double minY, double maxX, double maxY)
+int LASloader::load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY)
 {
 
    point temp;
@@ -30,6 +30,7 @@ int LASloader::load(int n, int nth, point *points, double minX, double minY, dou
    int pointcounter=0;
    static int numpoints;
    liblas::LASPoint p;
+   temp.flightline = flightlinenum;
    // for each point
    while (reader->ReadNextPoint() && pointcounter < n)
    {
@@ -77,14 +78,14 @@ int LASloader::load(int n, int nth, point *points, double minX, double minY, dou
 }
 
 
-int LASloader::load(int n, int nth, point *points)
+int LASloader::load(int n, int nth, point *points, int flightlinenum)
 {
    static int numpoints;
    point temp;
    int counter = 0;
    int pointcounter=0;
-   
    liblas::LASPoint p;
+   temp.flightline = flightlinenum;
    // for each point
    while (pointcounter < n && reader->ReadNextPoint())
    {
