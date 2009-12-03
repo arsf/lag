@@ -43,7 +43,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 quadtree::quadtree(double sx, double sy, double bx, double by, int cap)
 {
    capacity = cap;
-
+   flightlinenum=-1;
    root = new quadtreenode(sx,sy,bx,by,capacity);
 }
 

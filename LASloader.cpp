@@ -56,8 +56,6 @@ int LASloader::load(int n, int nth, point *points, int flightlinenum, double min
       temp.x = p.GetX() ;
       temp.y = p.GetY() ;
       temp.z = p.GetZ() ;
-      temp.classification = p.GetClassification();
-      temp.flightline = linecounter;
       temp.intensity = p.GetIntensity();
       temp.rnumber = p.GetReturnNumber();
       temp.time = p.GetTime();
@@ -104,7 +102,6 @@ int LASloader::load(int n, int nth, point *points, int flightlinenum)
       temp.y = p.GetY() ;
       temp.z = p.GetZ() ;
       temp.classification = p.GetClassification();
-      temp.flightline = linecounter;
       temp.intensity = p.GetIntensity();
       temp.rnumber = p.GetReturnNumber();
       temp.time = p.GetTime();
