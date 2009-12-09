@@ -22,9 +22,7 @@ class LASloader : public lidarpointloader
    ifstream ifs;
    liblas::LASReader *reader;
    liblas::LASHeader  header;
-public:
-   int linecounter;
-   
+public:   
    // see lidarpointloader.h
    LASloader(const char *filename);
    ~LASloader();

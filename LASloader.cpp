@@ -10,6 +10,10 @@ LASloader::LASloader(const char *filename)
 {
    this->filename = filename;
    ifs.open (filename, std::ios::in | std::ios::binary);
+   if(!ifs.is_open())
+   {
+      throw "could not open file";
+   }
    reader = new liblas::LASReader(ifs);
    header = reader->GetHeader();
    
