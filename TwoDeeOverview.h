@@ -9,6 +9,8 @@ class TwoDeeOverview : public Gtk::GL::DrawingArea
 public:
   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
   ~TwoDeeOverview();
+  bool drawviewable(int imagetype);//Draw the viewable part of the image.
+  void makeprofbox();
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -32,7 +34,30 @@ public:
       profiling=false;
       drawviewable(1);
    }
+   //Getters:
+   void getprofile(double &startx,double &starty,double &endx,double &endy,double &width){//Get coordinates for profile.
+      startx = profstartx;
+      starty = profstarty;
+      endx = profendx;
+      endy = profendy;
+      width = profwidth;
+   }
+   //Setters:
+   void setprofwidth(double profwidth){this->profwidth = profwidth;}
+   void setshowprofile(double showprofile){this->showprofile = showprofile;}
 protected:
+  bool classcolour;
+  bool returncolour;
+//  Glib::RefPtr<Gdk::GC> 2dcontext;
+//  Glib::RefPtr<Gdk::GC> pixmapcontext;
+//  Glib::RefPtr<Gdk::Pixmap> pixmap;
+  Glib::RefPtr<Gdk::GC> tdcontext;
+  Glib::RefPtr<Gdk::GC> pixmapcontext;
+  Glib::RefPtr<Gdk::Pixmap> pixmap;
+  Glib::RefPtr<Gdk::GL::Pixmap> glpixmap;
+  Glib::RefPtr<Gdk::GL::Config> glconfig;
+  Glib::RefPtr<Gdk::GL::Context> glcontext;
+  double opanstartx,opanstarty;
   //Point data and related stuff:
   quadtree* lidardata;//The point data is stored here.
   boundary* lidarboundary;//This stores the boundary of the file opened.
@@ -66,6 +91,7 @@ protected:
   double profendx, profendy;//The end coordinates for the profile.
   double profwidth;//The width of the profile.
   bool profiling;//Determines whether or not the profile should be drawn.
+  bool showprofile;
 
   //Signal handlers:
   //Panning:
@@ -83,7 +109,6 @@ protected:
   void prepare_image();//Reads from subset of quadtree and prepares image for drawing.
   bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
   bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
-  bool drawviewable(int imagetype);//Draw the viewable part of the image.
   bool on_configure_event(GdkEventConfigure* event);//Handles resizing of the window. Calls resetview().
   bool on_expose_event(GdkEventExpose* event);//Calls draw on an exose event.
 
@@ -104,13 +129,6 @@ protected:
    bool on_prof_start(GdkEventButton* event);
    bool on_prof(GdkEventMotion* event);
    bool on_prof_end(GdkEventButton* event);
-   void getprofile(double &startx,double &starty,double &endx,double &endy,double &width){//Get coordinates for profile.
-      startx = profstartx;
-      starty = profstarty;
-      endx = profendx;
-      endy = profendy;
-      width = profwidth;
-   }
 
    
 };

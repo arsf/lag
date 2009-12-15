@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Nov 25 13:54:15 2009 -->
+<!--Generated with glade3 3.4.5 on Tue Dec 15 16:03:22 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -195,6 +195,46 @@
                     <property name="homogeneous">True</property>
                   </packing>
                 </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="showprofiletoggle">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Show profile box</property>
+                    <property name="stock_id">gtk-media-stop</property>
+                  </widget>
+                  <packing>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolItem" id="toolbutton2">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox3">
+                        <property name="visible">True</property>
+                        <child>
+                          <widget class="GtkSpinButton" id="profwidthselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 10</property>
+                            <property name="digits">2</property>
+                          </widget>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="profwidthlabel">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Profile width</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
               </widget>
             </child>
           </widget>
@@ -211,7 +251,12 @@
   <widget class="GtkWindow" id="window3">
     <property name="destroy_with_parent">True</property>
     <child>
-      <placeholder/>
+      <widget class="GtkVBox" id="vboxprof">
+        <property name="visible">True</property>
+        <child>
+          <placeholder/>
+        </child>
+      </widget>
     </child>
   </widget>
   <widget class="GtkWindow" id="window4">

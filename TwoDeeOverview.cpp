@@ -9,7 +9,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include "TwoDeeOverview.h"
-#include "MathFuncs.cpp"
+#include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
@@ -17,6 +17,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    zoomlevel=1;
    profwidth=30;
    profiling=false;
+   showprofile=false;
    this->bucketlimit = bucketlimit;
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
@@ -43,10 +44,18 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    rmaxz=rminz=0;
    rmaxintensity=rminintensity=0;
    linecolour = true;
+   classcolour = false;
+   returncolour = false;
    colourheightarray = new double[2];
    colourintensityarray = new double[2];
    brightnessheightarray = new double[2];
    brightnessintensityarray = new double[2];
+   //OpenGl initialisation:
+//   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
+//   if (glconfig==NULL){
+//       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
+//       if(glconfig==NULL)std::exit(1);
+//   }
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
@@ -67,13 +76,27 @@ TwoDeeOverview::~TwoDeeOverview(){
 
 //This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area using offsets from the centre. *ratio*zoomlevel is there to convert screen dimensions to image dimensions.
 void TwoDeeOverview::resetview(){
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(centrex-(get_width()/2)*ratio/zoomlevel,
-          centrex+(get_width()/2)*ratio/zoomlevel,
-          centrey-(get_height()/2)*ratio/zoomlevel,
-          centrey+(get_height()/2)*ratio/zoomlevel,
-          -1000.0,50000.0);
+//  glMatrixMode(GL_PROJECTION);
+//  glLoadIdentity();
+//  glOrtho(centrex-(get_width()/2)*ratio/zoomlevel,
+//          centrex+(get_width()/2)*ratio/zoomlevel,
+//          centrey-(get_height()/2)*ratio/zoomlevel,
+//          centrey+(get_height()/2)*ratio/zoomlevel,
+//          -1000.0,50000.0);
+//   glMatrixMode(GL_MODELVIEW);
+//   glLoadIdentity();
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   glOrtho(-(get_width()/2)*ratio/zoomlevel,
+           +(get_width()/2)*ratio/zoomlevel,
+           -(get_height()/2)*ratio/zoomlevel,
+           +(get_height()/2)*ratio/zoomlevel,
+           -1000.0,50000.0);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   gluLookAt(centrex,centrey,0,
+             centrex,centrey,-100,
+             0,1,0);
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
@@ -84,6 +107,10 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    if(event->button==1){
       panstartx = event->x;
       panstarty = event->y;
+//      opanstartx = event->x;
+//      opanstarty = event->y;
+//      pixmapcontext = Gdk::GC::create(pixmap);
+//      pixmap->draw_drawable(pixmapcontext,this->get_window(),0,0,0,0,-1,-1);
    }
    return true;
 }
@@ -95,6 +122,12 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       panstartx=event->x;
       panstarty=event->y;
+//      tdcontext = Gdk::GC::create(this->get_window());
+//      int widthchange = event->x-opanstartx;
+//      int heightchange = event->y-opanstarty;
+//      if(widthchange<0)widthchange=-widthchange;
+//      if(heightchange<0)heightchange=-heightchange;
+//      this->get_window()->draw_drawable(tdcontext,pixmap,0,0,event->x-opanstartx,event->y-opanstarty,get_width()-widthchange,get_height()-heightchange);
       resetview();
       return drawviewable(2);
 }
@@ -109,15 +142,16 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   glNewList(4,GL_COMPILE);
-   glColor3f(1.0,1.0,1.0);
-   glBegin(GL_LINE_LOOP);
-      glVertex3d(profstartx-profwidth/2,profstarty,-0.1);
-      glVertex3d(profstartx-profwidth/2,profendy,-0.1);
-      glVertex3d(profendx+profwidth/2,profendy,-0.1);
-      glVertex3d(profendx+profwidth/2,profstarty,-0.1);
-   glEnd();
-   glEndList();
+//   glNewList(4,GL_COMPILE);
+//   glColor3f(1.0,1.0,1.0);
+//   glBegin(GL_LINE_LOOP);
+//      glVertex3d(profstartx-profwidth/2,profstarty,-0.1);
+//      glVertex3d(profstartx-profwidth/2,profendy,-0.1);
+//      glVertex3d(profendx+profwidth/2,profendy,-0.1);
+//      glVertex3d(profendx+profwidth/2,profstarty,-0.1);
+//   glEnd();
+//   glEndList();
+   makeprofbox();
    return drawviewable(2);
 }
 
@@ -125,9 +159,18 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   makeprofbox();
+   return drawviewable(2);
+}
+
+//Draw the full image at the end of selecting a profile.
+bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
+
+void TwoDeeOverview::makeprofbox(){
    double breadth = profendx - profstartx;
    double height = profendy - profstarty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   if(length==0)length=1;
    glNewList(4,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINE_LOOP);
@@ -137,19 +180,23 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
       glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,-0.1);
    glEnd();
    glEndList();
-   return drawviewable(2);
 }
-
-//Draw the full image at the end of selecting a profile.
-bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the dat to the screen.
 bool TwoDeeOverview::drawviewable(int imagetype){
+  glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
    double minx = centrex-get_width()/2*ratio/zoomlevel;
    double maxx = centrex+get_width()/2*ratio/zoomlevel;
    double miny = centrey-get_height()/2*ratio/zoomlevel;
    double maxy = centrey+get_height()/2*ratio/zoomlevel;
-   vector<pointbucket*> *pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+   vector<pointbucket*> *pointvector;
+   try{
+      pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+   }catch(const char* e){
+      cout << e << endl;
+      cout << "No points returned." << endl;
+      return false;
+   }
    int numbuckets = pointvector->size();
    pointbucket** buckets = new pointbucket*[numbuckets];
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -229,7 +276,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
    double x=0,y=0,z=0;
-   int line=0,intensity=0;
+   int line=0,intensity=0,classification,rnumber;
    float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
    float* colours = new float[3*bucketlimit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
@@ -245,9 +292,9 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
          z = buckets[i]->points[j].z;
          intensity = buckets[i]->points[j].intensity;
          if(heightcolour){//Colour by elevation.
-            red = colourheightarray[3*(int)(z-rminz)];
-            green = colourheightarray[3*(int)(z-rminz) + 1];
-            blue = colourheightarray[3*(int)(z-rminz) + 2];
+            red = colourheightarray[3*(int)(10*(z-rminz))];
+            green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
+            blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
          }
          else if(intensitycolour){//Colour by intensity.
             red = colourintensityarray[3*(int)(intensity-rminintensity)];
@@ -264,6 +311,37 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                 case 3:red=0;green=1;blue=1;break;//Cyan
                 case 4:red=1;green=1;blue=0;break;//Yellow
                 case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
+             }
+         }
+         else if(classcolour){//Colour by classification.
+             classification = buckets[i]->points[j].classification;
+             int index = classification;
+             switch(index){
+                case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
+                case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
+                case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
+                case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
+                case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
+                case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
+                case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+
+                case 9:red=0;green=0;blue=1;break;//Blue for water.
+                case 12:red=1;green=1;blue=1;break;//White for overlap points.
+                default:red=1;green=1;blue=1;cout << "Undefined point." << endl;break;//Yellow for undefined.
+             }
+         }
+         else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+             rnumber = buckets[i]->points[j].rnumber;
+             int index = rnumber;
+             switch(index){
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=0;green=1;blue=1;break;//Cyan
+                case 3:red=0;green=1;blue=0;break;//Green
+                case 4:red=1;green=0;blue=0;break;//Red
+                case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
              }
          }
          if(heightbrightness){//Shade by height.
@@ -289,7 +367,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       else glFlush();
    }
 //   glCallList(4);
-   if(profiling)glCallList(4);//Draw the profile box if profile mode is on.
+   if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -321,7 +399,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
    glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
    double x=0,y=0,z=0;
-   int line=0,intensity=0;
+   int line=0,intensity=0,classification,rnumber;
    float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
    float* colours = new float[3*bucketlimit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
@@ -337,9 +415,9 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
          z = buckets[i]->points[j].z;
          intensity = buckets[i]->points[j].intensity;
          if(heightcolour){//Colour by elevation.
-            red = colourheightarray[3*(int)(z-rminz)];
-            green = colourheightarray[3*(int)(z-rminz) + 1];
-            blue = colourheightarray[3*(int)(z-rminz) + 2];
+            red = colourheightarray[3*(int)(10*(z-rminz))];
+            green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
+            blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
          }
          else if(intensitycolour){//Colour by intensity.
             red = colourintensityarray[3*(int)(intensity-rminintensity)];
@@ -356,6 +434,37 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
                 case 3:red=0;green=1;blue=1;break;//Cyan
                 case 4:red=1;green=1;blue=0;break;//Yellow
                 case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
+             }
+         }
+         else if(classcolour){//Colour by classification.
+             classification = buckets[i]->points[j].classification;
+             int index = classification;
+             switch(index){
+                case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
+                case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
+                case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
+                case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
+                case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
+                case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
+                case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+
+                case 9:red=0;green=0;blue=1;break;//Blue for water.
+                case 12:red=1;green=1;blue=1;break;//White for overlap points.
+                default:red=1;green=1;blue=1;cout << "Undefined point." << endl;break;//Yellow for undefined.
+             }
+         }
+         else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+             rnumber = buckets[i]->points[j].rnumber;
+             int index = rnumber;
+             switch(index){
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=0;green=1;blue=1;break;//Cyan
+                case 3:red=0;green=1;blue=0;break;//Green
+                case 4:red=1;green=0;blue=0;break;//Red
+                case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
              }
          }
          if(heightbrightness){//Shade by height.
@@ -379,7 +488,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
       glDrawArrays(GL_POINTS,0,count);
    }
 //   glCallList(4);
-   if(profiling)glCallList(4);//Draw the profile box if profile mode is on.
+   if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -397,10 +506,10 @@ void TwoDeeOverview::coloursandshades(double maxz,double minz,int maxintensity,i
    delete[] brightnessheightarray;
    delete[] brightnessintensityarray;
    double red=0.0,green=0.0,blue=0.0;
-   int z=0,intensity=0;
-   colourheightarray = new double[3*(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height colour array:
-      z = i + (int)rminz;
+   double z=0,intensity=0;
+   colourheightarray = new double[30*(int)(rmaxz-rminz+4)];
+   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++){//Fill height colour array:
+      z = 0.1*(double)i + rminz;
       colour_by(z,maxz,minz,red,green,blue);
       colourheightarray[3*i]=red;
       colourheightarray[3*i+1]=green;
@@ -428,7 +537,15 @@ void TwoDeeOverview::coloursandshades(double maxz,double minz,int maxintensity,i
 
 //This method prepares the image for drawing and sets up OpenGl. It gets the data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets ups anti-aliasing, clearing and the initial view.
 void TwoDeeOverview::prepare_image(){
-   vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
+   vector<pointbucket*> *pointvector;
+   try{
+      pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
+   }catch(const char* e){
+      cout << e << endl;
+      cout << "No points returned." << endl;
+      return;
+   }
+//   vector<pointbucket*> *pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
    int numbuckets = pointvector->size();
    pointbucket** buckets = new pointbucket*[numbuckets];
    for(int i=0;i<numbuckets;i++){
@@ -488,6 +605,8 @@ void TwoDeeOverview::prepare_image(){
 //Prepare the image when the widget is first realised.
 void TwoDeeOverview::on_realize(){
   Gtk::GL::DrawingArea::on_realize();
+  glcontext = Gdk::GL::Context::create(this->get_gl_window(),true,Gdk::GL::RGBA_TYPE);
+  cout << this->get_gl_window()->make_current(glcontext) << endl;
   prepare_image();
 }
 
