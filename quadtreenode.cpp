@@ -199,7 +199,7 @@ bool quadtreenode::insert(point newP)
    }
    else
    {
-      // if the node has overflown and is a leaf
+      // if the node has overflowed and is a leaf
       if ((currentCap + 1) > capacity && leaf == true)
       {
          // this bucket is full, create four new buckets
@@ -543,7 +543,7 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
    // finally the four lines of the subset are compared to each of the four lines of
    // the node bounding box to check if there are any intersections between the 
    // two boxes. this covers situations where none of the subset points fall within
-   // the node boundary or visa versa (for instance where the two boxes form a cross)
+   // the node boundary and visa versa (for instance where the two boxes form a cross)
    if(lineintersect(x1,y1,x2,y2,minX,minY,minX,maxY) ||
    lineintersect(x1,y1,x2,y2,minX,maxY,maxX,maxY) ||
    lineintersect(x1,y1,x2,y2,maxX,maxY,maxX,minY) ||

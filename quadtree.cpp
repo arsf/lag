@@ -182,7 +182,7 @@ void quadtree::load(lidarpointloader *l, int nth)
 {
    // get new flight boundary
    boundary *nb = l->getboundary();
-   
+   //int hackcounter = 0;
    // size of each block of points loaded
    int arraysize = 10000;
    
@@ -203,12 +203,12 @@ void quadtree::load(lidarpointloader *l, int nth)
       {
          insert(temp[k]);
       }
-     
+      //hackcounter+=pointcounter;
    }
    while (pointcounter == arraysize);
    
 
-
+  // cout << "hackcounter says \"" << hackcounter <<" have just been loaded\"" << endl;
    
    delete[] temp;
 }
