@@ -33,6 +33,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    if(xratio>yratio)ratio = xratio;
    else ratio = yratio;
    //Colouring and shading:
+//   heightcolour = true;
    heightcolour = false;
    heightbrightness = false;
    zoffset=0;
@@ -43,6 +44,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    intensityfloor = 0;
    rmaxz=rminz=0;
    rmaxintensity=rminintensity=0;
+//   linecolour = false;
    linecolour = true;
    classcolour = false;
    returncolour = false;
@@ -91,7 +93,7 @@ void TwoDeeOverview::resetview(){
            +(get_width()/2)*ratio/zoomlevel,
            -(get_height()/2)*ratio/zoomlevel,
            +(get_height()/2)*ratio/zoomlevel,
-           -1000.0,50000.0);
+           -100000.0,50000.0);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    gluLookAt(centrex,centrey,0,
@@ -129,6 +131,11 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 //      if(heightchange<0)heightchange=-heightchange;
 //      this->get_window()->draw_drawable(tdcontext,pixmap,0,0,event->x-opanstartx,event->y-opanstarty,get_width()-widthchange,get_height()-heightchange);
       resetview();
+//   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+//   if (!glwindow->gl_begin(get_gl_context()))return false;
+//  glViewport(-100, -100, get_width()-100, get_height()-100);//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
+//   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+//   else glFlush();
       return drawviewable(2);
 }
 
@@ -174,10 +181,10 @@ void TwoDeeOverview::makeprofbox(){
    glNewList(4,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINE_LOOP);
-      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,-0.1);
-      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,-0.1);
-      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,-0.1);
-      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,-0.1);
+      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,40000);
+      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,40000);
+      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,40000);
+      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,40000);
    glEnd();
    glEndList();
 }
@@ -273,7 +280,7 @@ bool TwoDeeOverview::on_configure_event(GdkEventConfigure* event){
 bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
    double x=0,y=0,z=0;
    int line=0,intensity=0,classification,rnumber;
@@ -396,7 +403,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
 bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT);//Need to clear screen because of gaps.
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
    double red,green,blue;
    double x=0,y=0,z=0;
    int line=0,intensity=0,classification,rnumber;
@@ -589,12 +596,14 @@ void TwoDeeOverview::prepare_image(){
    if (!glwindow->gl_begin(get_gl_context()))return;
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
-   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly.
-   glEnable(GL_LINE_SMOOTH);//...
-   glEnable(GL_BLEND);//...
-   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
-   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
-   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
+//   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly.
+//   glEnable(GL_LINE_SMOOTH);//...
+//   glEnable(GL_BLEND);//...
+//   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
+//   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
+//   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
+//   glPointSize(50);
+   glEnable(GL_DEPTH_TEST);
    glViewport(0, 0, get_width(), get_height());
    resetview();
    delete[] buckets;

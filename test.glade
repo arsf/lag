@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Dec 15 16:03:22 2009 -->
+<!--Generated with glade3 3.4.5 on Wed Dec 16 11:55:19 2009 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -253,6 +253,43 @@
     <child>
       <widget class="GtkVBox" id="vboxprof">
         <property name="visible">True</property>
+        <child>
+          <widget class="GtkHandleBox" id="handlebox2">
+            <property name="visible">True</property>
+            <child>
+              <widget class="GtkToolbar" id="toolbar3">
+                <property name="visible">True</property>
+                <child>
+                  <widget class="GtkToggleToolButton" id="rulertoggle">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Ruler</property>
+                    <property name="stock_id">gtk-justify-fill</property>
+                  </widget>
+                  <packing>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolItem" id="toolbutton3">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkLabel" id="rulerlabel">
+                        <property name="visible">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+              </widget>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+          </packing>
+        </child>
         <child>
           <placeholder/>
         </child>

@@ -1,10 +1,13 @@
 #For normal use (has optimisation):
-g++ -o test.out -O4 -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp
+g++ -o test.out -O4 -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp commonfunctions.cpp ASCIIloader.cpp
 #For profiling WITH optimisation:
 #g++ -O4 -pg -o profilingtestopt.out -lpthread -Wall -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0` test.cpp
 #For profiling WITHOUT optimisation:
-#g++ -pg -g -o profilingtest.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp  Profile.cpp MathFuncs.cpp
+#g++ -pg -g -o profilingtest.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp  Profile.cpp MathFuncs.cpp commonfunctions.cpp ASCIIloader.cpp
+
 #For testing without optimisation and WITH debugging symbols:
-#g++ -o testdebug -g -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp
+#g++ -o testdebug -g -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp commonfunctions.cpp ASCIIloader.cpp
+
 #For use with gcov:
-#g++ -pg -fprofile-arcs -ftest-coverage -o coveragetest.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp
+#g++ -pg -fprofile-arcs -ftest-coverage -o coveragetest.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` test.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp commonfunctions.cpp ASCIIloader.cpp
+
