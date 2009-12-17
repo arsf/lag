@@ -14,37 +14,40 @@
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    lidarboundary = lidardata->getboundary();
-   zoomlevel=1;
+   this->bucketlimit = bucketlimit;
+   maindetailmod = 0.01;
+   previewdetailmod = 1;
+   //Initial state:
+   double xdif = lidarboundary->maxX-lidarboundary->minX;
+   double ydif = lidarboundary->maxY-lidarboundary->minY;
+      //Initial centre:
+      centrex = lidarboundary->minX+xdif/2;
+      centrey = lidarboundary->minY+ydif/2;
+      //Scaling to screen dimensions:
+      double swidth = get_screen()->get_width();
+      double sheight = get_screen()->get_height();
+      double xratio = xdif/swidth;
+      double yratio = ydif/sheight;
+      yratio*=1.25;
+      ratio = 0;
+      if(xratio>yratio)ratio = xratio;
+      else ratio = yratio;
+      zoomlevel=1;
+   //Profiling:
    profwidth=30;
    profiling=false;
    showprofile=false;
-   this->bucketlimit = bucketlimit;
-   double xdif = lidarboundary->maxX-lidarboundary->minX;
-   double ydif = lidarboundary->maxY-lidarboundary->minY;
-   centrex = lidarboundary->minX+xdif/2;
-   centrey = lidarboundary->minY+ydif/2;
-   //Scaling to screen dimensions:
-   double swidth = get_screen()->get_width();
-   double sheight = get_screen()->get_height();
-   double xratio = xdif/swidth;
-   double yratio = ydif/sheight;
-   yratio*=1.25;
-   ratio = 0;
-   if(xratio>yratio)ratio = xratio;
-   else ratio = yratio;
    //Colouring and shading:
-//   heightcolour = true;
    heightcolour = false;
    heightbrightness = false;
    zoffset=0;
    zfloor=0.25;
+   rmaxz=rminz=0;
    intensitycolour = false;
    intensitybrightness = true;
    intensityoffset = 0.0/3;
    intensityfloor = 0;
-   rmaxz=rminz=0;
    rmaxintensity=rminintensity=0;
-//   linecolour = false;
    linecolour = true;
    classcolour = false;
    returncolour = false;
@@ -52,12 +55,6 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    colourintensityarray = new double[2];
    brightnessheightarray = new double[2];
    brightnessintensityarray = new double[2];
-   //OpenGl initialisation:
-//   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
-//   if (glconfig==NULL){
-//       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
-//       if(glconfig==NULL)std::exit(1);
-//   }
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
@@ -74,26 +71,22 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
 
 TwoDeeOverview::~TwoDeeOverview(){
    delete[] colourheightarray;
+   delete[] colourintensityarray;
+   delete[] brightnessheightarray;
+   delete[] brightnessintensityarray;
 }
 
-//This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area using offsets from the centre. *ratio*zoomlevel is there to convert screen dimensions to image dimensions.
+//This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio*zoomlevel is there to convert screen dimensions to image dimensions. gluLookAt is then used so that the viewpoint is that of seeing the centre from above, with North being up.
 void TwoDeeOverview::resetview(){
-//  glMatrixMode(GL_PROJECTION);
-//  glLoadIdentity();
-//  glOrtho(centrex-(get_width()/2)*ratio/zoomlevel,
-//          centrex+(get_width()/2)*ratio/zoomlevel,
-//          centrey-(get_height()/2)*ratio/zoomlevel,
-//          centrey+(get_height()/2)*ratio/zoomlevel,
-//          -1000.0,50000.0);
-//   glMatrixMode(GL_MODELVIEW);
-//   glLoadIdentity();
+   double altitude = rmaxz+5000;
+   double depth = rminz-5000;
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glOrtho(-(get_width()/2)*ratio/zoomlevel,
            +(get_width()/2)*ratio/zoomlevel,
            -(get_height()/2)*ratio/zoomlevel,
            +(get_height()/2)*ratio/zoomlevel,
-           -100000.0,50000.0);
+           -altitude,-depth);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    gluLookAt(centrex,centrey,0,
@@ -109,33 +102,17 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    if(event->button==1){
       panstartx = event->x;
       panstarty = event->y;
-//      opanstartx = event->x;
-//      opanstarty = event->y;
-//      pixmapcontext = Gdk::GC::create(pixmap);
-//      pixmap->draw_drawable(pixmapcontext,this->get_window(),0,0,0,0,-1,-1);
    }
    return true;
 }
 
-//As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
+//As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview). The button is not defined here as it is defined in the /glade file.
 bool TwoDeeOverview::on_pan(GdkEventMotion* event){
-//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       centrex -= (event->x-panstartx)*ratio/zoomlevel;
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       panstartx=event->x;
       panstarty=event->y;
-//      tdcontext = Gdk::GC::create(this->get_window());
-//      int widthchange = event->x-opanstartx;
-//      int heightchange = event->y-opanstarty;
-//      if(widthchange<0)widthchange=-widthchange;
-//      if(heightchange<0)heightchange=-heightchange;
-//      this->get_window()->draw_drawable(tdcontext,pixmap,0,0,event->x-opanstartx,event->y-opanstarty,get_width()-widthchange,get_height()-heightchange);
       resetview();
-//   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-//   if (!glwindow->gl_begin(get_gl_context()))return false;
-//  glViewport(-100, -100, get_width()-100, get_height()-100);//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
-//   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-//   else glFlush();
       return drawviewable(2);
 }
 
@@ -149,15 +126,6 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-//   glNewList(4,GL_COMPILE);
-//   glColor3f(1.0,1.0,1.0);
-//   glBegin(GL_LINE_LOOP);
-//      glVertex3d(profstartx-profwidth/2,profstarty,-0.1);
-//      glVertex3d(profstartx-profwidth/2,profendy,-0.1);
-//      glVertex3d(profendx+profwidth/2,profendy,-0.1);
-//      glVertex3d(profendx+profwidth/2,profstarty,-0.1);
-//   glEnd();
-//   glEndList();
    makeprofbox();
    return drawviewable(2);
 }
@@ -173,29 +141,31 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
 
+//This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then prepares a rectangle for drawing from this.
 void TwoDeeOverview::makeprofbox(){
    double breadth = profendx - profstartx;
    double height = profendy - profstarty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
    if(length==0)length=1;
    glNewList(4,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINE_LOOP);
-      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,40000);
-      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,40000);
-      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,40000);
-      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,40000);
+      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,altitude);
+      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,altitude);
+      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,altitude);
+      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,altitude);
    glEnd();
    glEndList();
 }
 
-//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the dat to the screen.
+//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool TwoDeeOverview::drawviewable(int imagetype){
-  glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
-   double minx = centrex-get_width()/2*ratio/zoomlevel;
-   double maxx = centrex+get_width()/2*ratio/zoomlevel;
-   double miny = centrey-get_height()/2*ratio/zoomlevel;
-   double maxy = centrey+get_height()/2*ratio/zoomlevel;
+  glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way, which probably involves using separate contexts somehow.
+   double minx = centrex-get_width()/2*ratio/zoomlevel;//Limits of viewable area:
+   double maxx = centrex+get_width()/2*ratio/zoomlevel;//...
+   double miny = centrey-get_height()/2*ratio/zoomlevel;//...
+   double maxy = centrey+get_height()/2*ratio/zoomlevel;//...
    vector<pointbucket*> *pointvector;
    try{
       pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
@@ -209,25 +179,14 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
       buckets[i]=pointvector->at(i);
    }
-//This is for possible use later if it is needed to see how heights vary only in the viewable area:
-//   double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
-//   double maxintensity = buckets[0]->maxintensity;
-//   double minintensity = buckets[0]->minintensity;
-//   for(unsigned long int i=0;i<numbuckets;i++){
-////Perhaps need a better method in order to find 10th and 90th percentiles instead:
-//      if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
-//      if(minz>buckets[i]->minz)minz = buckets[i]->minz;
-//      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
-//      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
-//   }
    int detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
    if(imagetype==1){
-      detail=numbuckets/100;
+      detail=(int)(numbuckets*maindetailmod);
       if(detail<1)detail=1;
       mainimage(buckets,numbuckets,detail);
    }
    else if(imagetype==2){
-      detail=numbuckets*1;
+      detail=(int)(numbuckets*previewdetailmod);
       if(detail<1)detail=1;
       previewimage(buckets,numbuckets,detail);
    }

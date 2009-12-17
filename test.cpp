@@ -19,6 +19,7 @@ TwoDeeOverview *tdo = NULL;
 Profile *prof = NULL;
 Gtk::SpinButton *profwidthselect = NULL;
 int bucketlimit = 100000;
+string exename = "";
 
 void on_profiletoggle(){
    if(profiletoggle->get_active())tdo->setupprofile();
@@ -49,8 +50,21 @@ void on_profwidthselected(){
 int GUIset(int argc,char *argv[]){
    Gtk::Main gtkmain(argc, argv);
    Glib::RefPtr<Gnome::Glade::Xml> refXml;
-   try{ refXml = Gnome::Glade::Xml::create("test.glade"); }
-   catch(const Gnome::Glade::XmlError& ex){ std::cerr << ex.what() << std::endl; return 1; }
+   try{
+      unsigned int index = exename.rfind("/");
+      if(index==string::npos)index=0;
+      else index++;
+      string gladename = exename;
+      gladename.replace(index,10,"test.glade");
+      cout << exename << endl;
+      cout << gladename << endl;
+      refXml = Gnome::Glade::Xml::create(gladename);
+   }
+   catch(const Gnome::Glade::XmlError& ex){ 
+      cerr << ex.what() << std::endl;
+      cerr << "The file fastqcSVN.glade must be located in the same directory as the fastQC executable." << endl;
+      return 1;
+   }
    Gtk::GL::init(argc, argv);
    Gtk::Window *windowp = NULL;
    refXml->get_widget("window1", windowp);
@@ -126,7 +140,7 @@ int GUIset(int argc,char *argv[]){
 
 int main(int argc, char** argv) {
    try{
-      string fnames,pointoffset,exename,filename;
+      string fnames,pointoffset,filename;
       exename.append(argv[0]);
       pointoffset.append(argv[0]);
       int poffs = 0;

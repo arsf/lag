@@ -16,9 +16,11 @@ sort by time + sort by elevation ***                                            
 
 
 6. draw profiles, ruler ***                                                            Done.
+lines showing rolling average in profiles as interested in "average" difference *
 5. slow draw/colour by time ?  **                                                      ?????
 
 4. colour by flightline, elevation, intensity, classification, colour by return***	   Done.
+Make indices for elevation less than a metre in magnitude. 10cm?***                    Done, assuming scale is 1 metre.
 12. select which returns, clasifications etc *
 19. turn on/off flight lines without load/unload **
 
@@ -50,11 +52,9 @@ wish list
 
 
 
-using quad trees containing arrays of (structs to avoid overhead, or objects if there not to bad) this will allow the sections analised quickly when for instance
-searching for pixels on the visible display
+using quad trees containing arrays of (structs to avoid overhead, or objects if there not to bad) this will allow the sections analised quickly when for instance searching for pixels on the visible display
 
-consider only loading the pixel information neccesary at any one time (xyz all the time, intensity sometimes for inctance), the program could then go and pull out the missing data from the drive
-when the user does request it or even cooler, the most likly to be used data or pixels could have the data cached.
+consider only loading the pixel information neccesary at any one time (xyz all the time, intensity sometimes for inctance), the program could then go and pull out the missing data from the drive when the user does request it or even cooler, the most likly to be used data or pixels could have the data cached.
 
 consider the effects full waveform will have
 
@@ -65,11 +65,11 @@ use glade-3 to build gui, use opengl to draw display within gui
 
 Importance undefined: 
 
-Ability to have lines instead of points on the profiles. Also, maybe we should have a rolling average or some other smoothing system for the profiles as well, if what users are interested in is "average" difference?
 
-Split the draw operation into threads, and split away from interface. Should be embarrassingly parallel, as drawing is split into bits (buckets) anyway.
 
-Make indices for elevation less than a metre in magnitude. 10cm?***     Done, assuming scale is 1 metre.
+Split the draw operation into threads, and split away from interface. Should be embarrassingly parallel, as drawing is split into bits (buckets) anyway.*
+
+Use separate threads for each window.**
 
 Fix viewport problem with multiple windows and remove hack.***
 
