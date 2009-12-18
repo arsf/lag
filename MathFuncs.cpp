@@ -15,11 +15,12 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
    return percval;
 }
 
+//Determines whether the points in the sent bucket fit within the profile box.
 bool* vetpoints(int numberofpoints,point* points,double startx,double starty,double endx,double endy,double width){
    double width2 = width/2;
-   double error = 0.000001;
-   bool* correctpoints = new bool[numberofpoints];
-   if(startx==endx){
+   double error = 0.000001;//Allows points on the line to be counted. May or may not be necessary/desirable.
+   bool* correctpoints = new bool[numberofpoints];//This will be returned later.
+   if(startx==endx){//If the profile is parallel to the y axis:
       for(int i=0;i<numberofpoints;i++){
          correctpoints[i]=false;
          if((starty-points[i].y+error>0 && endy-points[i].y-error<0) ||
@@ -31,7 +32,7 @@ bool* vetpoints(int numberofpoints,point* points,double startx,double starty,dou
          }
       }
    }
-   else if(starty==endy){
+   else if(starty==endy){//If the profile is parallel to the x axis:
       for(int i=0;i<numberofpoints;i++){
          correctpoints[i]=false;
          if((startx-points[i].x+error>0 && endx-points[i].x-error<0) ||
@@ -43,22 +44,21 @@ bool* vetpoints(int numberofpoints,point* points,double startx,double starty,dou
          }
       }
    }
-   else{
+   else{//If the profile is skewed:
       //Lines of bounding box:
-      double lengradbox = (endy-starty)/(endx-startx);
-      double widgradbox = -1.0/lengradbox;
-   //   double lenconsbox = starty - (startx*lengradbox);
-      double widconsboxstart = starty - (startx*widgradbox);
-      double widconsboxend = endy - (endx*widgradbox);
-      double startxleft = startx - width2/sqrt(1+widgradbox*widgradbox);
-      double startxright = startx + width2/sqrt(1+widgradbox*widgradbox);
-      double startyleft = starty - widgradbox*width2/sqrt(1+widgradbox*widgradbox);
-      double startyright = starty + widgradbox*width2/sqrt(1+widgradbox*widgradbox);
-      double lenconsboxleft = startyleft - (startxleft*lengradbox);
-      double lenconsboxright = startyright - (startxright*lengradbox);
+      double lengradbox = (endy-starty)/(endx-startx);//Gradients of length and width lines
+      double widgradbox = -1.0/lengradbox;//...
+      double widconsboxstart = starty - (startx*widgradbox);//Constant values (y intercept) of the formulae for the sides of the box perpendiculr to the direction of the profile
+      double widconsboxend = endy - (endx*widgradbox);//...
+      double startxleft = startx - width2/sqrt(1+widgradbox*widgradbox);//Values for the end points of the starting perpendicular side
+      double startxright = startx + width2/sqrt(1+widgradbox*widgradbox);//...
+      double startyleft = starty - widgradbox*width2/sqrt(1+widgradbox*widgradbox);//...
+      double startyright = starty + widgradbox*width2/sqrt(1+widgradbox*widgradbox);//...
+      double lenconsboxleft = startyleft - (startxleft*lengradbox);//The constants for the longitudinal sides relative to the profile line itself.
+      double lenconsboxright = startyright - (startxright*lengradbox);//...
       //Testing points:
       double interstart,interend,interleft,interright;
-      for(int i=0;i<numberofpoints;i++){
+      for(int i=0;i<numberofpoints;i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
          interstart = points[i].x * widgradbox + widconsboxstart;
          interend = points[i].x * widgradbox + widconsboxend;
          interleft = points[i].x * lengradbox + lenconsboxleft;

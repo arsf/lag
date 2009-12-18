@@ -80,3 +80,5 @@ Make point size user-changeable.*
 Make ruler width user-changeable.*
 
 Include scan angle, and colour by it. Brightness?*
+
+Option to put noise points at top.*

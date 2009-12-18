@@ -13,11 +13,12 @@
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
-   lidarboundary = lidardata->getboundary();
    this->bucketlimit = bucketlimit;
    maindetailmod = 0.01;
    previewdetailmod = 1;
+   pointsize=1;
    //Initial state:
+   lidarboundary = lidardata->getboundary();
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
       //Initial centre:
@@ -44,12 +45,15 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    zfloor=0.25;
    rmaxz=rminz=0;
    intensitycolour = false;
-   intensitybrightness = true;
+//   intensitybrightness = true;
+   intensitybrightness = false;
    intensityoffset = 0.0/3;
    intensityfloor = 0;
    rmaxintensity=rminintensity=0;
-   linecolour = true;
-   classcolour = false;
+//   linecolour = true;
+   linecolour = false;
+//   classcolour = false;
+   classcolour = true;
    returncolour = false;
    colourheightarray = new double[2];
    colourintensityarray = new double[2];
@@ -215,7 +219,7 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    return drawviewable(1);
 }
 
-//When the window is resized, the viewport is resized accordingly and so are teh viewing properties.
+//When the window is resized, the viewport is resized accordingly and so are the viewing properties.
 bool TwoDeeOverview::on_configure_event(GdkEventConfigure* event){
   glViewport(0, 0, get_width(), get_height());
   resetview();
@@ -240,9 +244,9 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   double red,green,blue;
-   double x=0,y=0,z=0;
-   int line=0,intensity=0,classification,rnumber;
+   int line=0,intensity=0,classification=0,rnumber=0;
+   double x=0,y=0,z=0;//Point values
+   double red,green,blue;//Colour values
    float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
    float* colours = new float[3*bucketlimit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
@@ -332,7 +336,6 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
       else glFlush();
    }
-//   glCallList(4);
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
@@ -363,9 +366,9 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   double red,green,blue;
-   double x=0,y=0,z=0;
-   int line=0,intensity=0,classification,rnumber;
+   int line=0,intensity=0,classification=0,rnumber=0;
+   double x=0,y=0,z=0;//Point values
+   double red,green,blue;//Colour values
    float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
    float* colours = new float[3*bucketlimit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
@@ -453,7 +456,6 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
       }
       glDrawArrays(GL_POINTS,0,count);
    }
-//   glCallList(4);
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
@@ -538,31 +540,19 @@ void TwoDeeOverview::prepare_image(){
       minz=lowperc;
       delete[] zdata;
    }
-//Might want this later:
-//   if(maxintensity<=minintensity)maxintensity=minintensity+1;
-//   else{
-//      double* intensitydata = new double[numbuckets];
-//      for(int i=0;i<numbuckets;i++)intensitydata[i]=buckets[i]->maxintensity;
-//      double lowperc = percentilevalue(intensitydata,numbuckets,0.01,minintensity,maxintensity);
-//      for(int i=0;i<numbuckets;i++)intensitydata[i]=buckets[i]->minintensity;
-//      double highperc = percentilevalue(intensitydata,numbuckets,99.99,minintensity,maxintensity);
-//      maxintensity=(maxintensity+highperc)/2;
-//      minintensity=(minintensity+lowperc)/2;
-//      delete intensitydata;
-//   }
    coloursandshades(maxz,minz,maxintensity,minintensity);//Prepare colour and shading arrays.
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
    glClearColor(0.0, 0.0, 0.0, 0.0);
    glClearDepth(1.0);
-//   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly.
+//   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly. NOTE: Currently causes bucket shaped graphical artefacts. Obviously, anti-aliasing is happening when the data is passed to opengl, not when flush happens.
 //   glEnable(GL_LINE_SMOOTH);//...
 //   glEnable(GL_BLEND);//...
 //   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
 //   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
 //   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
-//   glPointSize(50);
-   glEnable(GL_DEPTH_TEST);
+   glPointSize(pointsize);//This is to be user-changeable later as, depending on the screen resolution, single pixels can be hard to see properly.
+   glEnable(GL_DEPTH_TEST);//Very important to include this! This allows us to see the things on the top above the things on the bottom!
    glViewport(0, 0, get_width(), get_height());
    resetview();
    delete[] buckets;

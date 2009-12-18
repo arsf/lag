@@ -52,6 +52,7 @@ protected:
    boundary* lidarboundary;//This stores the boundary of the file opened.
    int bucketlimit;//This is the maximum number of points a single bucket can contain.
    double maindetailmod,previewdetailmod;//These modify the amount of points skipped for each point not, when drawing. Lower is means more detail, higher means less.
+   double pointsize;//The diameter of the points.
  
    //Position variables:
    double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%.

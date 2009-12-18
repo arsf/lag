@@ -10,17 +10,18 @@
 #include "commonfunctions.h"
 using namespace std;
 
-quadtree* lidardata; 
-Gtk::ToggleToolButton *profiletoggle = NULL;
-Gtk::ToggleToolButton *showprofiletoggle = NULL;
-Gtk::ToggleToolButton *rulertoggle = NULL;
-Gtk::Label *rulerlabel = NULL;
-TwoDeeOverview *tdo = NULL;
-Profile *prof = NULL;
-Gtk::SpinButton *profwidthselect = NULL;
-int bucketlimit = 100000;
-string exename = "";
+quadtree* lidardata;//The flightlines are stored here.
+Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether mouse dragging selects the profile.
+Gtk::ToggleToolButton *showprofiletoggle = NULL;//Toggle button determining whether the profile box is viewable on the 2d overview.
+Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable.
+Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc..
+TwoDeeOverview *tdo = NULL;//The 2d overview.
+Profile *prof = NULL;//The profile.
+Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres(?).
+int bucketlimit = 100000;//How many points in each bucket, maximum.
+string exename = "";//The path of the executable.
 
+//When toggled, the 2d overview goes into profile selection mode. When untoggled, 2d overview goes out of profile selection mode and the profile parameters are sent to the profile area.
 void on_profiletoggle(){
    if(profiletoggle->get_active())tdo->setupprofile();
    else{
@@ -31,29 +32,33 @@ void on_profiletoggle(){
    }
 }
 
+//When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
 void on_showprofiletoggle(){
    tdo->setshowprofile(showprofiletoggle->get_active());
    tdo->drawviewable(1);
 }
 
-void on_rulertoggle(){
-   if(rulertoggle->get_active())prof->setupruler();
-   else prof->unsetupruler();
-}
-
+//When the value in the spinbutton for profile width is changed, tell the 2d overview, then make the new profile box and then draw it. This does NOT update the profile itself (or, at least, not yet). To update the profile after the width has been satisfactorily adjusted, the profiletoggle must be toggled and then untoggled.
 void on_profwidthselected(){
    tdo->setprofwidth(profwidthselect->get_value());
    tdo->makeprofbox();
    tdo->drawviewable(2);
 }
 
+//When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
+void on_rulertoggle(){
+   if(rulertoggle->get_active())prof->setupruler();
+   else prof->unsetupruler();
+}
+
+//Sets up the GUI.
 int GUIset(int argc,char *argv[]){
    Gtk::Main gtkmain(argc, argv);
    Glib::RefPtr<Gnome::Glade::Xml> refXml;
-   try{
-      unsigned int index = exename.rfind("/");
-      if(index==string::npos)index=0;
-      else index++;
+   try{//Takes the path the executable was called with and uses it to find the .glade file needed to make the GUI.
+      unsigned int index = exename.rfind("/");//Find the last forward slash and make its index our index.
+      if(index==string::npos)index=0;//I.e. in the event that there is no forward slash (so must be calling from the same directory), just go from 0, where the forward slash would have been.
+      else index++;//We do not actually want to include the forward slash.
       string gladename = exename;
       gladename.replace(index,10,"test.glade");
       cout << exename << endl;
@@ -74,7 +79,6 @@ int GUIset(int argc,char *argv[]){
       refXml->get_widget("window2", window2);
       if(window2){
          window2->set_title("Window2");
-         window2->set_reallocate_redraws(true);
          Gtk::VBox *vboxtdo = NULL;
          refXml->get_widget("vboxtdo",vboxtdo);
          if(vboxtdo){
@@ -84,18 +88,18 @@ int GUIset(int argc,char *argv[]){
             if(showprofiletoggle)showprofiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_showprofiletoggle));
             refXml->get_widget("profwidthselect",profwidthselect);
             if(profwidthselect){
-               profwidthselect->set_range(0,300);
+               profwidthselect->set_range(0,30000);//Essentially arbitrary. Would there be any situation where a width greater than 30 km would be wanted?
                profwidthselect->set_value(5);
                profwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_profwidthselected));
             }
-            Glib::RefPtr<Gdk::GL::Config> glconfig;
+            Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
             glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
             if (glconfig==NULL){
                 glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
                 if(glconfig==NULL)std::exit(1);
             }
             TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
-            tdo = tdo1;
+            tdo = tdo1;//For some reason, I have not been able to use "new" with the global object directly. :-(
             tdo->set_size_request(200,200);
             tdo->setprofwidth(profwidthselect->get_value());
             vboxtdo->pack_end(*tdo,true,true);
@@ -112,7 +116,7 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("rulertoggle",rulertoggle);
             if(rulertoggle)rulertoggle->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggle));
             refXml->get_widget("rulerlabel",rulerlabel);
-            Glib::RefPtr<Gdk::GL::Config> glconfig2;
+            Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
             glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
             if (glconfig2==NULL){
                glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
@@ -139,49 +143,51 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   try{
-      string fnames,pointoffset,filename;
-      exename.append(argv[0]);
-      pointoffset.append(argv[0]);
-      int poffs = 0;
-      poffs = StringToUINT(pointoffset);
-      if(poffs = 0 && pointoffset != "0")return 1;
-      for(int i=2;i<argc;i++)fnames.append(argv[i]);
-      if(fnames==""){
-         cout << "Must give a filename." << endl;
-         return 2;
+   try{//Attempt to get real files.
+      string pointoffset,filename;
+      if(argc < 3){
+         cout << "Form is \"lag <point skip number> <first file> [other files]...\"" << endl;
+         return 11;
       }
-      int spacepos=0,count=0;
-      do{
-         spacepos = fnames.find_first_of(" ");
-         filename.assign(fnames,0,spacepos);
-         fnames.erase(0,spacepos+1);
+      exename.append(argv[0]);
+      pointoffset.append(argv[1]);
+      int poffs = 0;
+      poffs = StringToUINT(pointoffset);//This returns the integer translation of the string, or zero if there is none, so...
+      if(poffs == 0 && pointoffset != "0"){//... in the situation where there is a value of zero, check the string to see whether this is because of there being a zero value or because of there not being and integer. If the value in the string is not zero:
+         cout << "The point offset must be an integer greater than or equal to zero. In addition, zero can only be accepted in the form \"0\", not \"00\" etc.." << endl;
+         return 1;
+      }
+      for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
+         filename.assign(argv[count]);
          if(filename != ""){
-            if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){
-               const char* filnam = filename.c_str();
-               LASloader* loader = new LASloader(filnam);
-               if(count==0)lidardata = new quadtree(loader,bucketlimit,poffs);
-               else lidardata->load(loader,poffs);
+            if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
+               LASloader* loader = new LASloader(argv[count]);
+               if(count==2)lidardata = new quadtree(loader,bucketlimit,poffs);//First time make quadtree...
+               else lidardata->load(loader,poffs);//... otherwise add to it.
+               cout << filename << endl;
                delete loader;
             }
-            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){
-               const char* filnam = filename.c_str();
+            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files:
                ostringstream filenum;
                filenum << count+1;
-               cout << "Type code for file " + filenum.str() << endl;
+               cout << "Type code for file " + filenum.str() << endl;//This code is needed in order to properly interpret the ASCII file.
                string code1;
-//               cin >> code1;
                getline(cin,code1);
                const char* code = code1.c_str();
                cout << code << endl;
-               ASCIIloader* aloader = new ASCIIloader(filnam,code);
-               if(count==0)lidardata = new quadtree(aloader,bucketlimit,poffs);
-               else lidardata->load(aloader,poffs);
+               ASCIIloader* aloader = new ASCIIloader(argv[count],code);
+               if(count==2)lidardata = new quadtree(aloader,bucketlimit,poffs);//First time make quadtree...
+               else lidardata->load(aloader,poffs);//... otherwise add to it.
+               cout << filename << endl;
                delete aloader;
             }
+            else{//For incorrect file extensions:
+               cout << "Files must have the extensions .las, .LAS, .txt or .TXT." << endl;
+               return 17;
+            }
          }
-         count++;
-      }while(spacepos!=string::npos && fnames != "");
+      }
+//       The following block of commented out code is for testing purposes:
 //       LASloader* loader = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_111020_1.LAS");
 //       LASloader* loader3 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_110312_1.LAS");
 //       LASloader* loader6 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_111753_1.LAS");
@@ -206,10 +212,9 @@ int main(int argc, char** argv) {
    }
    catch(char const* e){
       cout << e << endl;
-      cout << "bugger" << endl;
+      cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
+      return 22;
    }
-   
-   return GUIset(argc, argv);
+   return GUIset(argc, argv);//Make the GUI.
    delete lidardata;
 }
-
