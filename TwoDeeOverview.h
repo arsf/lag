@@ -9,6 +9,7 @@ class TwoDeeOverview : public Gtk::GL::DrawingArea
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
    ~TwoDeeOverview();
+   bool returntostart();
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    void makeprofbox();//Make the box showing the profile area.
    //Short, status changing methods:
@@ -45,7 +46,18 @@ public:
    //Setters:
    void setprofwidth(double profwidth){this->profwidth = profwidth;}//Set width of the profile.
    void setshowprofile(double showprofile){this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
+   void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
+   void setheightcolour(bool heightcolour){this->heightcolour=heightcolour;}
+   void setlinecolour(bool linecolour){this->linecolour=linecolour;}
+   void setclasscolour(bool classcolour){this->classcolour=classcolour;}
+   void setreturncolour(bool returncolour){this->returncolour=returncolour;}
+   void setintensitybrightness(bool intensitybrightness){this->intensitybrightness=intensitybrightness;}
+   void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
+   void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
+   void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
+   void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
 protected:
+   double zoompower;
    Glib::RefPtr<Gdk::GL::Context> glcontext;//Possibly part of solution to shared viewport problem.
    //Point data and related stuff:
    quadtree* lidardata;//The point data is stored here.

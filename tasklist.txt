@@ -16,7 +16,8 @@ sort by time + sort by elevation ***                                            
 
 
 6. draw profiles, ruler ***                                                            Done.
-lines showing rolling average in profiles as interested in "average" difference *
+lines showing rolling average in profiles as interested in "average" difference *      Done.
+Show lines of average of only points in a selected region.*
 5. slow draw/colour by time ?  **                                                      ?????
 
 4. colour by flightline, elevation, intensity, classification, colour by return***	   Done.
@@ -73,7 +74,7 @@ Use separate threads for each window.**
 
 Fix viewport problem with multiple windows and remove hack.***
 
-Try to make preview look nicer.***
+Try to make preview look nicer.*
 
 Make point size user-changeable.*
 
@@ -82,3 +83,7 @@ Make ruler width user-changeable.*
 Include scan angle, and colour by it. Brightness?*
 
 Option to put noise points at top.*
+
+Ability to open files with different number of skipped pixels.*
+
+Some way to see what flightline a point is from.***

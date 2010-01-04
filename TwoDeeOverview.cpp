@@ -14,6 +14,7 @@
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit)  : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    this->bucketlimit = bucketlimit;
+   zoompower = 0.5;
    maindetailmod = 0.01;
    previewdetailmod = 1;
    pointsize=1;
@@ -78,6 +79,16 @@ TwoDeeOverview::~TwoDeeOverview(){
    delete[] colourintensityarray;
    delete[] brightnessheightarray;
    delete[] brightnessintensityarray;
+}
+
+bool TwoDeeOverview::returntostart(){
+   double xdif = lidarboundary->maxX-lidarboundary->minX;
+   double ydif = lidarboundary->maxY-lidarboundary->minY;
+   centrex = lidarboundary->minX+xdif/2;
+   centrey = lidarboundary->minY+ydif/2;
+   zoomlevel=1;
+   resetview();
+   return drawviewable(1);
 }
 
 //This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio*zoomlevel is there to convert screen dimensions to image dimensions. gluLookAt is then used so that the viewpoint is that of seeing the centre from above, with North being up.
@@ -204,8 +215,8 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrex += (event->x-get_width()/2)*ratio/zoomlevel;
    centrey -= (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    if(zoomlevel>=1){
-      if(event->direction==GDK_SCROLL_UP)zoomlevel+=sqrt(zoomlevel)/2;
-      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=sqrt(zoomlevel)/2;
+      if(event->direction==GDK_SCROLL_UP)zoomlevel+=pow(zoomlevel,zoompower)/2;
+      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=pow(zoomlevel,zoompower)/2;
    }
    else if(zoomlevel>=0.2){
       if(event->direction==GDK_SCROLL_UP)zoomlevel+=0.1;
@@ -551,7 +562,7 @@ void TwoDeeOverview::prepare_image(){
 //   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
 //   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
 //   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
-   glPointSize(pointsize);//This is to be user-changeable later as, depending on the screen resolution, single pixels can be hard to see properly.
+   glPointSize(pointsize);
    glEnable(GL_DEPTH_TEST);//Very important to include this! This allows us to see the things on the top above the things on the bottom!
    glViewport(0, 0, get_width(), get_height());
    resetview();
