@@ -18,7 +18,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
-   flightlinenum = -1;
+   flightlinenum = 0;
    load(l, nth);   
 }
 
@@ -193,7 +193,7 @@ void quadtree::load(lidarpointloader *l, int nth)
 
    delete nb;
    int pointcounter;
-   flightlinenum++;
+   
    // while there are new points, pull a new block of points from the loader
    // and push them into the tree
    do
@@ -206,7 +206,7 @@ void quadtree::load(lidarpointloader *l, int nth)
       //hackcounter+=pointcounter;
    }
    while (pointcounter == arraysize);
-   
+   flightlinenum++;
 
   // cout << "hackcounter says \"" << hackcounter <<" have just been loaded\"" << endl;
    
@@ -245,7 +245,7 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
    // while there are new points, pull a new block of points from the loader
    // and push them into the tree
    int pointcount;
-   flightlinenum++;
+   
    do
    {
       pointcount = l->load(arraysize, nth, temp, flightlinenum, minX, minY, maxX, maxY);
@@ -255,7 +255,7 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
       }
    }
    while (pointcount == arraysize);
-   
+   flightlinenum++;
    
 }
 
