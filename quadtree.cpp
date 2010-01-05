@@ -180,6 +180,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 // load a new flight line into the quad tree, nth is the nth points to load
 void quadtree::load(lidarpointloader *l, int nth)
 {
+   int outofboundscounter = 0;
    // get new flight boundary
    boundary *nb = l->getboundary();
    //int hackcounter = 0;
@@ -201,7 +202,7 @@ void quadtree::load(lidarpointloader *l, int nth)
       pointcounter = l->load(arraysize, nth, temp, flightlinenum);
       for(int k=0; k<pointcounter; k++)
       {
-         insert(temp[k]);
+         outofboundscounter+=insert(temp[k]);
       }
       //hackcounter+=pointcounter;
    }
@@ -211,6 +212,11 @@ void quadtree::load(lidarpointloader *l, int nth)
   // cout << "hackcounter says \"" << hackcounter <<" have just been loaded\"" << endl;
    
    delete[] temp;
+   
+   if (outofboundscounter > 0)
+   {
+      throw "points out of bounds exception, "+outofboundscounter;
+   }
 }
 
 
@@ -219,7 +225,7 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
 {
    // get new flight boundary
    boundary *nb = l->getboundary();
-
+   int outofboundscounter = 0;
    if ((minX > nb->maxX && maxX > nb->maxX) || (minX < nb->minX && maxX < nb->minX))
    {
       throw "area of interest falls outside new file";
@@ -251,12 +257,16 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
       pointcount = l->load(arraysize, nth, temp, flightlinenum, minX, minY, maxX, maxY);
       for(int k=0; k<pointcount; k++)
       {
-         insert(temp[k]);
+         outofboundscounter+=insert(temp[k]);
       }
    }
    while (pointcount == arraysize);
    flightlinenum++;
-   
+   delete[] temp;
+   if (outofboundscounter > 0)
+   {
+      throw "points out of bounds exception, "+outofboundscounter;
+   }
 }
 
 
@@ -285,12 +295,12 @@ bool quadtree::isEmpty()
 
 // this method takes a point struct, it then attempts to insert it into the
 // quadtree. 
-void quadtree::insert(point newP)
+int quadtree::insert(point newP)
 {  
    // check the point falls within the global boundary oof the tree
    if (!root->checkbound(newP))
    {
-      throw "point out of bounds error";
+      return 1;
    }
    
    // this counter simple keeps track of the total points inserted
@@ -317,7 +327,7 @@ void quadtree::insert(point newP)
       // first try the guess bucket, if this works we can just return
       if (guessbucket->insert(newP))
       {
-         return;
+         return 0;
       }
       else
       {
@@ -343,6 +353,7 @@ void quadtree::insert(point newP)
    }
    
    guessbucket = current;
+   return 0;
 }
 
 

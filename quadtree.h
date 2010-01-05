@@ -35,7 +35,7 @@ public:
    ~quadtree();
    
    // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
-   void insert(point newP);
+   int insert(point newP);
    
    // debugging method, prints out the quadtree, only usefull in tiny quadtrees <50 points
    void print();
