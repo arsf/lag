@@ -79,7 +79,6 @@ int testfilename(int argc,char *argv[],bool start){
          if(filename != ""){
             if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
                LASloader* loader = new LASloader(argv[count]);
-               cout << filename << endl;
                if(count==2 && start){
                   delete lidardata;
                   lidardata = new quadtree(loader,bucketlimit,poffs);//First time make quadtree...
