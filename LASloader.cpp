@@ -135,12 +135,12 @@ boundary* LASloader::getboundary()
    // get bounding box and then correct the stupid inaccuracy between 
    // it and the lidar points (-+ 1/1000)
    // (boundry and header have different accuracys) 
-
+   // note: now that out of bounds points are ignored the leyway is removed
    boundary* newboundary = new boundary;
-   newboundary->minX=header.GetMinX()-1;
-   newboundary->minY=header.GetMinY()-1;
-   newboundary->maxX=header.GetMaxX()+1;
-   newboundary->maxY=header.GetMaxY()+1;
+   newboundary->minX=header.GetMinX();
+   newboundary->minY=header.GetMinY();
+   newboundary->maxX=header.GetMaxX();
+   newboundary->maxY=header.GetMaxY();
    return newboundary;
 }
 

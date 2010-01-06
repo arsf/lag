@@ -16,26 +16,28 @@
 #include "quadtreenode.h"
 #include <vector>
 #include "lidarpointloader.h"
+#include <sstream>
 using namespace std;
 
 class quadtree{
     quadtreenode *root;   
     int capacity;
     int flightlinenum;
+    ostream *errorstream;
 public:
    // constructor that builds a new tree from a loader object
    quadtree(lidarpointloader *l, int cap, int nth);
-   
+   quadtree(lidarpointloader *l, int cap, int nth, ostringstream *s);
    // constructor that builds a new tree from a specified area of a file
    quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY);
-   
+   quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s);
    // constructor that builds a new tree with user defined dimensions
    quadtree(double sx, double sy, double bx, double by, int cap);
-   
+   quadtree(double sx, double sy, double bx, double by, int cap, ostringstream *s);
    ~quadtree();
    
    // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
-   int insert(point newP);
+   bool insert(point newP);
    
    // debugging method, prints out the quadtree, only usefull in tiny quadtrees <50 points
    void print();
@@ -77,6 +79,8 @@ public:
    // NOTE : the method reassigns oldnode to point at the new root node providing a handle on the
    // new top layer of the tree.
    quadtreenode* expandboundary(quadtreenode* oldnode, boundary* nb);
+   
+   
 };
 
 

@@ -4,16 +4,33 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
-
+#include <sstream>
+#include <ostream>
 
 using namespace std;
 
 // this constructor creates a quadtree using a loader object
 quadtree::quadtree(lidarpointloader *l,int cap, int nth)
 {
+   errorstream = &cerr;
    capacity = cap;
    root = NULL;
+   
+   // get the boundary of the file points
+   boundary *b = l->getboundary();
+   // use boundary to create new tree that incompasses all points
+   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
+   flightlinenum = 0;
+   load(l, nth);
+   
+}
 
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s)
+{
+   errorstream = s;
+   capacity = cap;
+   root = NULL;
+   
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
@@ -22,9 +39,26 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    load(l, nth);   
 }
 
+
+
 // this constructor creates a quadtree using a loader object for a given area of interest
 quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
 {
+   errorstream = &cerr;
+   capacity = cap;
+   root = NULL;
+
+   // use area of interest to create new tree that incompasses all points
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity);
+   flightlinenum = -1;
+   // use area of intrest load
+   load(l, nth, minX, minY, maxX, maxY);
+     
+}
+
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s)
+{
+   errorstream = s;
    capacity = cap;
    root = NULL;
 
@@ -42,11 +76,19 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 // the points may not fail within the boundry
 quadtree::quadtree(double sx, double sy, double bx, double by, int cap)
 {
+   errorstream = &cerr;
    capacity = cap;
    flightlinenum=-1;
    root = new quadtreenode(sx,sy,bx,by,capacity);
 }
 
+quadtree::quadtree(double sx, double sy, double bx, double by, int cap, ostringstream *s)
+{
+   errorstream = s;
+   capacity = cap;
+   flightlinenum=-1;
+   root = new quadtreenode(sx,sy,bx,by,capacity);
+}
 
 // this method expands a quadtree to encompass a new boundary
 quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
@@ -194,7 +236,8 @@ void quadtree::load(lidarpointloader *l, int nth)
 
    delete nb;
    int pointcounter;
-   
+   ostream &outs = *(errorstream);
+   boundary *tempboundary = root->getbound();
    // while there are new points, pull a new block of points from the loader
    // and push them into the tree
    do
@@ -202,7 +245,32 @@ void quadtree::load(lidarpointloader *l, int nth)
       pointcounter = l->load(arraysize, nth, temp, flightlinenum);
       for(int k=0; k<pointcounter; k++)
       {
-         outofboundscounter+=insert(temp[k]);
+         // try and insert each point
+         if (!insert(temp[k]))
+         {
+            // don't blame me, this is to create the error string for harg
+            outofboundscounter++;
+            
+            outs << outofboundscounter << ": point out of bounds, diff: ";
+            if (temp[k].x < tempboundary->minX )
+            {
+               outs << "x:" << abs(temp[k].x-tempboundary->minX) << " below minimum ";
+            } else 
+            if (temp[k].x > tempboundary->maxX)
+            {
+               outs << "x:" << abs(temp[k].x-tempboundary->maxX) << " above maximum ";
+            } 
+            
+            if (temp[k].y < tempboundary->minY)
+            {
+               outs << "y:" << abs(temp[k].y-tempboundary->minY) << " below minimum ";
+            } else
+            if (temp[k].y > tempboundary->maxY)
+            {
+               outs << "y:" << abs(temp[k].y-tempboundary->maxY) << " above maximum ";
+            }
+            outs << endl;
+         }
       }
       //hackcounter+=pointcounter;
    }
@@ -212,11 +280,8 @@ void quadtree::load(lidarpointloader *l, int nth)
   // cout << "hackcounter says \"" << hackcounter <<" have just been loaded\"" << endl;
    
    delete[] temp;
+   delete tempboundary;
    
-   if (outofboundscounter > 0)
-   {
-      throw "points out of bounds exception, "+outofboundscounter;
-   }
 }
 
 
@@ -245,9 +310,9 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
    point *temp = new point[arraysize];
    // expand boundary to cover new points
    root = expandboundary(root, nb);
- 
+   ostream &outs = *(errorstream);
    delete nb;
-   
+   boundary *tempboundary = root->getbound();
    // while there are new points, pull a new block of points from the loader
    // and push them into the tree
    int pointcount;
@@ -257,7 +322,32 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
       pointcount = l->load(arraysize, nth, temp, flightlinenum, minX, minY, maxX, maxY);
       for(int k=0; k<pointcount; k++)
       {
-         outofboundscounter+=insert(temp[k]);
+         // try and insert each point
+         if (!insert(temp[k]))
+         {
+            // don't blame me, this is to create the error string for harg
+            outofboundscounter++;
+            
+            outs << outofboundscounter << ": point out of bounds, diff: ";
+            if (temp[k].x < tempboundary->minX )
+            {
+               outs << "x:" << abs(temp[k].x-tempboundary->minX) << " below minimum ";
+            } else 
+            if (temp[k].x > tempboundary->maxX)
+            {
+               outs << "x:" << abs(temp[k].x-tempboundary->maxX) << " above maximum ";
+            } 
+            
+            if (temp[k].y < tempboundary->minY)
+            {
+               outs << "y:" << abs(temp[k].y-tempboundary->minY) << " below minimum ";
+            } else
+            if (temp[k].y > tempboundary->maxY)
+            {
+               outs << "y:" << abs(temp[k].y-tempboundary->maxY) << " above maximum ";
+            }
+            outs << endl;
+         }
       }
    }
    while (pointcount == arraysize);
@@ -295,16 +385,17 @@ bool quadtree::isEmpty()
 
 // this method takes a point struct, it then attempts to insert it into the
 // quadtree. 
-int quadtree::insert(point newP)
+bool quadtree::insert(point newP)
 {  
-   // check the point falls within the global boundary oof the tree
+   // check the point falls within the global boundary of the tree
    if (!root->checkbound(newP))
    {
-      return 1;
+      // abort
+      return false;
    }
    
    // this counter simple keeps track of the total points inserted
-   // WARNING : debug code, dosen't take account of deleteions
+   // WARNING : debug code, dosen't take account of deletions
    static int counter;
    counter++;
    
@@ -327,7 +418,7 @@ int quadtree::insert(point newP)
       // first try the guess bucket, if this works we can just return
       if (guessbucket->insert(newP))
       {
-         return 0;
+         return true;
       }
       else
       {
@@ -353,7 +444,7 @@ int quadtree::insert(point newP)
    }
    
    guessbucket = current;
-   return 0;
+   return true;
 }
 
 
