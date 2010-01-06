@@ -22,7 +22,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth)
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
    flightlinenum = 0;
    load(l, nth);
-   
+   guessbucket = NULL;
 }
 
 quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s)
@@ -30,7 +30,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s)
    errorstream = s;
    capacity = cap;
    root = NULL;
-   
+   guessbucket = NULL;
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
@@ -47,7 +47,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
    errorstream = &cerr;
    capacity = cap;
    root = NULL;
-
+   guessbucket = NULL;
    // use area of interest to create new tree that incompasses all points
    root = new quadtreenode(minX, minY, maxX, maxY, capacity);
    flightlinenum = -1;
@@ -61,7 +61,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
    errorstream = s;
    capacity = cap;
    root = NULL;
-
+   guessbucket = NULL;
    // use area of interest to create new tree that incompasses all points
    root = new quadtreenode(minX, minY, maxX, maxY, capacity);
    flightlinenum = -1;
@@ -403,7 +403,6 @@ bool quadtree::insert(point newP)
    // was sucsessfully inserted into. because the lidar records read
    // top to bottom; left to right to left neighbouring points generally
    // fall into the same bucket. checking this bucket first saves time.
-   static quadtreenode* guessbucket;
    // this pointer keeps track of the location when a full search is
    // needed
    quadtreenode *current;

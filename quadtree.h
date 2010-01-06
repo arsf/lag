@@ -24,6 +24,7 @@ class quadtree{
     int capacity;
     int flightlinenum;
     ostream *errorstream;
+    quadtreenode* guessbucket;
 public:
    // constructor that builds a new tree from a loader object
    quadtree(lidarpointloader *l, int cap, int nth);
