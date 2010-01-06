@@ -7,7 +7,6 @@
 #include "ASCIIloader.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
-#include "commonfunctions.h"
 using namespace std;
 
 quadtree* lidardata;//The flightlines are stored here.
@@ -15,62 +14,55 @@ TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
 string exename = "";//The path of the executable.
-bool loadedanyfiles = false;
+bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
 
 //Gtk objects:
+Gtk::VBox *vboxtdo = NULL;//Contains the overview.
+Gtk::VBox *vboxprof = NULL;//Contains the profile.
+//File chooser:
+Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
+Gtk::SpinButton *pointskipselect = NULL;//How many points to skip after loading one.
+Gtk::CheckButton *fenceusecheck = NULL;//Check button determining whether the fence is used for loading flightlines.
+Gtk::Entry *asciicodeentry = NULL;//The type code for opening ASCII files.
+//Overview:
+Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
+Gtk::RadioMenuItem *colourbyintensitymenu = NULL;//Determines whether the image is coloured by intensity.
+Gtk::RadioMenuItem *colourbyheightmenu = NULL;//Determines whether the image is coloured by height.
+Gtk::RadioMenuItem *colourbyflightlinemenu = NULL;//Determines whether the image is coloured by flightline.
+Gtk::RadioMenuItem *colourbyclassificationmenu = NULL;//Determines whether the image is coloured by classification.
+Gtk::RadioMenuItem *colourbyreturnmenu = NULL;//Determines whether the image is coloured by return.
+Gtk::RadioMenuItem *brightnessbyintensitymenu = NULL;//Determines whether the image is shaded by intensity.
+Gtk::RadioMenuItem *brightnessbyheightmenu = NULL;//Determines whether the image is shaded by height.
 Gtk::ToggleToolButton *fencetoggle = NULL;//Toggle button determining whether mouse dragging selects the fence.
-Gtk::CheckButton *fenceusecheck = NULL;
 Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether mouse dragging selects the profile.
 Gtk::ToggleToolButton *showprofiletoggle = NULL;//Toggle button determining whether the profile box is viewable on the 2d overview.
+Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres.
+Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in the overview in pixels.
+Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
+Gtk::SpinButton *previewdetailselect = NULL;//Determines how many points are skipped displaying the overview preview.
+//Profile:
+Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;//Determines whether the profile is coloured by intensity.
+Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;//Determines whether the profile is coloured by height.
+Gtk::RadioMenuItem *colourbyflightlinemenuprof = NULL;//Determines whether the profile is coloured by flightline.
+Gtk::RadioMenuItem *colourbyclassificationmenuprof = NULL;//Determines whether the profile is coloured by classification.
+Gtk::RadioMenuItem *colourbyreturnmenuprof = NULL;//Determines whether the profile is coloured by return.
+Gtk::RadioMenuItem *brightnessbyintensitymenuprof = NULL;//Determines whether the profile is shaded by intensity.
+Gtk::RadioMenuItem *brightnessbyheightmenuprof = NULL;//Determines whether the profile is shaded by height.
+Gtk::SpinButton *pointwidthselectprof = NULL;//Determines the width of the points in the profile in pixels.
+Gtk::SpinButton *maindetailselectprof = NULL;//Determines how many points are skipped displaying the main profile image.
+Gtk::SpinButton *previewdetailselectprof = NULL;//Determines how many points are skipped displaying the profile preview.
+Gtk::ToggleToolButton *pointshowtoggle = NULL;//Whether to show the points on the profile.
+Gtk::ToggleToolButton *lineshowtoggle = NULL;//Whether to show the lines on the profile.
+Gtk::SpinButton *movingaveragerangeselect = NULL;//The range of the moving average for the lines on the profile.
 Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable.
 Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc..
-Gtk::RadioMenuItem *colourbyintensitymenu = NULL;
-Gtk::RadioMenuItem *colourbyheightmenu = NULL;
-Gtk::RadioMenuItem *colourbyflightlinemenu = NULL;
-Gtk::RadioMenuItem *colourbyclassificationmenu = NULL;
-Gtk::RadioMenuItem *colourbyreturnmenu = NULL;
-Gtk::RadioMenuItem *brightnessbyintensitymenu = NULL;
-Gtk::RadioMenuItem *brightnessbyheightmenu = NULL;
-Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres(?).
-Gtk::SpinButton *pointwidthselect = NULL;
-Gtk::SpinButton *maindetailselect = NULL;
-Gtk::SpinButton *previewdetailselect = NULL;
-Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
-Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;
-Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;
-Gtk::RadioMenuItem *colourbyflightlinemenuprof = NULL;
-Gtk::RadioMenuItem *colourbyclassificationmenuprof = NULL;
-Gtk::RadioMenuItem *colourbyreturnmenuprof = NULL;
-Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
-Gtk::RadioMenuItem *brightnessbyintensitymenuprof = NULL;
-Gtk::RadioMenuItem *brightnessbyheightmenuprof = NULL;
-Gtk::SpinButton *pointwidthselectprof = NULL;
-Gtk::SpinButton *maindetailselectprof = NULL;
-Gtk::SpinButton *previewdetailselectprof = NULL;
-Gtk::ToggleToolButton *pointshowtoggle = NULL;
-Gtk::ToggleToolButton *lineshowtoggle = NULL;
-Gtk::SpinButton *movingaveragerangeselect = NULL;
-Gtk::MenuItem *openfilemenuitem = NULL;
-Gtk::FileChooserDialog *filechooserdialog = NULL;
-Gtk::SpinButton *pixelskipselect = NULL;
-Gtk::VBox *vboxtdo = NULL;
-Gtk::VBox *vboxprof = NULL;
-Gtk::Entry *asciicodeentry = NULL;
 
-void on_returnbuttonprof_clicked(){
-   prof->returntostart();
-}
-
-void on_returnbutton_clicked(){
-   tdo->returntostart();
-}
-
+//Get the area to load the flightline(s) in by calling the overview's getfence() method.
 void get_area(double &minX,double &minY,double &maxX,double &maxY){
    tdo->getfence(minX,minY,maxX,maxY);
 }
 
 int testfilename(int argc,char *argv[],bool start,bool usearea){
-   bool show_areas = loadedanyfiles;
    try{//Attempt to get real files.
       string pointoffset,filename;
       if(argc < 3){
@@ -78,9 +70,8 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
          return 11;
       }
       pointoffset.append(argv[1]);
-      int poffs = 0;
-      poffs = StringToUINT(pointoffset);//This returns the integer translation of the string, or zero if there is none, so...
-      if(poffs == 0 && pointoffset != "0"){//... in the situation where there is a value of zero, check the string to see whether this is because of there being a zero value or because of there not being and integer. If the value in the string is not zero:
+      int poffs = atoi(pointoffset.c_str());//This returns the integer translation of the string, or zero if there is none, so...
+      if(poffs == 0 && pointoffset != "0"){//... in the situation where there is a value of zero, check the string to see whether this is because of there being a zero value or because of there not being an integer. If the value in the string is not zero:
          cout << "The point offset must be an integer greater than or equal to zero. In addition, zero can only be accepted in the form \"0\", not \"00\" etc.." << endl;
          return 1;
       }
@@ -89,58 +80,55 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
          if(filename != ""){
             if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
                LASloader* loader = new LASloader(argv[count]);
-               if(count==2 && (start || !loadedanyfiles)){
-                  if(usearea){
+               if(count==2 && (start || !loadedanyfiles)){//If refreshing (or from command-line) use first filename to make quadtree...
+                  if(usearea){//If using the fence:
                      delete lidardata;
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
                      lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY);
                   }
-                  else{
+                  else{//If not:
                      delete lidardata;
-                     lidardata = new quadtree(loader,bucketlimit,poffs);//First time make quadtree...
+                     lidardata = new quadtree(loader,bucketlimit,poffs);
                   }
                }
-               else{
-                  if(usearea){
+               else{//... but for all other situations add to it.
+                  if(usearea){//If using the fence:
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
                      lidardata->load(loader,poffs,minX,minY,maxX,maxY);
                   }
-                  else lidardata->load(loader,poffs);//... otherwise add to it.
+                  else lidardata->load(loader,poffs);//If not.
                }
                cout << filename << endl;
                delete loader;
-               loadedanyfiles = true;
             }
-            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files:
-               string code1 = asciicodeentry->get_text();
+            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
+               string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
                const char* code = code1.c_str();
-               cout << code << endl;
                ASCIIloader* aloader = new ASCIIloader(argv[count],code);
-               if(count==2 && (start || !loadedanyfiles)){
-                  if(usearea){
+               if(count==2 && (start || !loadedanyfiles)){//If refreshing (or from command-line) use first filename to make quadtree...
+                  if(usearea){//If using the fence:
                      delete lidardata;
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
                      lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY);
                   }
-                  else{
+                  else{//If not:
                      delete lidardata;
-                     lidardata = new quadtree(aloader,bucketlimit,poffs);//First time make quadtree...
+                     lidardata = new quadtree(aloader,bucketlimit,poffs);
                   }
                }
-               else{
-                  if(usearea){
+               else{//... but for all other situations add to it.
+                  if(usearea){//If using the fence:
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
                      lidardata->load(aloader,poffs,minX,minY,maxX,maxY);
                   }
-                  else lidardata->load(aloader,poffs);//... otherwise add to it.
+                  else lidardata->load(aloader,poffs);//If not.
                }
                cout << filename << endl;
                delete aloader;
-               loadedanyfiles = true;
             }
             else{//For incorrect file extensions:
                cout << "Files must have the extensions .las, .LAS, .txt or .TXT." << endl;
@@ -154,23 +142,21 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       return 22;
    }
-   if(show_areas){
+   //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This will need the viewport bug to be fixed in order to work properly.
+   if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
       tdo->prepare_image();
       tdo->drawviewable(1);
       prof->prepare_image();
       prof->drawviewable(1);
    }
-     else{
-         vboxtdo->pack_end(*tdo,true,true);
-         tdo->show_all();
-         vboxprof->pack_end(*prof,true,true);
-         prof->show_all();
-     }
+   else{//Otherwise, pack them into the vboxes and then show them, which will do as the above block does.
+      vboxtdo->pack_end(*tdo,true,true);
+      tdo->show_all();
+      vboxprof->pack_end(*prof,true,true);
+      prof->show_all();
+   }
+   loadedanyfiles = true;
    return 1;
-}
-
-void on_openfilemenuactivated(){
-   filechooserdialog->show_all();
 }
 
 void on_filechooserdialogresponse(int response_id){
@@ -181,9 +167,9 @@ void on_filechooserdialogresponse(int response_id){
       char** argv = new char*[argc];
       argv[0] = new char[exename.length()+1];
       strcpy(argv[0],exename.c_str());
-      ostringstream pixeloffset;
-      pixeloffset << pixelskipselect->get_value_as_int();
-      string poffs = pixeloffset.str();
+      ostringstream pointoffset;
+      pointoffset << pointskipselect->get_value_as_int();
+      string poffs = pointoffset.str();
       argv[1] = new char[poffs.length()+1];
       strcpy(argv[1],poffs.c_str());
       argc=2;
@@ -197,37 +183,10 @@ void on_filechooserdialogresponse(int response_id){
       for(int i = 0;i < argc;i++)delete[] argv[i];
       delete[] argv;
    }
-//   cout << lidardata->flightlinenum << endl;
 }
 
-void on_pointshowtoggle(){
-   prof->setdrawpoints(pointshowtoggle->get_active());
-   prof->drawviewable(1);
-}
-
-void on_lineshowtoggle(){
-   prof->setdrawmovingaverage(lineshowtoggle->get_active());
-   prof->drawviewable(1);
-}
-
-void on_movingaveragerangeselect(){
-   prof->setmavrgrange(movingaveragerangeselect->get_value());
-   prof->drawviewable(1);
-}
-
-void on_pointwidthselected(){
-   tdo->setpointwidth(pointwidthselect->get_value());
-   tdo->drawviewable(2);
-}
-
-void on_maindetailselected(){
-   tdo->setmaindetail(maindetailselect->get_value());
-   tdo->drawviewable(1);
-}
-
-void on_previewdetailselected(){
-   tdo->setpreviewdetail(previewdetailselect->get_value());
-   tdo->drawviewable(2);
+void on_openfilemenuactivated(){
+   filechooserdialog->show_all();
 }
 
 void on_colouractivated(){
@@ -245,36 +204,6 @@ void on_brightnessactivated(){
    tdo->drawviewable(1);
 }
 
-void on_pointwidthselectedprof(){
-   prof->setpointwidth(pointwidthselectprof->get_value());
-   prof->drawviewable(2);
-}
-
-void on_maindetailselectedprof(){
-   prof->setmaindetail(maindetailselectprof->get_value());
-   prof->drawviewable(1);
-}
-
-void on_previewdetailselectedprof(){
-   prof->setpreviewdetail(previewdetailselectprof->get_value());
-   prof->drawviewable(2);
-}
-
-void on_colouractivatedprof(){
-   prof->setintensitycolour(colourbyintensitymenuprof->get_active());
-   prof->setheightcolour(colourbyheightmenuprof->get_active());
-   prof->setlinecolour(colourbyflightlinemenuprof->get_active());
-   prof->setclasscolour(colourbyclassificationmenuprof->get_active());
-   prof->setreturncolour(colourbyreturnmenuprof->get_active());
-   prof->drawviewable(1);
-}
-
-void on_brightnessactivatedprof(){
-   prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
-   prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
-   prof->drawviewable(1);
-}
-
 void on_fencetoggle(){
    if(fencetoggle->get_active()){
       if(profiletoggle->get_active())profiletoggle->set_active(false);
@@ -285,11 +214,6 @@ void on_fencetoggle(){
    }
    tdo->drawviewable(1);
 }
-
-//void on_showfencetoggle(){
-//   tdo->setshowfence(showfencetoggle->get_active());
-//   tdo->drawviewable(1);
-//}
 
 //When toggled, the 2d overview goes into profile selection mode. When untoggled, 2d overview goes out of profile selection mode and the profile parameters are sent to the profile area.
 void on_profiletoggle(){
@@ -322,10 +246,78 @@ void on_profwidthselected(){
    prof->showprofile(startx,starty,endx,endy,width);//...
 }
 
+void on_pointwidthselected(){
+   tdo->setpointwidth(pointwidthselect->get_value());
+   tdo->drawviewable(2);
+}
+
+void on_maindetailselected(){
+   tdo->setmaindetail(maindetailselect->get_value());
+   tdo->drawviewable(1);
+}
+
+void on_previewdetailselected(){
+   tdo->setpreviewdetail(previewdetailselect->get_value());
+   tdo->drawviewable(2);
+}
+
+void on_colouractivatedprof(){
+   prof->setintensitycolour(colourbyintensitymenuprof->get_active());
+   prof->setheightcolour(colourbyheightmenuprof->get_active());
+   prof->setlinecolour(colourbyflightlinemenuprof->get_active());
+   prof->setclasscolour(colourbyclassificationmenuprof->get_active());
+   prof->setreturncolour(colourbyreturnmenuprof->get_active());
+   prof->drawviewable(1);
+}
+
+void on_brightnessactivatedprof(){
+   prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
+   prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
+   prof->drawviewable(1);
+}
+
+void on_pointwidthselectedprof(){
+   prof->setpointwidth(pointwidthselectprof->get_value());
+   prof->drawviewable(2);
+}
+
+void on_maindetailselectedprof(){
+   prof->setmaindetail(maindetailselectprof->get_value());
+   prof->drawviewable(1);
+}
+
+void on_previewdetailselectedprof(){
+   prof->setpreviewdetail(previewdetailselectprof->get_value());
+   prof->drawviewable(2);
+}
+
+void on_pointshowtoggle(){
+   prof->setdrawpoints(pointshowtoggle->get_active());
+   prof->drawviewable(1);
+}
+
+void on_lineshowtoggle(){
+   prof->setdrawmovingaverage(lineshowtoggle->get_active());
+   prof->drawviewable(1);
+}
+
+void on_movingaveragerangeselect(){
+   prof->setmavrgrange(movingaveragerangeselect->get_value());
+   prof->drawviewable(1);
+}
+
 //When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
 void on_rulertoggle(){
    if(rulertoggle->get_active())prof->setupruler();
    else prof->unsetupruler();
+}
+
+void on_returnbuttonprof_clicked(){
+   prof->returntostart();
+}
+
+void on_returnbutton_clicked(){
+   tdo->returntostart();
 }
 
 //Sets up the GUI.
@@ -362,7 +354,7 @@ int GUIset(int argc,char *argv[]){
             if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
             refXml->get_widget("filechooserdialog",filechooserdialog);
             if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
-            refXml->get_widget("pixelskipselect",pixelskipselect);
+            refXml->get_widget("pointskipselect",pointskipselect);
             refXml->get_widget("asciicodeentry",asciicodeentry);
 
             Gtk::RadioMenuItem *colourbynonemenu = NULL;
@@ -438,6 +430,7 @@ int GUIset(int argc,char *argv[]){
          window3->set_title("Window3");
          refXml->get_widget("vboxprof",vboxprof);
          if(vboxprof){
+            Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
             refXml->get_widget("colourbynonemenuprof",colourbynonemenuprof);
             if(colourbynonemenuprof)colourbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
 
@@ -456,6 +449,7 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("colourbyreturnmenuprof",colourbyreturnmenuprof);
             if(colourbyreturnmenuprof)colourbyreturnmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
 
+            Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
             refXml->get_widget("brightnessbynonemenuprof",brightnessbynonemenuprof);
             if(brightnessbynonemenuprof)brightnessbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
 

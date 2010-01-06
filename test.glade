@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Jan  6 14:55:12 2010 -->
+<!--Generated with glade3 3.4.5 on Wed Jan  6 18:22:01 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -449,7 +449,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="profwidthselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 0</property>
                             <property name="digits">2</property>
                           </widget>
                         </child>
@@ -481,7 +481,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="pointwidthselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                             <property name="digits">2</property>
                           </widget>
                         </child>
@@ -513,7 +513,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="maindetailselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 0.01 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.01 10 0</property>
                             <property name="digits">3</property>
                           </widget>
                         </child>
@@ -545,7 +545,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="previewdetailselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 0</property>
                             <property name="digits">3</property>
                           </widget>
                         </child>
@@ -825,7 +825,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="pointwidthselectprof">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                             <property name="digits">2</property>
                           </widget>
                         </child>
@@ -857,7 +857,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="maindetailselectprof">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 0.01 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.01 10 0</property>
                             <property name="digits">3</property>
                           </widget>
                         </child>
@@ -889,7 +889,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="previewdetailselectprof">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 0</property>
                             <property name="digits">3</property>
                           </widget>
                         </child>
@@ -941,7 +941,7 @@ to start</property>
                           <widget class="GtkSpinButton" id="movingaveragerangeselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 10</property>
+                            <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                           </widget>
                         </child>
                         <child>
@@ -1026,19 +1026,19 @@ Range</property>
                   <widget class="GtkVBox" id="vbox12">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkLabel" id="pixelskiplabel">
+                      <widget class="GtkLabel" id="pointskiplabel">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Pixel skip number</property>
+                        <property name="label" translatable="yes">Point skip number</property>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkSpinButton" id="pixelskipselect">
+                      <widget class="GtkSpinButton" id="pointskipselect">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="adjustment">0 0 300 1 10 10</property>
+                        <property name="adjustment">0 0 300 1 10 0</property>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
