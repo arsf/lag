@@ -10,8 +10,10 @@ public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
    ~TwoDeeOverview();
    bool returntostart();
+   void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    void makeprofbox();//Make the box showing the profile area.
+   void makefencebox();//Make the box showing the fence area.
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -22,7 +24,6 @@ public:
       sigprofend.unblock();
       this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
       profiling=true;
-      drawviewable(1);
    }
    void unsetupprofile(){//Blocks profile signals and unblocks pan signals:
       sigpanstart.unblock();
@@ -33,7 +34,26 @@ public:
       sigprofend.block();
       this->get_window()->set_cursor();
       profiling=false;
-      drawviewable(1);
+   }
+   void setupfence(){//Blocks pan signals and unblocks fence signals:
+      sigpanstart.block();
+      sigpan.block();
+      sigpanend.block();
+      sigfencestart.unblock();
+      sigfence.unblock();
+      sigfenceend.unblock();
+      this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      fencing=true;
+   }
+   void unsetupfence(){//Blocks fence signals and unblocks pan signals:
+      sigpanstart.unblock();
+      sigpan.unblock();
+      sigpanend.unblock();
+      sigfencestart.block();
+      sigfence.block();
+      sigfenceend.block();
+      this->get_window()->set_cursor();
+      fencing=false;
    }
    //Getters:
    void getprofile(double &startx,double &starty,double &endx,double &endy,double &width){//Get coordinates for profile.
@@ -43,9 +63,28 @@ public:
       endy = profendy;
       width = profwidth;
    }
+   void getfence(double &minX,double &minY,double &maxX,double &maxY){//Get coordinates for fence.
+      if(fencestartx<=fenceendx){
+         minX = fencestartx;
+         maxX = fenceendx;
+      }
+      else{
+         minX = fenceendx;
+         maxX = fencestartx;
+      }
+      if(fencestarty<=fenceendy){
+         minY = fencestarty;
+         maxY = fenceendy;
+      }
+      else{
+         minY = fenceendy;
+         maxY = fencestarty;
+      }
+   }
    //Setters:
    void setprofwidth(double profwidth){this->profwidth = profwidth;}//Set width of the profile.
    void setshowprofile(double showprofile){this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
+   void setshowfence(double showfence){this->showfence = showfence;}//Set whether fence should be seen when not being modified.
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
    void setheightcolour(bool heightcolour){this->heightcolour=heightcolour;}
    void setlinecolour(bool linecolour){this->linecolour=linecolour;}
@@ -97,6 +136,11 @@ protected:
    double profwidth;//The width of the profile.
    bool profiling;//Determines whether or not the profile should be drawn.
    bool showprofile;//Whether to display the profile box when not modifying it.
+   //Fencing:
+   double fencestartx, fencestarty;//The start coordinates for the fence.
+   double fenceendx, fenceendy;//The end coordinates for the fence.
+   bool fencing;//Determines whether or not the fence should be drawn.
+   bool showfence;//Whether to display the fence when not modifying it.
  
    //Signal handlers:
    //Panning:
@@ -107,12 +151,15 @@ protected:
    sigc::connection sigprofstart;
    sigc::connection sigprof;
    sigc::connection sigprofend;
+   //Fencing:
+   sigc::connection sigfencestart;
+   sigc::connection sigfence;
+   sigc::connection sigfenceend;
  
    //Methods:
  
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().
-   void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
    bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
    bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.
@@ -135,6 +182,10 @@ protected:
    bool on_prof_start(GdkEventButton* event);
    bool on_prof(GdkEventMotion* event);
    bool on_prof_end(GdkEventButton* event);
+    //Fencing:
+   bool on_fence_start(GdkEventButton* event);
+   bool on_fence(GdkEventMotion* event);
+   bool on_fence_end(GdkEventButton* event);
  
    
 };

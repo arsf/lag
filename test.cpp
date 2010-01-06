@@ -15,8 +15,11 @@ TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
 string exename = "";//The path of the executable.
+bool loadedanyfiles = false;
 
 //Gtk objects:
+Gtk::ToggleToolButton *fencetoggle = NULL;//Toggle button determining whether mouse dragging selects the fence.
+Gtk::CheckButton *fenceusecheck = NULL;
 Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether mouse dragging selects the profile.
 Gtk::ToggleToolButton *showprofiletoggle = NULL;//Toggle button determining whether the profile box is viewable on the 2d overview.
 Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable.
@@ -49,8 +52,10 @@ Gtk::ToggleToolButton *lineshowtoggle = NULL;
 Gtk::SpinButton *movingaveragerangeselect = NULL;
 Gtk::MenuItem *openfilemenuitem = NULL;
 Gtk::FileChooserDialog *filechooserdialog = NULL;
+Gtk::SpinButton *pixelskipselect = NULL;
 Gtk::VBox *vboxtdo = NULL;
 Gtk::VBox *vboxprof = NULL;
+Gtk::Entry *asciicodeentry = NULL;
 
 void on_returnbuttonprof_clicked(){
    prof->returntostart();
@@ -60,7 +65,12 @@ void on_returnbutton_clicked(){
    tdo->returntostart();
 }
 
-int testfilename(int argc,char *argv[],bool start){
+void get_area(double &minX,double &minY,double &maxX,double &maxY){
+   tdo->getfence(minX,minY,maxX,maxY);
+}
+
+int testfilename(int argc,char *argv[],bool start,bool usearea){
+   bool show_areas = loadedanyfiles;
    try{//Attempt to get real files.
       string pointoffset,filename;
       if(argc < 3){
@@ -79,30 +89,58 @@ int testfilename(int argc,char *argv[],bool start){
          if(filename != ""){
             if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
                LASloader* loader = new LASloader(argv[count]);
-               if(count==2 && start){
-                  delete lidardata;
-                  lidardata = new quadtree(loader,bucketlimit,poffs);//First time make quadtree...
+               if(count==2 && (start || !loadedanyfiles)){
+                  if(usearea){
+                     delete lidardata;
+                     double minX,minY,maxX,maxY;
+                     get_area(minX,minY,maxX,maxY);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY);
+                  }
+                  else{
+                     delete lidardata;
+                     lidardata = new quadtree(loader,bucketlimit,poffs);//First time make quadtree...
+                  }
                }
-               else lidardata->load(loader,poffs);//... otherwise add to it.
+               else{
+                  if(usearea){
+                     double minX,minY,maxX,maxY;
+                     get_area(minX,minY,maxX,maxY);
+                     lidardata->load(loader,poffs,minX,minY,maxX,maxY);
+                  }
+                  else lidardata->load(loader,poffs);//... otherwise add to it.
+               }
                cout << filename << endl;
                delete loader;
+               loadedanyfiles = true;
             }
             else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files:
-               ostringstream filenum;
-               filenum << count+1;
-               cout << "Type code for file " + filenum.str() << endl;//This code is needed in order to properly interpret the ASCII file.
-               string code1;
-               getline(cin,code1);
+               string code1 = asciicodeentry->get_text();
                const char* code = code1.c_str();
                cout << code << endl;
                ASCIIloader* aloader = new ASCIIloader(argv[count],code);
-               if(count==2 && start){
-                  delete lidardata;
-                  lidardata = new quadtree(aloader,bucketlimit,poffs);//First time make quadtree...
+               if(count==2 && (start || !loadedanyfiles)){
+                  if(usearea){
+                     delete lidardata;
+                     double minX,minY,maxX,maxY;
+                     get_area(minX,minY,maxX,maxY);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY);
+                  }
+                  else{
+                     delete lidardata;
+                     lidardata = new quadtree(aloader,bucketlimit,poffs);//First time make quadtree...
+                  }
                }
-               else lidardata->load(aloader,poffs);//... otherwise add to it.
+               else{
+                  if(usearea){
+                     double minX,minY,maxX,maxY;
+                     get_area(minX,minY,maxX,maxY);
+                     lidardata->load(aloader,poffs,minX,minY,maxX,maxY);
+                  }
+                  else lidardata->load(aloader,poffs);//... otherwise add to it.
+               }
                cout << filename << endl;
                delete aloader;
+               loadedanyfiles = true;
             }
             else{//For incorrect file extensions:
                cout << "Files must have the extensions .las, .LAS, .txt or .TXT." << endl;
@@ -110,82 +148,24 @@ int testfilename(int argc,char *argv[],bool start){
             }
          }
       }
-//       The following block of commented out code is for testing purposes:
-//       LASloader* loader = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_111020_1.LAS");
-//       LASloader* loader3 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_110312_1.LAS");
-//       LASloader* loader6 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_111753_1.LAS");
-//       LASloader* loader7 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_112149_1.LAS");
-//       LASloader* loader8 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_112524_1.LAS");
-//       LASloader* loader9 = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_112915_1.LAS");
-//       LASloader* loadera = new LASloader("/users/rsg/harg/hargsvn/lag/lag/las_files/LDR090601_113327_1.LAS");
-//       lidardata = new quadtree(loader,bucketlimit,3);
-//       lidardata->load(loader3,3);
-//       lidardata->load(loader6,3);
-//       lidardata->load(loader7,3);
-//       lidardata->load(loader8,3);
-//       lidardata->load(loader9,3);
-//       lidardata->load(loadera,3);
-//       delete loader;
-//       delete loader3;
-//       delete loader6;
-//       delete loader7;
-//       delete loader8;
-//       delete loader9;
-//       delete loadera;
    }
    catch(char const* e){
       cout << e << endl;
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       return 22;
    }
-   Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
-   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
-   if (glconfig==NULL){
-       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
-       if(glconfig==NULL)std::exit(1);
+   if(show_areas){
+      tdo->prepare_image();
+      tdo->drawviewable(1);
+      prof->prepare_image();
+      prof->drawviewable(1);
    }
-   delete tdo;
-   TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
-   tdo = tdo1;//For some reason, I have not been able to use "new" with the global object directly. :-(
-   tdo->set_size_request(200,200);
-   tdo->setintensitycolour(colourbyintensitymenu->get_active());
-   tdo->setheightcolour(colourbyheightmenu->get_active());
-   tdo->setlinecolour(colourbyflightlinemenu->get_active());
-   tdo->setclasscolour(colourbyclassificationmenu->get_active());
-   tdo->setreturncolour(colourbyreturnmenu->get_active());
-   tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
-   tdo->setheightbrightness(brightnessbyheightmenu->get_active());
-   tdo->setprofwidth(profwidthselect->get_value());
-   tdo->setpointwidth(pointwidthselect->get_value());
-   tdo->setmaindetail(maindetailselect->get_value());
-   tdo->setpreviewdetail(previewdetailselect->get_value());
-   vboxtdo->pack_end(*tdo,true,true);
-   tdo->show_all();
-   Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
-   glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
-   if (glconfig2==NULL){
-      glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
-      if(glconfig2==NULL)std::exit(1);
-   }
-   delete prof;
-   Profile* prof1 = new Profile(glconfig2,lidardata,bucketlimit,rulerlabel);
-   prof = prof1;
-   prof->set_size_request(200,200);
-   prof->setintensitycolour(colourbyintensitymenuprof->get_active());
-   prof->setheightcolour(colourbyheightmenuprof->get_active());
-   prof->setlinecolour(colourbyflightlinemenuprof->get_active());
-   prof->setclasscolour(colourbyclassificationmenuprof->get_active());
-   prof->setreturncolour(colourbyreturnmenuprof->get_active());
-   prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
-   prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
-   prof->setpointwidth(pointwidthselectprof->get_value());
-   prof->setmaindetail(maindetailselectprof->get_value());
-   prof->setpreviewdetail(previewdetailselectprof->get_value());
-   prof->setdrawpoints(pointshowtoggle->get_active());
-   prof->setdrawmovingaverage(lineshowtoggle->get_active());
-   prof->setmavrgrange(movingaveragerangeselect->get_value());
-   vboxprof->pack_end(*prof,true,true);
-   prof->show_all();
+     else{
+         vboxtdo->pack_end(*tdo,true,true);
+         tdo->show_all();
+         vboxprof->pack_end(*prof,true,true);
+         prof->show_all();
+     }
    return 1;
 }
 
@@ -195,38 +175,27 @@ void on_openfilemenuactivated(){
 
 void on_filechooserdialogresponse(int response_id){
    if(response_id == Gtk::RESPONSE_CLOSE)filechooserdialog->hide_all();
-   else if(response_id == 1){
+   else if(response_id == 1 || response_id == 2){
       Glib::SListHandle<Glib::ustring> names = filechooserdialog->get_filenames();
-      int argc = names.size() +1;
+      int argc = names.size() + 2;
       char** argv = new char*[argc];
-      argv[0] = (char*)exename.c_str();
-      argv[1] = (char*)"0";
+      argv[0] = new char[exename.length()+1];
+      strcpy(argv[0],exename.c_str());
+      ostringstream pixeloffset;
+      pixeloffset << pixelskipselect->get_value_as_int();
+      string poffs = pixeloffset.str();
+      argv[1] = new char[poffs.length()+1];
+      strcpy(argv[1],poffs.c_str());
       argc=2;
       for(Glib::SListHandle<Glib::ustring>::iterator itera = names.begin();itera!=names.end();itera++){
-         argv[argc] = (char*)(*itera).c_str();
-         cout << argv[argc] << endl;
+         argv[argc] = new char[(*itera).length()+1];
+         strcpy(argv[argc],(*itera).c_str());
          argc++;
       }
-      testfilename(argc,argv,false);
-   }
-   else if(response_id == 2){
-      Glib::SListHandle<Glib::ustring> names = filechooserdialog->get_filenames();
-      int argc = names.size() +1;
-      char** argv = new char*[argc];
-      argv[0] = (char*)exename.c_str();
-      argv[1] = (char*)"0";
-      argc=2;
-      string filenamestring;
-      for(Glib::SListHandle<Glib::ustring>::iterator itera = names.begin();itera!=names.end();itera++){
-//         argv[argc] = (char*)(*itera).c_str();
-//         argc++;
-         filenamestring = *itera;
-         argv[argc] = (char*)filenamestring.c_str();
-         cout << argv[argc] << endl;
-         argc++;
-         cout << *itera << endl;
-      }
-      testfilename(argc,argv,true);
+      if(response_id == 1)testfilename(argc,argv,false,fenceusecheck->get_active());
+      if(response_id == 2)testfilename(argc,argv,true,fenceusecheck->get_active());
+      for(int i = 0;i < argc;i++)delete[] argv[i];
+      delete[] argv;
    }
 //   cout << lidardata->flightlinenum << endl;
 }
@@ -298,7 +267,6 @@ void on_colouractivatedprof(){
    prof->setclasscolour(colourbyclassificationmenuprof->get_active());
    prof->setreturncolour(colourbyreturnmenuprof->get_active());
    prof->drawviewable(1);
-   cout << "wibble" << endl;
 }
 
 void on_brightnessactivatedprof(){
@@ -307,15 +275,35 @@ void on_brightnessactivatedprof(){
    prof->drawviewable(1);
 }
 
+void on_fencetoggle(){
+   if(fencetoggle->get_active()){
+      if(profiletoggle->get_active())profiletoggle->set_active(false);
+      tdo->setupfence();
+   }
+   else{
+   	tdo->unsetupfence();
+   }
+   tdo->drawviewable(1);
+}
+
+//void on_showfencetoggle(){
+//   tdo->setshowfence(showfencetoggle->get_active());
+//   tdo->drawviewable(1);
+//}
+
 //When toggled, the 2d overview goes into profile selection mode. When untoggled, 2d overview goes out of profile selection mode and the profile parameters are sent to the profile area.
 void on_profiletoggle(){
-   if(profiletoggle->get_active())tdo->setupprofile();
+   if(profiletoggle->get_active()){
+      if(fencetoggle->get_active())fencetoggle->set_active(false);
+      tdo->setupprofile();
+   }
    else{
    	tdo->unsetupprofile();
       double startx,starty,endx,endy,width;
       tdo->getprofile(startx,starty,endx,endy,width);
       prof->showprofile(startx,starty,endx,endy,width);
    }
+   tdo->drawviewable(1);
 }
 
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
@@ -329,6 +317,9 @@ void on_profwidthselected(){
    tdo->setprofwidth(profwidthselect->get_value());
    tdo->makeprofbox();
    tdo->drawviewable(2);
+   double startx,starty,endx,endy,width;//Experiment...
+   tdo->getprofile(startx,starty,endx,endy,width);//...
+   prof->showprofile(startx,starty,endx,endy,width);//...
 }
 
 //When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
@@ -371,6 +362,8 @@ int GUIset(int argc,char *argv[]){
             if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
             refXml->get_widget("filechooserdialog",filechooserdialog);
             if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
+            refXml->get_widget("pixelskipselect",pixelskipselect);
+            refXml->get_widget("asciicodeentry",asciicodeentry);
 
             Gtk::RadioMenuItem *colourbynonemenu = NULL;
             refXml->get_widget("colourbynonemenu",colourbynonemenu);
@@ -400,6 +393,10 @@ int GUIset(int argc,char *argv[]){
 
             refXml->get_widget("brightnessbyheightmenu",brightnessbyheightmenu);
             if(brightnessbyheightmenu)brightnessbyheightmenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
+
+            refXml->get_widget("fencetoggle",fencetoggle);
+            if(fencetoggle)fencetoggle->signal_toggled().connect(sigc::ptr_fun(&on_fencetoggle));
+            refXml->get_widget("fenceusecheck",fenceusecheck);
 
             refXml->get_widget("profiletoggle",profiletoggle);
             if(profiletoggle)profiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_profiletoggle));
@@ -510,23 +507,49 @@ int GUIset(int argc,char *argv[]){
 //      window4->set_title("Window4");
 //      window4->show();
 //      gtkmain.run(*windowp);   
-      Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
-      glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
-      if (glconfig==NULL){
-          glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
-          if(glconfig==NULL)std::exit(1);
-      }
-      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
-      tdo = tdo1;//For some reason, I have not been able to use "new" with the global object directly. :-(
-      Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
-      glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
-      if (glconfig2==NULL){
-         glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
-         if(glconfig2==NULL)std::exit(1);
-      }
-      Profile* prof1 = new Profile(glconfig2,lidardata,bucketlimit,rulerlabel);
-      prof = prof1;
-      testfilename(argc,argv,true);
+   Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
+   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
+   if (glconfig==NULL){
+       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
+       if(glconfig==NULL)std::exit(1);
+   }
+     TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
+     tdo = tdo1;//For some reason, I have not been able to use "new" with the global object directly. :-(
+     tdo->set_size_request(200,200);
+     tdo->setintensitycolour(colourbyintensitymenu->get_active());
+     tdo->setheightcolour(colourbyheightmenu->get_active());
+     tdo->setlinecolour(colourbyflightlinemenu->get_active());
+     tdo->setclasscolour(colourbyclassificationmenu->get_active());
+     tdo->setreturncolour(colourbyreturnmenu->get_active());
+     tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
+     tdo->setheightbrightness(brightnessbyheightmenu->get_active());
+     tdo->setprofwidth(profwidthselect->get_value());
+     tdo->setpointwidth(pointwidthselect->get_value());
+     tdo->setmaindetail(maindetailselect->get_value());
+     tdo->setpreviewdetail(previewdetailselect->get_value());
+     Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
+     glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
+     if (glconfig2==NULL){
+        glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
+        if(glconfig2==NULL)std::exit(1);
+     }
+     Profile* prof1 = new Profile(glconfig2,lidardata,bucketlimit,rulerlabel);
+     prof = prof1;
+     prof->set_size_request(200,200);
+     prof->setintensitycolour(colourbyintensitymenuprof->get_active());
+     prof->setheightcolour(colourbyheightmenuprof->get_active());
+     prof->setlinecolour(colourbyflightlinemenuprof->get_active());
+     prof->setclasscolour(colourbyclassificationmenuprof->get_active());
+     prof->setreturncolour(colourbyreturnmenuprof->get_active());
+     prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
+     prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
+     prof->setpointwidth(pointwidthselectprof->get_value());
+     prof->setmaindetail(maindetailselectprof->get_value());
+     prof->setpreviewdetail(previewdetailselectprof->get_value());
+     prof->setdrawpoints(pointshowtoggle->get_active());
+     prof->setdrawmovingaverage(lineshowtoggle->get_active());
+     prof->setmavrgrange(movingaveragerangeselect->get_value());
+      testfilename(argc,argv,true,false);
       gtkmain.run(*window2);
    } else {
       std::cerr << "eep, no main window?" << std::endl;
@@ -538,6 +561,9 @@ int GUIset(int argc,char *argv[]){
 int main(int argc, char** argv) {
    exename.append(argv[0]);
    lidardata = new quadtree(0,0,1,1,bucketlimit);
+   loadedanyfiles = false;
    return GUIset(argc, argv);//Make the GUI.
+   delete tdo;
+   delete prof;
    delete lidardata;
 }

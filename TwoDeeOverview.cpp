@@ -39,6 +39,9 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    profwidth=30;
    profiling=false;
    showprofile=false;
+   //Fencing:
+   fencing=false;
+   showfence=false;
    //Colouring and shading:
    heightcolour = false;
    heightbrightness = false;
@@ -46,14 +49,11 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    zfloor=0.25;
    rmaxz=rminz=0;
    intensitycolour = false;
-//   intensitybrightness = true;
    intensitybrightness = false;
    intensityoffset = 0.0/3;
    intensityfloor = 0;
    rmaxintensity=rminintensity=0;
-//   linecolour = true;
    linecolour = false;
-//   classcolour = false;
    classcolour = true;
    returncolour = false;
    colourheightarray = new double[2];
@@ -72,6 +72,12 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    sigprofstart.block();
    sigprof.block();
    sigprofend.block();
+   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_start));
+   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence));
+   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_end));
+   sigfencestart.block();
+   sigfence.block();
+   sigfenceend.block();
 }
 
 TwoDeeOverview::~TwoDeeOverview(){
@@ -79,6 +85,7 @@ TwoDeeOverview::~TwoDeeOverview(){
    delete[] colourintensityarray;
    delete[] brightnessheightarray;
    delete[] brightnessintensityarray;
+//   delete lidarboundary;
 }
 
 bool TwoDeeOverview::returntostart(){
@@ -164,13 +171,40 @@ void TwoDeeOverview::makeprofbox(){
    double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
    if(length==0)length=1;
    glNewList(4,GL_COMPILE);
-   glColor3f(1.0,1.0,1.0);
-   glBegin(GL_LINE_LOOP);
-      glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,altitude);
-      glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,altitude);
-      glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,altitude);
-      glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,altitude);
-   glEnd();
+      glColor3f(1.0,1.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,altitude);
+         glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,altitude);
+         glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,altitude);
+         glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,altitude);
+      glEnd();
+   glEndList();
+}
+
+bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
+   fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
+   fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   makefencebox();
+   return drawviewable(2);
+}
+bool TwoDeeOverview::on_fence(GdkEventMotion* event){
+   fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
+   fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   makefencebox();
+   return drawviewable(2);
+}
+bool TwoDeeOverview::on_fence_end(GdkEventButton* event){return drawviewable(1);}
+
+void TwoDeeOverview::makefencebox(){
+   double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
+   glNewList(6,GL_COMPILE);
+      glColor3f(1.0,1.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(fencestartx,fencestarty,altitude);
+         glVertex3d(fencestartx,fenceendy,altitude);
+         glVertex3d(fenceendx,fenceendy,altitude);
+         glVertex3d(fenceendx,fencestarty,altitude);
+      glEnd();
    glEndList();
 }
 
@@ -310,7 +344,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
 
                 case 9:red=0;green=0;blue=1;break;//Blue for water.
                 case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=1;blue=1;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
@@ -348,6 +382,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       else glFlush();
    }
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
+   if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -432,7 +467,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
 
                 case 9:red=0;green=0;blue=1;break;//Blue for water.
                 case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=1;blue=1;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
@@ -468,6 +503,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
       glDrawArrays(GL_POINTS,0,count);
    }
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
+   if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -516,6 +552,22 @@ void TwoDeeOverview::coloursandshades(double maxz,double minz,int maxintensity,i
 
 //This method prepares the image for drawing and sets up OpenGl. It gets the data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets ups anti-aliasing, clearing and the initial view.
 void TwoDeeOverview::prepare_image(){
+   //Initial state:
+   lidarboundary = lidardata->getboundary();
+   double xdif = lidarboundary->maxX-lidarboundary->minX;
+   double ydif = lidarboundary->maxY-lidarboundary->minY;
+      //Initial centre:
+      centrex = lidarboundary->minX+xdif/2;
+      centrey = lidarboundary->minY+ydif/2;
+      //Scaling to screen dimensions:
+      double swidth = get_screen()->get_width();
+      double sheight = get_screen()->get_height();
+      double xratio = xdif/swidth;
+      double yratio = ydif/sheight;
+      yratio*=1.25;
+      ratio = 0;
+      if(xratio>yratio)ratio = xratio;
+      else ratio = yratio;
    vector<pointbucket*> *pointvector;
    try{
       pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
