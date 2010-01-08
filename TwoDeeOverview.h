@@ -1,3 +1,9 @@
+/*
+ * File: TwoDeeOverview.h
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: November 2009 - January 2010
+ *
+ * */
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
@@ -9,7 +15,7 @@ class TwoDeeOverview : public Gtk::GL::DrawingArea
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
    ~TwoDeeOverview();
-   bool returntostart();
+   bool returntostart();//Returns to the initial view.
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    void makeprofbox();//Make the box showing the profile area.
@@ -96,7 +102,7 @@ public:
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
 protected:
-   double zoompower;
+   double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
    Glib::RefPtr<Gdk::GL::Context> glcontext;//Possibly part of solution to shared viewport problem.
    //Point data and related stuff:
    quadtree* lidardata;//The point data is stored here.
@@ -168,21 +174,21 @@ protected:
    void resetview();//Determines what part of the image is displayed with orthographic projection.
    bool on_zoom(GdkEventScroll* event);//Allows the user to zoom with the mouse wheel.
    bool on_configure_event(GdkEventConfigure* event);//Handles resizing of the window. Calls resetview().
-   //Panning control:   //These allow the user to pan by clicking and dragging.
-   bool on_pan_start(GdkEventButton* event);
-   bool on_pan(GdkEventMotion* event);
-   bool on_pan_end(GdkEventButton* event);
  
    //Colouring and shading:
    void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);//Colours by a numeric variable.
    double brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue);//Shades by a numeric variable.
    void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
  
-    //Profiling:
+   //Panning control:   //These allow the user to pan by clicking and dragging.
+   bool on_pan_start(GdkEventButton* event);
+   bool on_pan(GdkEventMotion* event);
+   bool on_pan_end(GdkEventButton* event);
+   //Profiling:
    bool on_prof_start(GdkEventButton* event);
    bool on_prof(GdkEventMotion* event);
    bool on_prof_end(GdkEventButton* event);
-    //Fencing:
+   //Fencing:
    bool on_fence_start(GdkEventButton* event);
    bool on_fence(GdkEventMotion* event);
    bool on_fence_end(GdkEventButton* event);

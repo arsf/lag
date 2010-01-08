@@ -1,3 +1,9 @@
+/*
+ * File: Profile.h
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: December 2009 - January 2010
+ *
+ * */
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
@@ -10,7 +16,7 @@ class Profile : public Gtk::GL::DrawingArea
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
-   bool returntostart();
+   bool returntostart();//Return to the initial view of the image.
    void prepare_image();//Reads from subset of quadtree and prepares image for drawing.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -51,10 +57,10 @@ public:
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
 protected:
-   double zoompower;
-   bool drawpoints;
-   bool drawmovingaverage;
-   int mavrgrange;
+   double zoompower;//Determines how much the image zooms, as it affects the call to pow(a,b).
+   bool drawpoints;//Determines whether points are drawn.
+   bool drawmovingaverage;//Determines whether the best fit line is drawn.
+   int mavrgrange;//Defines the range of the moving average, with 0 meaning no averaging.
    bool imageexists;//Determines whether to draw anything, based on the existance or nonexistance of anything to draw.
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    Glib::RefPtr<Gdk::GL::Context> glcontext;//Possibly part of solution to shared viewport problem.
@@ -66,12 +72,12 @@ protected:
    bool** correctpointsbuckets;//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    int bucketlimit;//This is the maximum number of points a single bucket can contain.
    double maindetailmod,previewdetailmod;//These modify the amount of points skipped for each point not, when drawing. Lower is means more detail, higher means less.
-   double pointsize;//The diameter of the points.
+   double pointsize;//The diameter of the points in pixels.
  
    //Position variables:
    double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%.
    double centrex,centrey,centrez;//These give the centre of the viewport in image terms, rather than screen terms.
-   double viewerx,viewery,viewerz;
+   double viewerx,viewery,viewerz;//These give the coordinates of the "eye", looking towards the centre.
    double ratio;//This determines, along with the zoomlevel, the scaling of the image relative to the screen. At zoomlevel 1, the image should just fit within the screen.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
    double startx,starty;//The start coordinates of the profile.

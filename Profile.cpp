@@ -1,3 +1,9 @@
+/*
+ * File: Profile.cpp
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: December 2009 - January 2010
+ *
+ * */
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
@@ -123,7 +129,7 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
   }
   numbuckets = pointvector->size();
   buckets = new pointbucket*[numbuckets];
-  correctpointsbuckets = new bool*[numbuckets];
+  correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
      buckets[i]=pointvector->at(i);
      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,startx,starty,endx,endy,width);
@@ -135,6 +141,54 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
 
 //Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool Profile::drawviewable(int imagetype){
+//   double breadth = endx - startx;
+//   double height = endy - starty;
+//   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+//   double hypotenuse,length2;
+//   double starcenx = centrex - startx;
+//   double starceny = centrey - starty;
+//   double endcenx = endx - centrex;
+//   double endceny = endy - centrey;
+//   if(starcenx*breadth<0)starcenx=0;
+//   if(starceny*breadth<0)starceny=0;
+//   if(endcenx*breadth<0)endcenx=0;
+//   if(endceny*breadth<0)endceny=0;
+//   cout << "See1:" << endl;
+//   cout << starcenx << endl;
+//   cout << starceny << endl;
+//   cout << endcenx << endl;
+//   cout << endceny << endl;
+//   hypotenuse = (get_width()/2)*ratio/zoomlevel;
+//   length2 = sqrt((starcenx)*(starcenx) + (starceny)*(starceny));
+//   if(hypotenuse>=length2)hypotenuse = length2;
+//   double vstartx = centrex - hypotenuse * breadth / length;
+//   double vstarty = centrey - hypotenuse * height / length;
+//   hypotenuse = (get_width()/2)*ratio/zoomlevel;
+//   length2 = sqrt((endcenx)*(endcenx) + (endceny)*(endceny));
+//   if(hypotenuse>=length2)hypotenuse = length2;
+//   double vendx = centrex + hypotenuse * breadth / length;
+//   double vendy = centrey + hypotenuse * height / length;
+//   for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
+//   delete[] correctpointsbuckets;
+//   delete[] buckets;
+//   vector<pointbucket*> *pointvector;
+//   try{
+//      pointvector = lidardata->advsubset(vstartx,vstarty,vendx,vendy,width);//Get data.
+//      imageexists=true;
+//   }catch(const char* e){
+//      cout << e << endl;
+//      cout << "No points returned." << endl;
+//      imageexists=false;
+//      return false;
+//   }
+//   numbuckets = pointvector->size();
+//   buckets = new pointbucket*[numbuckets];
+//   correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
+//   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+//      buckets[i]=pointvector->at(i);
+//      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,vstartx,vstarty,vendx,vendy,width);
+//   }
+//   delete pointvector;
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
@@ -183,7 +237,14 @@ void Profile::resetview(){
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
-bool Profile::on_expose_event(GdkEventExpose* event){ return drawviewable(1); }
+bool Profile::on_expose_event(GdkEventExpose* event){ //return drawviewable(1); }
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   return true;
+}
+
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool Profile::on_pan_start(GdkEventButton* event){
@@ -193,7 +254,6 @@ bool Profile::on_pan_start(GdkEventButton* event){
    }
    return true;
 }
-
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
 bool Profile::on_pan(GdkEventMotion* event){
 //Y is reversed because gtk has origin at top left and opengl has it at bottom left.
@@ -209,7 +269,6 @@ bool Profile::on_pan(GdkEventMotion* event){
    resetview();
    return drawviewable(2);
 }
-
 //At the end of the pan draw the full image.
 bool Profile::on_pan_end(GdkEventButton* event){
    if(event->button==1)return drawviewable(1);
@@ -229,7 +288,6 @@ bool Profile::on_ruler_start(GdkEventButton* event){
    makerulerbox();
    return drawviewable(1);
 }
-
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
 bool Profile::on_ruler(GdkEventMotion* event){
    double breadth = endx - startx;
@@ -256,10 +314,8 @@ bool Profile::on_ruler(GdkEventMotion* event){
    makerulerbox();
    return drawviewable(1);
 }
-
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
 bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
-
 //Make the ruler as a thick line.
 void Profile::makerulerbox(){
    glNewList(4,GL_COMPILE);
@@ -308,6 +364,7 @@ bool Profile::on_configure_event(GdkEventConfigure* event){
   return true;
 }
 
+//This method is for sort(). It projects the points onto a plane defined by the z axis and the line perpendicular to the viewing direction.
 bool Profile::linecomp(point* a,point* b){
    double xa = a->x;
    double xb = b->x;
@@ -315,13 +372,13 @@ bool Profile::linecomp(point* a,point* b){
    double yb = b->y;
    double alongprofa,alongprofb;
    if(startx==endx){//If the profile is parallel to the y axis:
-      double mult=-1;
+      double mult=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
       if(starty<endy)mult=1;
       alongprofa = mult * (ya - starty);
       alongprofb = mult * (yb - starty);
    }
    else if(starty==endy){//If the profile is parallel to the x axis:
-      double mult=-1;
+      double mult=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
       if(startx<endx)mult=1;
       alongprofa = mult * (xa - startx);
       alongprofb = mult * (xb - startx);
@@ -329,9 +386,9 @@ bool Profile::linecomp(point* a,point* b){
    else{//If the profile is skewed:
       double breadth = endx - startx;
       double height = endy - starty;
-      double multx=-1;
+      double multx=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
       if(startx<endx)multx=1;
-      double multy=-1;
+      double multy=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
       if(starty<endy)multy=1;
       double lengradbox = multx * multy * height / breadth;//Gradients of the profile and point-to-profile lines
       double widgradbox = -1.0 / lengradbox;//...
@@ -339,12 +396,12 @@ bool Profile::linecomp(point* a,point* b){
       double widgradboxb = multy * (yb - starty) - (multx * (xb - startx) * widgradbox);//...
       //Testing points:
       double interxa,interxb,interya,interyb;
-      interxa = widgradboxa / (widgradbox - lengradbox);
-      interya = interxa * lengradbox;
-      interxb = widgradboxb / (widgradbox - lengradbox);
-      interyb = interxb * lengradbox;
-      alongprofa = sqrt(interxa*interxa+interya*interya);
-      alongprofb = sqrt(interxb*interxb+interyb*interyb);
+      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point to the plane.
+      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point to the plane.
+      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point to the plane.
+      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point to the plane.
+      alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+      alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
    }
    return alongprofa > alongprofb;
 }
@@ -481,22 +538,19 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
             case 5:red=1;green=0;blue=1;break;//Purple
             default:red=green=blue=1;break;//White in the event of strangeness.
          }
-         for(int j=0;j<numbuckets;j++){
-            for(int k=0;k<buckets[j]->numberofpoints;k++){
+         for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
+            for(int k=0;k<buckets[j]->numberofpoints;k++){//Possibly: do k+=detail instead, and copy to preview. Might not be "correct" though.
                if(correctpointsbuckets[j][k])if(buckets[j]->points[k].flightline == flightlines.at(i))flightlinepoints.push_back(&(buckets[j]->points[k]));
             }
          }
-         sort(flightlinepoints.begin(),flightlinepoints.end(),boost::bind(&Profile::linecomp,this,_1,_2));
-//         glColor3d(red,green,blue);
-//         glBegin(GL_LINE_STRIP);
+         sort(flightlinepoints.begin(),flightlinepoints.end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
          for(int j=0;j<(int)flightlinepoints.size();j++){
             double z=0,zcount=0;
-            for(int k=-mavrgrange;k<=mavrgrange;k++)if((j+k>=0&&j+k<(int)flightlinepoints.size())){
+            for(int k=-mavrgrange;k<=mavrgrange;k++)if((j+k>=0&&j+k<(int)flightlinepoints.size())){// (up to) the range (depending on how close to the edge the point is) add up points...
                z+=flightlinepoints.at(j+k)->z;
                zcount++;
             }
-            z /= zcount;
-//            glVertex3d(flightlinepoints.at(j)->x,flightlinepoints.at(j)->y,z);
+            z /= zcount;//... and divide by the number of them to get the moving average at that point.
             double x = flightlinepoints.at(j)->x;
             double y = flightlinepoints.at(j)->y;
             vertices[3*count]=x;
@@ -507,7 +561,6 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
             colours[3*count+2]=blue;
             count++;
          }
-//         glEnd();
          glDrawArrays(GL_LINE_STRIP,0,count);
       }
    }

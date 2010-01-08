@@ -1,3 +1,9 @@
+/*
+ * File: MathFuncs.cpp
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: December 2009 - January 2010
+ *
+ * */
 #include "MathFuncs.h"
 
 //Returns the value of the given percentile of a dataset. Makes a histogram of the dataset and goes along it until it gets a total count corresponding with the percentile.

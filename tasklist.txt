@@ -84,6 +84,6 @@ Include scan angle, and colour by it. Brightness?*
 
 Option to put noise points at top.*
 
-Ability to open files with different number of skipped pixels.*
+Ability to open files with different number of skipped points.*
 
 Some way to see what flightline a point is from.***

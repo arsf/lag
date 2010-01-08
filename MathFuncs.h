@@ -1,3 +1,9 @@
+/*
+ * File: MathFuncs.h
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: December 2009 - January 2010
+ *
+ * */
 #include <cmath>
 #include "quadtreestructs.h"
 #ifndef MATHFUNCS_H

@@ -1,3 +1,9 @@
+/*
+ * File: TwoDeeOverview.cpp
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: November 2009 - January 2010
+ *
+ * */
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
@@ -88,6 +94,7 @@ TwoDeeOverview::~TwoDeeOverview(){
 //   delete lidarboundary;
 }
 
+//Return to initial viewing position.
 bool TwoDeeOverview::returntostart(){
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
@@ -117,7 +124,13 @@ void TwoDeeOverview::resetview(){
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
-bool TwoDeeOverview::on_expose_event(GdkEventExpose* event){ return drawviewable(1); }
+bool TwoDeeOverview::on_expose_event(GdkEventExpose* event){ //return drawviewable(1); }
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   return true;
+}
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
@@ -127,7 +140,6 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    }
    return true;
 }
-
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview). The button is not defined here as it is defined in the /glade file.
 bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       centrex -= (event->x-panstartx)*ratio/zoomlevel;
@@ -137,7 +149,6 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       resetview();
       return drawviewable(2);
 }
-
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    if(event->button==1)return drawviewable(1);
@@ -151,7 +162,6 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    makeprofbox();
    return drawviewable(2);
 }
-
 //Updates the end point of the profile and then gets the vertical and horisontal differences betweent the start and end points. These are used to determine the length of the profile and hence the positions of the vertices of the profile rectangle. The rectangle is prepared and then the drawing method is called.
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
@@ -159,10 +169,8 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    makeprofbox();
    return drawviewable(2);
 }
-
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
-
 //This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then prepares a rectangle for drawing from this.
 void TwoDeeOverview::makeprofbox(){
    double breadth = profendx - profstartx;
@@ -181,20 +189,23 @@ void TwoDeeOverview::makeprofbox(){
    glEndList();
 }
 
+//Initialises the coordinates of the fence and prepares it for drawing, then draws preview.
 bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
    makefencebox();
    return drawviewable(2);
 }
+//Updates end coordinates of the fence and prepares it for drawing, then draws preview.
 bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
    makefencebox();
    return drawviewable(2);
 }
+//Draws the main image one more.
 bool TwoDeeOverview::on_fence_end(GdkEventButton* event){return drawviewable(1);}
-
+//Makes the fence box.
 void TwoDeeOverview::makefencebox(){
    double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
    glNewList(6,GL_COMPILE);
@@ -378,6 +389,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
          count++;
       }
       glDrawArrays(GL_POINTS,0,count);
+      //Perhaps modify to happen only when the estimated number of points exceeds a certain value? Estimation could be: numbuckets * bucketlimit / detail. Quite rough, though. This might then cause previewimage to become useless. :-)
       if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
       else glFlush();
    }
