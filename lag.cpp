@@ -22,6 +22,7 @@ int bucketlimit = 100000;//How many points in each bucket, maximum.
 string exename = "";//The path of the executable.
 bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
 ostringstream *loaderrorstream;
+ofstream loaderroroutput;
 
 //Gtk objects:
 Gtk::VBox *vboxtdo = NULL;//Contains the overview.
@@ -116,6 +117,12 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                   else lidardata->load(loader,poffs);//If not.
                }
                cout << filename << endl;
+               if(loaderrorstream->str()!=""){
+                  cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
+                  loaderroroutput << filename << endl;
+                  loaderroroutput << loaderrorstream->str();
+                  loaderrorstream->str("");
+               }
                delete loader;
             }
             else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
@@ -147,6 +154,12 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                   else lidardata->load(aloader,poffs);//If not.
                }
                cout << filename << endl;
+               if(loaderrorstream->str()!=""){
+                  cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
+                  loaderroroutput << filename << endl;
+                  loaderroroutput << loaderrorstream->str();
+                  loaderrorstream->str("");
+               }
                delete aloader;
             }
             else{//For incorrect file extensions:
@@ -160,14 +173,6 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << e << endl;
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       return 22;
-   }
-   if(loaderrorstream->str()!=""){
-      cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
-      ofstream loaderroroutput;
-      loaderroroutput.open("/tmp/LAGloadingerrors.txt");
-      loaderroroutput << loaderrorstream->str();
-      cout << loaderrorstream->str();
-      loaderroroutput.close();
    }
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This will need the viewport bug to be fixed in order to work properly.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
@@ -601,6 +606,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
+   loaderroroutput.open("/tmp/LAGloadingerrors.txt");
    exename.append(argv[0]);//Record the program name.
    lidardata = new quadtree(0,0,1,1,bucketlimit);//Create quadtree now so that it can be deleted later.
    loadedanyfiles = false;
@@ -609,4 +615,5 @@ int main(int argc, char** argv) {
    delete tdo;
    delete prof;
    delete lidardata;
+   loaderroroutput.close();
 }
