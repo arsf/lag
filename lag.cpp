@@ -21,6 +21,7 @@ Profile *prof = NULL;//The profile.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
 string exename = "";//The path of the executable.
 bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
+ostringstream *loaderrorstream;
 
 //Gtk objects:
 Gtk::VBox *vboxtdo = NULL;//Contains the overview.
@@ -93,13 +94,17 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                if(count==2 && (start || !loadedanyfiles)){//If refreshing (or from command-line) use first filename to make quadtree...
                   if(usearea){//If using the fence:
                      delete lidardata;
+                     delete loaderrorstream;
+                     loaderrorstream = new ostringstream();
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY,loaderrorstream);
                   }
                   else{//If not:
                      delete lidardata;
-                     lidardata = new quadtree(loader,bucketlimit,poffs);
+                     delete loaderrorstream;
+                     loaderrorstream = new ostringstream();
+                     lidardata = new quadtree(loader,bucketlimit,poffs,loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.
@@ -120,13 +125,17 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                if(count==2 && (start || !loadedanyfiles)){//If refreshing (or from command-line) use first filename to make quadtree...
                   if(usearea){//If using the fence:
                      delete lidardata;
+                     delete loaderrorstream;
+                     loaderrorstream = new ostringstream();
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY,loaderrorstream);
                   }
                   else{//If not:
                      delete lidardata;
-                     lidardata = new quadtree(aloader,bucketlimit,poffs);
+                     delete loaderrorstream;
+                     loaderrorstream = new ostringstream();
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.
@@ -151,6 +160,14 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << e << endl;
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       return 22;
+   }
+   if(loaderrorstream->str()!=""){
+      cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
+      ofstream loaderroroutput;
+      loaderroroutput.open("/tmp/LAGloadingerrors.txt");
+      loaderroroutput << loaderrorstream->str();
+      cout << loaderrorstream->str();
+      loaderroroutput.close();
    }
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This will need the viewport bug to be fixed in order to work properly.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
@@ -587,6 +604,7 @@ int main(int argc, char** argv) {
    exename.append(argv[0]);//Record the program name.
    lidardata = new quadtree(0,0,1,1,bucketlimit);//Create quadtree now so that it can be deleted later.
    loadedanyfiles = false;
+   loaderrorstream = new ostringstream();
    return GUIset(argc, argv);//Make the GUI.
    delete tdo;
    delete prof;
