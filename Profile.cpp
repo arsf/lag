@@ -136,7 +136,8 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
   }
   resetview();
   delete pointvector;
-  return drawviewable(1);
+  if(is_realized())return drawviewable(1);
+  else return false;
 }
 
 //Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.

@@ -29,7 +29,7 @@ public:
       sigrulerstart.unblock();
       sigruler.unblock();
       sigrulerend.unblock();
-      this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
       rulering=true;
    }
    void unsetupruler(){//Blocks ruler signals and unblocks pan signals:
@@ -39,7 +39,7 @@ public:
       sigrulerstart.block();
       sigruler.block();
       sigrulerend.block();
-      this->get_window()->set_cursor();
+      if(is_realized())get_window()->set_cursor();
       rulering=false;
    }
    //Setters:

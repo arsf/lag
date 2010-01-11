@@ -230,14 +230,14 @@ void on_colouractivated(){
    tdo->setlinecolour(colourbyflightlinemenu->get_active());
    tdo->setclasscolour(colourbyclassificationmenu->get_active());
    tdo->setreturncolour(colourbyreturnmenu->get_active());
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //If one of the brightness radio menu items is selected (and, therefore, the others deselected) then set the values of the brightness control variables in the overview to the values of the corresponding radio menu items.
 void on_brightnessactivated(){
    tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
    tdo->setheightbrightness(brightnessbyheightmenu->get_active());
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //Toggles whether clicking and dragging will select the fence in the overview.
@@ -249,7 +249,7 @@ void on_fencetoggle(){
    else{
    	tdo->unsetupfence();
    }
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //When toggled, the 2d overview goes into profile selection mode. When untoggled, 2d overview goes out of profile selection mode and the profile parameters are sent to the profile area.
@@ -264,20 +264,20 @@ void on_profiletoggle(){
       tdo->getprofile(startx,starty,endx,endy,width);
       prof->showprofile(startx,starty,endx,endy,width);
    }
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
 void on_showprofiletoggle(){
    tdo->setshowprofile(showprofiletoggle->get_active());
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //When the value in the spinbutton for profile width is changed, tell the 2d overview, then make the new profile box and then draw it. This does NOT update the profile itself (or, at least, not yet). To update the profile after the width has been satisfactorily adjusted, the profiletoggle must be toggled and then untoggled.
 void on_profwidthselected(){
    tdo->setprofwidth(profwidthselect->get_value());
    tdo->makeprofbox();
-   tdo->drawviewable(2);
+   if(tdo->is_realized())tdo->drawviewable(2);
 //   double startx,starty,endx,endy,width;//Experiment...
 //   tdo->getprofile(startx,starty,endx,endy,width);//...
 //   prof->showprofile(startx,starty,endx,endy,width);//...
@@ -286,19 +286,19 @@ void on_profwidthselected(){
 //This changes the width of the points in pixels.
 void on_pointwidthselected(){
    tdo->setpointwidth(pointwidthselect->get_value());
-   tdo->drawviewable(2);
+   if(tdo->is_realized())tdo->drawviewable(2);
 }
 
 //This indirectly determines how many points are skipped when viewing the main overview image. I.e. this affects it as well as the number of visible buckets.
 void on_maindetailselected(){
    tdo->setmaindetail(maindetailselect->get_value());
-   tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(1);
 }
 
 //This indirectly determines how many points are skipped when viewing the overview preview. I.e. this affects it as well as the number of visible buckets.
 void on_previewdetailselected(){
    tdo->setpreviewdetail(previewdetailselect->get_value());
-   tdo->drawviewable(2);
+   if(tdo->is_realized())tdo->drawviewable(2);
 }
 
 //Does the same as on_colouractivated, except for the profile.
@@ -308,49 +308,49 @@ void on_colouractivatedprof(){
    prof->setlinecolour(colourbyflightlinemenuprof->get_active());
    prof->setclasscolour(colourbyclassificationmenuprof->get_active());
    prof->setreturncolour(colourbyreturnmenuprof->get_active());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //Does the same as on_brightnessactivated, except for the profile.
 void on_brightnessactivatedprof(){
    prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
    prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //Does the same as on_pointwidthselected, except for the profile.
 void on_pointwidthselectedprof(){
    prof->setpointwidth(pointwidthselectprof->get_value());
-   prof->drawviewable(2);
+   if(prof->is_realized())prof->drawviewable(2);
 }
 
 //Does the same as on_maindetailselected, except for the profile.
 void on_maindetailselectedprof(){
    prof->setmaindetail(maindetailselectprof->get_value());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //Does the same as on_previewdetailselected, except for the profile.
 void on_previewdetailselectedprof(){
    prof->setpreviewdetail(previewdetailselectprof->get_value());
-   prof->drawviewable(2);
+   if(prof->is_realized())prof->drawviewable(2);
 }
 
 //Determines whether to display the points on the profile.
 void on_pointshowtoggle(){
    prof->setdrawpoints(pointshowtoggle->get_active());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //Determines whether to display the (best fit) lines on the profile.
 void on_lineshowtoggle(){
    prof->setdrawmovingaverage(lineshowtoggle->get_active());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 //The best fit is a moving average, and this changes the range, and therefore the shape of the line.
 void on_movingaveragerangeselect(){
    prof->setmavrgrange(movingaveragerangeselect->get_value());
-   prof->drawviewable(1);
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
@@ -361,12 +361,12 @@ void on_rulertoggle(){
 
 //This returns the overview to its original position.
 void on_returnbutton_clicked(){
-   tdo->returntostart();
+   if(tdo->is_realized())tdo->returntostart();
 }
 
 //This returns the profile to its original position.
 void on_returnbuttonprof_clicked(){
-   prof->returntostart();
+   if(prof->is_realized())prof->returntostart();
 }
 
 //Sets up the GUI.

@@ -28,7 +28,7 @@ public:
       sigprofstart.unblock();
       sigprof.unblock();
       sigprofend.unblock();
-      this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
       profiling=true;
    }
    void unsetupprofile(){//Blocks profile signals and unblocks pan signals:
@@ -38,7 +38,7 @@ public:
       sigprofstart.block();
       sigprof.block();
       sigprofend.block();
-      this->get_window()->set_cursor();
+      if(is_realized())get_window()->set_cursor();
       profiling=false;
    }
    void setupfence(){//Blocks pan signals and unblocks fence signals:
@@ -48,7 +48,7 @@ public:
       sigfencestart.unblock();
       sigfence.unblock();
       sigfenceend.unblock();
-      this->get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
       fencing=true;
    }
    void unsetupfence(){//Blocks fence signals and unblocks pan signals:
@@ -58,7 +58,7 @@ public:
       sigfencestart.block();
       sigfence.block();
       sigfenceend.block();
-      this->get_window()->set_cursor();
+      if(is_realized())get_window()->set_cursor();
       fencing=false;
    }
    //Getters:
