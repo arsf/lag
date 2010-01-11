@@ -49,6 +49,19 @@ Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in
 Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in the overview in pixels.
 Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
 Gtk::SpinButton *previewdetailselect = NULL;//Determines how many points are skipped displaying the overview preview.
+//Advanced viewing options for the overview:
+Gtk::Dialog *advancedoptionsdialog = NULL;
+Gtk::CheckButton *classcheckbutton0 = NULL;
+Gtk::CheckButton *classcheckbutton2 = NULL;
+Gtk::CheckButton *classcheckbutton3 = NULL;
+Gtk::CheckButton *classcheckbutton4 = NULL;
+Gtk::CheckButton *classcheckbutton5 = NULL;
+Gtk::CheckButton *classcheckbutton6 = NULL;
+Gtk::CheckButton *classcheckbutton7 = NULL;
+Gtk::CheckButton *classcheckbutton8 = NULL;
+Gtk::CheckButton *classcheckbutton9 = NULL;
+Gtk::CheckButton *classcheckbutton12 = NULL;
+Gtk::CheckButton *classcheckbuttonA = NULL;
 //Profile:
 Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;//Determines whether the profile is coloured by intensity.
 Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;//Determines whether the profile is coloured by height.
@@ -369,6 +382,26 @@ void on_returnbuttonprof_clicked(){
    if(prof->is_realized())prof->returntostart();
 }
 
+void on_advancedbutton_clicked(){
+   advancedoptionsdialog->show_all();
+}
+
+void on_advancedoptionsdialog_response(int response_id){
+   advancedoptionsdialog->hide_all();
+}
+
+void on_classcheckbutton0_toggled(){ tdo->setheightenNonC(classcheckbutton0->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton2_toggled(){ tdo->setheightenGround(classcheckbutton2->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton3_toggled(){ tdo->setheightenLowVeg(classcheckbutton3->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton4_toggled(){ tdo->setheightenMedVeg(classcheckbutton4->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton5_toggled(){ tdo->setheightenHighVeg(classcheckbutton5->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton6_toggled(){ tdo->setheightenBuildings(classcheckbutton6->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton7_toggled(){ tdo->setheightenNoise(classcheckbutton7->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton8_toggled(){ tdo->setheightenMass(classcheckbutton8->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton9_toggled(){ tdo->setheightenWater(classcheckbutton9->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbutton12_toggled(){ tdo->setheightenOverlap(classcheckbutton12->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+void on_classcheckbuttonA_toggled(){ tdo->setheightenUndefined(classcheckbuttonA->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+
 //Sets up the GUI.
 int GUIset(int argc,char *argv[]){
    Gtk::Main gtkmain(argc, argv);
@@ -474,6 +507,33 @@ int GUIset(int argc,char *argv[]){
             Gtk::ToolButton *returnbutton = NULL;
             refXml->get_widget("returnbutton",returnbutton);
             if(returnbutton)returnbutton->signal_clicked().connect(sigc::ptr_fun(&on_returnbutton_clicked));
+            Gtk::ToolButton *advancedbutton = NULL;
+            refXml->get_widget("advancedbutton",advancedbutton);
+            if(advancedbutton)advancedbutton->signal_clicked().connect(sigc::ptr_fun(&on_advancedbutton_clicked));
+            refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
+            if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::ptr_fun(&on_advancedoptionsdialog_response));
+            refXml->get_widget("classcheckbutton0",classcheckbutton0);
+            if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton0_toggled));
+            refXml->get_widget("classcheckbutton2",classcheckbutton2);
+            if(classcheckbutton2)classcheckbutton2->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton2_toggled));
+            refXml->get_widget("classcheckbutton3",classcheckbutton3);
+            if(classcheckbutton3)classcheckbutton3->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton3_toggled));
+            refXml->get_widget("classcheckbutton4",classcheckbutton4);
+            if(classcheckbutton4)classcheckbutton4->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton4_toggled));
+            refXml->get_widget("classcheckbutton5",classcheckbutton5);
+            if(classcheckbutton5)classcheckbutton5->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton5_toggled));
+            refXml->get_widget("classcheckbutton6",classcheckbutton6);
+            if(classcheckbutton6)classcheckbutton6->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton6_toggled));
+            refXml->get_widget("classcheckbutton7",classcheckbutton7);
+            if(classcheckbutton7)classcheckbutton7->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton7_toggled));
+            refXml->get_widget("classcheckbutton8",classcheckbutton8);
+            if(classcheckbutton8)classcheckbutton8->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton8_toggled));
+            refXml->get_widget("classcheckbutton9",classcheckbutton9);
+            if(classcheckbutton9)classcheckbutton9->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton9_toggled));
+            refXml->get_widget("classcheckbutton12",classcheckbutton12);
+            if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
+            refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
+            if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
          }
          window2->show_all();
       }

@@ -66,6 +66,18 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    colourintensityarray = new double[2];
    brightnessheightarray = new double[2];
    brightnessintensityarray = new double[2];
+   //Classification heightening:
+   heightenNonC = false;
+   heightenGround = false;
+   heightenLowVeg = false;
+   heightenMedVeg = false;
+   heightenHighVeg = false;
+   heightenBuildings = false;
+   heightenNoise = false;
+   heightenMass = false;
+   heightenWater = false;
+   heightenOverlap = false;
+   heightenUndefined = false;
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
@@ -115,7 +127,7 @@ void TwoDeeOverview::resetview(){
            +(get_width()/2)*ratio/zoomlevel,
            -(get_height()/2)*ratio/zoomlevel,
            +(get_height()/2)*ratio/zoomlevel,
-           -altitude,-depth);
+           -5*altitude,-5*depth);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    gluLookAt(centrex,centrey,0,
@@ -382,6 +394,34 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
          }
          vertices[3*count]=x;
          vertices[3*count+1]=y;
+         if(heightenNonC ||
+            heightenGround ||
+            heightenLowVeg ||
+            heightenMedVeg ||
+            heightenHighVeg ||
+            heightenBuildings ||
+            heightenNoise ||
+            heightenMass ||
+            heightenWater ||
+            heightenOverlap ||
+            heightenUndefined){
+            classification = buckets[i]->points[j].classification;
+            int index = classification;
+            double incrementor = 2*abs(rmaxz-rminz);
+            switch(index){
+               case 0:case 1:if(heightenNonC)z+=incrementor;break;
+               case 2:if(heightenGround)z+=incrementor;break;
+               case 3:if(heightenLowVeg)z+=incrementor;break;
+               case 4:if(heightenMedVeg)z+=incrementor;break;
+               case 5:if(heightenHighVeg)z+=incrementor;break;
+               case 6:if(heightenBuildings)z+=incrementor;break;
+               case 7:if(heightenNoise)z+=incrementor;break;
+               case 8:if(heightenMass)z+=incrementor;break;
+               case 9:if(heightenWater)z+=incrementor;break;
+               case 12:if(heightenOverlap)z+=incrementor;break;
+               default:if(heightenUndefined)z+=incrementor;break;
+            }
+         }
          vertices[3*count+2]=z;
          colours[3*count]=red;
          colours[3*count+1]=green;

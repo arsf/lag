@@ -101,6 +101,17 @@ public:
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
+   void setheightenNonC(bool heightenNonC){this->heightenNonC = heightenNonC;}
+   void setheightenGround(bool heightenGround){this->heightenGround = heightenGround;}
+   void setheightenLowVeg(bool heightenLowVeg){this->heightenLowVeg = heightenLowVeg;}
+   void setheightenMedVeg(bool heightenMedVeg){this->heightenMedVeg = heightenMedVeg;}
+   void setheightenHighVeg(bool heightenHighVeg){this->heightenHighVeg = heightenHighVeg;}
+   void setheightenBuildings(bool heightenBuildings){this->heightenBuildings = heightenBuildings;}
+   void setheightenNoise(bool heightenNoise){this->heightenNoise = heightenNoise;}
+   void setheightenMass(bool heightenMass){this->heightenMass = heightenMass;}
+   void setheightenWater(bool heightenWater){this->heightenWater = heightenWater;}
+   void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}
+   void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
    Glib::RefPtr<Gdk::GL::Context> glcontext;//Possibly part of solution to shared viewport problem.
@@ -147,7 +158,20 @@ protected:
    double fenceendx, fenceendy;//The end coordinates for the fence.
    bool fencing;//Determines whether or not the fence should be drawn.
    bool showfence;//Whether to display the fence when not modifying it.
- 
+
+   //Classification heightening:
+   bool heightenNonC;
+   bool heightenGround;
+   bool heightenLowVeg;
+   bool heightenMedVeg;
+   bool heightenHighVeg;
+   bool heightenBuildings;
+   bool heightenNoise;
+   bool heightenMass;
+   bool heightenWater;
+   bool heightenOverlap;
+   bool heightenUndefined;
+
    //Signal handlers:
    //Panning:
    sigc::connection sigpanstart;
