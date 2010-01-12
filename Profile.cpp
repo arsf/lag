@@ -198,7 +198,10 @@ bool Profile::drawviewable(int imagetype){
       else glFlush();
       return false;
    }
-   glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
+  // glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
+  glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way, which probably involves using separate contexts somehow.
+  get_gl_window()->make_current(get_gl_context());
+  resetview();
    int detail=1;//This determines how many points are skipped between reads.
    if(imagetype==1){
       detail=(int)(numbuckets*maindetailmod);
@@ -810,8 +813,6 @@ void Profile::prepare_image(){
 //Prepare the image when the widget is first realised.
 void Profile::on_realize(){
   Gtk::GL::DrawingArea::on_realize();
-  glcontext = Gdk::GL::Context::create(this->get_gl_window(),true,Gdk::GL::RGBA_TYPE);
-  cout << this->get_gl_window()->make_current(glcontext) << endl;
   prepare_image();
 }
 

@@ -233,7 +233,9 @@ void TwoDeeOverview::makefencebox(){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool TwoDeeOverview::drawviewable(int imagetype){
+  get_gl_window()->make_current(get_gl_context());
   glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way, which probably involves using separate contexts somehow.
+  resetview();
    double minx = centrex-get_width()/2*ratio/zoomlevel;//Limits of viewable area:
    double maxx = centrex+get_width()/2*ratio/zoomlevel;//...
    double miny = centrey-get_height()/2*ratio/zoomlevel;//...
@@ -637,10 +639,41 @@ void TwoDeeOverview::prepare_image(){
    double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
    int maxintensity = buckets[0]->maxintensity,minintensity = buckets[0]->minintensity;
    for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
-      if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
-      if(minz>buckets[i]->minz)minz = buckets[i]->minz;
-      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
-      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
+//      bool skip = false;
+//      if(skipNonC ||
+//         skipGround ||
+//         skipLowVeg ||
+//         skipMedVeg ||
+//         skipHighVeg ||
+//         skipBuildings ||
+//         skipNoise ||
+//         skipMass ||
+//         skipWater ||
+//         skipOverlap ||
+//         skipUndefined){
+//         classification = buckets[i]->points[j].classification;
+//         int index = classification;
+//         double incrementor = 2*abs(rmaxz-rminz);
+//         switch(index){
+//            case 0:case 1:if(skipNonC)skip=true;break;
+//            case 2:if(skipGround)skip=true;break;
+//            case 3:if(skipLowVeg)skip=true;break;
+//            case 4:if(skipMedVeg)skip=true;break;
+//            case 5:if(skipHighVeg)skip=true;break;
+//            case 6:if(skipBuildings)skip=true;break;
+//            case 7:if(skipNoise)skip=true;break;
+//            case 8:if(skipMass)skip=true;break;
+//            case 9:if(skipWater)skip=true;break;
+//            case 12:if(skipOverlap)skip=true;break;
+//            default:if(skipUndefined)skip=true;break;
+//         }
+//      }
+//      if(!skip)
+         if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
+         if(minz>buckets[i]->minz)minz = buckets[i]->minz;
+         if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
+         if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
+//      }
    }
    rmaxz = maxz; rminz = minz;
    rmaxintensity = maxintensity; rminintensity = minintensity;
@@ -678,8 +711,6 @@ void TwoDeeOverview::prepare_image(){
 //Prepare the image when the widget is first realised.
 void TwoDeeOverview::on_realize(){
   Gtk::GL::DrawingArea::on_realize();
-  glcontext = Gdk::GL::Context::create(this->get_gl_window(),true,Gdk::GL::RGBA_TYPE);
-  cout << this->get_gl_window()->make_current(glcontext) << endl;
   prepare_image();
 }
 
