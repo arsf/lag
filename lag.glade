@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Jan 11 17:28:33 2010 -->
+<!--Generated with glade3 3.4.5 on Thu Jan 14 12:00:37 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -203,6 +203,25 @@
               </widget>
             </child>
             <child>
+              <widget class="GtkMenuItem" id="viewmenu">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">View</property>
+                <property name="use_underline">True</property>
+                <child>
+                  <widget class="GtkMenu" id="menu8">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkCheckMenuItem" id="showprofilecheck">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Show profile box</property>
+                        <property name="use_underline">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                </child>
+              </widget>
+            </child>
+            <child>
               <widget class="GtkMenuItem" id="colourbymenu">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Colour by</property>
@@ -281,6 +300,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">None</property>
                         <property name="use_underline">True</property>
+                        <property name="active">True</property>
                         <property name="draw_as_radio">True</property>
                       </widget>
                     </child>
@@ -289,7 +309,6 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Intensity</property>
                         <property name="use_underline">True</property>
-                        <property name="active">True</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">brightnessbynonemenu</property>
                       </widget>
@@ -339,16 +358,6 @@
               <widget class="GtkToolbar" id="toolbar2">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkToggleToolButton" id="fencetoggle">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Fence</property>
-                    <property name="stock_id">gtk-zoom-fit</property>
-                  </widget>
-                  <packing>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="GtkToolButton" id="returnbutton">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
@@ -361,25 +370,11 @@ to start</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkSeparatorToolItem" id="separatortoolitem11">
+                  <widget class="GtkToolButton" id="advancedbutton">
                     <property name="visible">True</property>
-                  </widget>
-                </child>
-                <child>
-                  <widget class="GtkToggleToolButton" id="profiletoggle">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Profie</property>
-                    <property name="stock_id">gtk-remove</property>
-                  </widget>
-                  <packing>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkToggleToolButton" id="showprofiletoggle">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Show profile box</property>
-                    <property name="stock_id">gtk-media-stop</property>
+                    <property name="label" translatable="yes">Advanced
+options</property>
+                    <property name="stock_id">gtk-preferences</property>
                   </widget>
                   <packing>
                     <property name="homogeneous">True</property>
@@ -514,14 +509,51 @@ to start</property>
                   </widget>
                 </child>
                 <child>
-                  <widget class="GtkToolButton" id="advancedbutton">
+                  <widget class="GtkSeparatorToolItem" id="separatortoolitem11">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Advanced
-options</property>
-                    <property name="stock_id">gtk-preferences</property>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="fencetoggle">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Fence</property>
+                    <property name="stock_id">gtk-zoom-fit</property>
                   </widget>
                   <packing>
                     <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="profiletoggle">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Profie</property>
+                    <property name="stock_id">gtk-remove</property>
+                  </widget>
+                  <packing>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="rulertoggleover">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Ruler</property>
+                    <property name="stock_id">gtk-justify-fill</property>
+                  </widget>
+                  <packing>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolItem" id="toolbutton10">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkLabel" id="rulerlabelover">
+                        <property name="visible">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">True</property>
                   </packing>
                 </child>
               </widget>

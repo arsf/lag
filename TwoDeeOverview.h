@@ -10,16 +10,16 @@
 #include "quadtree.h"
 #include "quadtreestructs.h"
 #include <vector>
-class TwoDeeOverview : public Gtk::GL::DrawingArea
-{
+#include "Display.h"
+class TwoDeeOverview : public Display{
 public:
-   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
+   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
    ~TwoDeeOverview();
    bool returntostart();//Returns to the initial view.
-   void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    void makeprofbox();//Make the box showing the profile area.
    void makefencebox();//Make the box showing the fence area.
+   void makerulerbox();//Make rectangle showing where the ruler is.
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -61,6 +61,26 @@ public:
       if(is_realized())get_window()->set_cursor();
       fencing=false;
    }
+   void setupruler(){//Blocks pan signals and unblocks ruler signals:
+      sigpanstart.block();
+      sigpan.block();
+      sigpanend.block();
+      sigrulerstart.unblock();
+      sigruler.unblock();
+      sigrulerend.unblock();
+      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      rulering=true;
+   }
+   void unsetupruler(){//Blocks ruler signals and unblocks pan signals:
+      sigpanstart.unblock();
+      sigpan.unblock();
+      sigpanend.unblock();
+      sigrulerstart.block();
+      sigruler.block();
+      sigrulerend.block();
+      if(is_realized())get_window()->set_cursor();
+      rulering=false;
+   }
    //Getters:
    void getprofile(double &startx,double &starty,double &endx,double &endy,double &width){//Get coordinates for profile.
       startx = profstartx;
@@ -91,16 +111,6 @@ public:
    void setprofwidth(double profwidth){this->profwidth = profwidth;}//Set width of the profile.
    void setshowprofile(double showprofile){this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
    void setshowfence(double showfence){this->showfence = showfence;}//Set whether fence should be seen when not being modified.
-   void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
-   void setheightcolour(bool heightcolour){this->heightcolour=heightcolour;}
-   void setlinecolour(bool linecolour){this->linecolour=linecolour;}
-   void setclasscolour(bool classcolour){this->classcolour=classcolour;}
-   void setreturncolour(bool returncolour){this->returncolour=returncolour;}
-   void setintensitybrightness(bool intensitybrightness){this->intensitybrightness=intensitybrightness;}
-   void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
-   void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
-   void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
-   void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
    void setheightenNonC(bool heightenNonC){this->heightenNonC = heightenNonC;}
    void setheightenGround(bool heightenGround){this->heightenGround = heightenGround;}
    void setheightenLowVeg(bool heightenLowVeg){this->heightenLowVeg = heightenLowVeg;}
@@ -113,40 +123,11 @@ public:
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}
 protected:
-   double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
-   Glib::RefPtr<Gdk::GL::Context> glcontext;//Possibly part of solution to shared viewport problem.
-   //Point data and related stuff:
-   quadtree* lidardata;//The point data is stored here.
-   boundary* lidarboundary;//This stores the boundary of the file opened.
-   int bucketlimit;//This is the maximum number of points a single bucket can contain.
-   double maindetailmod,previewdetailmod;//These modify the amount of points skipped for each point not, when drawing. Lower is means more detail, higher means less.
-   double pointsize;//The diameter of the points.
- 
+   Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    //Position variables:
-   double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%.
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
-   double ratio;//This determines, along with the zoomlevel, the scaling of the image relative to the screen. At zoomlevel 1, the image should just fit within the screen.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
  
-   //Colouring and shading variables:
-   bool heightcolour;//True if want to colour by height.
-   bool heightbrightness;//True if want to shade by height.
-   double zoffset;//A minimum height brightness value that also scales higher values.
-   double zfloor;//As above, but does not scale anything.
-   bool intensitycolour;//True if want to colour by intensity.
-   bool intensitybrightness;//True if want to shade by intensity.
-   int intensityoffset;//A minimum intensity brightness value that also scales higher values.
-   int intensityfloor;//As above, but does not scale anything.
-   bool linecolour;//Whether to colour by flightline.
-   bool classcolour;//Whether to colour by classification.
-   bool returncolour;//Whether to colour by return.
-   double rmaxz,rminz;//The maximum and minimum heights, for colour by elevation etc..
-   int rmaxintensity,rminintensity;//The maximum and minimum intensity, for brightness by intensity etc..
-   double* colourheightarray;//Array containing colours for different heights.
-   double* colourintensityarray;//Array containing colours for different intensities.
-   double* brightnessheightarray;//Array containing shades for different heights.
-   double* brightnessintensityarray;//Array containing shades for different intensities.
-   
    //Profiling:
    double profstartx, profstarty;//The start coordinates for the profile.
    double profendx, profendy;//The end coordinates for the profile.
@@ -185,24 +166,26 @@ protected:
    sigc::connection sigfencestart;
    sigc::connection sigfence;
    sigc::connection sigfenceend;
+   //Rulering:
+   sigc::connection sigrulerstart;
+   sigc::connection sigruler;
+   sigc::connection sigrulerend;
  
    //Methods:
  
    //Drawing:
-   void on_realize();//Realises drawing area and calls prepare_image().
    bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
    bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
-   bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.
  
    //Positioning methods:
    void resetview();//Determines what part of the image is displayed with orthographic projection.
    bool on_zoom(GdkEventScroll* event);//Allows the user to zoom with the mouse wheel.
-   bool on_configure_event(GdkEventConfigure* event);//Handles resizing of the window. Calls resetview().
  
-   //Colouring and shading:
-   void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);//Colours by a numeric variable.
-   double brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue);//Shades by a numeric variable.
-   void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
+   //Rulering:
+   double rulerstartx,rulerstarty;//The start coordinates for the ruler
+   double rulerendx,rulerendy;//The end coordinates for the ruler.
+   double rulerwidth;//The width of the ruler.
+   bool rulering;//Determines whether or not the ruler should be drawn.
  
    //Panning control:   //These allow the user to pan by clicking and dragging.
    bool on_pan_start(GdkEventButton* event);
@@ -216,6 +199,10 @@ protected:
    bool on_fence_start(GdkEventButton* event);
    bool on_fence(GdkEventMotion* event);
    bool on_fence_end(GdkEventButton* event);
+   //Rulering control:   //These allow the user to ruler by clicking and dragging.
+   bool on_ruler_start(GdkEventButton* event);
+   bool on_ruler(GdkEventMotion* event);
+   bool on_ruler_end(GdkEventButton* event);
  
    
 };

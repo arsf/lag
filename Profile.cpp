@@ -17,62 +17,25 @@
 #include "Profile.h"
 #include "MathFuncs.h"
 
-Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Gtk::GL::DrawingArea(config){
-   this->lidardata=lidardata;
-   this->bucketlimit = bucketlimit;
+Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    zoompower = 0.7;
    imageexists=false;
    maindetailmod = 0;
    previewdetailmod = 0.3;
-   pointsize=1;
    drawpoints = true;
    drawmovingaverage = false;
    mavrgrange = 5;
-   //Initial state:
-   lidarboundary = lidardata->getboundary();
-   double xdif = lidarboundary->maxX-lidarboundary->minX;
-   double ydif = lidarboundary->maxY-lidarboundary->minY;
-      //Initial centre:
-      viewerx = centrex = lidarboundary->minX+xdif/2;
-      viewery = centrey = lidarboundary->minY+ydif/2;
-      viewerz = centrez = 0;
-      //Scaling to screen dimensions:
-      double swidth = get_screen()->get_width();
-      double sheight = get_screen()->get_height();
-      double xratio = xdif/swidth;
-      double yratio = ydif/sheight;
-      yratio*=1.25;
-      ratio = 0;
-      if(xratio>yratio)ratio = xratio;
-      else ratio = yratio;
-      zoomlevel=1;
-   //Rulering:
-   rulering=false;
-   rulerwidth=2;
-   this->rulerlabel = rulerlabel;
-   //Colouring and shading:
-   heightcolour = false;
-   heightbrightness = false;
-   zoffset=0;
-   zfloor=0.25;
-   intensitycolour = false;
-   intensitybrightness = true;
-   intensityoffset = 0.0/3;
-   intensityfloor = 0;
-   rmaxz=rminz=0;
-   rmaxintensity=rminintensity=0;
-   linecolour = true;
-   classcolour = false;
-   returncolour = false;
-   colourheightarray = new double[2];
-   colourintensityarray = new double[2];
-   brightnessheightarray = new double[2];
-   brightnessintensityarray = new double[2];
+   startx = 0;
+   starty = 0;
    buckets = new pointbucket*[2];
    correctpointsbuckets = new bool*[2];
    correctpointsbuckets[0] = new bool[2];
    correctpointsbuckets[1] = new bool[2];
    numbuckets = 2;
+   //Rulering:
+   rulering=false;
+   rulerwidth=2;
+   this->rulerlabel = rulerlabel;
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&Profile::on_zoom));
@@ -87,13 +50,7 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    sigrulerend.block();
 }
 
-Profile::~Profile(){
-   delete[] colourheightarray;
-   delete[] colourintensityarray;
-   delete[] brightnessheightarray;
-   delete[] brightnessintensityarray;
-//   delete lidarboundary;
-}
+Profile::~Profile(){}
 
 bool Profile::returntostart(){
   centrex = startx;
@@ -134,9 +91,12 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
      buckets[i]=pointvector->at(i);
      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,startx,starty,endx,endy,width);
   }
+  glViewport(0, 0, get_width(), get_height());
+  get_gl_window()->make_current(get_gl_context());
   resetview();
   delete pointvector;
-  if(is_realized())return drawviewable(1);
+//  if(is_realized())return drawviewable(1);
+  if(is_realized())return returntostart();
   else return false;
 }
 
@@ -198,8 +158,7 @@ bool Profile::drawviewable(int imagetype){
       else glFlush();
       return false;
    }
-  // glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way.
-  glViewport(0, 0, get_width(), get_height());//THIS IS A HACK! This is in order to temporarily make the program work with multiple windows. Hopefully there is a better way, which probably involves using separate contexts somehow.
+  glViewport(0, 0, get_width(), get_height());
   get_gl_window()->make_current(get_gl_context());
   resetview();
    int detail=1;//This determines how many points are skipped between reads.
@@ -239,16 +198,6 @@ void Profile::resetview(){
             centrex,centrey,centrez,
             0,0,1);
 }
-
-//Draw on expose. 1 indicates that the non-preview image is drawn.
-bool Profile::on_expose_event(GdkEventExpose* event){ //return drawviewable(1); }
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
-   return true;
-}
-
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool Profile::on_pan_start(GdkEventButton* event){
@@ -322,7 +271,7 @@ bool Profile::on_ruler(GdkEventMotion* event){
 bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
 //Make the ruler as a thick line.
 void Profile::makerulerbox(){
-   glNewList(4,GL_COMPILE);
+   glNewList(5,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
    glBegin(GL_LINES);
@@ -359,13 +308,6 @@ bool Profile::on_zoom(GdkEventScroll* event){
    centrez += (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
    return drawviewable(1);
-}
-
-//When the window is resized, the viewport is resized accordingly and so are teh viewing properties.
-bool Profile::on_configure_event(GdkEventConfigure* event){
-  glViewport(0, 0, get_width(), get_height());
-  resetview();
-  return true;
 }
 
 //This method is for sort(). It projects the points onto a plane defined by the z axis and the line perpendicular to the viewing direction.
@@ -527,7 +469,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
 //      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
 //      else glFlush();
    }
-   if(rulering)glCallList(4);//Draw the ruler if ruler mode is on.
+   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if(drawmovingaverage){
       for(int i=0;i<(int)flightlines.size();i++){
          int count = 0;
@@ -689,7 +631,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
       }
       glDrawArrays(GL_POINTS,0,count);
    }
-   if(rulering)glCallList(4);//Draw the ruler if ruler mode is on.
+   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -698,162 +640,4 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
    delete[] vertices;
    delete[] colours;
    return true;
-}
-
-//Prepares the arrays for looking up the colours and shades of the points.
-void Profile::coloursandshades(double maxz,double minz,int maxintensity,int minintensity){
-   delete[] colourheightarray;
-   delete[] colourintensityarray;
-   delete[] brightnessheightarray;
-   delete[] brightnessintensityarray;
-   double red=0.0,green=0.0,blue=0.0;
-   double z=0,intensity=0;
-   colourheightarray = new double[30*(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++){//Fill height colour array:
-      z = 0.1*(double)i + rminz;
-      colour_by(z,maxz,minz,red,green,blue);
-      colourheightarray[3*i]=red;
-      colourheightarray[3*i+1]=green;
-      colourheightarray[3*i+2]=blue;
-   }
-   colourintensityarray = new double[3*(int)(rmaxintensity-rminintensity+4)];
-   for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity colour array:
-      intensity = i + rminintensity;
-      colour_by(intensity,maxintensity,minintensity,red,green,blue);
-      colourintensityarray[3*i]=red;
-      colourintensityarray[3*i+1]=green;
-      colourintensityarray[3*i+2]=blue;
-   }
-   brightnessheightarray = new double[(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
-      z = i + (int)rminz;
-      brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
-   }
-   brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
-   for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity brightness array:
-      intensity = i + rminintensity;
-      brightnessintensityarray[i] = brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor);
-   }
-}
-
-//This method prepares the image for drawing and sets up OpenGl. It gets the data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets ups anti-aliasing, clearing and the initial view.
-void Profile::prepare_image(){
-   //Initial state:
-   lidarboundary = lidardata->getboundary();
-   double xdif = lidarboundary->maxX-lidarboundary->minX;
-   double ydif = lidarboundary->maxY-lidarboundary->minY;
-      //Initial centre:
-      viewerx = centrex = lidarboundary->minX+xdif/2;
-      viewery = centrey = lidarboundary->minY+ydif/2;
-      viewerz = centrez = 0;
-      //Scaling to screen dimensions:
-      double swidth = get_screen()->get_width();
-      double sheight = get_screen()->get_height();
-      double xratio = xdif/swidth;
-      double yratio = ydif/sheight;
-      yratio*=1.25;
-      ratio = 0;
-      if(xratio>yratio)ratio = xratio;
-      else ratio = yratio;
-   vector<pointbucket*> *ppointvector;
-   try{
-      ppointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
-   }catch(const char* e){
-      cout << e << endl;
-      cout << "No points returned." << endl;
-      return;
-   }
-   int numpbuckets = ppointvector->size();
-   pointbucket** pbuckets = new pointbucket*[numpbuckets];
-   for(int i=0;i<numpbuckets;i++){
-      pbuckets[i]=ppointvector->at(i);
-   }
-   double maxz = pbuckets[0]->maxz,minz = pbuckets[0]->minz;
-   int maxintensity = pbuckets[0]->maxintensity,minintensity = pbuckets[0]->minintensity;
-   for(int i=0;i<numpbuckets;i++){//Find the maximum and minimum values from the pbuckets:
-      if(maxz<pbuckets[i]->maxz)maxz = pbuckets[i]->maxz;
-      if(minz>pbuckets[i]->minz)minz = pbuckets[i]->minz;
-      if(maxintensity<pbuckets[i]->maxintensity)maxintensity = pbuckets[i]->maxintensity;
-      if(minintensity>pbuckets[i]->minintensity)minintensity = pbuckets[i]->minintensity;
-   }
-   rmaxz = maxz; rminz = minz;
-   centrez = rminz + (rmaxz + rminz) / 2;
-   rmaxintensity = maxintensity; rminintensity = minintensity;
-   if(maxz<=minz)maxz=minz+1;
-   else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the pbuckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
-      double* zdata = new double[numpbuckets];
-      for(int i=0;i<numpbuckets;i++)zdata[i]=pbuckets[i]->maxz;
-      double lowperc = percentilevalue(zdata,numpbuckets,0.01,minz,maxz);
-      for(int i=0;i<numpbuckets;i++)zdata[i]=pbuckets[i]->minz;
-      double highperc = percentilevalue(zdata,numpbuckets,99.99,minz,maxz);
-      maxz=highperc;
-      minz=lowperc;
-      delete[] zdata;
-   }
-   coloursandshades(maxz,minz,maxintensity,minintensity);//Prepare colour and shading arrays.
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return;
-   glClearColor(0.0, 0.0, 0.0, 0.0);
-   glClearDepth(1.0);
-//   glEnable(GL_POINT_SMOOTH);//Antialiasing stuff, for use later, possibly. NOTE: Currently causes bucket shaped graphical artefacts. Obviously, anti-aliasing is happening when the data is passed to opengl, not when flush happens.
-//   glEnable(GL_LINE_SMOOTH);//...
-//   glEnable(GL_BLEND);//...
-//   glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);//...
-//   glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);//...
-//   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);//...
-   glPointSize(pointsize);//This is to be user-changeable later as, depending on the screen resolution, single pixels can be hard to see properly.
-   glEnable(GL_DEPTH_TEST);//Very important to include this! This allows us to see the things on the top above the things on the bottom!
-   glViewport(0, 0, get_width(), get_height());
-   resetview();
-   delete[] pbuckets;
-   delete ppointvector;
-   glwindow->gl_end();
-}
-
-//Prepare the image when the widget is first realised.
-void Profile::on_realize(){
-  Gtk::GL::DrawingArea::on_realize();
-  prepare_image();
-}
-
-//Given maximum and minimum values, find out the colour a certain value should be mapped to.
-void Profile::colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3){//Following comments assume col1=red, col2=green and col3=blue.
-  double range = maxvalue-minvalue;
-  if(value<=minvalue+range/6){//Green to Yellow:
-     col1 = 6*(value-minvalue)/range;
-     col2 = 1.0;
-     col3 = 0.0;
-  }
-  else if(value<=minvalue+range/3){//Yellow to Red:
-     col1 = 1.0;
-     col2 = 2.0 - 6*(value-minvalue)/range;
-     col3 = 0.0;
-  }
-  else if(value<=minvalue+range/2){//Red to Purple:
-     col1 = 1.0;
-     col2 = 0.0;
-     col3 = 6*(value-minvalue)/range - 2.0;
-  }
-  else if(value<=minvalue+range*2/3){//Purple to Blue:
-     col1 = 4.0 - 6*(value-minvalue)/range;
-     col2 = 0.0;
-     col3 = 1.0;
-  }
-  else if(value<=minvalue+range*5/6){//Blue to Cyan:
-     col1 = 0.0;
-     col2 = 6*(value-minvalue)/range - 4.0;
-     col3 = 1.0;
-  }
-  else{//Cyan to White:
-     col1 = 6*(value-minvalue)/range - 5.0;
-     if(col1>1.0)col1=1.0;
-     col2 = 1.0;
-     col3 = 1.0;
-  }
-}
-
-//Given maximum and minimum values, find out the brightness a certain value should be mapped to.
-double Profile::brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue){
-  double multiplier = floorvalue + offsetvalue + (1.0 - offsetvalue)*(value-minvalue)/(maxvalue-minvalue);
-  return multiplier;
 }

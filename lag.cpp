@@ -35,6 +35,7 @@ Gtk::CheckButton *fenceusecheck = NULL;//Check button determining whether the fe
 Gtk::Entry *asciicodeentry = NULL;//The type code for opening ASCII files.
 //Overview:
 Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
+Gtk::CheckMenuItem *showprofilecheck = NULL;//Check button determining whether the profile box is viewable on the 2d overview.
 Gtk::RadioMenuItem *colourbyintensitymenu = NULL;//Determines whether the image is coloured by intensity.
 Gtk::RadioMenuItem *colourbyheightmenu = NULL;//Determines whether the image is coloured by height.
 Gtk::RadioMenuItem *colourbyflightlinemenu = NULL;//Determines whether the image is coloured by flightline.
@@ -44,24 +45,25 @@ Gtk::RadioMenuItem *brightnessbyintensitymenu = NULL;//Determines whether the im
 Gtk::RadioMenuItem *brightnessbyheightmenu = NULL;//Determines whether the image is shaded by height.
 Gtk::ToggleToolButton *fencetoggle = NULL;//Toggle button determining whether mouse dragging selects the fence.
 Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether mouse dragging selects the profile.
-Gtk::ToggleToolButton *showprofiletoggle = NULL;//Toggle button determining whether the profile box is viewable on the 2d overview.
 Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres.
 Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in the overview in pixels.
 Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
 Gtk::SpinButton *previewdetailselect = NULL;//Determines how many points are skipped displaying the overview preview.
-//Advanced viewing options for the overview:
 Gtk::Dialog *advancedoptionsdialog = NULL;
-Gtk::CheckButton *classcheckbutton0 = NULL;
-Gtk::CheckButton *classcheckbutton2 = NULL;
-Gtk::CheckButton *classcheckbutton3 = NULL;
-Gtk::CheckButton *classcheckbutton4 = NULL;
-Gtk::CheckButton *classcheckbutton5 = NULL;
-Gtk::CheckButton *classcheckbutton6 = NULL;
-Gtk::CheckButton *classcheckbutton7 = NULL;
-Gtk::CheckButton *classcheckbutton8 = NULL;
-Gtk::CheckButton *classcheckbutton9 = NULL;
-Gtk::CheckButton *classcheckbutton12 = NULL;
-Gtk::CheckButton *classcheckbuttonA = NULL;
+   //Advanced viewing options for the overview:
+   Gtk::CheckButton *classcheckbutton0 = NULL;
+   Gtk::CheckButton *classcheckbutton2 = NULL;
+   Gtk::CheckButton *classcheckbutton3 = NULL;
+   Gtk::CheckButton *classcheckbutton4 = NULL;
+   Gtk::CheckButton *classcheckbutton5 = NULL;
+   Gtk::CheckButton *classcheckbutton6 = NULL;
+   Gtk::CheckButton *classcheckbutton7 = NULL;
+   Gtk::CheckButton *classcheckbutton8 = NULL;
+   Gtk::CheckButton *classcheckbutton9 = NULL;
+   Gtk::CheckButton *classcheckbutton12 = NULL;
+   Gtk::CheckButton *classcheckbuttonA = NULL;
+Gtk::ToggleToolButton *rulertoggleover = NULL;//Toggle button determining whether the ruler is viewable on the overview.
+Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
 Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;//Determines whether the profile is coloured by intensity.
 Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;//Determines whether the profile is coloured by height.
@@ -76,8 +78,8 @@ Gtk::SpinButton *previewdetailselectprof = NULL;//Determines how many points are
 Gtk::ToggleToolButton *pointshowtoggle = NULL;//Whether to show the points on the profile.
 Gtk::ToggleToolButton *lineshowtoggle = NULL;//Whether to show the lines on the profile.
 Gtk::SpinButton *movingaveragerangeselect = NULL;//The range of the moving average for the lines on the profile.
-Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable.
-Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc..
+Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable on the profile.
+Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the profile.
 
 void on_aboutmenuactivated(){ about->show_all(); }
 void on_aboutresponse(int response_id){ about->hide_all(); }
@@ -257,6 +259,7 @@ void on_brightnessactivated(){
 void on_fencetoggle(){
    if(fencetoggle->get_active()){
       if(profiletoggle->get_active())profiletoggle->set_active(false);
+      if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupfence();
    }
    else{
@@ -269,6 +272,7 @@ void on_fencetoggle(){
 void on_profiletoggle(){
    if(profiletoggle->get_active()){
       if(fencetoggle->get_active())fencetoggle->set_active(false);
+      if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupprofile();
    }
    else{
@@ -280,9 +284,22 @@ void on_profiletoggle(){
    if(tdo->is_realized())tdo->drawviewable(1);
 }
 
+////When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
+void on_rulertoggleover(){
+   if(rulertoggleover->get_active()){
+      if(fencetoggle->get_active())fencetoggle->set_active(false);
+      if(profiletoggle->get_active())profiletoggle->set_active(false);
+      tdo->setupruler();
+   }
+   else{
+      tdo->unsetupruler();
+   }
+   if(tdo->is_realized())tdo->drawviewable(1);
+}
+
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
-void on_showprofiletoggle(){
-   tdo->setshowprofile(showprofiletoggle->get_active());
+void on_showprofilecheck(){
+   tdo->setshowprofile(showprofilecheck->get_active());
    if(tdo->is_realized())tdo->drawviewable(1);
 }
 
@@ -370,6 +387,7 @@ void on_movingaveragerangeselect(){
 void on_rulertoggle(){
    if(rulertoggle->get_active())prof->setupruler();
    else prof->unsetupruler();
+   if(prof->is_realized())prof->drawviewable(1);
 }
 
 //This returns the overview to its original position.
@@ -441,6 +459,10 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("fenceusecheck",fenceusecheck);
             refXml->get_widget("asciicodeentry",asciicodeentry);
 
+            //Viewing options:
+            refXml->get_widget("showprofilecheck",showprofilecheck);
+            if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
+
             //For determining how to colour the overview:
             Gtk::RadioMenuItem *colourbynonemenu = NULL;
             refXml->get_widget("colourbynonemenu",colourbynonemenu);
@@ -476,8 +498,6 @@ int GUIset(int argc,char *argv[]){
             if(fencetoggle)fencetoggle->signal_toggled().connect(sigc::ptr_fun(&on_fencetoggle));
             refXml->get_widget("profiletoggle",profiletoggle);
             if(profiletoggle)profiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_profiletoggle));
-            refXml->get_widget("showprofiletoggle",showprofiletoggle);
-            if(showprofiletoggle)showprofiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_showprofiletoggle));
             refXml->get_widget("profwidthselect",profwidthselect);
             if(profwidthselect){
                profwidthselect->set_range(0,30000);//Essentially arbitrary. Would there be any situation where a width greater than 30 km would be wanted?
@@ -534,6 +554,11 @@ int GUIset(int argc,char *argv[]){
             if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
             refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
             if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
+
+            //The ruler:
+            refXml->get_widget("rulertoggleover",rulertoggleover);
+            if(rulertoggleover)rulertoggleover->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggleover));
+            refXml->get_widget("rulerlabelover",rulerlabelover);
          }
          window2->show_all();
       }
@@ -618,7 +643,7 @@ int GUIset(int argc,char *argv[]){
          glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |    Gdk::GL::MODE_DEPTH);
          if(glconfig==NULL)std::exit(1);
       }
-      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit);
+      TwoDeeOverview* tdo1 = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);
       tdo = tdo1;//For some reason, I have not been able to use "new" with the global object directly. :-(
       tdo->set_size_request(200,200);
       //Initialisations:
