@@ -43,6 +43,7 @@ Gtk::RadioMenuItem *colourbyclassificationmenu = NULL;//Determines whether the i
 Gtk::RadioMenuItem *colourbyreturnmenu = NULL;//Determines whether the image is coloured by return.
 Gtk::RadioMenuItem *brightnessbyintensitymenu = NULL;//Determines whether the image is shaded by intensity.
 Gtk::RadioMenuItem *brightnessbyheightmenu = NULL;//Determines whether the image is shaded by height.
+Gtk::ToolButton *returnbutton = NULL;
 Gtk::ToggleToolButton *fencetoggle = NULL;//Toggle button determining whether mouse dragging selects the fence.
 Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether mouse dragging selects the profile.
 Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres.
@@ -526,7 +527,6 @@ int GUIset(int argc,char *argv[]){
                previewdetailselect->set_value(1);
                previewdetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselected));
             }
-            Gtk::ToolButton *returnbutton = NULL;
             refXml->get_widget("returnbutton",returnbutton);
             if(returnbutton)returnbutton->signal_clicked().connect(sigc::ptr_fun(&on_returnbutton_clicked));
             Gtk::ToolButton *advancedbutton = NULL;
@@ -693,6 +693,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
+   cout << "Build number: 2010.01.18.1" << endl;
    loaderroroutput.open("/tmp/LAGloadingerrors.txt");
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;
