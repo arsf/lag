@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jan 14 12:00:37 2010 -->
+<!--Generated with glade3 3.4.5 on Mon Jan 18 14:37:36 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -300,7 +300,6 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">None</property>
                         <property name="use_underline">True</property>
-                        <property name="active">True</property>
                         <property name="draw_as_radio">True</property>
                       </widget>
                     </child>
@@ -309,6 +308,7 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Intensity</property>
                         <property name="use_underline">True</property>
+                        <property name="active">True</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">brightnessbynonemenu</property>
                       </widget>

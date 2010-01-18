@@ -20,6 +20,7 @@ public:
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    virtual bool drawviewable(int imagetype) = 0;
    //Setters:
+   void setlidardata(quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
    void setheightcolour(bool heightcolour){this->heightcolour=heightcolour;}
    void setlinecolour(bool linecolour){this->linecolour=linecolour;}
@@ -30,6 +31,17 @@ public:
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
+   void setskipNonC(bool skipNonC){this->skipNonC = skipNonC;}
+   void setskipGround(bool skipGround){this->skipGround = skipGround;}
+   void setskipLowVeg(bool skipLowVeg){this->skipLowVeg = skipLowVeg;}
+   void setskipMedVeg(bool skipMedVeg){this->skipMedVeg = skipMedVeg;}
+   void setskipHighVeg(bool skipHighVeg){this->skipHighVeg = skipHighVeg;}
+   void setskipBuildings(bool skipBuildings){this->skipBuildings = skipBuildings;}
+   void setskipNoise(bool skipNoise){this->skipNoise = skipNoise;}
+   void setskipMass(bool skipMass){this->skipMass = skipMass;}
+   void setskipWater(bool skipWater){this->skipWater = skipWater;}
+   void setskipOverlap(bool skipOverlap){this->skipOverlap = skipOverlap;}
+   void setskipUndefined(bool skipUndefined){this->skipUndefined = skipUndefined;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
 
@@ -61,6 +73,17 @@ protected:
    double* colourintensityarray;//Array containing colours for different intensities.
    double* brightnessheightarray;//Array containing shades for different heights.
    double* brightnessintensityarray;//Array containing shades for different intensities.
+   bool skipNonC;
+   bool skipGround;
+   bool skipLowVeg;
+   bool skipMedVeg;
+   bool skipHighVeg;
+   bool skipBuildings;
+   bool skipNoise;
+   bool skipMass;
+   bool skipWater;
+   bool skipOverlap;
+   bool skipUndefined;
    
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().

@@ -189,6 +189,8 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       return 22;
    }
+   tdo->setlidardata(lidardata,bucketlimit);
+   prof->setlidardata(lidardata,bucketlimit);
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This will need the viewport bug to be fixed in order to work properly.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
       tdo->prepare_image();
@@ -693,9 +695,9 @@ int GUIset(int argc,char *argv[]){
 int main(int argc, char** argv) {
    loaderroroutput.open("/tmp/LAGloadingerrors.txt");
    exename.append(argv[0]);//Record the program name.
-   lidardata = new quadtree(0,0,1,1,bucketlimit);//Create quadtree now so that it can be deleted later.
    loadedanyfiles = false;
    loaderrorstream = new ostringstream();
+   lidardata = new quadtree(0,0,1,1,bucketlimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
    return GUIset(argc, argv);//Make the GUI.
    delete tdo;
    delete prof;
