@@ -8,7 +8,7 @@ using namespace std;
 
 quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap)
 {
-   this->minX = this->minX; this->minY = minY; this->maxX = maxX; this->maxY = maxY;
+   this->minX = minX; this->minY = minY; this->maxX = maxX; this->maxY = maxY;
    capacity = cap;
    bucket = NULL;
    
@@ -21,9 +21,9 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
 
  // constructor which allows both the boundarys and the child nodes of the
  // quadtree to be defined
- quadtreenode::quadtreenode(double sx, double sy, double bx, double by, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d)
+ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d)
  {
-    minX = sx; minY = sy; maxX = bx; maxY = by;
+    this->minX = minX; this->minY = minY; this->maxX = maxX; this->maxY = maxY;
    capacity = cap;
    bucket = NULL;
      
