@@ -26,15 +26,15 @@ class quadtree{
     ostream *errorstream;
     quadtreenode* guessbucket;
 public:
+   
    // constructor that builds a new tree from a loader object
-   quadtree(lidarpointloader *l, int cap, int nth);
    quadtree(lidarpointloader *l, int cap, int nth, ostringstream *s);
+   
    // constructor that builds a new tree from a specified area of a file
-   quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY);
    quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s);
+   
    // constructor that builds a new tree with user defined dimensions
-   quadtree(double sx, double sy, double bx, double by, int cap);
-   quadtree(double sx, double sy, double bx, double by, int cap, ostringstream *s);
+   quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s);
    ~quadtree();
    
    // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
@@ -75,12 +75,13 @@ public:
    // returns a boundary object representing the area the root node covers
    boundary* getboundary();
    
+   
+private:
    // this method expands the quadtree whose root is oldnode to contain the boundary passed
    // as nb, to do this is creates a new root node above oldnode and makes the oldnode its child.
    // NOTE : the method reassigns oldnode to point at the new root node providing a handle on the
    // new top layer of the tree.
    quadtreenode* expandboundary(quadtreenode* oldnode, boundary* nb);
-   
    
 };
 

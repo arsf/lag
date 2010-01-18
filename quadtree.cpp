@@ -9,25 +9,18 @@
 
 using namespace std;
 
-// this constructor creates a quadtree using a loader object
-quadtree::quadtree(lidarpointloader *l,int cap, int nth)
-{
-   errorstream = &cerr;
-   capacity = cap;
-   root = NULL;
-   
-   // get the boundary of the file points
-   boundary *b = l->getboundary();
-   // use boundary to create new tree that incompasses all points
-   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
-   flightlinenum = 0;
-   load(l, nth);
-   guessbucket = NULL;
-}
 
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s)
+
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s = NULL)
 {
-   errorstream = s;
+   if (s == NULL)
+   {
+      errorstream = &cerr;
+   }
+   else
+   {
+      errorstream = s;
+   }
    capacity = cap;
    root = NULL;
    guessbucket = NULL;
@@ -42,23 +35,16 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s)
 
 
 // this constructor creates a quadtree using a loader object for a given area of interest
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY)
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s = NULL)
 {
-   errorstream = &cerr;
-   capacity = cap;
-   root = NULL;
-   guessbucket = NULL;
-   // use area of interest to create new tree that incompasses all points
-   root = new quadtreenode(minX, minY, maxX, maxY, capacity);
-   flightlinenum = -1;
-   // use area of intrest load
-   load(l, nth, minX, minY, maxX, maxY);
-     
-}
-
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s)
-{
-   errorstream = s;
+   if (s == NULL)
+   {
+      errorstream = &cerr;
+   }
+   else
+   {
+      errorstream = s;
+   }
    capacity = cap;
    root = NULL;
    guessbucket = NULL;
@@ -74,20 +60,19 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
 // the points may not fail within the boundry
-quadtree::quadtree(double sx, double sy, double bx, double by, int cap)
+quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s = NULL)
 {
-   errorstream = &cerr;
+   if (s == NULL)
+   {
+      errorstream = &cerr;
+   }
+   else
+   {
+      errorstream = s;
+   }
    capacity = cap;
    flightlinenum=-1;
-   root = new quadtreenode(sx,sy,bx,by,capacity);
-}
-
-quadtree::quadtree(double sx, double sy, double bx, double by, int cap, ostringstream *s)
-{
-   errorstream = s;
-   capacity = cap;
-   flightlinenum=-1;
-   root = new quadtreenode(sx,sy,bx,by,capacity);
+   root = new quadtreenode(minX,minY,maxX,maxY,capacity);
 }
 
 // this method expands a quadtree to encompass a new boundary
@@ -325,6 +310,7 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
          // try and insert each point
          if (!insert(temp[k]))
          {
+            
             // don't blame me, this is to create the error string for harg
             outofboundscounter++;
             
@@ -596,6 +582,10 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    
 boundary* quadtree::getboundary()
 {
+   if (root == NULL)
+   {
+      throw "exception: attempted to get boundary from NULL root";
+   }
    return root->getbound();
 }
    

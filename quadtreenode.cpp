@@ -6,9 +6,9 @@
 #include <limits>
 using namespace std;
 
-quadtreenode::quadtreenode(double sx, double sy, double bx, double by, int cap)
+quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap)
 {
-   minX = sx; minY = sy; maxX = bx; maxY = by;
+   this->minX = this->minX; this->minY = minY; this->maxX = maxX; this->maxY = maxY;
    capacity = cap;
    bucket = NULL;
    
