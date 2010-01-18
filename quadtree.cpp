@@ -11,7 +11,7 @@ using namespace std;
 
 
 
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s = NULL)
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s )
 {
    if (s == NULL)
    {
@@ -35,7 +35,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s = NULL
 
 
 // this constructor creates a quadtree using a loader object for a given area of interest
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s = NULL)
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s)
 {
    if (s == NULL)
    {
@@ -60,7 +60,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
 // the points may not fail within the boundry
-quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s = NULL)
+quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s)
 {
    if (s == NULL)
    {
