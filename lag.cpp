@@ -175,6 +175,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                   cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
                   loaderroroutput << filename << endl;
                   loaderroroutput << loaderrorstream->str();
+                  loaderroroutput.flush();
                   loaderrorstream->str("");
                }
                delete aloader;
