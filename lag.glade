@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Jan 18 18:32:10 2010 -->
+<!--Generated with glade3 3.4.5 on Tue Jan 19 14:09:52 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -981,6 +981,7 @@ Range</property>
                       <widget class="GtkEntry" id="asciicodeentry">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="text" translatable="yes"> txyzicr#</property>
                       </widget>
                       <packing>
                         <property name="position">1</property>
@@ -996,7 +997,7 @@ Range</property>
             <child>
               <widget class="GtkLabel" id="label1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">The format for the type code is: Delimiter = &lt;space&gt;, X coordinates = x, Y coordinates = y, Z coordinates = z, Intensity = i, Classification = c,  Return number = r, Column to be ignored = #</property>
+                <property name="label" translatable="yes">The format for the type code is a combination of the following: Delimiter (always comes first) = &lt;whatever, perhaps space&gt;, Time = t, X coordinates = x, Y coordinates = y, Z coordinates = z, Intensity = i, Classification = c,  Return number = r, Column to be ignored = #</property>
                 <property name="justify">GTK_JUSTIFY_FILL</property>
                 <property name="wrap">True</property>
               </widget>
