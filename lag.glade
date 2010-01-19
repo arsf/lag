@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Jan 18 14:37:36 2010 -->
+<!--Generated with glade3 3.4.5 on Mon Jan 18 18:32:10 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -1035,19 +1035,6 @@ Range</property>
               </widget>
               <packing>
                 <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkButton" id="closefilechooserbutton">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="label" translatable="yes">gtk-close</property>
-                <property name="use_stock">True</property>
-                <property name="response_id">-7</property>
-              </widget>
-              <packing>
-                <property name="position">2</property>
               </packing>
             </child>
           </widget>

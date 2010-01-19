@@ -137,6 +137,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                   cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
                   loaderroroutput << filename << endl;
                   loaderroroutput << loaderrorstream->str();
+                  loaderroroutput.flush();
                   loaderrorstream->str("");
                }
                delete loader;
@@ -188,6 +189,8 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
    catch(char const* e){
       cout << e << endl;
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
+      loaderrorstream = new ostringstream();
+      lidardata = new quadtree(0,0,1,1,bucketlimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
       return 22;
    }
    tdo->setlidardata(lidardata,bucketlimit);
@@ -512,7 +515,7 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("pointwidthselect",pointwidthselect);
             if(pointwidthselect){
                pointwidthselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
-               pointwidthselect->set_value(1);
+               pointwidthselect->set_value(2);
                pointwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselected));
             }
             refXml->get_widget("maindetailselect",maindetailselect);
@@ -693,7 +696,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.01.18.1" << endl;
+   cout << "Build number: 2010.01.19.1" << endl;
    loaderroroutput.open("/tmp/LAGloadingerrors.txt");
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;

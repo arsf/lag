@@ -123,6 +123,49 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    if(event->button==1)return drawviewable(1);
+//   else if(event->button=3){
+//      double pointeroffx = event->x - get_width()/2;
+//      double pointeroffy = event->y - get_height()/2;
+//      double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;
+//      double miny = centrey + (-pointeroffy - pointsize/2)*ratio/zoomlevel;
+//      double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;
+//      double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;
+////      if(minx>=maxx){
+////         double temp = minx;
+////         minx = maxx;
+////         maxx = temp;
+////      }
+////      if(miny>=maxy){
+////         double temp = miny;
+////         miny = maxy;
+////         maxy = temp;
+////      }
+//      vector<pointbucket*> *pointvector;
+//      try{
+//         pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+//      }catch(const char* e){
+//         cout << e << endl;
+//         cout << "No points returned." << endl;
+//         return false;
+//      }
+//      double midx = centrex + pointeroffx * ratio/zoomlevel;
+//      int bucketno=0;
+//      int pointno=0;
+//      for(int i=0;i<pointvector->size();i++){
+//         bool* pointsinarea = vetpoints(pointvector->at(i)->numberofpoints,pointvector->at(i)->points,midx,miny,midx,maxy,pointsize);
+//         for(int j=0;j<pointvector->at(i)->numberofpoints;j++){
+//            if(pointsinarea[j]){
+//               if(pointvector->at(i)->points[j].z >= pointvector->at(bucketno)->points[pointno].z){
+//                  bucketno=i;
+//                  pointno=j;
+//               }
+//            }
+//         }
+//      }
+//      ostringstream x,y,z,time,intensity
+//      rulerlabel->set_text("Distance: 0\nX: 0\nY: 0");
+//      return true;
+//   }
    else return false;
 }
 
