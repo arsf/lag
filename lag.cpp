@@ -697,7 +697,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.01.19.2" << endl;
+   cout << "Build number: 2010.01.19.3" << endl;
    loaderroroutput.open("/tmp/LAGloadingerrors.txt");
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;

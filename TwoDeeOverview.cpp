@@ -123,49 +123,75 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    if(event->button==1)return drawviewable(1);
-//   else if(event->button=3){
-//      double pointeroffx = event->x - get_width()/2;
-//      double pointeroffy = event->y - get_height()/2;
-//      double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;
-//      double miny = centrey + (-pointeroffy - pointsize/2)*ratio/zoomlevel;
-//      double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;
-//      double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;
-////      if(minx>=maxx){
-////         double temp = minx;
-////         minx = maxx;
-////         maxx = temp;
-////      }
-////      if(miny>=maxy){
-////         double temp = miny;
-////         miny = maxy;
-////         maxy = temp;
-////      }
-//      vector<pointbucket*> *pointvector;
-//      try{
-//         pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
-//      }catch(const char* e){
-//         cout << e << endl;
-//         cout << "No points returned." << endl;
-//         return false;
+   else if(event->button==3){
+      string meh = "0\n0\n0";
+      rulerlabel->set_text(meh);
+      double pointeroffx = event->x - get_width()/2;
+      double pointeroffy = event->y - get_height()/2;
+      double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;
+      double miny = centrey + (-pointeroffy - pointsize/2)*ratio/zoomlevel;
+      double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;
+      double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;
+//      if(minx>=maxx){
+//         double temp = minx;
+//         minx = maxx;
+//         maxx = temp;
 //      }
-//      double midx = centrex + pointeroffx * ratio/zoomlevel;
-//      int bucketno=0;
-//      int pointno=0;
-//      for(int i=0;i<pointvector->size();i++){
-//         bool* pointsinarea = vetpoints(pointvector->at(i)->numberofpoints,pointvector->at(i)->points,midx,miny,midx,maxy,pointsize);
-//         for(int j=0;j<pointvector->at(i)->numberofpoints;j++){
-//            if(pointsinarea[j]){
-//               if(pointvector->at(i)->points[j].z >= pointvector->at(bucketno)->points[pointno].z){
-//                  bucketno=i;
-//                  pointno=j;
-//               }
-//            }
-//         }
+//      if(miny>=maxy){
+//         double temp = miny;
+//         miny = maxy;
+//         maxy = temp;
 //      }
-//      ostringstream x,y,z,time,intensity
-//      rulerlabel->set_text("Distance: 0\nX: 0\nY: 0");
-//      return true;
-//   }
+      vector<pointbucket*> *pointvector;
+      try{
+         pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+      }catch(const char* e){
+         cout << e << endl;
+         cout << "No points returned." << endl;
+         return false;
+      }
+      if(pointvector->size()>0){
+         double midx = centrex + pointeroffx * ratio/zoomlevel;
+         int bucketno=0;
+         int pointno=0;
+         for(unsigned int i=0;i<pointvector->size();i++){
+            bool* pointsinarea = vetpoints(pointvector->at(i)->numberofpoints,pointvector->at(i)->points,midx,miny,midx,maxy,pointsize);
+            for(int j=0;j<pointvector->at(i)->numberofpoints;j++){
+               if(pointsinarea[j]){
+                  if(pointvector->at(i)->points[j].z >= pointvector->at(bucketno)->points[pointno].z){
+                     bucketno=i;
+                     pointno=j;
+                  }
+               }
+            }
+            delete pointsinarea;
+         }
+         ostringstream x,y,z,time,intensity,classification,flightline,rnumber;
+         x << pointvector->at(bucketno)->points[pointno].x;
+         y << pointvector->at(bucketno)->points[pointno].y;
+         z << pointvector->at(bucketno)->points[pointno].z;
+         time << pointvector->at(bucketno)->points[pointno].time;
+         intensity << pointvector->at(bucketno)->points[pointno].intensity;
+         classification << (int)pointvector->at(bucketno)->points[pointno].classification;
+         flightline << (int)pointvector->at(bucketno)->points[pointno].flightline;
+         rnumber << (int)pointvector->at(bucketno)->points[pointno].rnumber;
+         string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + "),\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline.str() + ", Return number: " + rnumber.str() + ".";
+         rulerlabel->set_text(pointstring);
+         cout << "points" << endl;
+      }
+      double altitude = rmaxz+1000;
+      glNewList(7,GL_COMPILE);
+         glColor3f(1.0,1.0,1.0);
+         glBegin(GL_LINE_LOOP);
+            glVertex3d(minx,miny,altitude);
+            glVertex3d(minx,maxy,altitude);
+            glVertex3d(maxx,maxy,altitude);
+            glVertex3d(maxx,miny,altitude);
+         glEnd();
+      glEndList();
+      delete pointvector;
+      return drawviewable(1);
+   }
    else return false;
 }
 
@@ -474,6 +500,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
+   glCallList(7);
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -596,6 +623,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
    if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
    if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
+   glCallList(7);
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
