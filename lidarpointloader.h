@@ -27,6 +27,8 @@ public:
    virtual bool compatibleCheck(const char *filename) = 0;
 
    virtual boundary* getboundary() = 0;
+   
+   virtual const char* getfilename() = 0;
 };
 
 #endif	/* _LIDARPOINTLOADER_H */

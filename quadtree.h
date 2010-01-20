@@ -17,7 +17,12 @@
 #include <vector>
 #include "lidarpointloader.h"
 #include <sstream>
+#include <string>
+#include <tr1/unordered_map> 
+
 using namespace std;
+
+typedef tr1::unordered_map<uint8_t, string> flighthash;
 
 class quadtree{
     quadtreenode *root;   
@@ -25,6 +30,7 @@ class quadtree{
     int flightlinenum;
     ostream *errorstream;
     quadtreenode* guessbucket;
+    flighthash flighttable;
 public:
    
    // constructor that builds a new tree from a loader object
@@ -75,6 +81,9 @@ public:
    // returns a boundary object representing the area the root node covers
    boundary* getboundary();
    
+   //this method takes a flightlinenum and returns the associated filename 
+   // (the numbers are stored with each point because it takes less memory)
+   string getfilename(uint8_t flightlinenum);
    
 private:
    // this method expands the quadtree whose root is oldnode to contain the boundary passed

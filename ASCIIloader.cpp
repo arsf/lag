@@ -313,5 +313,10 @@ boundary* ASCIIloader::getboundary()
    
    return b;
 }     
+
+const char* ASCIIloader::getfilename()
+{
+   return filename;
+}
       
       

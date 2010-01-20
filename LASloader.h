@@ -31,6 +31,7 @@ public:
    // WARNING: placeholder
    bool compatibleCheck(const char *filename){return false;};
    boundary* getboundary();
+   const char* getfilename();
 };
 
 #endif	/* _LASLOADER_H */

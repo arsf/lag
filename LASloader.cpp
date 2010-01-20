@@ -145,6 +145,11 @@ boundary* LASloader::getboundary()
 }
 
 
+const char* LASloader::getfilename()
+{
+   return filename;
+}
+
 
 
 

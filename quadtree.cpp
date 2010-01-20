@@ -29,6 +29,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s )
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
    flightlinenum = 0;
+
    load(l, nth);   
 }
 
@@ -50,7 +51,8 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
    guessbucket = NULL;
    // use area of interest to create new tree that incompasses all points
    root = new quadtreenode(minX, minY, maxX, maxY, capacity);
-   flightlinenum = -1;
+   flightlinenum = 0;
+
    // use area of intrest load
    load(l, nth, minX, minY, maxX, maxY);
      
@@ -71,7 +73,7 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
       errorstream = s;
    }
    capacity = cap;
-   flightlinenum=-1;
+   flightlinenum=0;
    root = new quadtreenode(minX,minY,maxX,maxY,capacity);
 }
 
@@ -207,6 +209,10 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 // load a new flight line into the quad tree, nth is the nth points to load
 void quadtree::load(lidarpointloader *l, int nth)
 {
+   // add the flightline name flightline num pair to the table
+   string tempstring(l->getfilename());
+   flighttable.insert(make_pair(flightlinenum, tempstring));
+   
    int outofboundscounter = 0;
    // get new flight boundary
    boundary *nb = l->getboundary();
@@ -273,6 +279,10 @@ void quadtree::load(lidarpointloader *l, int nth)
 // this method loads points from a flightline that fall within an area of intrest
 void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, double maxX, double maxY)
 {
+   // add the flightline name flightline num pair to the table
+   string tempstring(l->getfilename());
+   flighttable.insert(make_pair(flightlinenum, tempstring));
+   
    // get new flight boundary
    boundary *nb = l->getboundary();
    int outofboundscounter = 0;
@@ -589,6 +599,18 @@ boundary* quadtree::getboundary()
    return root->getbound();
 }
    
-   
+
+string quadtree::getfilename(uint8_t flightlinenum)
+{
+   flighthash::iterator ity = flighttable.find(flightlinenum);
+   if (ity != flighttable.end())
+   {
+      return ity->second;
+   }
+   else
+   {
+      throw "flightline number does not exist";
+   }
+}
    
    
