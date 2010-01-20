@@ -15,6 +15,7 @@
 #include "Profile.h"
 using namespace std;
 
+string loaderroroutputfile;
 quadtree* lidardata;//The flightlines are stored here.
 TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
@@ -134,7 +135,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                cout << filename << endl;
                if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
+                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
                   loaderroroutput << filename << endl;
                   loaderroroutput << loaderrorstream->str();
                   loaderroroutput.flush();
@@ -172,7 +173,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                cout << filename << endl;
                if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file /tmp/LAGloadingerrors.txt" << endl;
+                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
                   loaderroroutput << filename << endl;
                   loaderroroutput << loaderrorstream->str();
                   loaderroroutput.flush();
@@ -697,8 +698,14 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.01.19.3" << endl;
-   loaderroroutput.open("/tmp/LAGloadingerrors.txt");
+   cout << "Build number: 2010.01.20.1" << endl;
+   time_t starttime = time(NULL);
+   char meh[80];
+   strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
+   ostringstream bleh;
+   bleh << meh;
+   loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
+   loaderroroutput.open(loaderroroutputfile.c_str());
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;
    loaderrorstream = new ostringstream();
