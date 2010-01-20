@@ -187,6 +187,7 @@ protected:
    double rulerwidth;//The width of the ruler.
    bool rulering;//Determines whether or not the ruler should be drawn.
  
+   bool pointinfo(double eventx,double eventy);
    //Panning control:   //These allow the user to pan by clicking and dragging.
    bool on_pan_start(GdkEventButton* event);
    bool on_pan(GdkEventMotion* event);
