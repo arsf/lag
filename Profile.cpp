@@ -18,6 +18,7 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   viewerz = 0;
    zoompower = 0.7;
    imageexists=false;
    maindetailmod = 0;
@@ -93,9 +94,13 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
   }
   glViewport(0, 0, get_width(), get_height());
   get_gl_window()->make_current(get_gl_context());
+  double breadth = endx - startx;
+  double height = endy - starty;
+  double length = sqrt(breadth*breadth+height*height);//Right triangle.
+  viewerx = width * height / length;//To the right when looking from start to end.
+  viewery = -width * breadth / length;//...
   resetview();
   delete pointvector;
-//  if(is_realized())return drawviewable(1);
   if(is_realized())return returntostart();
   else return false;
 }
@@ -188,14 +193,8 @@ void Profile::resetview(){
           +5*width);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  double breadth = endx - startx;
-  double height = endy - starty;
-  double length = sqrt(breadth*breadth+height*height);//Right triangle.
-  viewerx = centrex + width * height / length;//To the right when looking from start to end.
-  viewery = centrey - width * breadth / length;//...
-  viewerz = centrez;
   gluLookAt(viewerx,viewery,viewerz,
-            centrex,centrey,centrez,
+            0,0,0,
             0,0,1);
 }
 
@@ -234,9 +233,9 @@ bool Profile::on_ruler_start(GdkEventButton* event){
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
-   rulerstartx = rulerendx = viewerx + hypotenuse * breadth / length;
-   rulerstarty = rulerendy = viewery + hypotenuse * height / length;
-   rulerstartz = rulerendz = viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+   rulerstartx = rulerendx = centrex + viewerx + hypotenuse * breadth / length;
+   rulerstarty = rulerendy = centrey + viewery + hypotenuse * height / length;
+   rulerstartz = rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0");
    makerulerbox();
    return drawviewable(1);
@@ -247,9 +246,9 @@ bool Profile::on_ruler(GdkEventMotion* event){
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
-   rulerendx = viewerx + hypotenuse * breadth / length;
-   rulerendy = viewery + hypotenuse * height / length;
-   rulerendz = viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+   rulerendx = centrex + viewerx + hypotenuse * breadth / length;
+   rulerendy = centrey + viewery + hypotenuse * height / length;
+   rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    double d,xd,yd,hd,zd;
    xd = abs(rulerendx-rulerstartx);
    yd = abs(rulerendy-rulerstarty);
@@ -264,22 +263,20 @@ bool Profile::on_ruler(GdkEventMotion* event){
    zdist << zd;
    string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str();
    rulerlabel->set_text(rulerstring);
-   makerulerbox();
+//   makerulerbox();
    return drawviewable(1);
 }
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
 bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
 //Make the ruler as a thick line.
 void Profile::makerulerbox(){
-   glNewList(5,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
    glBegin(GL_LINES);
-      glVertex3d(rulerstartx,rulerstarty,rulerstartz);
-      glVertex3d(rulerendx,rulerendy,rulerendz);
+      glVertex3d(rulerstartx-centrex,rulerstarty-centrey,rulerstartz-centrez);
+      glVertex3d(rulerendx-centrex,rulerendy-centrey,rulerendz-centrez);
    glEnd();
    glLineWidth(1);
-   glEndList();
 }
 
 //First, half the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
@@ -453,9 +450,9 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                   green *= brightnessintensityarray[(int)(intensity-rminintensity)];
                   blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
                }
-               vertices[3*count]=x;
-               vertices[3*count+1]=y;
-               vertices[3*count+2]=z;
+               vertices[3*count]=x-centrex;
+               vertices[3*count+1]=y-centrey;
+               vertices[3*count+2]=z-centrez;
                colours[3*count]=red;
                colours[3*count+1]=green;
                colours[3*count+2]=blue;
@@ -466,10 +463,12 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
          }
       }
       glDrawArrays(GL_POINTS,0,count);
-//      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
-//      else glFlush();
+      if(numbuckets>20)if((i+1)%20==0){
+         if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
+         else glFlush();
+      }
    }
-   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(drawmovingaverage){
       for(int i=0;i<(int)flightlines.size();i++){
          int count = 0;
@@ -499,9 +498,9 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
             z /= zcount;//... and divide by the number of them to get the moving average at that point.
             double x = flightlinepoints.at(j)->x;
             double y = flightlinepoints.at(j)->y;
-            vertices[3*count]=x;
-            vertices[3*count+1]=y;
-            vertices[3*count+2]=z;
+            vertices[3*count]=x-centrex;
+            vertices[3*count+1]=y-centrey;
+            vertices[3*count+2]=z-centrez;
             colours[3*count]=red;
             colours[3*count+1]=green;
             colours[3*count+2]=blue;
@@ -620,9 +619,9 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                green *= brightnessintensityarray[(int)(intensity-rminintensity)];
                blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
             }
-            vertices[3*count]=x;
-            vertices[3*count+1]=y;
-            vertices[3*count+2]=z;
+            vertices[3*count]=x-centrex;
+            vertices[3*count+1]=y-centrey;
+            vertices[3*count+2]=z-centrez;
             colours[3*count]=red;
             colours[3*count+1]=green;
             colours[3*count+2]=blue;

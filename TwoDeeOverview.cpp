@@ -98,9 +98,6 @@ void TwoDeeOverview::resetview(){
            -5*altitude,-5*depth);
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-   gluLookAt(centrex,centrey,0,
-             centrex,centrey,-100,
-             0,1,0);
 }
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
@@ -178,7 +175,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       intensity << pointvector->at(bucketno)->points[pointno].intensity;
       classification << (int)pointvector->at(bucketno)->points[pointno].classification;
       rnumber << (int)pointvector->at(bucketno)->points[pointno].rnumber;
-      string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + "),\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline /*lidardata->getfilename(pointvector->at(bucketno)->points[pointno].flightline)*/ + ", Return number: " + rnumber.str() + ".";
+      string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline /*lidardata->getfilename(pointvector->at(bucketno)->points[pointno].flightline)*/ + ", Return number: " + rnumber.str() + ".";
       rulerlabel->set_text(pointstring);
    }
    delete pointvector;
@@ -189,14 +186,12 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   makeprofbox();
    return drawviewable(2);
 }
 //Updates the end point of the profile and then gets the vertical and horisontal differences betweent the start and end points. These are used to determine the length of the profile and hence the positions of the vertices of the profile rectangle. The rectangle is prepared and then the drawing method is called.
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   makeprofbox();
    return drawviewable(2);
 }
 //Draw the full image at the end of selecting a profile.
@@ -208,29 +203,25 @@ void TwoDeeOverview::makeprofbox(){
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
    if(length==0)length=1;
-   glNewList(4,GL_COMPILE);
       glColor3f(1.0,1.0,1.0);
       glBegin(GL_LINE_LOOP);
-         glVertex3d(profstartx-(profwidth/2)*height/length,profstarty+(profwidth/2)*breadth/length,altitude);
-         glVertex3d(profstartx+(profwidth/2)*height/length,profstarty-(profwidth/2)*breadth/length,altitude);
-         glVertex3d(profendx+(profwidth/2)*height/length,profendy-(profwidth/2)*breadth/length,altitude);
-         glVertex3d(profendx-(profwidth/2)*height/length,profendy+(profwidth/2)*breadth/length,altitude);
+         glVertex3d(profstartx-(profwidth/2)*height/length-centrex,profstarty+(profwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profstartx+(profwidth/2)*height/length-centrex,profstarty-(profwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profendx+(profwidth/2)*height/length-centrex,profendy-(profwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profendx-(profwidth/2)*height/length-centrex,profendy+(profwidth/2)*breadth/length-centrey,altitude);
       glEnd();
-   glEndList();
 }
 
 //Initialises the coordinates of the fence and prepares it for drawing, then draws preview.
 bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   makefencebox();
    return drawviewable(2);
 }
 //Updates end coordinates of the fence and prepares it for drawing, then draws preview.
 bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   makefencebox();
    return drawviewable(2);
 }
 //Draws the main image one more.
@@ -238,15 +229,13 @@ bool TwoDeeOverview::on_fence_end(GdkEventButton* event){return drawviewable(1);
 //Makes the fence box.
 void TwoDeeOverview::makefencebox(){
    double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
-   glNewList(6,GL_COMPILE);
       glColor3f(1.0,1.0,1.0);
       glBegin(GL_LINE_LOOP);
-         glVertex3d(fencestartx,fencestarty,altitude);
-         glVertex3d(fencestartx,fenceendy,altitude);
-         glVertex3d(fenceendx,fenceendy,altitude);
-         glVertex3d(fenceendx,fencestarty,altitude);
+         glVertex3d(fencestartx-centrex,fencestarty-centrey,altitude);
+         glVertex3d(fencestartx-centrex,fenceendy-centrey,altitude);
+         glVertex3d(fenceendx-centrex,fenceendy-centrey,altitude);
+         glVertex3d(fenceendx-centrex,fencestarty-centrey,altitude);
       glEnd();
-   glEndList();
 }
 
 //Find the starting coordinates of the ruler and set the label values to zero.
@@ -254,7 +243,6 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event){
    rulerstartx = rulerendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    rulerstarty = rulerendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
    rulerlabel->set_text("Distance: 0\nX: 0\nY: 0");
-   makerulerbox();
    return drawviewable(2);
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
@@ -271,7 +259,6 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event){
    ydist << yd;
    string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str();
    rulerlabel->set_text(rulerstring);
-   makerulerbox();
    return drawviewable(2);
 }
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
@@ -279,15 +266,13 @@ bool TwoDeeOverview::on_ruler_end(GdkEventButton* event){return drawviewable(1);
 //Make the ruler as a thick line.
 void TwoDeeOverview::makerulerbox(){
    double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
-   glNewList(5,GL_COMPILE);
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
    glBegin(GL_LINES);
-      glVertex3d(rulerstartx,rulerstarty,altitude);
-      glVertex3d(rulerendx,rulerendy,altitude);
+      glVertex3d(rulerstartx-centrex,rulerstarty-centrey,altitude);
+      glVertex3d(rulerendx-centrex,rulerendy-centrey,altitude);
    glEnd();
    glLineWidth(1);
-   glEndList();
 }
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
@@ -446,8 +431,8 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             green *= brightnessintensityarray[(int)(intensity-rminintensity)];
             blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
          }
-         vertices[3*count]=x;
-         vertices[3*count+1]=y;
+         vertices[3*count]=x-centrex;
+         vertices[3*count+1]=y-centrey;
          if(heightenNonC ||
             heightenGround ||
             heightenLowVeg ||
@@ -484,12 +469,14 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       }
       glDrawArrays(GL_POINTS,0,count);
       //Perhaps modify to happen only when the estimated number of points exceeds a certain value? Estimation could be: numbuckets * bucketlimit / detail. Quite rough, though. This might then cause previewimage to become useless. :-)
-      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
-      else glFlush();
+      if(numbuckets>10)if((i+1)%10==0){
+         if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
+         else glFlush();
+      }
    }
-   if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
-   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
+   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
+   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -599,8 +586,8 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
             green *= brightnessintensityarray[(int)(intensity-rminintensity)];
             blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
          }
-         vertices[3*count]=x;
-         vertices[3*count+1]=y;
+         vertices[3*count]=x-centrex;
+         vertices[3*count+1]=y-centrey;
          vertices[3*count+2]=z;
          colours[3*count]=red;
          colours[3*count+1]=green;
@@ -609,9 +596,9 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
       }
       glDrawArrays(GL_POINTS,0,count);
    }
-   if(profiling||showprofile)glCallList(4);//Draw the profile box if profile mode is on.
-   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)glCallList(6);//Draw the fence box if fence mode is on.
+   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
+   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);

@@ -1,10 +1,13 @@
 #For normal use (has optimisation):
-g++ -o lag.out -O4 -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp
+#g++ -o lag.out -O4 -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp
 #g++ -o lag.out -O4 -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp
 #For profiling WITH optimisation:
 #g++ -O4 -pg -o profilingtestopt.out -lpthread -Wall -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0` lag.cpp
 #For profiling WITHOUT optimisation:
 #g++ -pg -g -o profilingtest.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp  Profile.cpp MathFuncs.cpp ASCIIloader.cpp
+
+#NO optimisation:
+g++ -o lag.out -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp
 
 #For testing without optimisation and WITH debugging symbols:
 #g++ -o lagdebug -g -lglut -llas -L./liblas/lib/ -Wall -pedantic -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2` lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp
