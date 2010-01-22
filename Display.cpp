@@ -161,7 +161,7 @@ void Display::prepare_image(){
       double sheight = get_screen()->get_height();
       double xratio = xdif/swidth;
       double yratio = ydif/sheight;
-      yratio*=1.25;
+      yratio*=1.3;
       ratio = 0;
       if(xratio>yratio)ratio = xratio;
       else ratio = yratio;

@@ -15,6 +15,7 @@ class TwoDeeOverview : public Display{
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
    ~TwoDeeOverview();
+   bool clippy(string picturename);
    bool returntostart();//Returns to the initial view.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    void makeprofbox();//Make the box showing the profile area.
