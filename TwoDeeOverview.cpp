@@ -609,7 +609,6 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
    return true;
 }
 
-bool TwoDeeOverview::clippy(string picturename){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   glwindow->draw_pixbuf(get_style()->get_fg_gc(get_state()),Gdk::Pixbuf::create_from_file(picturename),0,0,0,0,-1,-1,Gdk::RGB_DITHER_NONE,0,0);
+void TwoDeeOverview::clippy(string picturename){
+   get_gl_window()->draw_pixbuf(get_style()->get_fg_gc(get_state()),Gdk::Pixbuf::create_from_file(picturename),0,0,0,0,-1,-1,Gdk::RGB_DITHER_NONE,0,0);
 }

@@ -18,6 +18,7 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   flightlinepoints = new vector<point*>[1];
    viewerz = 0;
    zoompower = 0.7;
    imageexists=false;
@@ -33,6 +34,9 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    correctpointsbuckets[0] = new bool[2];
    correctpointsbuckets[1] = new bool[2];
    numbuckets = 2;
+   linezsize=1;
+   linez = new double*[linezsize];
+   linez[0] = new double[1];
    //Rulering:
    rulering=false;
    rulerwidth=2;
@@ -64,45 +68,66 @@ bool Profile::returntostart(){
 
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile and then draws them by calling drawviewable(1).
 bool Profile::showprofile(double startx,double starty,double endx,double endy,double width){
-  this->startx = startx;
-  this->starty = starty;
-  this->endx = endx;
-  this->endy = endy;
-  this->width = width;
-  centrex = startx;
-  centrey = starty;
-  centrez = rminz + (rmaxz - rminz)/2;
-  for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
-  delete[] correctpointsbuckets;
-  delete[] buckets;
-  vector<pointbucket*> *pointvector;
-  try{
-     pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
-     imageexists=true;
-  }catch(const char* e){
-     cout << e << endl;
-     cout << "No points returned." << endl;
-     imageexists=false;
-     return false;
-  }
-  numbuckets = pointvector->size();
-  buckets = new pointbucket*[numbuckets];
-  correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
-  for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-     buckets[i]=pointvector->at(i);
-     correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,startx,starty,endx,endy,width);
-  }
-  glViewport(0, 0, get_width(), get_height());
-  get_gl_window()->make_current(get_gl_context());
-  double breadth = endx - startx;
-  double height = endy - starty;
-  double length = sqrt(breadth*breadth+height*height);//Right triangle.
-  viewerx = width * height / length;//To the right when looking from start to end.
-  viewery = -width * breadth / length;//...
-  resetview();
-  delete pointvector;
-  if(is_realized())return returntostart();
-  else return false;
+   this->startx = startx;
+   this->starty = starty;
+   this->endx = endx;
+   this->endy = endy;
+   this->width = width;
+   centrex = startx;
+   centrey = starty;
+   centrez = rminz + (rmaxz - rminz)/2;
+   for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
+   delete[] correctpointsbuckets;
+   delete[] buckets;
+   vector<pointbucket*> *pointvector;
+   try{
+      pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
+      imageexists=true;
+   }catch(const char* e){
+      cout << e << endl;
+      cout << "No points returned." << endl;
+      imageexists=false;
+      return false;
+   }
+   numbuckets = pointvector->size();
+   buckets = new pointbucket*[numbuckets];
+   flightlinestot.clear();
+   correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
+   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+      buckets[i]=pointvector->at(i);
+      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,startx,starty,endx,endy,width);
+      for(int j=0;j<buckets[i]->numberofpoints;j++){
+         if(correctpointsbuckets[i][j]){
+            if(find(flightlinestot.begin(),flightlinestot.end(),buckets[i]->points[j].flightline)==flightlinestot.end()){
+               flightlinestot.push_back(buckets[i]->points[j].flightline);
+            }
+         }
+      }
+   }
+   delete[] flightlinepoints;
+   flightlinepoints = new vector<point*>[flightlinestot.size()];
+   for(int i=0;i<(int)flightlinestot.size();i++){
+      for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
+         for(int k=0;k<buckets[j]->numberofpoints;k++){//Possibly: do k+=detail instead, and copy to preview. Might not be "correct" though.
+            if(correctpointsbuckets[j][k]){
+               if(buckets[j]->points[k].flightline == flightlinestot.at(i))flightlinepoints[i].push_back(&(buckets[j]->points[k]));
+            }
+         }
+      }
+      sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
+   }
+   make_moving_average();
+   glViewport(0, 0, get_width(), get_height());
+   get_gl_window()->make_current(get_gl_context());
+   double breadth = endx - startx;
+   double height = endy - starty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   viewerx = width * height / length;//To the right when looking from start to end.
+   viewery = -width * breadth / length;//...
+   resetview();
+   delete pointvector;
+   if(is_realized())return returntostart();
+   else return false;
 }
 
 //Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
@@ -349,6 +374,28 @@ bool Profile::linecomp(point* a,point* b){
    return alongprofa > alongprofb;
 }
 
+void Profile::make_moving_average(){
+   for(int i=0;i<linezsize;i++){
+      delete[] linez[i];
+   }
+   delete[] linez;
+   linezsize = flightlinestot.size();
+   linez = new double*[linezsize];
+   for(int i=0;i<linezsize;i++){
+      int numofpoints = (int)flightlinepoints[i].size();
+      linez[i] = new double[numofpoints];
+      for(int j=0;j<numofpoints;j++){
+         double z=0,zcount=0;
+         for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){// (up to) the range (depending on how close to the edge the point is) add up points...
+            z+=flightlinepoints[i][j+k]->z;
+            zcount++;
+         }
+         z /= zcount;//... and divide by the number of them to get the moving average at that point.
+         linez[i][j]=z;
+      }
+   }
+}
+
 /*This method draws the main image. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
  *
  *   for every bucket:
@@ -459,21 +506,19 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                count++;
             }
             line = buckets[i]->points[j].flightline;
-            if(drawmovingaverage)if(find(flightlines.begin(),flightlines.end(),line)==flightlines.end())flightlines.push_back(line);
          }
       }
       glDrawArrays(GL_POINTS,0,count);
-      if(numbuckets>20)if((i+1)%20==0){
+      if(numbuckets>90)if((i+1)%90==0){
          if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
          else glFlush();
       }
    }
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(drawmovingaverage){
-      for(int i=0;i<(int)flightlines.size();i++){
+      for(int i=0;i<(int)flightlinestot.size();i++){
          int count = 0;
-         vector<point*> flightlinepoints;
-         int index = flightlines.at(i) % 6;
+         int index = flightlinestot.at(i) % 6;
          switch(index){
             case 0:red=0;green=1;blue=0;break;//Green
             case 1:red=0;green=0;blue=1;break;//Blue
@@ -483,24 +528,13 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
             case 5:red=1;green=0;blue=1;break;//Purple
             default:red=green=blue=1;break;//White in the event of strangeness.
          }
-         for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
-            for(int k=0;k<buckets[j]->numberofpoints;k++){//Possibly: do k+=detail instead, and copy to preview. Might not be "correct" though.
-               if(correctpointsbuckets[j][k])if(buckets[j]->points[k].flightline == flightlines.at(i))flightlinepoints.push_back(&(buckets[j]->points[k]));
-            }
-         }
-         sort(flightlinepoints.begin(),flightlinepoints.end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
-         for(int j=0;j<(int)flightlinepoints.size();j++){
-            double z=0,zcount=0;
-            for(int k=-mavrgrange;k<=mavrgrange;k++)if((j+k>=0&&j+k<(int)flightlinepoints.size())){// (up to) the range (depending on how close to the edge the point is) add up points...
-               z+=flightlinepoints.at(j+k)->z;
-               zcount++;
-            }
-            z /= zcount;//... and divide by the number of them to get the moving average at that point.
-            double x = flightlinepoints.at(j)->x;
-            double y = flightlinepoints.at(j)->y;
+         int numofpoints = (int)flightlinepoints[i].size();
+         for(int j=0;j<numofpoints;j++){
+            double x = flightlinepoints[i][j]->x;
+            double y = flightlinepoints[i][j]->y;
             vertices[3*count]=x-centrex;
             vertices[3*count+1]=y-centrey;
-            vertices[3*count+2]=z-centrez;
+            vertices[3*count+2]=linez[i][j]-centrez;
             colours[3*count]=red;
             colours[3*count+1]=green;
             colours[3*count+2]=blue;

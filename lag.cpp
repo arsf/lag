@@ -408,6 +408,7 @@ void on_lineshowtoggle(){
 //The best fit is a moving average, and this changes the range, and therefore the shape of the line.
 void on_movingaveragerangeselect(){
    prof->setmavrgrange(movingaveragerangeselect->get_value());
+   prof->make_moving_average();
    if(prof->is_realized())prof->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -724,7 +725,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.01.22.1" << endl;
+   cout << "Build number: 2010.01.26.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

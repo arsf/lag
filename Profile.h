@@ -16,6 +16,7 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
+   void make_moving_average();
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -46,6 +47,10 @@ public:
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
 protected:
+   vector<int> flightlinestot;
+   vector<point*>* flightlinepoints;
+   double** linez;
+   int linezsize;
    bool drawpoints;//Determines whether points are drawn.
    bool drawmovingaverage;//Determines whether the best fit line is drawn.
    int mavrgrange;//Defines the range of the moving average, with 0 meaning no averaging.
