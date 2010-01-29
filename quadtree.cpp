@@ -6,12 +6,12 @@
 #include <cmath>
 #include <sstream>
 #include <ostream>
-
+#include "cacheminder.h"
 using namespace std;
 
 
 
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s )
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, int cachesize, ostringstream *s)
 {
    if (s == NULL)
    {
@@ -24,19 +24,19 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, ostringstream *s )
    capacity = cap;
    root = NULL;
    guessbucket = NULL;
+   MCP = new cacheminder(cachesize);
    // get the boundary of the file points
    boundary *b = l->getboundary();
    // use boundary to create new tree that incompasses all points
-   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity);
+   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity, MCP);
    flightlinenum = 0;
-
    load(l, nth);   
 }
 
 
 
 // this constructor creates a quadtree using a loader object for a given area of interest
-quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s)
+quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *s)
 {
    if (s == NULL)
    {
@@ -49,8 +49,9 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
    capacity = cap;
    root = NULL;
    guessbucket = NULL;
+   MCP = new cacheminder(cachesize);
    // use area of interest to create new tree that incompasses all points
-   root = new quadtreenode(minX, minY, maxX, maxY, capacity);
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP);
    flightlinenum = 0;
 
    // use area of intrest load
@@ -62,7 +63,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
 // the points may not fail within the boundry
-quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s)
+quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *s)
 {
    if (s == NULL)
    {
@@ -74,7 +75,9 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
    }
    capacity = cap;
    flightlinenum=0;
-   root = new quadtreenode(minX,minY,maxX,maxY,capacity);
+   guessbucket = NULL;
+   MCP = new cacheminder(cachesize);
+   root = new quadtreenode(minX,minY,maxX,maxY,capacity, MCP);
 }
 
 // this method expands a quadtree to encompass a new boundary
@@ -116,9 +119,9 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the top left corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->minX, newby2, capacity);
-      quadtreenode* tr = new quadtreenode(b->minX, b->maxY, newbx2, newby2, capacity);
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->maxY, capacity);
+      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->minX, newby2, capacity, MCP);
+      quadtreenode* tr = new quadtreenode(b->minX, b->maxY, newbx2, newby2, capacity, MCP);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->maxY, capacity, MCP);
       
       boundary* subboundary = new boundary;
       subboundary->minX = b->minX;
@@ -133,7 +136,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       delete subboundary;
       delete b;
       // create a new node above the old containing the 3 new child nodes and the expaned old node
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP);
    }
    
    // if the old node is in the bottom left
@@ -141,8 +144,8 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the top right corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->maxX, newby2, capacity);
-      quadtreenode* tr = new quadtreenode(b->maxX, b->maxY, newbx2, newby2, capacity);
+      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->maxX, newby2, capacity, MCP);
+      quadtreenode* tr = new quadtreenode(b->maxX, b->maxY, newbx2, newby2, capacity, MCP);
       
       boundary* subboundary = new boundary;
       subboundary->minX = newbx1;
@@ -153,9 +156,9 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       // the old node then needs to be expanded into its new quarter
       quadtreenode* bl = expandboundary(oldnode, subboundary);
       delete subboundary;
-      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->maxY, capacity);
+      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->maxY, capacity, MCP);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP);
    }
    
    // if the old node is in the top right
@@ -163,7 +166,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the bottom left corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->minY, b->minX, newby2, capacity);
+      quadtreenode* tl = new quadtreenode(newbx1, b->minY, b->minX, newby2, capacity, MCP);
       
       boundary* subboundary = new boundary;
       subboundary->minX = b->minX;
@@ -174,10 +177,10 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       // the old node then needs to be expanded into its new quarter
       quadtreenode* tr = expandboundary(oldnode, subboundary);
       delete subboundary;
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->minY, capacity);
-      quadtreenode* br = new quadtreenode(b->minX, newby1, newbx2, b->minY, capacity);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->minY, capacity, MCP);
+      quadtreenode* br = new quadtreenode(b->minX, newby1, newbx2, b->minY, capacity, MCP);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP);
    }
    
    // if the old node is in the top left
@@ -195,11 +198,11 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the bottom right corner of the old node
-      quadtreenode* tr = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity);
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->maxX, b->minY, capacity);
-      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->minY, capacity);
+      quadtreenode* tr = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity, MCP);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->maxX, b->minY, capacity, MCP);
+      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->minY, capacity, MCP);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP);
    }
    
    throw "error expanding quadtree"; 
@@ -451,6 +454,7 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    // NOTE: the caller of this method is responsible for cleaning up this data object 
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    root->subset(minX, minY, maxX, maxY, buckets);
+   MCP->cachelist(buckets);
    return buckets;
 }
 
@@ -586,6 +590,7 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    
    // begin the recursive subsetting of the root node 
    root->advsubset(sx1,sy1,sx2,sy2,sx3,sy3,sx4,sy4,buckets);
+   MCP->cachelist(buckets);
    return buckets;
  }
    

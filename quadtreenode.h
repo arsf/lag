@@ -17,10 +17,11 @@ class quadtreenode{
    int currentCap;
    pointbucket *bucket;
    bool leaf;
+   cacheminder *MCP;
    void addsubset(double x1, double y1, double x2, double y2, double x3, double y3 ,double x4, double y4, std::vector<pointbucket*> *buckets);
 public:
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap);
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCD);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCD);
     ~quadtreenode();
     
     // this method inserts a new point into the node

@@ -31,16 +31,17 @@ class quadtree{
     ostream *errorstream;
     quadtreenode* guessbucket;
     flighthash flighttable;
+    cacheminder *MCP;
 public:
    
    // constructor that builds a new tree from a loader object
-   quadtree(lidarpointloader *l, int cap, int nth, ostringstream *s = NULL);
+   quadtree(lidarpointloader *l, int cap, int nth, int cachesize, ostringstream *s = NULL);
    
    // constructor that builds a new tree from a specified area of a file
-   quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, ostringstream *s = NULL);
+   quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *s = NULL);
    
    // constructor that builds a new tree with user defined dimensions
-   quadtree(double minX, double minY, double maxX, double maxY, int cap, ostringstream *s = NULL);
+   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *s = NULL);
    ~quadtree();
    
    // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
