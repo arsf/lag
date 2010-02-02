@@ -72,7 +72,10 @@ quadtreenode::~quadtreenode()
     delete b;
     delete c;
     delete d;
-    delete bucket;
+    if (bucket != NULL)
+    {
+        delete bucket;
+    }
 }
 
 
@@ -215,18 +218,7 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
 
 bool quadtreenode::insert(point newP)
 {
-   /* if (bucket != NULL)
-    {
-        for (int k = 0; k < currentCap; k++)
-        {
-            point bob = bucket->getpoint(k);
-            if (bob.x < minX || bob.x > maxX ||bob.y < minY || bob.y > maxY)
-            {
-                cout << "******** point in wrong bucket, checked before" << endl;
-               // throw "its all gone pete tong";
-            }
-        }
-    }*/
+   
     // if the point dosen't belong in this subset of the tree return false
     if (newP.x < minX || newP.x > maxX || newP.y < minY || newP.y > maxY)
     {
@@ -306,7 +298,7 @@ bool quadtreenode::insert(point newP)
             throw "failed to insert new point into any of the four child nodes, big problem";
         }
 
-        // if the node falls within the boundary but this node isn't not a leaf
+        // if the node falls within the boundary but this node not a leaf
         if (leaf == false)
         {
             return false;
@@ -345,17 +337,8 @@ bool quadtreenode::insert(point newP)
             }
 
             bucket->getpoint(currentCap) = newP;
-            //cout << newP.x << "/" << newP.y << " new inserted into bucket " << bucket << "(" << minX << " " << maxX << ")" << endl;
             bucket->numberofpoints++;
             currentCap++;
-            /*for (int k = 0; k < currentCap; k++)
-            {
-                if (bucket->getpoint(k).x < minX || bucket->getpoint(k).x > maxX || bucket->getpoint(k).y < minY || bucket->getpoint(k).y > maxY)
-                {
-                    cout << "******** point in wrong bucket, checked after inserting" << endl;
-                    throw "its all gone pete tong";
-                }
-            }*/
             return true;
         }
     }

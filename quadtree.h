@@ -64,6 +64,7 @@ public:
    // pointers to all the buckets that could contain points falling within this area
    // NOTE : this area must be defined by the lower left and up right points of a rectangle
    vector<pointbucket*>* subset(double minX, double minY, double maxX, double maxY);
+   vector<pointbucket*>* uncachedsubset(double minX, double minY, double maxX, double maxY);
    
    // not implemented yet <----------- WARNING
    point* search(int x,int y,int z);

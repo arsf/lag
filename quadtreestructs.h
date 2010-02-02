@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_oarchive.hpp"
 #include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_iarchive.hpp"
+#include "boost/thread.hpp"
 
 class cacheminder;
 
@@ -64,6 +65,7 @@ public:
     point *points;
     int size;
     int length;
+
     bucket() { };
 
     bucket(int cap)
@@ -134,6 +136,7 @@ public:
     bool incache;
     int cap;
     bucket *b;
+    boost::recursive_mutex cachemutex;
 
     pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP);
     ~pointbucket();
@@ -143,7 +146,7 @@ public:
 
     inline point& getpoint(int i)
     {
-        if (incache == true)
+        if (incache)
         {
             return b->points[i];
         }

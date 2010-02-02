@@ -38,24 +38,20 @@ pointbucket::~pointbucket()
         }
     }
 
-
-    delete b;
+    
     if (incache)
     {
         MCP->releasecache(cap, this);
+        delete b;
     }
 }
 
 void pointbucket::uncache()
 {
+    boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it
     if (serialized == false || numberofcachedpoints != numberofpoints)
     {
-        /*FILE* fp = fopen(serialfile, "r");
-        if (fp!=NULL) {
-            throw "file already exists error";
-        }*/
-
         // generate file name and save
         b->length=numberofpoints;
         std::ofstream ofs(serialfile, ios::out | ios::binary | ios::trunc);
@@ -64,11 +60,7 @@ void pointbucket::uncache()
         binaryouta << b;
         ofs.close();
         serialized = true;
-
-        
-        
     }
-
     //clean up bucket
     delete b;
     b = NULL;
@@ -79,11 +71,19 @@ void pointbucket::uncache()
 
 bool pointbucket::cache(bool force)
 {
-
+    boost::recursive_mutex::scoped_lock mylock(cachemutex);
+    if (incache)
+    {
+        return true;
+    }
     if (serialized == true)
     {
+        
+        if (MCP->requestcache(cap, this, force) == false)
+        {
+            return false;
+        }
         b = new bucket;
-        MCP->requestcache(cap, this, true);
         // load the serial version from the filename assigned into a new bucket instance
         std::ifstream ifs(serialfile, ios::out | ios::binary);
         
@@ -92,14 +92,18 @@ bool pointbucket::cache(bool force)
         ifs.close();
         incache = true;
         numberofcachedpoints = numberofpoints;
-       
+        return true;
     }
     else
     {
         
-        MCP->requestcache(cap, this, true);
+        if (MCP->requestcache(cap, this, force) == false)
+        {
+            return false;
+        }
         b = new bucket(cap);
         incache = true;
+        return true;
     }
 
 }

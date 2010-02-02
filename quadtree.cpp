@@ -365,7 +365,9 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
 //deconstructor
 quadtree::~quadtree()
 {
+   MCP->stopcachethread();
    delete root;
+   delete MCP;
 }
 
 // this is for debugging only usefull for tiny trees (<50)
@@ -455,9 +457,24 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    root->subset(minX, minY, maxX, maxY, buckets);
    MCP->cachelist(buckets);
+   vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
+   root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
+   MCP->pushcachetodo(extrabuckets);
+   root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
+   MCP->pushcachetodo(extrabuckets);
+   root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
+   MCP->pushcachetodo(extrabuckets);
+   root->subset(minX-200, minY-300, maxX+300, maxY+300, extrabuckets);
+   MCP->pushcachetodo(extrabuckets);
    return buckets;
 }
 
+vector<pointbucket*>* quadtree::uncachedsubset(double minX, double minY, double maxX, double maxY)
+{
+   vector<pointbucket*> *buckets = new vector<pointbucket*>;
+   root->subset(minX, minY, maxX, maxY, buckets);
+   return buckets;
+}
 
 
 
@@ -591,6 +608,7 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    // begin the recursive subsetting of the root node 
    root->advsubset(sx1,sy1,sx2,sy2,sx3,sy3,sx4,sy4,buckets);
    MCP->cachelist(buckets);
+  
    return buckets;
  }
    
