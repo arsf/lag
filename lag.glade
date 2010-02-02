@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Jan 19 15:35:32 2010 -->
+<!--Generated with glade3 3.4.5 on Wed Jan 27 10:25:35 2010 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -361,6 +361,7 @@
                   <widget class="GtkToolButton" id="returnbutton">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Return
 to start</property>
                     <property name="stock_id">gtk-jump-to</property>
@@ -372,6 +373,7 @@ to start</property>
                 <child>
                   <widget class="GtkToolButton" id="advancedbutton">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Advanced
 options</property>
                     <property name="stock_id">gtk-preferences</property>
@@ -516,6 +518,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="fencetoggle">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Fence</property>
                     <property name="stock_id">gtk-zoom-fit</property>
                   </widget>
@@ -526,6 +529,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="profiletoggle">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Profie</property>
                     <property name="stock_id">gtk-remove</property>
                   </widget>
@@ -536,6 +540,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="rulertoggleover">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Ruler</property>
                     <property name="stock_id">gtk-justify-fill</property>
                   </widget>
@@ -697,6 +702,7 @@ options</property>
                   <widget class="GtkToolButton" id="returnbuttonprof">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Return
 to start</property>
                     <property name="stock_id">gtk-jump-to</property>
@@ -814,6 +820,7 @@ to start</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="pointshowtoggle">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Show points</property>
                     <property name="stock_id">gtk-yes</property>
                     <property name="active">True</property>
@@ -825,6 +832,7 @@ to start</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="lineshowtoggle">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Show lines</property>
                     <property name="stock_id">gtk-apply</property>
                   </widget>
@@ -868,6 +876,7 @@ Range</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="rulertoggle">
                     <property name="visible">True</property>
+                    <property name="is_important">True</property>
                     <property name="label" translatable="yes">Ruler</property>
                     <property name="stock_id">gtk-justify-fill</property>
                   </widget>

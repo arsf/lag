@@ -79,6 +79,11 @@ bool TwoDeeOverview::returntostart(){
    double ydif = lidarboundary->maxY-lidarboundary->minY;
    centrex = lidarboundary->minX+xdif/2;
    centrey = lidarboundary->minY+ydif/2;
+//   double xratio = xdif/get_width();
+//   double yratio = ydif/get_height();
+//   if(xratio>yratio)ratio = xratio;
+//   else ratio = yratio;
+//   ratio*=1.1;
    zoomlevel=1;
    resetview();
    delete lidarboundary;
@@ -293,10 +298,12 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       return false;
    }
    int numbuckets = pointvector->size();
-   pointbucket** buckets = new pointbucket*[numbuckets];
-   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-      buckets[i]=pointvector->at(i);
-   }
+   pointbucket** buckets = &(*pointvector)[0];
+//   vector<pointbucket*>& buckets = pointvector;
+//   pointbucket** buckets = new pointbucket*[numbuckets];
+//   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+//      buckets[i]=pointvector->at(i);
+//   }
    int detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
    if(imagetype==1){
       detail=(int)(numbuckets*maindetailmod);
@@ -308,7 +315,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       if(detail<1)detail=1;
       previewimage(buckets,numbuckets,detail);
    }
-   delete[] buckets;
+//   delete[] buckets;
    delete pointvector;
    return true;
 }

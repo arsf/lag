@@ -174,10 +174,11 @@ void Display::prepare_image(){
       return;
    }
    int numbuckets = pointvector->size();
-   pointbucket** buckets = new pointbucket*[numbuckets];
-   for(int i=0;i<numbuckets;i++){
-      buckets[i]=pointvector->at(i);
-   }
+   pointbucket** buckets = &(*pointvector)[0];
+//   pointbucket** buckets = new pointbucket*[numbuckets];
+//   for(int i=0;i<numbuckets;i++){
+//      buckets[i]=pointvector->at(i);
+//   }
    double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
    int maxintensity = buckets[0]->maxintensity,minintensity = buckets[0]->minintensity;
    for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
@@ -239,7 +240,7 @@ void Display::prepare_image(){
    glEnable(GL_DEPTH_TEST);//Very important to include this! This allows us to see the things on the top above the things on the bottom!
    glViewport(0, 0, get_width(), get_height());
    resetview();
-   delete[] buckets;
+//   delete[] buckets;
    delete pointvector;
    delete lidarboundary;
    glwindow->gl_end();

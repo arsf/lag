@@ -4,8 +4,11 @@
  * Written: December 2009 - January 2010
  *
  * */
+#include <vector>
+#include <iterator>
 #include <cmath>
 #include "quadtreestructs.h"
+using namespace std;
 #ifndef MATHFUNCS_H
 #define MATHFUNCS_H
 
@@ -15,5 +18,9 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
 
 //Determines whether the points in the sent bucket fit within the profile box.
 bool* vetpoints(int numberofpoints,point* points,double startx,double starty,double endx,double endy,double width);
+
+//
+//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,bool (*comp)(point*,point*));
+//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,Profile *prof);
 
 #endif

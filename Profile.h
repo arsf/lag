@@ -47,8 +47,10 @@ public:
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
 protected:
+   double minplanx,minplany;
    vector<int> flightlinestot;
    vector<point*>* flightlinepoints;
+   double leftboundx,leftboundy,rightboundx,rightboundy;
    double** linez;
    int linezsize;
    bool drawpoints;//Determines whether points are drawn.
@@ -86,6 +88,7 @@ protected:
    sigc::connection sigrulerend;
  
    //Methods:
+   int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last);
    bool linecomp(point* a,point* b);
  
    //Drawing:

@@ -81,3 +81,24 @@ bool* vetpoints(int numberofpoints,point* points,double startx,double starty,dou
    }
    return correctpoints;
 }
+
+//
+
+//struct CompCallback{
+//   CompCallback(Profile *ptr,void(*f)(Profile *)):
+//}
+
+//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,bool (*comp)(point*,point*)){
+//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,Profile *prof){
+//   vector<point*>::iterator originalFirst = first;
+//   vector<point*>::iterator middle;
+//   while(true){//INFINITE LOOP interrupted by returns.
+//      middle = first + distance(first,last)/2;
+//      if(comp(*middle,value))last = middle;
+//      else if(comp(value,*middle))first = middle;
+//      if(prof->linecomp(*middle,value))last = middle;
+//      else if(prof->linecomp(value,*middle))first = middle;
+//      else return distance(originalFirst,middle);
+//      if(distance(first,last)==0)return distance(originalFirst,middle);
+//   }
+//}

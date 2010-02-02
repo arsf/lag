@@ -725,7 +725,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.01.26.1" << endl;
+   cout << "Build number: 2010.02.02.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
