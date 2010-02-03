@@ -37,7 +37,7 @@ private:
     deque<pointbucket*> bucketsincache;
     int cacheused;
     int totalcache;
-    deque<pointbucket * > *cachetodo;
+    deque<pointbucket *> *cachetodo;
     boost::recursive_mutex quemutex;
     boost::recursive_mutex todomutex;
     boost::thread thread1;

@@ -218,7 +218,7 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
 
 bool quadtreenode::insert(point newP)
 {
-   
+
     // if the point dosen't belong in this subset of the tree return false
     if (newP.x < minX || newP.x > maxX || newP.y < minY || newP.y > maxY)
     {
@@ -251,11 +251,11 @@ bool quadtreenode::insert(point newP)
                 // attept to insert each point in turn into the child nodes
                 if (a->insert(bob))
                 {
-                  //  cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << a->minX << " " << a->maxX << ")" << endl;
+                    //  cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << a->minX << " " << a->maxX << ")" << endl;
                 }
                 else if (b->insert(bob))
                 {
-                   // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << b->minX << " " << b->maxX << ")" << endl;
+                    // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << b->minX << " " << b->maxX << ")" << endl;
                 }
                 else if (c->insert(bob))
                 {
@@ -263,7 +263,7 @@ bool quadtreenode::insert(point newP)
                 }
                 else if (d->insert(bob))
                 {
-                   // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << d->minX << " " << d->maxX << ")" << endl;
+                    // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << d->minX << " " << d->maxX << ")" << endl;
                 }
                 else
                 {
@@ -335,7 +335,6 @@ bool quadtreenode::insert(point newP)
             {
                 bucket->minz = newP.z;
             }
-
             bucket->getpoint(currentCap) = newP;
             bucket->numberofpoints++;
             currentCap++;

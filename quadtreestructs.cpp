@@ -83,7 +83,7 @@ bool pointbucket::cache(bool force)
         {
             return false;
         }
-        b = new bucket;
+        b = new SerializableInnerBucket;
         // load the serial version from the filename assigned into a new bucket instance
         std::ifstream ifs(serialfile, ios::out | ios::binary);
         
@@ -101,7 +101,7 @@ bool pointbucket::cache(bool force)
         {
             return false;
         }
-        b = new bucket(cap);
+        b = new SerializableInnerBucket(cap);
         incache = true;
         return true;
     }

@@ -460,8 +460,6 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
    root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
-   root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
-   MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-300, maxX+300, maxY+300, extrabuckets);

@@ -59,23 +59,23 @@ struct boundary
     double maxY;
 };
 
-class bucket
+class SerializableInnerBucket
 {
 public:
     point *points;
     int size;
     int length;
 
-    bucket() { };
+    SerializableInnerBucket() { };
 
-    bucket(int cap)
+    SerializableInnerBucket(int cap)
     {
         points = new point[cap];
         size = cap;
         length = 0;
     };
 
-    ~bucket()
+    ~SerializableInnerBucket()
     {
         if (points != NULL)
         {
@@ -135,7 +135,7 @@ public:
     bool serialized;
     bool incache;
     int cap;
-    bucket *b;
+    SerializableInnerBucket *b;
     boost::recursive_mutex cachemutex;
 
     pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP);
