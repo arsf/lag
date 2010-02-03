@@ -6,6 +6,7 @@
 
 using namespace std;
 
+// basic constructor which initilizes the boundary and capacity from paramters and the other meta data to defaults
 quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP)
 {
     this->minX = minX;
@@ -17,14 +18,13 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
     this->MCP = MCP;
     leaf = true;
     a = b = c = d = NULL;
-    currentCap = 0;
+    numofpoints = 0;
 }
 
 
 
-// constructor which allows both the boundarys and the child nodes of the
+// constructor which allows both the boundarys, capacity and the child nodes of the
 // quadtree to be defined
-
 quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCP)
 {
     this->minX = minX;
@@ -60,7 +60,7 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
     this->b = b;
     this->c = c;
     this->d = d;
-    currentCap = 0;
+    numofpoints = 0;
 }
 
 // deconstructor for quad tree, this recursivly calls the deconstructor in the
@@ -87,15 +87,15 @@ void quadtreenode::print()
 {
     if (leaf == true)
     {
-        if (currentCap == 0)
+        if (numofpoints == 0)
         {
             cout << "(empty)";
         }
         else
         {
-            for (int k = 0; k < currentCap; k++)
+            for (int k = 0; k < numofpoints; k++)
             {
-                cout << "(" << bucket->points[k].x << " , " << bucket->points[k].y << ")";
+                cout << "(" << bucket->getpoint(k).x << " , " << bucket->getpoint(k).y << ")";
             }
         }
         cout << endl << endl;
@@ -227,7 +227,7 @@ bool quadtreenode::insert(point newP)
     else
     {
         // if the node has overflowed and is a leaf
-        if ((currentCap + 1) > capacity && leaf == true)
+        if ((numofpoints + 1) > capacity && leaf == true)
         {
             // this bucket is full, create four new buckets
             // and populate them.
@@ -245,7 +245,7 @@ bool quadtreenode::insert(point newP)
             if (d == NULL)
                 d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP);
 
-            for (int k = 0; k < currentCap; k++)
+            for (int k = 0; k < numofpoints; k++)
             {
                 point bob = bucket->getpoint(k);
                 // attept to insert each point in turn into the child nodes
@@ -335,9 +335,9 @@ bool quadtreenode::insert(point newP)
             {
                 bucket->minz = newP.z;
             }
-            bucket->getpoint(currentCap) = newP;
+            bucket->getpoint(numofpoints) = newP;
             bucket->numberofpoints++;
-            currentCap++;
+            numofpoints++;
             return true;
         }
     }
@@ -362,7 +362,7 @@ void quadtreenode::sort(int ( * comparator) (const void *, const void *))
     }
     // the qsort function takes a function to compare elements, by passing
     // different functions the attribute by which the points are sorted is controlled
-    qsort(bucket->points, bucket->numberofpoints, sizeof (point), comparator);
+//    qsort(bucket->points, bucket->numberofpoints, sizeof (point), comparator);
 }
 
 // if this is a leaf and the bucket is NULL then it is empty,

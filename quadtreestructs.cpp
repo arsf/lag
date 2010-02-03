@@ -25,10 +25,12 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
     sprintf(serialfile, "/tmp/test/%f_%f-%f_%f", minx, miny, maxx, maxy);
 }
 
-// self explanitory :P
+
+
 
 pointbucket::~pointbucket()
 {
+    // when a point bucket is deleted the corrisponding serial file in secondary memory is also deleted
     if(serialized)
     {
         if(remove(serialfile) != 0)
@@ -46,13 +48,18 @@ pointbucket::~pointbucket()
     }
 }
 
+
+// the getpoint method adds a layer between outside classes and the SerializableInnerBucket. this prevents
+    // outside classes from accessing the SerializableInnerBucket without the pointbuckets knowledge. This
+    // is important as the SerializableInnerBucket may not be cached. by providing this method all access to
+    // SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
 void pointbucket::uncache()
 {
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
-    // check serial version already exists and if not create it
+    // check serial version already exists and if not create it, also if serial version is out of date overwrite it
     if (serialized == false || numberofcachedpoints != numberofpoints)
     {
-        // generate file name and save
+
         b->length=numberofpoints;
         std::ofstream ofs(serialfile, ios::out | ios::binary | ios::trunc);
 
@@ -64,21 +71,28 @@ void pointbucket::uncache()
     //clean up bucket
     delete b;
     b = NULL;
+    // free memory only after removal is complete
     MCP->releasecache(cap, this);
     incache = false;
 
 }
 
+
+// the cache method requests some space in main memory and then loads the SerializableInnerBucket into it.
+    // this is only done if the SerializableInnerBucket is not already in cache.
+    // the parameter "force" defines wether the another bucket can be forced out of cache to accomodate this one
+    // if space cannot be found false is returned
 bool pointbucket::cache(bool force)
 {
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
+    // if already cached just return
     if (incache)
     {
         return true;
     }
     if (serialized == true)
     {
-        
+        // aquire memory before using it to ensure memory limit is respected
         if (MCP->requestcache(cap, this, force) == false)
         {
             return false;
@@ -96,7 +110,7 @@ bool pointbucket::cache(bool force)
     }
     else
     {
-        
+        // aquire memory before using it to ensure memory limit is respected
         if (MCP->requestcache(cap, this, force) == false)
         {
             return false;

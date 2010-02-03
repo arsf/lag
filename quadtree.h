@@ -30,6 +30,7 @@ class quadtree{
     int flightlinenum;
     ostream *errorstream;
     quadtreenode* guessbucket;
+    // hashtable to hold flight file name/flight number pairs
     flighthash flighttable;
     cacheminder *MCP;
 public:
@@ -63,7 +64,11 @@ public:
    // for a given area this method returns a pointer to a vector which contains
    // pointers to all the buckets that could contain points falling within this area
    // NOTE : this area must be defined by the lower left and up right points of a rectangle
+   // NOTE : this version adds the buckets of the subset to a cacheing list that is
+   // processed in the background by a seperate thread
    vector<pointbucket*>* subset(double minX, double minY, double maxX, double maxY);
+   // this version does no include cacheing untill a point is actually accessed
+   // and is therefore usefull if only meta data from buckets is required.
    vector<pointbucket*>* uncachedsubset(double minX, double minY, double maxX, double maxY);
    
    // not implemented yet <----------- WARNING

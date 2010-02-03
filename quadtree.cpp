@@ -10,11 +10,13 @@
 using namespace std;
 
 
-
+// this constructor creates a quadtree using the parameters given. it then loads
+// into the quadtree the lidarpointloader that was passed
 quadtree::quadtree(lidarpointloader *l,int cap, int nth, int cachesize, ostringstream *s)
 {
    if (s == NULL)
    {
+       // if no stringstream is given it defaults to the error stream
       errorstream = &cerr;
    }
    else
@@ -40,6 +42,7 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
 {
    if (s == NULL)
    {
+       // if no stringstream is given it defaults to the error stream
       errorstream = &cerr;
    }
    else
@@ -67,6 +70,7 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
 {
    if (s == NULL)
    {
+       // if no stringstream is given it defaults to the error stream
       errorstream = &cerr;
    }
    else
@@ -97,6 +101,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    double newby1 = b->minY;
    double newbx2 = b->maxX;
    double newby2 = b->maxY;
+
    // find the boundary that encompasses the old node and the new boundary
    if (nb->minX < newbx1) { newbx1 = nb->minX; }
    if (nb->minY < newby1) { newby1 = nb->minY; }
@@ -242,9 +247,9 @@ void quadtree::load(lidarpointloader *l, int nth)
          // try and insert each point
          if (!insert(temp[k]))
          {
-            // don't blame me, this is to create the error string for harg
+            // this block of code appends various information and error messages
+            // regarding out of bounds points to the specified error stream
             outofboundscounter++;
-            
             outs << outofboundscounter << ": point out of bounds, diff: ";
             if (temp[k].x < tempboundary->minX )
             {
@@ -324,9 +329,9 @@ void quadtree::load(lidarpointloader *l, int nth, double minX, double minY, doub
          if (!insert(temp[k]))
          {
             
-            // don't blame me, this is to create the error string for harg
+            // this block of code appends various information and error messages
+            // regarding out of bounds points to the specified error stream
             outofboundscounter++;
-            
             outs << outofboundscounter << ": point out of bounds, diff: ";
             if (temp[k].x < tempboundary->minX )
             {
@@ -458,6 +463,10 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    root->subset(minX, minY, maxX, maxY, buckets);
    MCP->cachelist(buckets);
    vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
+
+   // these additional subsets are to provide a list of buckets surrounding the
+   // originol subset so as to allow them be precached incase the next subset
+   // is only slightly different
    root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
@@ -610,7 +619,7 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    return buckets;
  }
    
-   
+// returns the boundary of the entire quadtree
 boundary* quadtree::getboundary()
 {
    if (root == NULL)
@@ -620,7 +629,8 @@ boundary* quadtree::getboundary()
    return root->getbound();
 }
    
-
+// this method returns the filename of a given flight line number using the
+// hashtable built when loading them
 string quadtree::getfilename(uint8_t flightlinenum)
 {
    flighthash::iterator ity = flighttable.find(flightlinenum);
