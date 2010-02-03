@@ -14,6 +14,7 @@ cacheminder::cacheminder(int cachesize)
     totalcache = cachesize;
     cacheused = 0;
     cachetodo = new deque<pointbucket *>;
+    cacheing = false;
 }
 
 // WANRING!!!: it is imperitive that the requestsize is correct and is always
@@ -36,6 +37,7 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
         while (cacheused + requestsize > totalcache)
         {
             bucketsincache.front()->uncache();
+            cacheing = true;
         }
     }
     else if ((cacheused + requestsize > totalcache))
@@ -84,8 +86,16 @@ void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
 {
     {
         boost::recursive_mutex::scoped_lock mylock(quemutex);
+
+        // if the cache limit has not been reached yet there is no need to clear the cache or cache new buckets in
+        if(!cacheing)
+        {
+            return;
+        }
+
         vector<pointbucket *> tobereleased;
         cout << "start" << endl;
+        
         for (int k = 0; k < bucketsincache.size(); k++)
         {
             bool found = false;
@@ -109,7 +119,7 @@ void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
             tobereleased[k]->uncache();
         }
         cout << "stop" << endl;
-
+        
     }
     setcachetodo(bucketlist);
 

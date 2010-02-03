@@ -41,6 +41,7 @@ private:
     boost::recursive_mutex quemutex;
     boost::recursive_mutex todomutex;
     boost::thread thread1;
+    bool cacheing;
 };
 
 #endif	/* _CACHEMINDER_H */
