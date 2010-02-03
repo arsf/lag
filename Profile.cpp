@@ -18,7 +18,7 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
-   flightlinepoints = new vector<point*>[1];
+   flightlinepoints = new vector<point>[1];
    viewerz = 0;
    zoompower = 0.7;
    imageexists=false;
@@ -62,8 +62,8 @@ bool Profile::returntostart(){
    centrey = (starty + endy)/2;
    centrez=0;
    for(int i=0;i<(int)flightlinestot.size();i++){
-      centrez+=flightlinepoints[i][0]->z;
-      centrez+=flightlinepoints[i][flightlinepoints[i].size()-1]->z;
+      centrez+=flightlinepoints[i][0].z;
+      centrez+=flightlinepoints[i][flightlinepoints[i].size()-1].z;
    }
    centrez/=(2*flightlinestot.size());
    zoomlevel=1;
@@ -105,22 +105,24 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
    correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
 //      buckets[i]=pointvector->at(i);
-      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,startx,starty,endx,endy,width);
+      correctpointsbuckets[i] = vetpoints(buckets[i],startx,starty,endx,endy,width);
       for(int j=0;j<buckets[i]->numberofpoints;j++){
          if(correctpointsbuckets[i][j]){
-            if(find(flightlinestot.begin(),flightlinestot.end(),buckets[i]->points[j].flightline)==flightlinestot.end()){
-               flightlinestot.push_back(buckets[i]->points[j].flightline);
+            if(find(flightlinestot.begin(),flightlinestot.end(),buckets[i]->getpoint(j).flightline)==flightlinestot.end()){
+               flightlinestot.push_back(buckets[i]->getpoint(j).flightline);
             }
          }
       }
    }
    delete[] flightlinepoints;
-   flightlinepoints = new vector<point*>[flightlinestot.size()];
+   flightlinepoints = new vector<point>[flightlinestot.size()];
    for(int i=0;i<(int)flightlinestot.size();i++){
       for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
          for(int k=0;k<buckets[j]->numberofpoints;k++){//Possibly: do k+=detail instead, and copy to preview. Might not be "correct" though.
             if(correctpointsbuckets[j][k]){
-               if(buckets[j]->points[k].flightline == flightlinestot.at(i))flightlinepoints[i].push_back(&(buckets[j]->points[k]));
+               if(buckets[j]->getpoint(k).flightline == flightlinestot[i]){
+                  flightlinepoints[i].push_back(buckets[j]->getpoint(k));
+               }
             }
          }
       }
@@ -169,13 +171,13 @@ void Profile::resetview(){
 //   gluUnProject(get_width(),y,z,modelview,projection,viewport,&rightboundx,&rightboundy,&zs);
 }
 
-int Profile::get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last){
-   vector<point*>::iterator originalFirst = first;
-   vector<point*>::iterator middle;
+int Profile::get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last){
+   vector<point>::iterator originalFirst = first;
+   vector<point>::iterator middle;
    while(true){//INFINITE LOOP interrupted by returns.
       middle = first + distance(first,last)/2;
-      if(linecomp(*middle,value))first = middle;
-      else if(linecomp(value,*middle))last = middle;
+      if(linecomp(*middle,*value))first = middle;
+      else if(linecomp(*value,*middle))last = middle;
       else return distance(originalFirst,middle);
       if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);
    }
@@ -367,11 +369,11 @@ bool Profile::on_zoom(GdkEventScroll* event){
 }
 
 //This method is for sort(). It projects the points onto a plane defined by the z axis and the line perpendicular to the viewing direction.
-bool Profile::linecomp(point *a,point *b){
-   double xa = a->x;
-   double xb = b->x;
-   double ya = a->y;
-   double yb = b->y;
+bool Profile::linecomp(const point &a,const point &b){
+   const double xa = a.x;
+   const double xb = b.x;
+   const double ya = a.y;
+   const double yb = b.y;
    double alongprofa,alongprofb;
    if(startx==endx){//If the profile is parallel to the y axis:
       double mult=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
@@ -421,7 +423,7 @@ void Profile::make_moving_average(){
       for(int j=0;j<numofpoints;j++){
          double z=0,zcount=0;
          for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){// (up to) the range (depending on how close to the edge the point is) add up points...
-            z+=flightlinepoints[i][j+k]->z;
+            z+=flightlinepoints[i][j+k].z;
             zcount++;
          }
          z /= zcount;//... and divide by the number of them to get the moving average at that point.
@@ -467,10 +469,10 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
          for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
             if(correctpointsbuckets[i][j]){
                red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = buckets[i]->points[j].x;
-               y = buckets[i]->points[j].y;
-               z = buckets[i]->points[j].z;
-               intensity = buckets[i]->points[j].intensity;
+               x = buckets[i]->getpoint(j).x;
+               y = buckets[i]->getpoint(j).y;
+               z = buckets[i]->getpoint(j).z;
+               intensity = buckets[i]->getpoint(j).intensity;
                if(heightcolour){//Colour by elevation.
                   red = colourheightarray[3*(int)(10*(z-rminz))];
                   green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -482,7 +484,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                   blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
                }
                else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = buckets[i]->points[j].flightline;
+                   line = buckets[i]->getpoint(j).flightline;
                    int index = line % 6;
                    switch(index){
                       case 0:red=0;green=1;blue=0;break;//Green
@@ -495,7 +497,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(classcolour){//Colour by classification.
-                   classification = buckets[i]->points[j].classification;
+                   classification = buckets[i]->getpoint(j).classification;
                    int index = classification;
                    switch(index){
                       case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -513,7 +515,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = buckets[i]->points[j].rnumber;
+                   rnumber = buckets[i]->getpoint(j).rnumber;
                    int index = rnumber;
                    switch(index){
                       case 1:red=0;green=0;blue=1;break;//Blue
@@ -557,7 +559,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
       leftpnt->x = leftboundx + centrex;
       leftpnt->y = leftboundy + centrey;
       leftpnt->z = 0;
-      leftpnt->time = flightlinepoints[0][0]->time;
+      leftpnt->time = flightlinepoints[0][0].time;
       leftpnt->intensity = 0;
       leftpnt->classification = 0;
       leftpnt->flightline = 0;
@@ -566,7 +568,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
       rightpnt->x = rightboundx + centrex;
       rightpnt->y = rightboundy + centrey;
       rightpnt->z = 0;
-      rightpnt->time = flightlinepoints[0][0]->time;
+      rightpnt->time = flightlinepoints[0][0].time;
       rightpnt->intensity = 0;
       rightpnt->classification = 0;
       rightpnt->flightline = 0;
@@ -594,8 +596,8 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                default:red=green=blue=1;break;//White in the event of strangeness.
             }
             for(int j=startindex;j<=endindex;j++){
-               x = flightlinepoints[i][j]->x;
-               y = flightlinepoints[i][j]->y;
+               x = flightlinepoints[i][j].x;
+               y = flightlinepoints[i][j].y;
                vertices[3*count]=x-centrex;
                vertices[3*count+1]=y-centrey;
                vertices[3*count+2]=linez[i][j]-centrez;
@@ -610,10 +612,10 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
          if(drawpoints){
             for(int j=startindex;j<=endindex;j++){
                red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = flightlinepoints[i][j]->x;
-               y = flightlinepoints[i][j]->y;
-               z = flightlinepoints[i][j]->z;
-               intensity = flightlinepoints[i][j]->intensity;
+               x = flightlinepoints[i][j].x;
+               y = flightlinepoints[i][j].y;
+               z = flightlinepoints[i][j].z;
+               intensity = flightlinepoints[i][j].intensity;
                if(heightcolour){//Colour by elevation.
                   red = colourheightarray[3*(int)(10*(z-rminz))];
                   green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -625,7 +627,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                   blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
                }
                else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = flightlinepoints[i][j]->flightline;
+                   line = flightlinepoints[i][j].flightline;
                    int index = line % 6;
                    switch(index){
                       case 0:red=0;green=1;blue=0;break;//Green
@@ -638,7 +640,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(classcolour){//Colour by classification.
-                   classification = flightlinepoints[i][j]->classification;
+                   classification = flightlinepoints[i][j].classification;
                    int index = classification;
                    switch(index){
                       case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -656,7 +658,7 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = flightlinepoints[i][j]->rnumber;
+                   rnumber = flightlinepoints[i][j].rnumber;
                    int index = rnumber;
                    switch(index){
                       case 1:red=0;green=0;blue=1;break;//Blue
@@ -738,10 +740,10 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
       for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
          if(correctpointsbuckets[i][j]){
             red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-            x = buckets[i]->points[j].x;
-            y = buckets[i]->points[j].y;
-            z = buckets[i]->points[j].z;
-            intensity = buckets[i]->points[j].intensity;
+            x = buckets[i]->getpoint(j).x;
+            y = buckets[i]->getpoint(j).y;
+            z = buckets[i]->getpoint(j).z;
+            intensity = buckets[i]->getpoint(j).intensity;
             if(heightcolour){//Colour by elevation.
                red = colourheightarray[3*(int)(10*(z-rminz))];
                green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -753,7 +755,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
             }
             else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                line = buckets[i]->points[j].flightline;
+                line = buckets[i]->getpoint(j).flightline;
                 int index = line % 6;
                 switch(index){
                    case 0:red=0;green=1;blue=0;break;//Green
@@ -766,7 +768,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                 }
             }
             else if(classcolour){//Colour by classification.
-                classification = buckets[i]->points[j].classification;
+                classification = buckets[i]->getpoint(j).classification;
                 int index = classification;
                 switch(index){
                    case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -784,7 +786,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                rnumber = buckets[i]->points[j].rnumber;
+                rnumber = buckets[i]->getpoint(j).rnumber;
                 int index = rnumber;
                 switch(index){
                    case 1:red=0;green=0;blue=1;break;//Blue
@@ -822,7 +824,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
       leftpnt->x = leftboundx + centrex;
       leftpnt->y = leftboundy + centrey;
       leftpnt->z = 0;
-      leftpnt->time = flightlinepoints[0][0]->time;
+      leftpnt->time = flightlinepoints[0][0].time;
       leftpnt->intensity = 0;
       leftpnt->classification = 0;
       leftpnt->flightline = 0;
@@ -831,12 +833,12 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
       rightpnt->x = rightboundx + centrex;
       rightpnt->y = rightboundy + centrey;
       rightpnt->z = 0;
-      rightpnt->time = flightlinepoints[0][0]->time;
+      rightpnt->time = flightlinepoints[0][0].time;
       rightpnt->intensity = 0;
       rightpnt->classification = 0;
       rightpnt->flightline = 0;
       rightpnt->rnumber = 0;
-      for(int i=0;i<(int)flightlinestot.size();i++){
+      for(unsigned int i=0;i<flightlinestot.size();i++){
          double tempx = minplanx,tempy= minplany;
          minplanx = startx + leftboundx;
          minplany = starty + leftboundy;
@@ -859,8 +861,8 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                default:red=green=blue=1;break;//White in the event of strangeness.
             }
             for(int j=startindex;j<=endindex;j+=detail){
-               x = flightlinepoints[i][j]->x;
-               y = flightlinepoints[i][j]->y;
+               x = flightlinepoints[i][j].x;
+               y = flightlinepoints[i][j].y;
                vertices[3*count]=x-centrex;
                vertices[3*count+1]=y-centrey;
                vertices[3*count+2]=linez[i][j]-centrez;
@@ -875,10 +877,10 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
          if(drawpoints){
             for(int j=startindex;j<=endindex;j+=detail){
                red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = flightlinepoints[i][j]->x;
-               y = flightlinepoints[i][j]->y;
-               z = flightlinepoints[i][j]->z;
-               intensity = flightlinepoints[i][j]->intensity;
+               x = flightlinepoints[i][j].x;
+               y = flightlinepoints[i][j].y;
+               z = flightlinepoints[i][j].z;
+               intensity = flightlinepoints[i][j].intensity;
                if(heightcolour){//Colour by elevation.
                   red = colourheightarray[3*(int)(10*(z-rminz))];
                   green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -890,7 +892,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                   blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
                }
                else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = flightlinepoints[i][j]->flightline;
+                   line = flightlinepoints[i][j].flightline;
                    int index = line % 6;
                    switch(index){
                       case 0:red=0;green=1;blue=0;break;//Green
@@ -903,7 +905,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(classcolour){//Colour by classification.
-                   classification = flightlinepoints[i][j]->classification;
+                   classification = flightlinepoints[i][j].classification;
                    int index = classification;
                    switch(index){
                       case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -921,7 +923,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                    }
                }
                else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = flightlinepoints[i][j]->rnumber;
+                   rnumber = flightlinepoints[i][j].rnumber;
                    int index = rnumber;
                    switch(index){
                       case 1:red=0;green=0;blue=1;break;//Blue

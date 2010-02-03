@@ -9,8 +9,10 @@
 #define	_TESTSTRUCT_H
 
 #include <stdint.h>
-#include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_oarchive.hpp"
-#include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/archive/binary_iarchive.hpp"
+//#include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_oarchive.hpp"
+//#include "/users/rsg/chrfi/boost_install/include/boost/archive/binary_iarchive.hpp"
 #include "boost/thread.hpp"
 
 class cacheminder;

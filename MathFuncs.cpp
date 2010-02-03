@@ -1,7 +1,7 @@
 /*
  * File: MathFuncs.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - January 2010
+ * Written: December 2009 - February 2010
  *
  * */
 #include "MathFuncs.h"
@@ -22,29 +22,29 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
 }
 
 //Determines whether the points in the sent bucket fit within the profile box.
-bool* vetpoints(int numberofpoints,point* points,double startx,double starty,double endx,double endy,double width){
+bool* vetpoints(pointbucket* points,double startx,double starty,double endx,double endy,double width){
    double width2 = width/2;
    double error = 0.000001;//Allows points on the line to be counted. May or may not be necessary/desirable.
-   bool* correctpoints = new bool[numberofpoints];//This will be returned later.
+   bool* correctpoints = new bool[points->numberofpoints];//This will be returned later.
    if(startx==endx){//If the profile is parallel to the y axis:
-      for(int i=0;i<numberofpoints;i++){
+      for(int i=0;i<points->numberofpoints;i++){
          correctpoints[i]=false;
-         if((starty-points[i].y+error>0 && endy-points[i].y-error<0) ||
-            (starty-points[i].y-error<0 && endy-points[i].y+error>0)){
-            if((startx+width2-points[i].x+error>0 && startx-width2-points[i].x-error<0) ||
-               (startx+width2-points[i].x-error<0 && startx-width2-points[i].x+error>0)){
+         if((starty-points->getpoint(i).y+error>0 && endy-points->getpoint(i).y-error<0) ||
+            (starty-points->getpoint(i).y-error<0 && endy-points->getpoint(i).y+error>0)){
+            if((startx+width2-points->getpoint(i).x+error>0 && startx-width2-points->getpoint(i).x-error<0) ||
+               (startx+width2-points->getpoint(i).x-error<0 && startx-width2-points->getpoint(i).x+error>0)){
                correctpoints[i] = true;
             }
          }
       }
    }
    else if(starty==endy){//If the profile is parallel to the x axis:
-      for(int i=0;i<numberofpoints;i++){
+      for(int i=0;i<points->numberofpoints;i++){
          correctpoints[i]=false;
-         if((startx-points[i].x+error>0 && endx-points[i].x-error<0) ||
-            (startx-points[i].x-error<0 && endx-points[i].x+error>0)){
-            if((starty+width2-points[i].y+error>0 && starty-width2-points[i].y-error<0) ||
-               (starty+width2-points[i].y-error<0 && starty-width2-points[i].y+error>0)){
+         if((startx-points->getpoint(i).x+error>0 && endx-points->getpoint(i).x-error<0) ||
+            (startx-points->getpoint(i).x-error<0 && endx-points->getpoint(i).x+error>0)){
+            if((starty+width2-points->getpoint(i).y+error>0 && starty-width2-points->getpoint(i).y-error<0) ||
+               (starty+width2-points->getpoint(i).y-error<0 && starty-width2-points->getpoint(i).y+error>0)){
                correctpoints[i] = true;
             }
          }
@@ -64,16 +64,16 @@ bool* vetpoints(int numberofpoints,point* points,double startx,double starty,dou
       double lenconsboxright = startyright - (startxright*lengradbox);//...
       //Testing points:
       double interstart,interend,interleft,interright;
-      for(int i=0;i<numberofpoints;i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
-         interstart = points[i].x * widgradbox + widconsboxstart;
-         interend = points[i].x * widgradbox + widconsboxend;
-         interleft = points[i].x * lengradbox + lenconsboxleft;
-         interright = points[i].x * lengradbox + lenconsboxright;
+      for(int i=0;i<points->numberofpoints;i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
+         interstart = points->getpoint(i).x * widgradbox + widconsboxstart;
+         interend = points->getpoint(i).x * widgradbox + widconsboxend;
+         interleft = points->getpoint(i).x * lengradbox + lenconsboxleft;
+         interright = points->getpoint(i).x * lengradbox + lenconsboxright;
          correctpoints[i]=false;
-         if((interstart-points[i].y+error>0 && interend-points[i].y-error<0) ||
-            (interstart-points[i].y-error<0 && interend-points[i].y+error>0)){
-            if((interleft-points[i].y+error>0 && interright-points[i].y-error<0) ||
-               (interleft-points[i].y-error<0 && interright-points[i].y+error>0)){
+         if((interstart-points->getpoint(i).y+error>0 && interend-points->getpoint(i).y-error<0) ||
+            (interstart-points->getpoint(i).y-error<0 && interend-points->getpoint(i).y+error>0)){
+            if((interleft-points->getpoint(i).y+error>0 && interright-points->getpoint(i).y-error<0) ||
+               (interleft-points->getpoint(i).y-error<0 && interright-points->getpoint(i).y+error>0)){
                correctpoints[i] = true;
             }
          }
@@ -81,24 +81,3 @@ bool* vetpoints(int numberofpoints,point* points,double startx,double starty,dou
    }
    return correctpoints;
 }
-
-//
-
-//struct CompCallback{
-//   CompCallback(Profile *ptr,void(*f)(Profile *)):
-//}
-
-//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,bool (*comp)(point*,point*)){
-//int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last,Profile *prof){
-//   vector<point*>::iterator originalFirst = first;
-//   vector<point*>::iterator middle;
-//   while(true){//INFINITE LOOP interrupted by returns.
-//      middle = first + distance(first,last)/2;
-//      if(comp(*middle,value))last = middle;
-//      else if(comp(value,*middle))first = middle;
-//      if(prof->linecomp(*middle,value))last = middle;
-//      else if(prof->linecomp(value,*middle))first = middle;
-//      else return distance(originalFirst,middle);
-//      if(distance(first,last)==0)return distance(originalFirst,middle);
-//   }
-//}

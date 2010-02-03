@@ -15,18 +15,21 @@
 #include "Profile.h"
 using namespace std;
 
-string picturename;
-const bool useclippy = false;
+//EASTER EGG! Clippy!
+string picturename;//Path of clippy image.
+const bool useclippy = false;//Whether or not to use clippy.
 
-string loaderroroutputfile;
 quadtree* lidardata;//The flightlines are stored here.
+int bucketlimit = 100000;//How many points in each bucket, maximum.
+int cachelimit = 50000000;//How many points to hold in cache. 1 GB ~= 50000000 points.
 TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
-int bucketlimit = 100000;//How many points in each bucket, maximum.
 string exename = "";//The path of the executable.
 bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
-ostringstream *loaderrorstream;
-ofstream loaderroroutput;
+//Quadtree error handling:
+ostringstream *loaderrorstream;//Stringstream getting error messages from the quadtree.
+ofstream loaderroroutput;//Stream outputting error messages from the quadtree to a file.
+string loaderroroutputfile;//Path of file for error message output.
 
 //Gtk objects:
 Gtk::VBox *vboxtdo = NULL;//Contains the overview.
@@ -54,19 +57,19 @@ Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in
 Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in the overview in pixels.
 Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
 Gtk::SpinButton *previewdetailselect = NULL;//Determines how many points are skipped displaying the overview preview.
-Gtk::Dialog *advancedoptionsdialog = NULL;
+Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
    //Advanced viewing options for the overview:
-   Gtk::CheckButton *classcheckbutton0 = NULL;
-   Gtk::CheckButton *classcheckbutton2 = NULL;
-   Gtk::CheckButton *classcheckbutton3 = NULL;
-   Gtk::CheckButton *classcheckbutton4 = NULL;
-   Gtk::CheckButton *classcheckbutton5 = NULL;
-   Gtk::CheckButton *classcheckbutton6 = NULL;
-   Gtk::CheckButton *classcheckbutton7 = NULL;
-   Gtk::CheckButton *classcheckbutton8 = NULL;
-   Gtk::CheckButton *classcheckbutton9 = NULL;
-   Gtk::CheckButton *classcheckbutton12 = NULL;
-   Gtk::CheckButton *classcheckbuttonA = NULL;
+   Gtk::CheckButton *classcheckbutton0 = NULL;//Elevate classifications with the respective codes:
+   Gtk::CheckButton *classcheckbutton2 = NULL;//...
+   Gtk::CheckButton *classcheckbutton3 = NULL;//...
+   Gtk::CheckButton *classcheckbutton4 = NULL;//...
+   Gtk::CheckButton *classcheckbutton5 = NULL;//...
+   Gtk::CheckButton *classcheckbutton6 = NULL;//...
+   Gtk::CheckButton *classcheckbutton7 = NULL;//...
+   Gtk::CheckButton *classcheckbutton8 = NULL;//...
+   Gtk::CheckButton *classcheckbutton9 = NULL;//...
+   Gtk::CheckButton *classcheckbutton12 = NULL;//...
+   Gtk::CheckButton *classcheckbuttonA = NULL;//"Anything else" classification elevator.
 Gtk::ToggleToolButton *rulertoggleover = NULL;//Toggle button determining whether the ruler is viewable on the overview.
 Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
@@ -86,14 +89,60 @@ Gtk::SpinButton *movingaveragerangeselect = NULL;//The range of the moving avera
 Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable on the profile.
 Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the profile.
 
+//Show the about dialog when respective menu item activated.
 void on_aboutmenuactivated(){ about->show_all(); }
+//Hide the about dialog when close button activated.
 void on_aboutresponse(int response_id){ about->hide_all(); }
 
 //Get the area to load the flightline(s) in by calling the overview's getfence() method.
-void get_area(double &minX,double &minY,double &maxX,double &maxY){
-   tdo->getfence(minX,minY,maxX,maxY);
-}
-
+void get_area(double &minX,double &minY,double &maxX,double &maxY){ tdo->getfence(minX,minY,maxX,maxY); }
+/*Determines whether the input filename(s) are correct and, if so, creates or modifies the quadtree to accomodate the data. First it makes sure that a sufficient number of arguments have been passed to include the executable, point offset and at least one filename. It then extracts the point offset, which is used to skip a certain number of points between each read point, for faster loading. It then starts dealing withthe filenames:
+ * Try:
+ *    For all the filenames:
+ *       If the filename is not empty:
+ *          If the filename ends with .las or .LAS:
+ *             Create LASLoader;
+ *             If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded:
+ *                If using a fence:
+ *                   Delete old quadtree (including the original dummy one if the program has just started);
+ *                   Get fence coordinates;
+ *                   Create new quadtree with data with fence;
+ *                Else:
+ *                   Delete old quadtree (including the original dummy one if the program has just started);
+ *                   Create new quadtree with data without fence;
+ *             Else:
+ *                If using a fence:
+ *                   Get fence coordinates;
+ *                   Add data with fence to quadtree;
+ *                Else:
+ *                   Add data without fence to quadtree;
+ *             Write any errors to the error file;
+ *          Else if the filename ends with .txt or .TXT:
+ *             Get typecode from text box;
+ *             Create ASCIIloader useing typecode;
+ *             If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded:
+ *                If using a fence:
+ *                   Delete old quadtree (including the original dummy one if the program has just started);
+ *                   Get fence coordinates;
+ *                   Create new quadtree with data with fence;
+ *                Else:
+ *                   Delete old quadtree (including the original dummy one if the program has just started);
+ *                   Create new quadtree with data without fence;
+ *             Else:
+ *                If using a fence:
+ *                   Get fence coordinates;
+ *                   Add data with fence to quadtree;
+ *                Else:
+ *                   Add data without fence to quadtree;
+ *             Write any errors to the error file;
+ *          Else do nothing;
+ * Catch:
+ *    Make a dummy quadtree;
+ *
+ * Then a pointer to the data is sent to all of the display areas, which are then prepared for displaying and then display.
+ *
+ *
+ * */
 int testfilename(int argc,char *argv[],bool start,bool usearea){
    try{//Attempt to get real files.
       string pointoffset,filename;
@@ -119,13 +168,13 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      loaderrorstream = new ostringstream();
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY,loaderrorstream);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY,cachelimit,loaderrorstream);
                   }
                   else{//If not:
                      delete lidardata;
                      delete loaderrorstream;
                      loaderrorstream = new ostringstream();
-                     lidardata = new quadtree(loader,bucketlimit,poffs,loaderrorstream);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,cachelimit,loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.
@@ -157,13 +206,13 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      loaderrorstream = new ostringstream();
                      double minX,minY,maxX,maxY;
                      get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY,loaderrorstream);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY,cachelimit,loaderrorstream);
                   }
                   else{//If not:
                      delete lidardata;
                      delete loaderrorstream;
                      loaderrorstream = new ostringstream();
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,loaderrorstream);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,cachelimit,loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.
@@ -195,7 +244,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << e << endl;
       cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       loaderrorstream = new ostringstream();
-      lidardata = new quadtree(0,0,1,1,bucketlimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
+      lidardata = new quadtree(0,0,1,1,bucketlimit,cachelimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
       return 22;
    }
    tdo->setlidardata(lidardata,bucketlimit);
@@ -216,7 +265,6 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
    loadedanyfiles = true;
    return 1;
 }
-
 //If either the add or refresh button is pressed, then this function takes the selected filenames and creates an imitation of a command-line command, which is then sent to testfilename() where the file will be opened.
 void on_filechooserdialogresponse(int response_id){
    if(response_id == Gtk::RESPONSE_CLOSE)filechooserdialog->hide_all();
@@ -243,11 +291,8 @@ void on_filechooserdialogresponse(int response_id){
       delete[] argv;
    }
 }
-
 //When selected from the menu, the file choosers opens.
-void on_openfilemenuactivated(){
-   filechooserdialog->show_all();
-}
+void on_openfilemenuactivated(){ filechooserdialog->show_all(); }
 
 //If one of the colour radio menu items is selected (and, therefore, the others deselected) then set the values of the colour control variables in the overview to the values of the corresponding radio menu items.
 void on_colouractivated(){
@@ -736,7 +781,7 @@ int main(int argc, char** argv) {
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;
    loaderrorstream = new ostringstream();
-   lidardata = new quadtree(0,0,1,1,bucketlimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
+   lidardata = new quadtree(0,0,1,1,bucketlimit,cachelimit,loaderrorstream);//Create quadtree now so that it can be deleted later.
    return GUIset(argc, argv);//Make the GUI.
    delete tdo;
    delete prof;

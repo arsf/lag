@@ -49,7 +49,7 @@ public:
 protected:
    double minplanx,minplany;
    vector<int> flightlinestot;
-   vector<point*>* flightlinepoints;
+   vector<point>* flightlinepoints;
    double leftboundx,leftboundy,rightboundx,rightboundy;
    double** linez;
    int linezsize;
@@ -88,8 +88,8 @@ protected:
    sigc::connection sigrulerend;
  
    //Methods:
-   int get_closest_element_position(point* value,vector<point*>::iterator first,vector<point*>::iterator last);
-   bool linecomp(point* a,point* b);
+   int get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last);
+   bool linecomp(const point& a,const point& b);
  
    //Drawing:
    bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image

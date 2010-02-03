@@ -156,10 +156,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       int bucketno=0;
       int pointno=0;
       for(unsigned int i=0;i<pointvector->size();i++){
-         bool* pointsinarea = vetpoints(pointvector->at(i)->numberofpoints,pointvector->at(i)->points,midx,miny,midx,maxy,pointsize);
+         bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize);
          for(int j=0;j<pointvector->at(i)->numberofpoints;j++){
             if(pointsinarea[j]){
-               if(pointvector->at(i)->points[j].z >= pointvector->at(bucketno)->points[pointno].z){
+               if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){
                   bucketno=i;
                   pointno=j;
                }
@@ -167,20 +167,20 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          }
          delete pointsinarea;
       }
-      string flightline = lidardata->getfilename(pointvector->at(bucketno)->points[pointno].flightline);
+      string flightline = lidardata->getfilename(pointvector->at(bucketno)->getpoint(pointno).flightline);
       unsigned int index = flightline.rfind("/");
       if(index==string::npos)index=0;
       else index++;
       flightline = flightline.substr(index);
       ostringstream x,y,z,time,intensity,classification,rnumber;
-      x << pointvector->at(bucketno)->points[pointno].x;
-      y << pointvector->at(bucketno)->points[pointno].y;
-      z << pointvector->at(bucketno)->points[pointno].z;
-      time << pointvector->at(bucketno)->points[pointno].time;
-      intensity << pointvector->at(bucketno)->points[pointno].intensity;
-      classification << (int)pointvector->at(bucketno)->points[pointno].classification;
-      rnumber << (int)pointvector->at(bucketno)->points[pointno].rnumber;
-      string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline /*lidardata->getfilename(pointvector->at(bucketno)->points[pointno].flightline)*/ + ", Return number: " + rnumber.str() + ".";
+      x << pointvector->at(bucketno)->getpoint(pointno).x;
+      y << pointvector->at(bucketno)->getpoint(pointno).y;
+      z << pointvector->at(bucketno)->getpoint(pointno).z;
+      time << pointvector->at(bucketno)->getpoint(pointno).time;
+      intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
+      classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
+      rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
+      string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
       rulerlabel->set_text(pointstring);
    }
    delete pointvector;
@@ -371,10 +371,10 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
       for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-         x = buckets[i]->points[j].x;
-         y = buckets[i]->points[j].y;
-         z = buckets[i]->points[j].z;
-         intensity = buckets[i]->points[j].intensity;
+         x = buckets[i]->getpoint(j).x;
+         y = buckets[i]->getpoint(j).y;
+         z = buckets[i]->getpoint(j).z;
+         intensity = buckets[i]->getpoint(j).intensity;
          if(heightcolour){//Colour by elevation.
             red = colourheightarray[3*(int)(10*(z-rminz))];
             green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -386,7 +386,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
          }
          else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-             line = buckets[i]->points[j].flightline;
+             line = buckets[i]->getpoint(j).flightline;
              int index = line % 6;
              switch(index){
                 case 0:red=0;green=1;blue=0;break;//Green
@@ -399,7 +399,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          else if(classcolour){//Colour by classification.
-             classification = buckets[i]->points[j].classification;
+             classification = buckets[i]->getpoint(j).classification;
              int index = classification;
              switch(index){
                 case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -417,7 +417,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-             rnumber = buckets[i]->points[j].rnumber;
+             rnumber = buckets[i]->getpoint(j).rnumber;
              int index = rnumber;
              switch(index){
                 case 1:red=0;green=0;blue=1;break;//Blue
@@ -451,7 +451,7 @@ bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             heightenWater ||
             heightenOverlap ||
             heightenUndefined){
-            classification = buckets[i]->points[j].classification;
+            classification = buckets[i]->getpoint(j).classification;
             int index = classification;
             double incrementor = 2*abs(rmaxz-rminz);
             switch(index){
@@ -526,10 +526,10 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
       int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
       for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-         x = buckets[i]->points[j].x;
-         y = buckets[i]->points[j].y;
-         z = buckets[i]->points[j].z;
-         intensity = buckets[i]->points[j].intensity;
+         x = buckets[i]->getpoint(j).x;
+         y = buckets[i]->getpoint(j).y;
+         z = buckets[i]->getpoint(j).z;
+         intensity = buckets[i]->getpoint(j).intensity;
          if(heightcolour){//Colour by elevation.
             red = colourheightarray[3*(int)(10*(z-rminz))];
             green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -541,7 +541,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
             blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
          }
          else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-             line = buckets[i]->points[j].flightline;
+             line = buckets[i]->getpoint(j).flightline;
              int index = line % 6;
              switch(index){
                 case 0:red=0;green=1;blue=0;break;//Green
@@ -554,7 +554,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
              }
          }
          else if(classcolour){//Colour by classification.
-             classification = buckets[i]->points[j].classification;
+             classification = buckets[i]->getpoint(j).classification;
              int index = classification;
              switch(index){
                 case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -572,7 +572,7 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-             rnumber = buckets[i]->points[j].rnumber;
+             rnumber = buckets[i]->getpoint(j).rnumber;
              int index = rnumber;
              switch(index){
                 case 1:red=0;green=0;blue=1;break;//Blue
