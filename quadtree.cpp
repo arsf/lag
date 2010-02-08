@@ -7,6 +7,7 @@
 #include <sstream>
 #include <ostream>
 #include "cacheminder.h"
+#include "boost/filesystem.hpp"
 using namespace std;
 
 
@@ -452,6 +453,14 @@ bool quadtree::insert(point newP)
    return true;
 }
 
+bool compare(pointbucket *pb1, pointbucket *pb2)
+{
+    if (pb1->incache && !pb2->incache)
+    {
+        return true;
+    }
+    return false;
+}
 
 // this method takes a boundary and provides all the buckets that may contain 
 // points within that boundary
@@ -461,6 +470,7 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    // NOTE: the caller of this method is responsible for cleaning up this data object 
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    root->subset(minX, minY, maxX, maxY, buckets);
+   /*MCP->clearcachetodo();
    MCP->cachelist(buckets);
    vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
 
@@ -472,7 +482,8 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-300, maxX+300, maxY+300, extrabuckets);
-   MCP->pushcachetodo(extrabuckets);
+   MCP->pushcachetodo(extrabuckets);*/
+   std::sort(buckets->begin(), buckets->end(), compare);
    return buckets;
 }
 

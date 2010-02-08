@@ -203,6 +203,7 @@ void cacheminder::cachethread()
 {
     while (true)
     {
+        thread1.yield();
         boost::this_thread::interruption_point();
         boost::recursive_mutex::scoped_lock mylock(todomutex);
         if (cachetodo->size() == 0)

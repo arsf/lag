@@ -11,7 +11,6 @@
 #ifndef _QUADTREE_H
 #define	_QUADTREE_H
 
-#include <string>
 #include "quadloader.h"
 #include "quadtreenode.h"
 #include <vector>
@@ -33,6 +32,7 @@ class quadtree{
     // hashtable to hold flight file name/flight number pairs
     flighthash flighttable;
     cacheminder *MCP;
+
 public:
    
    // constructor that builds a new tree from a loader object

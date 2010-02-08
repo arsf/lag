@@ -9,6 +9,8 @@
 #define	_QUADTREENODE_H
 #include "quadtreestructs.h"
 #include <vector>
+#include <string>
+using namespace std;
 
 class quadtreenode{
    quadtreenode *a, *b, *c, *d;
@@ -18,6 +20,7 @@ class quadtreenode{
    pointbucket *bucket;
    bool leaf;
    cacheminder *MCP;
+
    void addsubset(double x1, double y1, double x2, double y2, double x3, double y3 ,double x4, double y4, std::vector<pointbucket*> *buckets);
 public:
     // basic constructor allowing boundary and capacity to be specified

@@ -12,8 +12,11 @@
 #include "boost/archive/binary_iarchive.hpp"
 #include "boost/archive/binary_oarchive.hpp"
 #include "boost/thread.hpp"
+#include <stdio.h>
+#include <string>
 
 class cacheminder;
+
 
 // this struct contains the data for a single lidar point
 
@@ -135,12 +138,13 @@ public:
     double minx, miny, maxx, maxy;
     cacheminder *MCP;
     int numberofcachedpoints;
-    char serialfile[512];
     bool serialized;
     bool incache;
     int cap;
+    char serialfile[512];
     SerializableInnerBucket *b;
     boost::recursive_mutex cachemutex;
+
 
     // constructer which initilizes the capacity of the bucket along with the boundary from
     // parameters and the other varibles to defaults
