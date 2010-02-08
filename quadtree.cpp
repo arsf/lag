@@ -470,20 +470,20 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    // NOTE: the caller of this method is responsible for cleaning up this data object 
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    root->subset(minX, minY, maxX, maxY, buckets);
-   /*MCP->clearcachetodo();
-   MCP->cachelist(buckets);
-   vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
+   //MCP->clearcachetodo();
+   //MCP->cachelist(buckets);
+   //vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
 
    // these additional subsets are to provide a list of buckets surrounding the
    // originol subset so as to allow them be precached incase the next subset
    // is only slightly different
-   root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
+   /*root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
    MCP->pushcachetodo(extrabuckets);
    root->subset(minX-200, minY-300, maxX+300, maxY+300, extrabuckets);
    MCP->pushcachetodo(extrabuckets);*/
-   std::sort(buckets->begin(), buckets->end(), compare);
+   std::stable_sort(buckets->begin(), buckets->end(), compare);
    return buckets;
 }
 
@@ -491,6 +491,7 @@ vector<pointbucket*>* quadtree::uncachedsubset(double minX, double minY, double 
 {
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
    root->subset(minX, minY, maxX, maxY, buckets);
+   std::stable_sort(buckets->begin(), buckets->end(), compare);
    return buckets;
 }
 

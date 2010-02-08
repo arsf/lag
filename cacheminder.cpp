@@ -96,10 +96,10 @@ void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
         vector<pointbucket *> tobereleased;
         cout << "start" << endl;
         
-        for (int k = 0; k < bucketsincache.size(); k++)
+        for (unsigned int k = 0; k < bucketsincache.size(); k++)
         {
             bool found = false;
-            for (int x = 0; x < bucketlist->size(); x++)
+            for (unsigned int x = 0; x < bucketlist->size(); x++)
             {
                 if (bucketsincache.at(k) == bucketlist->at(x))
                 {
@@ -114,7 +114,7 @@ void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
         }
         
         cout << "middle" << endl;
-        for (int k = 0; k < tobereleased.size(); k++)
+        for (unsigned int k = 0; k < tobereleased.size(); k++)
         {
             tobereleased[k]->uncache();
         }
@@ -140,7 +140,7 @@ void cacheminder::setcachetodo(vector<pointbucket *> *tasks)
     boost::recursive_mutex::scoped_lock mylock(todomutex);
     delete cachetodo;
     cachetodo = new deque<pointbucket *>();
-    for (int k = 0; k < tasks->size(); k++)
+    for (unsigned int k = 0; k < tasks->size(); k++)
     {
         cachetodo->push_back(tasks->at(k));
     }
@@ -150,7 +150,7 @@ void cacheminder::setcachetodo(vector<pointbucket *> *tasks)
 void cacheminder::pushcachetodo(vector<pointbucket *> *tasks)
 {
     boost::recursive_mutex::scoped_lock mylock(todomutex);
-    for (int k = 0; k < tasks->size(); k++)
+    for (unsigned int k = 0; k < tasks->size(); k++)
     {
         cachetodo->push_back(tasks->at(k));
     }
@@ -166,9 +166,9 @@ void cacheminder::popcachetodo()
 void cacheminder::deletecachetodo(vector<pointbucket *> *tasks)
 {
     boost::recursive_mutex::scoped_lock mylock(todomutex);
-    for (int k = 0; k < tasks->size(); k++)
+    for (unsigned int k = 0; k < tasks->size(); k++)
     {
-        for (int x = 0; x < cachetodo->size(); x++)
+        for (unsigned int x = 0; x < cachetodo->size(); x++)
         {
             if (tasks->at(k) == cachetodo->at(x))
             {

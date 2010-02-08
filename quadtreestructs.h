@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <string>
 
+using namespace std;
+
 class cacheminder;
 
 
@@ -141,7 +143,7 @@ public:
     bool serialized;
     bool incache;
     int cap;
-    char serialfile[512];
+    string filepath;
     SerializableInnerBucket *b;
     boost::recursive_mutex cachemutex;
 

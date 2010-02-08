@@ -4,6 +4,7 @@
 #include <c++/3.4.6/iosfwd>
 #include <limits.h>
 #include <cstdio>
+#include "boost/filesystem.hpp"
 
 using namespace std;
 
@@ -22,7 +23,19 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
     this->MCP = MCP;
     serialized = false;
     incache = false;
-    sprintf(serialfile, "/tmp/test/%f_%f-%f_%f", minx, miny, maxx, maxy);
+
+    string s = boost::lexical_cast<string>(this);
+    filepath = "/tmp";
+    for(int k=s.size(); k>3; k=k-2)
+    {
+        filepath.append("/");
+        filepath.append(s, k-2, 2);
+
+
+        boost::filesystem::create_directory(filepath);
+    }
+    filepath.append("/"+boost::lexical_cast<string>(minx)+"-"+boost::lexical_cast<string>(miny)+"_"+boost::lexical_cast<string>(maxy)+"-"+boost::lexical_cast<string>(maxx));
+
 }
 
 
@@ -33,9 +46,9 @@ pointbucket::~pointbucket()
     // when a point bucket is deleted the corrisponding serial file in secondary memory is also deleted
     if(serialized)
     {
-        if(remove(serialfile) != 0)
-        {
-            throw serialfile;
+
+        if(std::remove(filepath.c_str()) != 0)
+        {       
             throw "failed to delete serial file";
         }
     }
@@ -61,7 +74,7 @@ void pointbucket::uncache()
     {
 
         b->length=numberofpoints;
-        std::ofstream ofs(serialfile, ios::out | ios::binary | ios::trunc);
+        std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
         binaryouta << b;
@@ -99,7 +112,8 @@ bool pointbucket::cache(bool force)
         }
         b = new SerializableInnerBucket;
         // load the serial version from the filename assigned into a new bucket instance
-        std::ifstream ifs(serialfile, ios::out | ios::binary);
+
+        std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
         
         boost::archive::binary_iarchive binaryina(ifs);
         binaryina >> b;

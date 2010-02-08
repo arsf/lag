@@ -176,7 +176,7 @@ quadtreenode* quadtreenode::pickchild(point newP)
 
 void quadtreenode::subset(double minX, double minY, double maxX, double maxY, vector<pointbucket*> *buckets)
 {
-    // check if this bucket contains any part of the subset
+    // check if this bucket dosen't contains any part of the subset
     if (this->minX >= maxX) return;
     if (this->maxX <= minX) return;
     if (this->minY >= maxY) return;
