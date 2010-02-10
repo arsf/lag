@@ -9,6 +9,8 @@
 #include "cacheminder.h"
 #include "boost/filesystem.hpp"
 #include "boost/lexical_cast.hpp"
+#include "time.h"
+#include "unistd.h"
 
 using namespace std;
 
@@ -29,7 +31,9 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, int cachesize, ostrings
    capacity = cap;
    root = NULL;
    guessbucket = NULL;
-   instancedirectory = "/tmp/";
+   instancedirectory = "/tmp/lag_";
+   instancedirectory.append(boost::lexical_cast<string>(time(NULL)));
+   instancedirectory.append(boost::lexical_cast<string>(getpid()));
    instancedirectory.append(boost::lexical_cast<string>(this));
    boost::filesystem::create_directory(instancedirectory);
    MCP = new cacheminder(cachesize);
@@ -59,7 +63,9 @@ quadtree::quadtree(lidarpointloader *l,int cap, int nth, double minX, double min
    root = NULL;
    guessbucket = NULL;
    MCP = new cacheminder(cachesize);
-   instancedirectory = "/tmp/";
+   instancedirectory = "/tmp/lag_";
+   instancedirectory.append(boost::lexical_cast<string>(time(NULL)));
+   instancedirectory.append(boost::lexical_cast<string>(getpid()));
    instancedirectory.append(boost::lexical_cast<string>(this));
    boost::filesystem::create_directory(instancedirectory);
    // use area of interest to create new tree that incompasses all points
@@ -90,7 +96,9 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
    flightlinenum=0;
    guessbucket = NULL;
    MCP = new cacheminder(cachesize);
-   instancedirectory = "/tmp/";
+   instancedirectory = "/tmp/lag_";
+   instancedirectory.append(boost::lexical_cast<string>(time(NULL)));
+   instancedirectory.append(boost::lexical_cast<string>(getpid()));
    instancedirectory.append(boost::lexical_cast<string>(this));
    boost::filesystem::create_directory(instancedirectory);
    root = new quadtreenode(minX,minY,maxX,maxY,capacity, MCP, instancedirectory);
