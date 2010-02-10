@@ -75,7 +75,7 @@ void pointbucket::uncache()
     {
 
         b->length=numberofpoints;
-        std::fstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
+        std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
         binaryouta << b;
@@ -114,7 +114,7 @@ bool pointbucket::cache(bool force)
         b = new SerializableInnerBucket;
         // load the serial version from the filename assigned into a new bucket instance
 
-        std::fstream ifs(filepath.c_str(), ios::out | ios::binary);
+        std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
         
         boost::archive::binary_iarchive binaryina(ifs);
         binaryina >> b;
