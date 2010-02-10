@@ -129,18 +129,28 @@ protected:
    //Position variables:
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
+   double origpanstartx,origpanstarty;
  
    //Profiling:
+   double profeventstartx,profeventstarty;
    double profstartx, profstarty;//The start coordinates for the profile.
    double profendx, profendy;//The end coordinates for the profile.
    double profwidth;//The width of the profile.
    bool profiling;//Determines whether or not the profile should be drawn.
    bool showprofile;//Whether to display the profile box when not modifying it.
    //Fencing:
+   double fenceeventstartx,fenceeventstarty;
    double fencestartx, fencestarty;//The start coordinates for the fence.
    double fenceendx, fenceendy;//The end coordinates for the fence.
    bool fencing;//Determines whether or not the fence should be drawn.
    bool showfence;//Whether to display the fence when not modifying it.
+   //Rulering:
+   double rulereventstartx,rulereventstarty;
+   double rulerstartx,rulerstarty;//The start coordinates for the ruler
+   double rulerendx,rulerendy;//The end coordinates for the ruler.
+   double rulerwidth;//The width of the ruler.
+   bool rulering;//Determines whether or not the ruler should be drawn.
+ 
 
    //Classification heightening:
    bool heightenNonC;
@@ -178,16 +188,11 @@ protected:
    //Drawing:
    bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
    bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
+   bool drawbuckets(pointbucket** buckets,int numbuckets);
  
    //Positioning methods:
    void resetview();//Determines what part of the image is displayed with orthographic projection.
    bool on_zoom(GdkEventScroll* event);//Allows the user to zoom with the mouse wheel.
- 
-   //Rulering:
-   double rulerstartx,rulerstarty;//The start coordinates for the ruler
-   double rulerendx,rulerendy;//The end coordinates for the ruler.
-   double rulerwidth;//The width of the ruler.
-   bool rulering;//Determines whether or not the ruler should be drawn.
  
    bool pointinfo(double eventx,double eventy);
    //Panning control:   //These allow the user to pan by clicking and dragging.

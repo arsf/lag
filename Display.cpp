@@ -56,6 +56,7 @@ bool Display::on_expose_event(GdkEventExpose* event){
    if (!glwindow->gl_begin(get_gl_context()))return false;
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
+   glwindow->gl_end();
    return true;
 }
 

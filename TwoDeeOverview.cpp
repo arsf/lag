@@ -108,8 +108,8 @@ void TwoDeeOverview::resetview(){
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    if(event->button==1){
-      panstartx = event->x;
-      panstarty = event->y;
+      origpanstartx = panstartx = event->x;
+      origpanstarty = panstarty = event->y;
       return true;
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -130,6 +130,8 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 }
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
+   origpanstartx=panstartx;
+   origpanstarty=panstarty;
    if(event->button==1)return drawviewable(1);
    else return false;
 }
@@ -145,6 +147,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;
    vector<pointbucket*> *pointvector;
    try{
+      //Remember to change this to unchachesubset() later!
       pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
    }catch(const char* e){
       cout << e << endl;
@@ -191,13 +194,49 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   profeventstartx = event->x;
+   profeventstarty = event->y;
    return drawviewable(2);
 }
 //Updates the end point of the profile and then gets the vertical and horisontal differences betweent the start and end points. These are used to determine the length of the profile and hence the positions of the vertices of the profile rectangle. The rectangle is prepared and then the drawing method is called.
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   return drawviewable(2);
+   Gdk::Color *col = new Gdk::Color("White");
+   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glwindow->gl_end();
+   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),profeventstartx,profeventstarty,event->x,event->y);
+//   double breadth = profendx - profstartx;
+//   double height = profendy - profstarty;
+//   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+//   double startpointx,startpointy,endpointx,endpointy;
+//   startpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   startpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   endpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   endpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
+//   startpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   startpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   endpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   endpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
+//   startpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   startpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   endpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   endpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
+//   startpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   startpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   endpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
+//   endpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
+//   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
+   delete col;
+   return true;
+//   return drawviewable(2);
 }
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(1);}
@@ -221,13 +260,42 @@ void TwoDeeOverview::makeprofbox(){
 bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+   fenceeventstartx = event->x;
+   fenceeventstarty = event->y;
    return drawviewable(2);
 }
 //Updates end coordinates of the fence and prepares it for drawing, then draws preview.
 bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   return drawviewable(2);
+   Gdk::Color *col = new Gdk::Color("White");
+   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
+   double boxstartx,boxstarty,boxendx,boxendy;
+   if(event->x>fenceeventstartx){
+      boxstartx = fenceeventstartx;
+      boxendx = event->x;
+   }
+   else{
+      boxstartx = event->x;
+      boxendx = fenceeventstartx;
+   }
+   if(event->y>fenceeventstarty){
+      boxstarty = fenceeventstarty;
+      boxendy = event->y;
+   }
+   else{
+      boxstarty = event->y;
+      boxendy = fenceeventstarty;
+   }
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glwindow->gl_end();
+   get_gl_window()->draw_rectangle(get_style()->get_fg_gc(get_state()),false,boxstartx,boxstarty,boxendx-boxstartx,boxendy-boxstarty);
+   delete col;
+   return true;
+//   return drawviewable(2);
 }
 //Draws the main image one more.
 bool TwoDeeOverview::on_fence_end(GdkEventButton* event){return drawviewable(1);}
@@ -248,6 +316,8 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event){
    rulerstartx = rulerendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
    rulerstarty = rulerendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
    rulerlabel->set_text("Distance: 0\nX: 0\nY: 0");
+   rulereventstartx = event->x;
+   rulereventstarty = event->y;
    return drawviewable(2);
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
@@ -264,7 +334,17 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event){
    ydist << yd;
    string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str();
    rulerlabel->set_text(rulerstring);
-   return drawviewable(2);
+   Gdk::Color *col = new Gdk::Color("White");
+   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glwindow->gl_end();
+   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),rulereventstartx,rulereventstarty,event->x,event->y);
+   delete col;
+   return true;
+//   return drawviewable(2);
 }
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
 bool TwoDeeOverview::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
@@ -291,6 +371,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    double maxy = centrey+get_height()/2*ratio/zoomlevel;//...
    vector<pointbucket*> *pointvector;
    try{
+      //Remember to change this to unchachesubset() later!
       pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
    }catch(const char* e){
       cout << e << endl;
@@ -311,9 +392,10 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       mainimage(buckets,numbuckets,detail);
    }
    else if(imagetype==2){
-      detail=(int)(numbuckets*previewdetailmod);
-      if(detail<1)detail=1;
-      previewimage(buckets,numbuckets,detail);
+//      detail=(int)(numbuckets*previewdetailmod);
+//      if(detail<1)detail=1;
+//      previewimage(buckets,numbuckets,detail);
+      drawbuckets(buckets,numbuckets);
    }
 //   delete[] buckets;
    delete pointvector;
@@ -618,4 +700,57 @@ bool TwoDeeOverview::previewimage(pointbucket** buckets,int numbuckets,int detai
 
 void TwoDeeOverview::clippy(string picturename){
    get_gl_window()->draw_pixbuf(get_style()->get_fg_gc(get_state()),Gdk::Pixbuf::create_from_file(picturename),0,0,0,0,-1,-1,Gdk::RGB_DITHER_NONE,0,0);
+}
+
+bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
+   glReadBuffer(GL_BACK);
+   glDrawBuffer(GL_FRONT);
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
+//   int line=0,intensity=0,classification=0,rnumber=0;
+//   double x=0,y=0,z=0;//Point values
+   double altitude = rminz-1000;//This makes sure the preview box is drawn under the flightlines.
+//   double red,green,blue;//Colour values
+   float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
+//   float* colours = new float[3*bucketlimit];//...
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+//   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+//   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   glColor3f(1.0,1.0,1.0);
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+//      red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+      vertices[0]=buckets[i]->minx-centrex;
+      vertices[1]=buckets[i]->miny-centrey;
+      vertices[2]=altitude;
+      vertices[3]=buckets[i]->minx-centrex;
+      vertices[4]=buckets[i]->maxy-centrey;
+      vertices[5]=altitude;
+      vertices[6]=buckets[i]->maxx-centrex;
+      vertices[7]=buckets[i]->maxy-centrey;
+      vertices[8]=altitude;
+      vertices[9]=buckets[i]->maxx-centrex;
+      vertices[10]=buckets[i]->miny-centrey;
+      vertices[11]=altitude;
+//      colours[3*count]=red;
+//      colours[3*count+1]=green;
+//      colours[3*count+2]=blue;
+      glDrawArrays(GL_LINE_LOOP,0,4);
+   }
+   glCopyPixels(origpanstartx-panstartx,panstarty-origpanstarty,get_width()+panstartx-origpanstartx,get_height()+origpanstarty-panstarty,GL_COLOR);
+   glFlush();
+   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
+   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
+//   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+//   else glFlush();
+//   glFlush();
+   glDisableClientState(GL_VERTEX_ARRAY);
+//   glDisableClientState(GL_COLOR_ARRAY);
+   glDrawBuffer(GL_BACK);
+   glwindow->gl_end();
+   delete[] vertices;
+//   delete[] colours;
+   return true;
 }
