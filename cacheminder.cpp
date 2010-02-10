@@ -8,6 +8,7 @@
 #include "cacheminder.h"
 #include <iostream>
 #include "boost/date_time/time_duration.hpp"
+#include "quadtreeexceptions.h"
 
 cacheminder::cacheminder(int cachesize)
 {
@@ -26,7 +27,7 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
     boost::recursive_mutex::scoped_lock mylock(quemutex);
     if (requestsize > totalcache)
     {
-        throw "request has been made to cache minder asking for more ram in a single block than available in total";
+        throw ramallocationexception("request has been made to cache minder asking for more ram in a single block than available in total");
     }
 
 
@@ -78,7 +79,7 @@ void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
             return;
         }
     }
-    throw "cache minder asked to release cache that is not being used";
+    throw ramallocationexception("cache minder asked to release cache that is not being used");
     // search for the bucket and then remove it from the queue then update the cache counter
 }
 

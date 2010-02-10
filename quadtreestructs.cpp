@@ -5,12 +5,13 @@
 #include <limits.h>
 #include <cstdio>
 #include "boost/filesystem.hpp"
+#include "quadtreeexceptions.h"
 
 using namespace std;
 
 // self explanitory :P
 
-pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP)
+pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory)
 {
     numberofpoints = 0;
     numberofcachedpoints = 0;
@@ -23,9 +24,9 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
     this->MCP = MCP;
     serialized = false;
     incache = false;
-
+    this->instancedirectory = instancedirectory;
     string s = boost::lexical_cast<string>(this);
-    filepath = "/tmp";
+    filepath = instancedirectory;
     for(int k=s.size(); k>3; k=k-2)
     {
         filepath.append("/");
@@ -49,7 +50,7 @@ pointbucket::~pointbucket()
 
         if(std::remove(filepath.c_str()) != 0)
         {       
-            throw "failed to delete serial file";
+            throw fileexception("failed to delete serial file");
         }
     }
 
@@ -74,7 +75,7 @@ void pointbucket::uncache()
     {
 
         b->length=numberofpoints;
-        std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
+        std::fstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
         binaryouta << b;
@@ -113,7 +114,7 @@ bool pointbucket::cache(bool force)
         b = new SerializableInnerBucket;
         // load the serial version from the filename assigned into a new bucket instance
 
-        std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
+        std::fstream ifs(filepath.c_str(), ios::out | ios::binary);
         
         boost::archive::binary_iarchive binaryina(ifs);
         binaryina >> b;

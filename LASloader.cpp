@@ -13,7 +13,7 @@ LASloader::LASloader(const char *filename)
     ifs.open(filename, std::ios::in | std::ios::binary);
     if (!ifs.is_open())
     {
-        throw "could not open file";
+        throw fileexception("could not open file");
     }
     reader = new liblas::LASReader(ifs);
     header = reader->GetHeader();
@@ -63,7 +63,7 @@ int LASloader::load(int n, int nth, point *points, int flightlinenum, double min
         temp.intensity = p.GetIntensity();
         temp.rnumber = p.GetReturnNumber();
         temp.time = p.GetTime();
-
+        temp.classification = p.GetClassification();
 
         // copy temp into the array
         points[pointcounter] = temp;

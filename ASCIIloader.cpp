@@ -20,7 +20,7 @@ ASCIIloader::ASCIIloader(const char *filename, const char *newformatstring)
    fp = fopen(filename, "r");
    if(fp == NULL)
    {
-      throw "error opening file";
+      throw fileexception("error opening file");
    }
 }
 
@@ -168,6 +168,8 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
          counter++;
          continue;
       }
+
+      temp.classification = NULL; temp.flightline = NULL; temp.intensity = NULL; temp.rnumber = NULL; temp.x = NULL; temp.y = NULL; temp.z = NULL; temp.time = NULL;
 
       tok = strtok(line, delim);
       wordcounter=0;

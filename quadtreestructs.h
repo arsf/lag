@@ -146,11 +146,12 @@ public:
     string filepath;
     SerializableInnerBucket *b;
     boost::recursive_mutex cachemutex;
+    string instancedirectory;
 
 
     // constructer which initilizes the capacity of the bucket along with the boundary from
     // parameters and the other varibles to defaults
-    pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP);
+    pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory);
     ~pointbucket();
 
     // the uncache method removes the associated SerializableInnerBucket and writes

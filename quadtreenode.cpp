@@ -3,11 +3,12 @@
 #include "quadtreestructs.h"
 #include <stdlib.h>
 #include <limits>
+#include "quadtreeexceptions.h"
 
 using namespace std;
 
 // basic constructor which initilizes the boundary and capacity from paramters and the other meta data to defaults
-quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP)
+quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP, string instancedirectory)
 {
     this->minX = minX;
     this->minY = minY;
@@ -16,6 +17,7 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
     capacity = cap;
     bucket = NULL;
     this->MCP = MCP;
+    this->instancedirectory = instancedirectory;
     leaf = true;
     a = b = c = d = NULL;
     numofpoints = 0;
@@ -25,7 +27,7 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
 
 // constructor which allows both the boundarys, capacity and the child nodes of the
 // quadtree to be defined
-quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCP)
+quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCP, string instancedirectory)
 {
     this->minX = minX;
     this->minY = minY;
@@ -34,22 +36,23 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
     capacity = cap;
     bucket = NULL;
     this->MCP = MCP;
+    this->instancedirectory = instancedirectory;
     // these checks ensure the new quadtree is legal (that all child nodes
     //  boundarys fall within the parent node).
     // NOTE: WARNING: this checking neglects to check if the child nodes
     // corretly divide the parent node into 4 equal squares
 
     if (a->minX < minX || a->minY < minY || a->maxX > maxX || a->maxY > maxY)
-        throw "node argument a does not fit within paraent node";
+        throw outofboundsexception("node argument a does not fit within paraent node");
 
     if (b->minX < minX || b->minY < minY || b->maxX > maxX || b->maxY > maxY)
-        throw "node argument b does not fit within paraent node";
+        throw outofboundsexception("node argument b does not fit within paraent node");
 
     if (c->minX < minX || c->minY < minY || c->maxX > maxX || c->maxY > maxY)
-        throw "node argument c does not fit within paraent node";
+        throw outofboundsexception("node argument c does not fit within paraent node");
 
     if (d->minX < minX || d->minY < minY || d->maxX > maxX || d->maxY > maxY)
-        throw "node argument d does not fit within paraent node";
+        throw outofboundsexception("node argument d does not fit within paraent node");
 
 
 
@@ -162,7 +165,7 @@ quadtreenode* quadtreenode::pickchild(point newP)
     }
     else
     {
-        throw "failed to fit into any of the four child nodes, big problem";
+        throw outofboundsexception("failed to fit into any of the four child nodes, big problem");
     }
 }
 
@@ -237,13 +240,13 @@ bool quadtreenode::insert(point newP)
             // WARNING: because there is nothing to control the boundary of childs
             // created during construction this may lead to overlapping children
             if (a == NULL)
-                a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP);
+                a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP, instancedirectory);
             if (b == NULL)
-                b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP);
+                b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP, instancedirectory);
             if (c == NULL)
-                c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP);
+                c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
             if (d == NULL)
-                d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP);
+                d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
 
             for (int k = 0; k < numofpoints; k++)
             {
@@ -267,7 +270,7 @@ bool quadtreenode::insert(point newP)
                 }
                 else
                 {
-                    throw "failed to insert old point into any of the four child nodes, big problem";
+                    throw outofboundsexception("failed to insert old point into any of the four child nodes, big problem");
                 }
 
             }
@@ -295,7 +298,7 @@ bool quadtreenode::insert(point newP)
             {
                 return true;
             }
-            throw "failed to insert new point into any of the four child nodes, big problem";
+            throw outofboundsexception("failed to insert new point into any of the four child nodes, big problem");
         }
 
         // if the node falls within the boundary but this node not a leaf
@@ -309,7 +312,7 @@ bool quadtreenode::insert(point newP)
             // insert new point
             if (bucket == NULL)
             {
-                bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP);
+                bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP, instancedirectory);
                 //cout << "bucket " << bucket << " created " << endl;
             }
             if (bucket->numberofpoints == 0)

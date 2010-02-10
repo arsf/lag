@@ -20,13 +20,14 @@ class quadtreenode{
    pointbucket *bucket;
    bool leaf;
    cacheminder *MCP;
+   string instancedirectory;
 
    void addsubset(double x1, double y1, double x2, double y2, double x3, double y3 ,double x4, double y4, std::vector<pointbucket*> *buckets);
 public:
     // basic constructor allowing boundary and capacity to be specified
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCD);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCD, string instancedirectory);
     // in addition to the basic constructor this one allows each of the child nodes to be specified
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCD);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCD, string instancedirectory);
     ~quadtreenode();
     
     // this method inserts a new point into the node

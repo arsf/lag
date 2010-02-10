@@ -17,7 +17,8 @@
 #include "lidarpointloader.h"
 #include <sstream>
 #include <string>
-#include <tr1/unordered_map> 
+#include <tr1/unordered_map>
+#include "quadtreeexceptions.h"
 
 using namespace std;
 
@@ -32,7 +33,7 @@ class quadtree{
     // hashtable to hold flight file name/flight number pairs
     flighthash flighttable;
     cacheminder *MCP;
-
+    string instancedirectory;
 public:
    
    // constructor that builds a new tree from a loader object
