@@ -1,5 +1,5 @@
 #include "LASloader.h"
-
+#include "quadtreeexceptions.h"
 #include <iostream>
 #include <stdlib.h>   
 

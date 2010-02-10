@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <cstring>
 #include <stdio.h>
-
+#include "quadtreeexceptions.h"
 
 
 ASCIIloader::ASCIIloader(const char *filename, const char *newformatstring)
