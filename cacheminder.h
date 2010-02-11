@@ -7,6 +7,7 @@
 
 #include <queue>
 #include "quadtreestructs.h"
+#include "pointbucket.h"
 #include "boost/thread.hpp"
 
 using namespace std;

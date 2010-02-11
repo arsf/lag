@@ -8,6 +8,7 @@
 #ifndef _QUADTREENODE_H
 #define	_QUADTREENODE_H
 #include "quadtreestructs.h"
+#include "pointbucket.h"
 #include <vector>
 #include <string>
 using namespace std;
