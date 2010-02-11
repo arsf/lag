@@ -26,6 +26,7 @@ class cacheminder;
 
 class pointbucket
 {
+
 public:
     int numberofpoints;
     unsigned short int minintensity, maxintensity;
@@ -66,25 +67,12 @@ public:
     {
         if (incache)
         {
-            return b->points->at(i);
+            return b->points[i];
         }
         else
         {
             cache(true);
-            return b->points->at(i);
-        }
-    }
-
-    inline void setpoint(point &newP)
-    {
-        if (incache)
-        {
-            b->points->push_back(newP);
-        }
-        else
-        {
-            cache(true);
-            b->points->push_back(newP);
+            return b->points[i];
         }
     }
 

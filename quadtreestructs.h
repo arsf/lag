@@ -71,7 +71,7 @@ public:
     int size;
     int length;
 
-    SerializableInnerBucket() {points = NULL;};
+    SerializableInnerBucket() {};
 
     SerializableInnerBucket(int cap)
     {

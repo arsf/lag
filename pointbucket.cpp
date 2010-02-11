@@ -79,7 +79,7 @@ void pointbucket::uncache()
     if (serialized == false || numberofcachedpoints != numberofpoints)
     {
 
-        //b->length=numberofpoints;
+        b->length=numberofpoints;
         std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
