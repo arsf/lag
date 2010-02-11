@@ -9,6 +9,7 @@
 #include <gtkglmm.h>
 #include "quadtree.h"
 #include "quadtreestructs.h"
+#include "pointbucket.h"
 #include <vector>
 #include <boost/bind.hpp>
 #include "Display.h"

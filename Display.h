@@ -9,6 +9,7 @@
 #include <gtkglmm.h>
 #include "quadtree.h"
 #include "quadtreestructs.h"
+#include "pointbucket.h"
 #include <vector>
 #ifndef DISPLAY_H
 #define DISPLAY_H

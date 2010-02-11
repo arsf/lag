@@ -11,6 +11,7 @@
 #include <iostream>
 #include "quadtree.h"
 #include "quadtreestructs.h"
+#include "pointbucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
