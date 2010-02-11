@@ -19,6 +19,8 @@ using namespace std;
 string picturename;//Path of clippy image.
 const bool useclippy = false;//Whether or not to use clippy.
 
+bool drawwhentoggled = true;
+
 quadtree* lidardata = NULL;//The flightlines are stored here.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
 int cachelimit = 50000000;//How many points to hold in cache. 1 GB ~= 50000000 points.
@@ -307,7 +309,8 @@ void on_colouractivated(){
    tdo->setlinecolour(colourbyflightlinemenu->get_active());
    tdo->setclasscolour(colourbyclassificationmenu->get_active());
    tdo->setreturncolour(colourbyreturnmenu->get_active());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   drawwhentoggled = !drawwhentoggled;//As the signal handler is called twice (each time a radio button is toggle or untoggled, and toggling one automatically untoggles another), and we only want to draw (which is slow when caching) once, draw half the time this handler is called.
+   if(tdo->is_realized()&&drawwhentoggled)tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -315,7 +318,8 @@ void on_colouractivated(){
 void on_brightnessactivated(){
    tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
    tdo->setheightbrightness(brightnessbyheightmenu->get_active());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   drawwhentoggled = !drawwhentoggled;//As the signal handler is called twice (each time a radio button is toggle or untoggled, and toggling one automatically untoggles another), and we only want to draw (which is slow when caching) once, draw half the time this handler is called.
+   if(tdo->is_realized()&&drawwhentoggled)tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -325,11 +329,12 @@ void on_fencetoggle(){
       if(profiletoggle->get_active())profiletoggle->set_active(false);
       if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupfence();
+      if(tdo->is_realized())tdo->drawviewable(1);
    }
    else{
    	tdo->unsetupfence();
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
    }
-   if(tdo->is_realized())tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -339,14 +344,15 @@ void on_profiletoggle(){
       if(fencetoggle->get_active())fencetoggle->set_active(false);
       if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupprofile();
+      if(tdo->is_realized())tdo->drawviewable(1);
    }
    else{
    	tdo->unsetupprofile();
       double startx,starty,endx,endy,width;
       tdo->getprofile(startx,starty,endx,endy,width);
       prof->showprofile(startx,starty,endx,endy,width);
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
    }
-   if(tdo->is_realized())tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -356,11 +362,12 @@ void on_rulertoggleover(){
       if(fencetoggle->get_active())fencetoggle->set_active(false);
       if(profiletoggle->get_active())profiletoggle->set_active(false);
       tdo->setupruler();
+      if(tdo->is_realized())tdo->drawviewable(1);
    }
    else{
       tdo->unsetupruler();
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
    }
-   if(tdo->is_realized())tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
