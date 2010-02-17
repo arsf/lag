@@ -14,7 +14,7 @@
 #include "boost/thread.hpp"
 #include <stdio.h>
 #include <string>
-
+#include <stdlib.h>
 
 
 
@@ -70,14 +70,16 @@ public:
     point *points;
     int size;
     int length;
+    int increase;
 
-    SerializableInnerBucket() {};
+    SerializableInnerBucket(){};
 
-    SerializableInnerBucket(int cap)
+    SerializableInnerBucket(int initialsize, int increase)
     {
-        points = new point[cap];
-        size = cap;
+        points = (point*) malloc(initialsize * sizeof(point));
+        size = initialsize;
         length = 0;
+        this->increase = increase;
     };
 
     ~SerializableInnerBucket()
@@ -88,6 +90,17 @@ public:
         }
     };
 
+    inline void setpoint(point& newP)
+    {
+        if (length == size)
+        {
+            size+=increase;
+            points = (point*) realloc(points, size * sizeof(point));
+        }
+        points[length]=newP;
+        length++;
+    }
+
 private:
     friend class boost::serialization::access;
 
@@ -96,6 +109,7 @@ private:
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const
     {
+        ar & increase;
         ar & length;
         ar & size;
         for (int k=0; k<length; k++)
@@ -107,6 +121,7 @@ private:
     template<class Archive>
     void load(Archive & ar, const unsigned int version)
     {
+        ar & increase;
         ar & length;
         ar & size;
         if (size != 0)

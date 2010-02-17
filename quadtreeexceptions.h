@@ -5,14 +5,18 @@
  * Created on February 10, 2010, 4:10 PM
  */
 
-#include <exception>
+
 
 #ifndef _QUADTREEEXCEPTIONS_H
 #define	_QUADTREEEXCEPTIONS_H
 
+#include <exception>
+
+using namespace std;
+
 class descriptiveexception : public exception
 {
-    private:
+private:
     const char *details;
 public:
     descriptiveexception(const char *details)

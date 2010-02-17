@@ -30,7 +30,15 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
         throw ramallocationexception("request has been made to cache minder asking for more ram in a single block than available in total");
     }
 
-
+    deque<pointbucket *>::iterator ity;
+    for(ity=bucketsincache.begin(); ity<bucketsincache.end(); ity++)
+    {
+        if (*ity == pbucket)
+        {
+            bucketsincache.erase(ity);
+            break;
+        }
+    }
 
     if (force)
     {
@@ -45,6 +53,8 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
     {
         return false;
     }
+
+
 
     bucketsincache.push_back(pbucket);
     cacheused = cacheused + requestsize;

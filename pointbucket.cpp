@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <cstdio>
 #include "boost/filesystem.hpp"
-#include "quadtreeexceptions.h"
+
 
 using namespace std;
 
@@ -21,7 +21,7 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
     numberofpoints = 0;
     numberofcachedpoints = 0;
     this->cap = cap;
-
+    innerbucketsize = 20000;
     this->minx = minx;
     this->miny = miny;
     this->maxx = maxx;
@@ -86,12 +86,13 @@ void pointbucket::uncache()
         binaryouta << b;
         ofs.close();
         serialized = true;
+        innerbucketsize = b->size;
     }
     //clean up bucket
     delete b;
     b = NULL;
     // free memory only after removal is complete
-    MCP->releasecache(cap, this);
+    MCP->releasecache(innerbucketsize, this);
     incache = false;
 
 }
@@ -112,11 +113,11 @@ bool pointbucket::cache(bool force)
     if (serialized == true)
     {
         // aquire memory before using it to ensure memory limit is respected
-        if (MCP->requestcache(cap, this, force) == false)
+        if (MCP->requestcache(innerbucketsize, this, force) == false)
         {
             return false;
         }
-        b = new SerializableInnerBucket;
+        b = new SerializableInnerBucket();
         // load the serial version from the filename assigned into a new bucket instance
 
         std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
@@ -131,13 +132,33 @@ bool pointbucket::cache(bool force)
     else
     {
         // aquire memory before using it to ensure memory limit is respected
-        if (MCP->requestcache(cap, this, force) == false)
+        if (MCP->requestcache(innerbucketsize, this, force) == false)
         {
             return false;
         }
-        b = new SerializableInnerBucket(cap);
+        b = new SerializableInnerBucket(innerbucketsize, 20000);
         incache = true;
         return true;
     }
+
+}
+
+bool pointbucket::increasecache(bool force, int i)
+{
+    boost::recursive_mutex::scoped_lock mylock(cachemutex);
+   
+    if (!incache)
+    {
+        return false;
+    }
+
+    
+        
+        return MCP->requestcache(i, this, force);
+        
+            
+        
+
+    
 
 }

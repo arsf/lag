@@ -338,7 +338,7 @@ bool quadtreenode::insert(point newP)
             {
                 bucket->minz = newP.z;
             }
-            bucket->getpoint(numofpoints) = newP;
+            bucket->setpoint(newP);
             bucket->numberofpoints++;
             numofpoints++;
             return true;

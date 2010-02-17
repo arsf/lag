@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string>
 #include "quadtreestructs.h"
+#include "quadtreeexceptions.h"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ public:
     SerializableInnerBucket *b;
     boost::recursive_mutex cachemutex;
     string instancedirectory;
+    int innerbucketsize;
 
 
     // constructer which initilizes the capacity of the bucket along with the boundary from
@@ -57,7 +59,7 @@ public:
     // the parameter "force" defines wether the another bucket can be forced out of cache to accomodate this one
     // if space cannot be found false is returned
     bool cache(bool force);
-
+    bool increasecache(bool force, int i);
 
     // the getpoint method adds a layer between outside classes and the SerializableInnerBucket. this prevents
     // outside classes from accessing the SerializableInnerBucket without the pointbuckets knowledge. This
@@ -74,6 +76,25 @@ public:
             cache(true);
             return b->points[i];
         }
+    }
+
+    inline void setpoint(point& newP)
+    {
+        if (!incache)
+        {
+            cache(true);
+        }
+        if (b->size == b->length)
+        {
+            if(!increasecache(true, b->increase))
+            {
+                throw ramallocationexception("failed to acquire extra ram to allow more points to be inserted");
+            }
+            innerbucketsize = b->size;
+
+        }
+
+        b->setpoint(newP);
     }
 
 };
