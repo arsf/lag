@@ -1,7 +1,9 @@
 /*
  * File: TwoDeeOverview.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - January 2010
+ * Written: November 2009 - February 2010
+ *
+ * WARNING! THIS IS A THREADED ENVIRONMENT. CARELESSNESS WILL BE REWARDED WITH EXTREME PREJUDICE (YES, YOU READ THAT CORRECTLY)!
  *
  * */
 #include <gtkmm.h>
@@ -19,6 +21,15 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   pointcount = 0;
+   thread_running = false;
+   thread_existsmain = false;
+   interruptmain = false;
+   thread_existsthread = false;
+   interruptthread = false;
+   drawing_to_GL = false;
+   initialising_GL_draw = false;
+   flushing = false;
    zoompower = 0.5;
    maindetailmod = 0.01;
    previewdetailmod = 1;
@@ -69,9 +80,294 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    sigrulerstart.block();
    sigruler.block();
    sigrulerend.block();
+      //Dispatchers:
+      signal_InitGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::InitGLDraw));
+      signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
+      signal_DrawGLToCard.connect(sigc::mem_fun(*this,&TwoDeeOverview::DrawGLToCard));
+      signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));
 }
 
 TwoDeeOverview::~TwoDeeOverview(){}
+
+void TwoDeeOverview::InitGLDraw(){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
+   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
+   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   initialising_GL_draw = false;
+}
+
+void TwoDeeOverview::EndGLDraw(){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glDisableClientState(GL_VERTEX_ARRAY);
+   glDisableClientState(GL_COLOR_ARRAY);
+   glwindow->gl_end();
+   interruptmain = false;
+   thread_existsmain = false;
+}
+
+void TwoDeeOverview::DrawGLToCard(){
+   glDrawArrays(GL_POINTS,0,pointcount);//THIS will ALSO have to be done in the main thread, I think, as it uses OpenGL. Therefore, to solve this, before telling the main loop to fix this, a variable should be set to true and, before the arrays are modified again, there should be a while(true) loop such that, until the main loop sets the variable back to false (which it will do after calling glDrawArrays(GL_POINTS,0,count)) nothing happens, and then it can replace the data in the arrays. This signal should be separate from the one for the flushing. (Basically, assume, and HOPE, that the main thread executes received signals in order (which all previous observations seem to indicate).
+   drawing_to_GL = false;
+}
+
+void TwoDeeOverview::FlushGLToScreen(){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
+   else glFlush();
+   flushing = false;
+}
+
+/*This method draws the main image. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
+ *
+ *   for every bucket:
+ *      for every point:
+ *         determine colour and brightness of point
+ *         place point
+ *      end for
+ *      draw all points in bucket
+ *   end for
+ *
+ *Then the profiling box is drawn if it exists.
+ *
+ *
+ * */
+/*bool*/void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail*/){
+   cout << "Wait?" << endl;
+   while(thread_existsthread||thread_existsmain){usleep(100);}//If another thread still exists (i.e., in theory, it has not cleared itself up yet) then wait until it is cleared.
+   cout << "Finished waiting." << endl;
+   thread_existsmain = true;
+   thread_existsthread = true;
+   thread_running = true;
+   int line=0,intensity=0,classification=0,rnumber=0;
+   double x=0,y=0,z=0;//Point values
+   double red,green,blue;//Colour values
+   cout << "First array" << endl;
+   /*float**/ vertices = new float[3*bucketlimit];
+   cout << "Second array" << endl;
+   /*float**/ colours = new float[3*bucketlimit];
+   cout << "Initialise GL drawing." << endl;
+   initialising_GL_draw = true;
+   signal_InitGLDraw();
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+      cout << "Interrupt?" << endl;
+      if(interruptmain||interruptthread){
+         cout << "Interrupted." << endl;
+         thread_running = false;
+         cout << "End drawing" << endl;
+         signal_EndGLDraw();
+         cout << "Delete first array." << endl;
+         delete[] vertices;
+         cout << "Delete second array." << endl;
+         delete[] colours;
+         cout << "Booleans." << endl;
+         interruptthread = false;
+         thread_existsthread = false;
+         cout << "Finished thread!" << endl;
+         return;
+//         return true;
+      }
+      cout << "If drawing, pause." << endl;
+      while(drawing_to_GL){usleep(10);}
+      cout << "Not drawing (anymore)." << endl;
+      pointcount=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
+      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
+         red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+//         cout << "Get coords." << endl;
+         x = buckets[i]->getpoint(j).x;
+         y = buckets[i]->getpoint(j).y;
+         z = buckets[i]->getpoint(j).z;
+         intensity = buckets[i]->getpoint(j).intensity;
+//         cout << "Colours!" << endl;
+         if(heightcolour){//Colour by elevation.
+            red = colourheightarray[3*(int)(10*(z-rminz))];
+            green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
+            blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
+         }
+         else if(intensitycolour){//Colour by intensity.
+            red = colourintensityarray[3*(int)(intensity-rminintensity)];
+            green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
+            blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
+         }
+         else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+             line = buckets[i]->getpoint(j).flightline;
+             int index = line % 6;
+             switch(index){
+                case 0:red=0;green=1;blue=0;break;//Green
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=1;green=0;blue=0;break;//Red
+                case 3:red=0;green=1;blue=1;break;//Cyan
+                case 4:red=1;green=1;blue=0;break;//Yellow
+                case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
+             }
+         }
+         else if(classcolour){//Colour by classification.
+             classification = buckets[i]->getpoint(j).classification;
+             int index = classification;
+             switch(index){
+                case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
+                case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
+                case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
+                case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
+                case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
+                case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
+                case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+
+                case 9:red=0;green=0;blue=1;break;//Blue for water.
+                case 12:red=1;green=1;blue=1;break;//White for overlap points.
+                default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
+             }
+         }
+         else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+             rnumber = buckets[i]->getpoint(j).rnumber;
+             int index = rnumber;
+             switch(index){
+                case 1:red=0;green=0;blue=1;break;//Blue
+                case 2:red=0;green=1;blue=1;break;//Cyan
+                case 3:red=0;green=1;blue=0;break;//Green
+                case 4:red=1;green=0;blue=0;break;//Red
+                case 5:red=1;green=0;blue=1;break;//Purple
+                default:red=green=blue=1;break;//White in the event of strangeness.
+             }
+         }
+         if(heightbrightness){//Shade by height.
+            red *= brightnessheightarray[(int)(z-rminz)];
+            green *= brightnessheightarray[(int)(z-rminz)];
+            blue *= brightnessheightarray[(int)(z-rminz)];
+         }
+         else if(intensitybrightness){//Shade by intensity.
+            red *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            green *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
+         }
+         vertices[3*pointcount]=x-centrexsafe;
+         vertices[3*pointcount+1]=y-centreysafe;
+         if(heightenNonC ||
+            heightenGround ||
+            heightenLowVeg ||
+            heightenMedVeg ||
+            heightenHighVeg ||
+            heightenBuildings ||
+            heightenNoise ||
+            heightenMass ||
+            heightenWater ||
+            heightenOverlap ||
+            heightenUndefined){
+            classification = buckets[i]->getpoint(j).classification;
+            int index = classification;
+            double incrementor = 2*abs(rmaxz-rminz);
+            switch(index){
+               case 0:case 1:if(heightenNonC)z+=incrementor;break;
+               case 2:if(heightenGround)z+=incrementor;break;
+               case 3:if(heightenLowVeg)z+=incrementor;break;
+               case 4:if(heightenMedVeg)z+=incrementor;break;
+               case 5:if(heightenHighVeg)z+=incrementor;break;
+               case 6:if(heightenBuildings)z+=incrementor;break;
+               case 7:if(heightenNoise)z+=incrementor;break;
+               case 8:if(heightenMass)z+=incrementor;break;
+               case 9:if(heightenWater)z+=incrementor;break;
+               case 12:if(heightenOverlap)z+=incrementor;break;
+               default:if(heightenUndefined)z+=incrementor;break;
+            }
+         }
+         vertices[3*pointcount+2]=z;
+         colours[3*pointcount]=red;
+         colours[3*pointcount+1]=green;
+         colours[3*pointcount+2]=blue;
+         pointcount++;
+      }
+      if(!interruptthread&&!interruptmain){
+         cout << "Sending draw signal." << endl;
+         drawing_to_GL = true;
+         signal_DrawGLToCard();
+         //Perhaps modify to happen only when the estimated number of points exceeds a certain value? Estimation could be: numbuckets * bucketlimit / detail. Quite rough, though. This might then cause previewimage to become useless. :-)
+         if(numbuckets>10)if((i+1)%10==0){
+            flushing = true;
+            cout << "Sending flush signal." << endl;
+            signal_FlushGLToScreen();
+         }
+      }
+   }
+   cout << "Ending..." << endl;
+   thread_running = false;
+   cout << "End drawing" << endl;
+   signal_EndGLDraw();
+   cout << "Delete first array." << endl;
+   delete[] vertices;
+   cout << "Delete second array." << endl;
+   delete[] colours;
+   cout << "Booleans." << endl;
+   interruptthread = false;
+   thread_existsthread = false;
+   cout << "Finished thread!" << endl;
+   delete[] buckets;
+//   return true;
+}
+
+//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
+bool TwoDeeOverview::drawviewable(int imagetype){
+   if(drawing_to_GL)return true;
+   if(initialising_GL_draw)return true;
+   if(flushing)return true;
+   interruptmain = true;
+   interruptthread = true;
+   if(thread_running)cout << "Help! Am stalling!" << endl;
+   while(thread_running){usleep(100);}
+   cout << "Am fluid" << endl;
+   centrexsafe = centrex;
+   centreysafe = centrey;
+   get_gl_window()->make_current(get_gl_context());
+   glViewport(0, 0, get_width(), get_height());
+   resetview();
+   double minx = centrex-get_width()/2*ratio/zoomlevel;//Limits of viewable area:
+   double maxx = centrex+get_width()/2*ratio/zoomlevel;//...
+   double miny = centrey-get_height()/2*ratio/zoomlevel;//...
+   double maxy = centrey+get_height()/2*ratio/zoomlevel;//...
+   vector<pointbucket*> *pointvector;
+   try{
+      //Remember to change this to uncachesubset() later!
+      pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+   }catch(const char* e){
+      cout << e << endl;
+      cout << "No points returned." << endl;
+      return false;
+   }
+   /*int*/ numbuckets = pointvector->size();
+//   /*pointbucket***/ buckets = &(*pointvector)[0];
+ //  vector<pointbucket*>& buckets = pointvector;
+   /*pointbucket***/ buckets = new pointbucket*[numbuckets];
+   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+      buckets[i]=(*pointvector)[i];
+   }
+   /*int*/ detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
+   if(imagetype==1){
+      detail=(int)(numbuckets*maindetailmod);
+      if(detail<1)detail=1;
+      interruptthread = false;
+      interruptmain = false;
+      data_former_thread = Glib::Thread::create(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),false);
+//      mainimage(buckets,numbuckets,detail);
+   }
+   else if(imagetype==2){
+ //     detail=(int)(numbuckets*previewdetailmod);
+ //     if(detail<1)detail=1;
+ //     previewimage(buckets,numbuckets,detail);
+      drawbuckets(buckets,numbuckets);
+   }
+ //  delete[] buckets;
+   delete pointvector;
+   return true;
+}
 
 //Return to initial viewing position.
 bool TwoDeeOverview::returntostart(){
@@ -131,9 +427,11 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 }
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
-   origpanstartx=panstartx;
-   origpanstarty=panstarty;
-   if(event->button==1)return drawviewable(1);
+   if(event->button==1){
+      origpanstartx=panstartx;
+      origpanstarty=panstarty;
+      return drawviewable(1);
+   }
    else return false;
 }
 
@@ -148,7 +446,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;
    vector<pointbucket*> *pointvector;
    try{
-      //Remember to change this to unchachesubset() later!
+      //Remember to change this to uncachesubset() later!
       pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
    }catch(const char* e){
       cout << e << endl;
@@ -361,48 +659,6 @@ void TwoDeeOverview::makerulerbox(){
    glLineWidth(1);
 }
 
-//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
-bool TwoDeeOverview::drawviewable(int imagetype){
-  get_gl_window()->make_current(get_gl_context());
-  glViewport(0, 0, get_width(), get_height());
-  resetview();
-   double minx = centrex-get_width()/2*ratio/zoomlevel;//Limits of viewable area:
-   double maxx = centrex+get_width()/2*ratio/zoomlevel;//...
-   double miny = centrey-get_height()/2*ratio/zoomlevel;//...
-   double maxy = centrey+get_height()/2*ratio/zoomlevel;//...
-   vector<pointbucket*> *pointvector;
-   try{
-      //Remember to change this to unchachesubset() later!
-      pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
-   }catch(const char* e){
-      cout << e << endl;
-      cout << "No points returned." << endl;
-      return false;
-   }
-   int numbuckets = pointvector->size();
-   pointbucket** buckets = &(*pointvector)[0];
-//   vector<pointbucket*>& buckets = pointvector;
-//   pointbucket** buckets = new pointbucket*[numbuckets];
-//   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-//      buckets[i]=pointvector->at(i);
-//   }
-   int detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
-   if(imagetype==1){
-      detail=(int)(numbuckets*maindetailmod);
-      if(detail<1)detail=1;
-      mainimage(buckets,numbuckets,detail);
-   }
-   else if(imagetype==2){
-//      detail=(int)(numbuckets*previewdetailmod);
-//      if(detail<1)detail=1;
-//      previewimage(buckets,numbuckets,detail);
-      drawbuckets(buckets,numbuckets);
-   }
-//   delete[] buckets;
-   delete pointvector;
-   return true;
-}
-
 //(Anything that happens for centrex is reversed for centrey). First, half the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
 bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrex += (event->x-get_width()/2)*ratio/zoomlevel;
@@ -421,160 +677,6 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrey += (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
    return drawviewable(1);
-}
-
-/*This method draws the main image. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
- *
- *   for every bucket:
- *      for every point:
- *         determine colour and brightness of point
- *         place point
- *      end for
- *      draw all points in bucket
- *   end for
- *
- *Then the profiling box is drawn if it exists.
- *
- *
- * */
-bool TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   int line=0,intensity=0,classification=0,rnumber=0;
-   double x=0,y=0,z=0;//Point values
-   double red,green,blue;//Colour values
-   float* vertices = new float[3*bucketlimit];//Needed for the glDrawArrays() call further down.
-   float* colours = new float[3*bucketlimit];//...
-   glEnableClientState(GL_VERTEX_ARRAY);//...
-   glEnableClientState(GL_COLOR_ARRAY);//...
-   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-   glColorPointer(3, GL_FLOAT, 0, colours);//...
-   for(int i=0;i<numbuckets;i++){//For every bucket...
-      int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
-      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
-         red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-         x = buckets[i]->getpoint(j).x;
-         y = buckets[i]->getpoint(j).y;
-         z = buckets[i]->getpoint(j).z;
-         intensity = buckets[i]->getpoint(j).intensity;
-         if(heightcolour){//Colour by elevation.
-            red = colourheightarray[3*(int)(10*(z-rminz))];
-            green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-            blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-         }
-         else if(intensitycolour){//Colour by intensity.
-            red = colourintensityarray[3*(int)(intensity-rminintensity)];
-            green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-            blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-         }
-         else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-             line = buckets[i]->getpoint(j).flightline;
-             int index = line % 6;
-             switch(index){
-                case 0:red=0;green=1;blue=0;break;//Green
-                case 1:red=0;green=0;blue=1;break;//Blue
-                case 2:red=1;green=0;blue=0;break;//Red
-                case 3:red=0;green=1;blue=1;break;//Cyan
-                case 4:red=1;green=1;blue=0;break;//Yellow
-                case 5:red=1;green=0;blue=1;break;//Purple
-                default:red=green=blue=1;break;//White in the event of strangeness.
-             }
-         }
-         else if(classcolour){//Colour by classification.
-             classification = buckets[i]->getpoint(j).classification;
-             int index = classification;
-             switch(index){
-                case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
-                case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
-                case 9:red=0;green=0;blue=1;break;//Blue for water.
-                case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
-             }
-         }
-         else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-             rnumber = buckets[i]->getpoint(j).rnumber;
-             int index = rnumber;
-             switch(index){
-                case 1:red=0;green=0;blue=1;break;//Blue
-                case 2:red=0;green=1;blue=1;break;//Cyan
-                case 3:red=0;green=1;blue=0;break;//Green
-                case 4:red=1;green=0;blue=0;break;//Red
-                case 5:red=1;green=0;blue=1;break;//Purple
-                default:red=green=blue=1;break;//White in the event of strangeness.
-             }
-         }
-         if(heightbrightness){//Shade by height.
-            red *= brightnessheightarray[(int)(z-rminz)];
-            green *= brightnessheightarray[(int)(z-rminz)];
-            blue *= brightnessheightarray[(int)(z-rminz)];
-         }
-         else if(intensitybrightness){//Shade by intensity.
-            red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-            green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-            blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-         }
-         vertices[3*count]=x-centrex;
-         vertices[3*count+1]=y-centrey;
-         if(heightenNonC ||
-            heightenGround ||
-            heightenLowVeg ||
-            heightenMedVeg ||
-            heightenHighVeg ||
-            heightenBuildings ||
-            heightenNoise ||
-            heightenMass ||
-            heightenWater ||
-            heightenOverlap ||
-            heightenUndefined){
-            classification = buckets[i]->getpoint(j).classification;
-            int index = classification;
-            double incrementor = 2*abs(rmaxz-rminz);
-            switch(index){
-               case 0:case 1:if(heightenNonC)z+=incrementor;break;
-               case 2:if(heightenGround)z+=incrementor;break;
-               case 3:if(heightenLowVeg)z+=incrementor;break;
-               case 4:if(heightenMedVeg)z+=incrementor;break;
-               case 5:if(heightenHighVeg)z+=incrementor;break;
-               case 6:if(heightenBuildings)z+=incrementor;break;
-               case 7:if(heightenNoise)z+=incrementor;break;
-               case 8:if(heightenMass)z+=incrementor;break;
-               case 9:if(heightenWater)z+=incrementor;break;
-               case 12:if(heightenOverlap)z+=incrementor;break;
-               default:if(heightenUndefined)z+=incrementor;break;
-            }
-         }
-         vertices[3*count+2]=z;
-         colours[3*count]=red;
-         colours[3*count+1]=green;
-         colours[3*count+2]=blue;
-         count++;
-      }
-      glDrawArrays(GL_POINTS,0,count);
-      //Perhaps modify to happen only when the estimated number of points exceeds a certain value? Estimation could be: numbuckets * bucketlimit / detail. Quite rough, though. This might then cause previewimage to become useless. :-)
-      if(numbuckets>10)if((i+1)%10==0){
-         if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
-         else glFlush();
-      }
-   }
-   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
-   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
-   glDisableClientState(GL_VERTEX_ARRAY);
-   glDisableClientState(GL_COLOR_ARRAY);
-   glwindow->gl_end();
-   delete[] vertices;
-   delete[] colours;
-   return true;
 }
 
 //NOTE: This method is almost identical to the mainimage method. Only two lines are different, and could easily be replace with an if statement. The methods are kept separate as this one might change in the future to make it faster and/or more detailed.

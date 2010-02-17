@@ -1,7 +1,7 @@
 /*
  * File: lag.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - January 2010
+ * Written: November 2009 - February 2010
  *
  * */
 #include <iostream>
@@ -75,6 +75,7 @@ Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
 Gtk::ToggleToolButton *rulertoggleover = NULL;//Toggle button determining whether the ruler is viewable on the overview.
 Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
+Gtk::Window *window3 = NULL;
 Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;//Determines whether the profile is coloured by intensity.
 Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;//Determines whether the profile is coloured by height.
 Gtk::RadioMenuItem *colourbyflightlinemenuprof = NULL;//Determines whether the profile is coloured by flightline.
@@ -242,9 +243,11 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
          }
       }
    }
-   catch(char const* e){
-      cout << e << endl;
-      cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
+   catch(descriptiveexception e){
+      cout << "There has been an exception:" << endl;
+      cout << "What: " << e.what() << endl;
+      cout << "Why: " << e.why() << endl;
+//      cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       loaderrorstream->str("");
       if(lidardata != NULL)delete lidardata;
       lidardata = NULL;
@@ -348,6 +351,7 @@ void on_profiletoggle(){
    }
    else{
    	tdo->unsetupprofile();
+      if(!window3->get_visible())window3->show_all();
       double startx,starty,endx,endy,width;
       tdo->getprofile(startx,starty,endx,endy,width);
       prof->showprofile(startx,starty,endx,endy,width);
@@ -649,7 +653,6 @@ int GUIset(int argc,char *argv[]){
          }
          window2->show_all();
       }
-      Gtk::Window *window3 = NULL;
       refXml->get_widget("window3", window3);
       if(window3){
          window3->set_title("LAG Profile");
@@ -775,6 +778,7 @@ int GUIset(int argc,char *argv[]){
       prof->setdrawmovingaverage(lineshowtoggle->get_active());
       prof->setmavrgrange(movingaveragerangeselect->get_value());
       testfilename(argc,argv,true,false);//In case of command-line commands.
+      Glib::thread_init();
       gtkmain.run(*window2);
    } else {
       std::cerr << "eep, no main window?" << std::endl;

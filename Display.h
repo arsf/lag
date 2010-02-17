@@ -89,7 +89,7 @@ protected:
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().
    bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.
-   virtual bool mainimage(pointbucket** buckets,int numbuckets,int detail) = 0;//Draw the main image
+//   virtual bool mainimage(pointbucket** buckets,int numbuckets,int detail) = 0;//Draw the main image
    virtual bool previewimage(pointbucket** buckets,int numbuckets,int detail) = 0;//Draw the preview (for panning etc.).
  
    //Colouring and shading:

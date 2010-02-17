@@ -126,6 +126,26 @@ public:
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}
 protected:
+   pointbucket** buckets;
+   int numbuckets;
+   int detail;
+   int pointcount;
+   float* vertices;
+   float* colours;
+   bool interruptmain;
+   bool thread_existsmain;
+   bool interruptthread;
+   bool thread_existsthread;
+   bool thread_running;
+   bool drawing_to_GL;
+   bool initialising_GL_draw;
+   bool flushing;
+   double centrexsafe,centreysafe;
+   Glib::Dispatcher signal_InitGLDraw;
+   Glib::Dispatcher signal_EndGLDraw;
+   Glib::Dispatcher signal_DrawGLToCard;
+   Glib::Dispatcher signal_FlushGLToScreen;
+   Glib::Thread* data_former_thread;
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    //Position variables:
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
@@ -185,9 +205,13 @@ protected:
    sigc::connection sigrulerend;
  
    //Methods:
+   void InitGLDraw();
+   void EndGLDraw();
+   void DrawGLToCard();
+   void FlushGLToScreen();
  
    //Drawing:
-   bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
+   /*bool*/void mainimage(/*pointbucket** buckets,int numbuckets,int detail*/);//Draw the main image
    bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
    bool drawbuckets(pointbucket** buckets,int numbuckets);
  
