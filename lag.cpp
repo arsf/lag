@@ -23,7 +23,7 @@ bool drawwhentoggled = true;
 
 quadtree* lidardata = NULL;//The flightlines are stored here.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
-int cachelimit = 50000000;//How many points to hold in cache. 1 GB ~= 50000000 points.
+int cachelimit = 25000000;//How many points to hold in cache. 1 GB ~= 50000000 points.
 TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
 string exename = "";//The path of the executable.
@@ -788,7 +788,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.02.02.1" << endl;
+   cout << "Build number: 2010.02.19.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

@@ -140,11 +140,14 @@ protected:
    bool drawing_to_GL;
    bool initialising_GL_draw;
    bool flushing;
-   double centrexsafe,centreysafe;
+   bool extraDrawing;
+   bool threaddebug;
+//   double centrexsafe,centreysafe;
    Glib::Dispatcher signal_InitGLDraw;
    Glib::Dispatcher signal_EndGLDraw;
    Glib::Dispatcher signal_DrawGLToCard;
    Glib::Dispatcher signal_FlushGLToScreen;
+   Glib::Dispatcher signal_extraDraw;
    Glib::Thread* data_former_thread;
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    //Position variables:
@@ -205,6 +208,7 @@ protected:
    sigc::connection sigrulerend;
  
    //Methods:
+   void extraDraw();
    void InitGLDraw();
    void EndGLDraw();
    void DrawGLToCard();

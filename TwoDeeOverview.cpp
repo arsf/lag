@@ -30,6 +30,8 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    drawing_to_GL = false;
    initialising_GL_draw = false;
    flushing = false;
+   extraDrawing = false;
+   threaddebug = false;
    zoompower = 0.5;
    maindetailmod = 0.01;
    previewdetailmod = 1;
@@ -85,6 +87,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
       signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
       signal_DrawGLToCard.connect(sigc::mem_fun(*this,&TwoDeeOverview::DrawGLToCard));
       signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));
+      signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
 }
 
 TwoDeeOverview::~TwoDeeOverview(){}
@@ -115,11 +118,13 @@ void TwoDeeOverview::EndGLDraw(){
 }
 
 void TwoDeeOverview::DrawGLToCard(){
+   if(threaddebug)cout << "Boo!" << endl;
    glDrawArrays(GL_POINTS,0,pointcount);//THIS will ALSO have to be done in the main thread, I think, as it uses OpenGL. Therefore, to solve this, before telling the main loop to fix this, a variable should be set to true and, before the arrays are modified again, there should be a while(true) loop such that, until the main loop sets the variable back to false (which it will do after calling glDrawArrays(GL_POINTS,0,count)) nothing happens, and then it can replace the data in the arrays. This signal should be separate from the one for the flushing. (Basically, assume, and HOPE, that the main thread executes received signals in order (which all previous observations seem to indicate).
    drawing_to_GL = false;
 }
 
 void TwoDeeOverview::FlushGLToScreen(){
+   if(threaddebug)cout << "Lalalalalaaa!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
    else glFlush();
@@ -141,52 +146,61 @@ void TwoDeeOverview::FlushGLToScreen(){
  *
  * */
 /*bool*/void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail*/){
-   cout << "Wait?" << endl;
+   thread_running = true;
+   if(threaddebug)cout << "Wait?" << endl;
    while(thread_existsthread||thread_existsmain){usleep(100);}//If another thread still exists (i.e., in theory, it has not cleared itself up yet) then wait until it is cleared.
-   cout << "Finished waiting." << endl;
+   if(threaddebug)cout << "***Finished waiting." << endl;
    thread_existsmain = true;
    thread_existsthread = true;
-   thread_running = true;
+   double centrexsafe = centrex;
+   double centreysafe = centrey;
    int line=0,intensity=0,classification=0,rnumber=0;
    double x=0,y=0,z=0;//Point values
    double red,green,blue;//Colour values
-   cout << "First array" << endl;
+   if(threaddebug)cout << "First array" << endl;
    /*float**/ vertices = new float[3*bucketlimit];
-   cout << "Second array" << endl;
+   if(threaddebug)cout << "Second array" << endl;
    /*float**/ colours = new float[3*bucketlimit];
-   cout << "Initialise GL drawing." << endl;
+   if(threaddebug)cout << "Initialise GL drawing." << endl;
    initialising_GL_draw = true;
    signal_InitGLDraw();
    for(int i=0;i<numbuckets;i++){//For every bucket...
-      cout << "Interrupt?" << endl;
+      if(threaddebug)cout << i << " " << numbuckets << endl;
+      if(threaddebug)cout << buckets[i]->numberofpoints << endl;
+      if(threaddebug)cout << detail << endl;
+      if(threaddebug)cout << "If drawing, pause." << endl;
+      while(drawing_to_GL){usleep(10);}
+      if(threaddebug)cout << "Not drawing (anymore)." << endl;
+      if(threaddebug)cout << "Interrupt?" << endl;
       if(interruptmain||interruptthread){
-         cout << "Interrupted." << endl;
+         if(threaddebug)cout << "Interrupted." << endl;
+         if(threaddebug)cout << "Delete data array." << endl;
+         delete[] buckets;
+         if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
          thread_running = false;
-         cout << "End drawing" << endl;
+         if(threaddebug)cout << "End drawing" << endl;
          signal_EndGLDraw();
-         cout << "Delete first array." << endl;
+         if(threaddebug)cout << "Delete vertex array." << endl;
          delete[] vertices;
-         cout << "Delete second array." << endl;
+         if(threaddebug)cout << "Delete colour array." << endl;
          delete[] colours;
-         cout << "Booleans." << endl;
+         if(threaddebug)cout << "Booleans." << endl;
          interruptthread = false;
          thread_existsthread = false;
-         cout << "Finished thread!" << endl;
+         if(threaddebug)cout << "*********Finished thread!" << endl;
          return;
 //         return true;
       }
-      cout << "If drawing, pause." << endl;
-      while(drawing_to_GL){usleep(10);}
-      cout << "Not drawing (anymore)." << endl;
+      if(threaddebug)cout << "No interrupt." << endl;
       pointcount=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
       for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-//         cout << "Get coords." << endl;
+//         if(threaddebug)cout << "Get coords." << endl;
          x = buckets[i]->getpoint(j).x;
          y = buckets[i]->getpoint(j).y;
          z = buckets[i]->getpoint(j).z;
          intensity = buckets[i]->getpoint(j).intensity;
-//         cout << "Colours!" << endl;
+//         if(threaddebug)cout << "Colours!" << endl;
          if(heightcolour){//Colour by elevation.
             red = colourheightarray[3*(int)(10*(z-rminz))];
             green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -286,46 +300,67 @@ void TwoDeeOverview::FlushGLToScreen(){
          colours[3*pointcount+2]=blue;
          pointcount++;
       }
+      if(threaddebug)cout << pointcount << endl;
+      if(threaddebug)cout << vertices[3*pointcount/2] << endl;
+      if(threaddebug)cout << "Draw if not interrupted." << endl;
       if(!interruptthread&&!interruptmain){
-         cout << "Sending draw signal." << endl;
+         if(threaddebug)cout << "Sending draw signal." << endl;
+         if(threaddebug)cout << "Yes!" << endl;
          drawing_to_GL = true;
          signal_DrawGLToCard();
          //Perhaps modify to happen only when the estimated number of points exceeds a certain value? Estimation could be: numbuckets * bucketlimit / detail. Quite rough, though. This might then cause previewimage to become useless. :-)
-         if(numbuckets>10)if((i+1)%10==0){
+//         if(i>=(numbuckets-1)||numbuckets>10)if((i+1)%10==0){
             flushing = true;
-            cout << "Sending flush signal." << endl;
+            if(threaddebug)cout << "Sending flush signal." << endl;
             signal_FlushGLToScreen();
-         }
+//         }
       }
+      else if(threaddebug)cout << "Draw interrupted." << endl;
    }
-   cout << "Ending..." << endl;
+   if(threaddebug)cout << "Ending..." << endl;
+   if(threaddebug)cout << "Delete data array." << endl;
+   delete[] buckets;
+   if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
    thread_running = false;
-   cout << "End drawing" << endl;
+   if(threaddebug)cout << "End drawing" << endl;
    signal_EndGLDraw();
-   cout << "Delete first array." << endl;
+   if(threaddebug)cout << "Delete vertex array." << endl;
    delete[] vertices;
-   cout << "Delete second array." << endl;
+   if(threaddebug)cout << "Delete colour array." << endl;
    delete[] colours;
-   cout << "Booleans." << endl;
+   if(threaddebug)cout << "Booleans." << endl;
    interruptthread = false;
    thread_existsthread = false;
-   cout << "Finished thread!" << endl;
-   delete[] buckets;
+   if(threaddebug)cout << "***Finished thread!" << endl;
 //   return true;
+}
+
+void TwoDeeOverview::extraDraw(){
+   extraDrawing = false;
+   drawviewable(1);
 }
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool TwoDeeOverview::drawviewable(int imagetype){
-   if(drawing_to_GL)return true;
-   if(initialising_GL_draw)return true;
-   if(flushing)return true;
+//   if(drawing_to_GL)return true;
+//   if(initialising_GL_draw)return true;
+//   if(flushing)return true;
    interruptmain = true;
    interruptthread = true;
-   if(thread_running)cout << "Help! Am stalling!" << endl;
-   while(thread_running){usleep(100);}
-   cout << "Am fluid" << endl;
-   centrexsafe = centrex;
-   centreysafe = centrey;
+   if(thread_running)if(threaddebug)cout << "Help! Am stalling!" << endl;
+   if(thread_running||drawing_to_GL||initialising_GL_draw||flushing){
+      if(!extraDrawing){
+         extraDrawing = true;
+         signal_extraDraw();
+      }
+      return true;
+   }
+//   if(thread_running)return true;
+//   while(thread_running){usleep(100);}
+   if(threaddebug)cout << "Am fluid" << endl;
+//   centrexsafe = centrex;
+//   centreysafe = centrey;
+   if(threaddebug)cout << "Changed offsets." << endl;
    get_gl_window()->make_current(get_gl_context());
    glViewport(0, 0, get_width(), get_height());
    resetview();
@@ -355,6 +390,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       if(detail<1)detail=1;
       interruptthread = false;
       interruptmain = false;
+      thread_running = true;
       data_former_thread = Glib::Thread::create(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),false);
 //      mainimage(buckets,numbuckets,detail);
    }
