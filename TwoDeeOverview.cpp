@@ -22,8 +22,7 @@
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    pointcount = 0;
-   threaddebug = true;
-//   threaddebug = false;
+   threaddebug = false;
    zoompower = 0.5;
    maindetailmod = 0.01;
    //Limits of pixel copying for the preview:
@@ -31,10 +30,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    drawnsofarminy=0;
    drawnsofarmaxx=1;
    drawnsofarmaxy=1;
-   //Thread control:
-   thread_running = false;
    thread_existsmain = false;
-   interruptmain = false;
    thread_existsthread = false;
    interruptthread = false;
    drawing_to_GL = false;
@@ -151,7 +147,6 @@ void TwoDeeOverview::EndGLDraw(){
    glFlush();
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
-   interruptmain = false;//This tells the new thread (if there is one) that it will not have to interrupt immediately after creation.
    thread_existsmain = false;//This tells the main thread that it can now produce a new drawing thread.
 }
 //This tells the main thread to draw the main image again after all its tasks currently in its queue are complete.
@@ -199,12 +194,10 @@ void TwoDeeOverview::extraDraw(){
  *   (Thread ends).
  * */
 void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail*/){
-   thread_running = true;//The main thread will not create any more threads like this while this is true.
    if(threaddebug)cout << "Wait?" << endl;
-   while(thread_existsthread||thread_existsmain){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
+   while(thread_existsthread){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
    if(threaddebug)cout << "***Finished waiting." << endl;
-   thread_existsmain = true;//Any subsequent threads must wait until these both become false again.
-   thread_existsthread = true;//...
+   thread_existsthread = true;//Any subsequent threads must wait until this becomes false again.
    centrexsafe = centrex;//These are "safe" versions of the centre coordinates, as they will not change while this thread is running, while the originals might.
    centreysafe = centrey;//...
    int line=0,intensity=0,classification=0,rnumber=0;
@@ -231,14 +224,13 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
       while(drawing_to_GL){usleep(10);}//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
       if(threaddebug)cout << "Not drawing (anymore)." << endl;
       if(threaddebug)cout << "Interrupt?" << endl;
-      if(interruptmain||interruptthread){
+      if(interruptthread){
          if(threaddebug)cout << "Interrupted." << endl;
          if(threaddebug)cout << "Delete data array." << endl;
          delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
          if(threaddebug)cout << "End drawing" << endl;
          signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
          if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
-         thread_running = false;//The main thread may now create another thread like this.
          if(threaddebug)cout << "Delete vertex array." << endl;
          delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
          if(threaddebug)cout << "Delete colour array." << endl;
@@ -365,7 +357,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
       if(threaddebug)cout << pointcount << endl;
       if(threaddebug)cout << vertices[3*pointcount/2] << endl;
       if(threaddebug)cout << "Draw if not interrupted." << endl;
-      if(!interruptthread&&!interruptmain){
+      if(!interruptthread){
          if(threaddebug)cout << "Sending draw signal." << endl;
          if(threaddebug)cout << "Yes!" << endl;
          drawing_to_GL = true;//Main thread must not attempt to create a new thread like this while this is waiting for a draw to the framebuffer.
@@ -383,7 +375,6 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
    if(threaddebug)cout << "Delete data array." << endl;
    delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
    if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
-   thread_running = false;//The main thread may now create another thread like this.
    if(threaddebug)cout << "End drawing" << endl;
    signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
    if(threaddebug)cout << "Delete vertex array." << endl;
@@ -482,14 +473,13 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
 bool TwoDeeOverview::drawviewable(int imagetype){
-   interruptmain = true;//These cause any existing drawing thread to stop.
-   interruptthread = true;//...
+   interruptthread = true;//This causes any existing drawing thread to stop.
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application.
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...
    if(imagetype==1){//Draw the main image.
-      if(thread_running)if(threaddebug)cout << "Help! Am stalling!" << endl;
-      if(thread_running||drawing_to_GL||initialising_GL_draw||flushing){//If any of these conditions are true and a new thread is created now, deadlock is possible.
+      if(thread_existsmain||thread_existsthread)if(threaddebug)cout << "Help! Am stalling!" << endl;
+      if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
          if(!extraDrawing){//If not ding so already, prepare to draw again after the interrupt.
             extraDrawing = true;
             signal_extraDraw();
@@ -521,8 +511,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       detail=(int)(numbuckets*maindetailmod);//...
       if(detail<1)detail=1;//...
       interruptthread = false;//New threads should not be immediately interrupted.
-      interruptmain = false;//...
-      thread_running = true;//No more threads should be made for now.
+      thread_existsmain = true;//No more threads should be made for now.
       data_former_thread = Glib::Thread::create(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),false);//This thread will interpret the data before telling the main thread to draw.
       delete pointvector;
    }

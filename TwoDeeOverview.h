@@ -132,11 +132,9 @@ protected:
    int pointcount;//The number of points being drawn from the current bucket.
    float* vertices;//This contains the coordinates of all the points in the current bucket.
    float* colours;//This contains the RGB components of the colours of all the points in the current bucket.
-   bool interruptmain;//This indicates whether to interrupt the current drawing thread.
    bool thread_existsmain;//This indicates whether a drawing thread currently exists.
    bool interruptthread;//This indicates whether to interrupt the current drawing thread.
    bool thread_existsthread;//This indicates whether a drawing thread currently exists.
-   bool thread_running;//This indicates whether, specifically, parts of the drawing thread are running which will/might send signals back to the main thread.
    bool drawing_to_GL;//This indicates whether the main thread is/should/will be busy drawing the contents of the arrays vertices and colours to the framebuffer. If so, the drawing thread should pause.
    bool initialising_GL_draw;//This indicates whether the main thread is/should/will be busy setting up OpenGL for drawing. If so, the drawing thread should pause.
    bool flushing;//This indicates whether the main thread is/should/will be busy flushing the contents of the framebuffer to the screen.
