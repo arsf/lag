@@ -22,7 +22,8 @@
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    pointcount = 0;
-   threaddebug = false;
+   threaddebug = true;
+//   threaddebug = false;
    zoompower = 0.5;
    maindetailmod = 0.01;
    //Limits of pixel copying for the preview:
@@ -235,7 +236,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
          if(threaddebug)cout << "Delete data array." << endl;
          delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
          if(threaddebug)cout << "End drawing" << endl;
-//         signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
+         signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
          if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
          thread_running = false;//The main thread may now create another thread like this.
          if(threaddebug)cout << "Delete vertex array." << endl;
@@ -381,10 +382,10 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
    if(threaddebug)cout << "Ending..." << endl;
    if(threaddebug)cout << "Delete data array." << endl;
    delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
-   if(threaddebug)cout << "End drawing" << endl;
-   signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
    if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
    thread_running = false;//The main thread may now create another thread like this.
+   if(threaddebug)cout << "End drawing" << endl;
+   signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
    if(threaddebug)cout << "Delete vertex array." << endl;
    delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
    if(threaddebug)cout << "Delete colour array." << endl;
