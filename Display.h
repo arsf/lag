@@ -31,7 +31,6 @@ public:
    void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
-   void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
    void setskipNonC(bool skipNonC){this->skipNonC = skipNonC;}
    void setskipGround(bool skipGround){this->skipGround = skipGround;}
    void setskipLowVeg(bool skipLowVeg){this->skipLowVeg = skipLowVeg;}
@@ -49,7 +48,7 @@ protected:
    //Point data and related stuff:
    quadtree* lidardata;//The point data is stored here.
    int bucketlimit;//This is the maximum number of points a single bucket can contain.
-   double maindetailmod,previewdetailmod;//These modify the amount of points skipped for each point not, when drawing. Lower is means more detail, higher means less.
+   double maindetailmod;//This modifies the amount of points skipped for each point in the main image, when drawing. Lower is means more detail, higher means less.
    double pointsize;//The diameter of the points in pixels.
 
    //Position variables:
@@ -89,8 +88,6 @@ protected:
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().
    bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.
-//   virtual bool mainimage(pointbucket** buckets,int numbuckets,int detail) = 0;//Draw the main image
-   virtual bool previewimage(pointbucket** buckets,int numbuckets,int detail) = 0;//Draw the preview (for panning etc.).
  
    //Colouring and shading:
    void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);//Colours by a numeric variable.

@@ -58,7 +58,6 @@ Gtk::ToggleToolButton *profiletoggle = NULL;//Toggle button determining whether 
 Gtk::SpinButton *profwidthselect = NULL;//Determines the width of the profile in metres.
 Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in the overview in pixels.
 Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
-Gtk::SpinButton *previewdetailselect = NULL;//Determines how many points are skipped displaying the overview preview.
 Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
    //Advanced viewing options for the overview:
    Gtk::CheckButton *classcheckbutton0 = NULL;//Elevate classifications with the respective codes:
@@ -332,11 +331,11 @@ void on_fencetoggle(){
       if(profiletoggle->get_active())profiletoggle->set_active(false);
       if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupfence();
-      if(tdo->is_realized())tdo->drawviewable(1);
+      if(tdo->is_realized())tdo->drawviewable(2);
    }
    else{
    	tdo->unsetupfence();
-      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -347,7 +346,7 @@ void on_profiletoggle(){
       if(fencetoggle->get_active())fencetoggle->set_active(false);
       if(rulertoggleover->get_active())rulertoggleover->set_active(false);
       tdo->setupprofile();
-      if(tdo->is_realized())tdo->drawviewable(1);
+      if(tdo->is_realized())tdo->drawviewable(2);
    }
    else{
    	tdo->unsetupprofile();
@@ -355,7 +354,7 @@ void on_profiletoggle(){
       double startx,starty,endx,endy,width;
       tdo->getprofile(startx,starty,endx,endy,width);
       prof->showprofile(startx,starty,endx,endy,width);
-      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -366,11 +365,11 @@ void on_rulertoggleover(){
       if(fencetoggle->get_active())fencetoggle->set_active(false);
       if(profiletoggle->get_active())profiletoggle->set_active(false);
       tdo->setupruler();
-      if(tdo->is_realized())tdo->drawviewable(1);
+      if(tdo->is_realized())tdo->drawviewable(2);
    }
    else{
       tdo->unsetupruler();
-      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(1);
+      if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -378,7 +377,7 @@ void on_rulertoggleover(){
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
 void on_showprofilecheck(){
    tdo->setshowprofile(showprofilecheck->get_active());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -396,7 +395,7 @@ void on_profwidthselected(){
 //This changes the width of the points in pixels.
 void on_pointwidthselected(){
    tdo->setpointwidth(pointwidthselect->get_value());
-   if(tdo->is_realized())tdo->drawviewable(2);
+   if(tdo->is_realized())tdo->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -404,13 +403,6 @@ void on_pointwidthselected(){
 void on_maindetailselected(){
    tdo->setmaindetail(maindetailselect->get_value());
    if(tdo->is_realized())tdo->drawviewable(1);
-   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
-}
-
-//This indirectly determines how many points are skipped when viewing the overview preview. I.e. this affects it as well as the number of visible buckets.
-void on_previewdetailselected(){
-   tdo->setpreviewdetail(previewdetailselect->get_value());
-   if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
@@ -514,6 +506,7 @@ void on_classcheckbuttonA_toggled(){ tdo->setheightenUndefined(classcheckbuttonA
 
 //Sets up the GUI.
 int GUIset(int argc,char *argv[]){
+   Glib::thread_init();
    Gtk::Main gtkmain(argc, argv);
    Glib::RefPtr<Gnome::Glade::Xml> refXml;
    try{//Takes the path the executable was called with and uses it to find the .glade file needed to make the GUI.
@@ -609,12 +602,6 @@ int GUIset(int argc,char *argv[]){
                maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
                maindetailselect->set_value(0.01);
                maindetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselected));
-            }
-            refXml->get_widget("previewdetailselect",previewdetailselect);
-            if(previewdetailselect){
-               previewdetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-               previewdetailselect->set_value(1);
-               previewdetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselected));
             }
             refXml->get_widget("returnbutton",returnbutton);
             if(returnbutton)returnbutton->signal_clicked().connect(sigc::ptr_fun(&on_returnbutton_clicked));
@@ -750,7 +737,6 @@ int GUIset(int argc,char *argv[]){
       tdo->setprofwidth(profwidthselect->get_value());
       tdo->setpointwidth(pointwidthselect->get_value());
       tdo->setmaindetail(maindetailselect->get_value());
-      tdo->setpreviewdetail(previewdetailselect->get_value());
       Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
       glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
       if (glconfig2==NULL){
@@ -778,7 +764,6 @@ int GUIset(int argc,char *argv[]){
       prof->setdrawmovingaverage(lineshowtoggle->get_active());
       prof->setmavrgrange(movingaveragerangeselect->get_value());
       testfilename(argc,argv,true,false);//In case of command-line commands.
-      Glib::thread_init();
       gtkmain.run(*window2);
    } else {
       std::cerr << "eep, no main window?" << std::endl;

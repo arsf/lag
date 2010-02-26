@@ -47,7 +47,9 @@ public:
    void setdrawpoints(bool drawpoints){this->drawpoints=drawpoints;}
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
+   void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
 protected:
+   double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower is means more detail, higher means less.
    double minplanx,minplany;
    vector<int> flightlinestot;
    vector<point>* flightlinepoints;
