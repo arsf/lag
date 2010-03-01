@@ -19,25 +19,20 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
-   flightlinepoints = new vector<point>[1];
    viewerz = 0;
-   zoompower = 0.7;
-   imageexists=false;
-   maindetailmod = 0;
-   previewdetailmod = 0.3;
-   drawpoints = true;
-   drawmovingaverage = false;
-   mavrgrange = 5;
    startx = 0;
    starty = 0;
-   buckets = new pointbucket*[2];
-   correctpointsbuckets = new bool*[2];
-   correctpointsbuckets[0] = new bool[2];
-   correctpointsbuckets[1] = new bool[2];
-   numbuckets = 2;
-   linezsize=1;
-   linez = new double*[linezsize];
-   linez[0] = new double[1];
+   //Initialisation:
+   flightlinepoints = NULL;
+   linez = NULL;
+   //Drawing control:
+   zoompower = 0.7;
+   imageexists=false;
+   drawpoints = true;
+   drawmovingaverage = false;
+   maindetailmod = 0;
+   previewdetailmod = 0.3;
+   mavrgrange = 5;
    //Rulering:
    rulering=false;
    rulerwidth=2;
@@ -58,15 +53,16 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
 
 Profile::~Profile(){}
 
+//This is called by a "reset button". It returns the view to the initial one. It sets the centre of the screen to the centre of the profile (average in the case of Z) and then sets the viewer position and the ratio of world coordinates to window coordinates before resetting the view and then drawing.
 bool Profile::returntostart(){
-   centrex = (startx + endx)/2;
-   centrey = (starty + endy)/2;
+   centrex = (startx + endx)/2;//This way, all of the profile should be on-screen.
+   centrey = (starty + endy)/2;//...
    centrez=0;
-   for(int i=0;i<(int)flightlinestot.size();i++){
+   for(int i=0;i<(int)flightlinestot.size();i++){//Totalling z...
       centrez+=flightlinepoints[i][0].z;
       centrez+=flightlinepoints[i][flightlinepoints[i].size()-1].z;
    }
-   centrez/=(2*flightlinestot.size());
+   centrez/=(2*flightlinestot.size());//Dividing to get average.
    zoomlevel=1;
    double breadth = endx - startx;
    double height = endy - starty;
@@ -78,7 +74,7 @@ bool Profile::returntostart(){
    resetview();
    return drawviewable(1);
 }
-
+//FIX THIS COMMENT!
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile and then draws them by calling drawviewable(1).
 bool Profile::showprofile(double startx,double starty,double endx,double endy,double width){
    this->startx = startx;
@@ -86,9 +82,6 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
    this->endx = endx;
    this->endy = endy;
    this->width = width;
-   for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
-   delete[] correctpointsbuckets;
-//   delete[] buckets;
    vector<pointbucket*> *pointvector;
    try{
       pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
@@ -99,42 +92,43 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
       imageexists=false;
       return false;
    }
-   numbuckets = pointvector->size();
-   buckets = &(*pointvector)[0];
-//   buckets = new pointbucket*[numbuckets];
+   int numbuckets = pointvector->size();
    flightlinestot.clear();
-   correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
+   bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-//      buckets[i]=pointvector->at(i);
-      correctpointsbuckets[i] = vetpoints(buckets[i],startx,starty,endx,endy,width);
-      for(int j=0;j<buckets[i]->numberofpoints;j++){
-         if(correctpointsbuckets[i][j]){
-            if(find(flightlinestot.begin(),flightlinestot.end(),buckets[i]->getpoint(j).flightline)==flightlinestot.end()){
-               flightlinestot.push_back(buckets[i]->getpoint(j).flightline);
+      correctpointsbuckets[i] = vetpoints((*pointvector)[i],startx,starty,endx,endy,width);
+      for(int j=0;j<(*pointvector)[i]->numberofpoints;j++){
+         if(correctpointsbuckets[i][j]){//This gets from all the points their flightline numbers and compiles a list of all the flightlines in the profile.
+            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j).flightline)==flightlinestot.end()){
+               flightlinestot.push_back((*pointvector)[i]->getpoint(j).flightline);
             }
          }
       }
    }
-   delete[] flightlinepoints;
+   if(flightlinepoints!=NULL)delete[] flightlinepoints;
    flightlinepoints = new vector<point>[flightlinestot.size()];
+   totnumpoints = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
       for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
-         for(int k=0;k<buckets[j]->numberofpoints;k++){//Possibly: do k+=detail instead, and copy to preview. Might not be "correct" though.
+         for(int k=0;k<(*pointvector)[j]->numberofpoints;k++){
             if(correctpointsbuckets[j][k]){
-               if(buckets[j]->getpoint(k).flightline == flightlinestot[i]){
-                  flightlinepoints[i].push_back(buckets[j]->getpoint(k));
+               if((*pointvector)[j]->getpoint(k).flightline == flightlinestot[i]){
+                  flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k));
+                  totnumpoints++;
                }
             }
          }
       }
-      minplanx = startx;
-      minplany = starty;
+      minplanx = startx;//These are the initial values, as the initial position of the viewing area will be defiend by the start and end coordinates of the profile.
+      minplany = starty;//...
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
    }
    make_moving_average();
    glViewport(0, 0, get_width(), get_height());
    get_gl_window()->make_current(get_gl_context());
    delete pointvector;
+   for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
+   delete[] correctpointsbuckets;
    if(is_realized())return returntostart();
    else return false;
 }
@@ -161,15 +155,6 @@ void Profile::resetview(){
    gluLookAt(viewerx,viewery,viewerz,
              0,0,0,
              0,0,1);
-//   GLint viewport[4];
-//   glGetIntegerv(GL_VIEWPORT,viewport);
-//   GLdouble modelview[16];
-//   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
-//   GLdouble projection[16];
-//   glGetDoublev(GL_PROJECTION_MATRIX,projection);
-//   GLdouble z=0,zs=0,y=0;
-//   gluUnProject(0,y,z,modelview,projection,viewport,&leftboundx,&leftboundy,&zs);
-//   gluUnProject(get_width(),y,z,modelview,projection,viewport,&rightboundx,&rightboundy,&zs);
 }
 
 int Profile::get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last){
@@ -186,54 +171,6 @@ int Profile::get_closest_element_position(point* value,vector<point>::iterator f
 
 //Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool Profile::drawviewable(int imagetype){
-//   double breadth = endx - startx;
-//   double height = endy - starty;
-//   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-//   double hypotenuse,length2;
-//   double starcenx = centrex - startx;
-//   double starceny = centrey - starty;
-//   double endcenx = endx - centrex;
-//   double endceny = endy - centrey;
-//   if(starcenx*breadth<0)starcenx=0;
-//   if(starceny*breadth<0)starceny=0;
-//   if(endcenx*breadth<0)endcenx=0;
-//   if(endceny*breadth<0)endceny=0;
-//   cout << "See1:" << endl;
-//   cout << starcenx << endl;
-//   cout << starceny << endl;
-//   cout << endcenx << endl;
-//   cout << endceny << endl;
-//   hypotenuse = (get_width()/2)*ratio/zoomlevel;
-//   length2 = sqrt((starcenx)*(starcenx) + (starceny)*(starceny));
-//   if(hypotenuse>=length2)hypotenuse = length2;
-//   double vstartx = centrex - hypotenuse * breadth / length;
-//   double vstarty = centrey - hypotenuse * height / length;
-//   hypotenuse = (get_width()/2)*ratio/zoomlevel;
-//   length2 = sqrt((endcenx)*(endcenx) + (endceny)*(endceny));
-//   if(hypotenuse>=length2)hypotenuse = length2;
-//   double vendx = centrex + hypotenuse * breadth / length;
-//   double vendy = centrey + hypotenuse * height / length;
-//   for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
-//   delete[] correctpointsbuckets;
-//   delete[] buckets;
-//   vector<pointbucket*> *pointvector;
-//   try{
-//      pointvector = lidardata->advsubset(vstartx,vstarty,vendx,vendy,width);//Get data.
-//      imageexists=true;
-//   }catch(const char* e){
-//      cout << e << endl;
-//      cout << "No points returned." << endl;
-//      imageexists=false;
-//      return false;
-//   }
-//   numbuckets = pointvector->size();
-//   buckets = new pointbucket*[numbuckets];
-//   correctpointsbuckets = new bool*[numbuckets];//Determines whether points are in the profile and, therefore, whether they are drawn.
-//   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-//      buckets[i]=pointvector->at(i);
-//      correctpointsbuckets[i] = vetpoints(buckets[i]->numberofpoints,buckets[i]->points,vstartx,vstarty,vendx,vendy,width);
-//   }
-//   delete pointvector;
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
@@ -247,15 +184,14 @@ bool Profile::drawviewable(int imagetype){
   resetview();
    int detail=1;//This determines how many points are skipped between reads.
    if(imagetype==1){
-      detail=(int)(numbuckets*maindetailmod);
+      detail=(int)(totnumpoints*maindetailmod/100000);
       if(detail<1)detail=1;
-      mainimage(buckets,numbuckets,detail);
-//      previewimage(buckets,numbuckets,detail);
+      mainimage(detail);
    }
    else if(imagetype==2){
-      detail=(int)(numbuckets*previewdetailmod);
+      detail=(int)(totnumpoints*previewdetailmod/100000);
       if(detail<1)detail=1;
-      previewimage(buckets,numbuckets,detail);
+      previewimage(detail);
    }
    return true;
 }
@@ -325,7 +261,6 @@ bool Profile::on_ruler(GdkEventMotion* event){
    zdist << zd;
    string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str();
    rulerlabel->set_text(rulerstring);
-//   makerulerbox();
    return drawviewable(1);
 }
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
@@ -412,10 +347,12 @@ bool Profile::linecomp(const point &a,const point &b){
 }
 
 void Profile::make_moving_average(){
-   for(int i=0;i<linezsize;i++){
-      delete[] linez[i];
+   if(linez!=NULL){
+      for(int i=0;i<linezsize;i++){
+         delete[] linez[i];
+      }
+      delete[] linez;
    }
-   delete[] linez;
    linezsize = flightlinestot.size();
    linez = new double*[linezsize];
    for(int i=0;i<linezsize;i++){
@@ -447,7 +384,7 @@ void Profile::make_moving_average(){
  *
  *
  * */
-bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
+bool Profile::mainimage(int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
@@ -463,288 +400,68 @@ bool Profile::mainimage(pointbucket** buckets,int numbuckets,int detail){
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
-   if(false/*drawpoints*/){
-      int line=0,intensity=0,classification=0,rnumber=0;
-      for(int i=0;i<numbuckets;i++){//For every bucket...
-         int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
-         for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
-            if(correctpointsbuckets[i][j]){
-               red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = buckets[i]->getpoint(j).x;
-               y = buckets[i]->getpoint(j).y;
-               z = buckets[i]->getpoint(j).z;
-               intensity = buckets[i]->getpoint(j).intensity;
-               if(heightcolour){//Colour by elevation.
-                  red = colourheightarray[3*(int)(10*(z-rminz))];
-                  green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-                  blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-               }
-               else if(intensitycolour){//Colour by intensity.
-                  red = colourintensityarray[3*(int)(intensity-rminintensity)];
-                  green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-                  blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-               }
-               else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = buckets[i]->getpoint(j).flightline;
-                   int index = line % 6;
-                   switch(index){
-                      case 0:red=0;green=1;blue=0;break;//Green
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=1;green=0;blue=0;break;//Red
-                      case 3:red=0;green=1;blue=1;break;//Cyan
-                      case 4:red=1;green=1;blue=0;break;//Yellow
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               else if(classcolour){//Colour by classification.
-                   classification = buckets[i]->getpoint(j).classification;
-                   int index = classification;
-                   switch(index){
-                      case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
-                      case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                      case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                      case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                      case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                      case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                      case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                      case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
-                      case 9:red=0;green=0;blue=1;break;//Blue for water.
-                      case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                      default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
-                   }
-               }
-               else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = buckets[i]->getpoint(j).rnumber;
-                   int index = rnumber;
-                   switch(index){
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=0;green=1;blue=1;break;//Cyan
-                      case 3:red=0;green=1;blue=0;break;//Green
-                      case 4:red=1;green=0;blue=0;break;//Red
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               if(heightbrightness){//Shade by height.
-                  red *= brightnessheightarray[(int)(z-rminz)];
-                  green *= brightnessheightarray[(int)(z-rminz)];
-                  blue *= brightnessheightarray[(int)(z-rminz)];
-               }
-               else if(intensitybrightness){//Shade by intensity.
-                  red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-               }
-               vertices[3*count]=x-centrex;
-               vertices[3*count+1]=y-centrey;
-               vertices[3*count+2]=z-centrez;
-               colours[3*count]=red;
-               colours[3*count+1]=green;
-               colours[3*count+2]=blue;
-               count++;
-            }
-         }
-         glDrawArrays(GL_POINTS,0,count);
-         if(numbuckets>90)if((i+1)%90==0){
-            if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every bucket to show user stuff is happening.
-            else glFlush();
-         }
-      }
-   }
-   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(true/*drawmovingaverage*/){
-      int line=0,intensity=0,classification=0,rnumber=0;
-      point *leftpnt = new point;
-      leftpnt->x = leftboundx + centrex;
-      leftpnt->y = leftboundy + centrey;
-      leftpnt->z = 0;
-      leftpnt->time = flightlinepoints[0][0].time;
-      leftpnt->intensity = 0;
-      leftpnt->classification = 0;
-      leftpnt->flightline = 0;
-      leftpnt->rnumber = 0;
-      point *rightpnt = new point;
-      rightpnt->x = rightboundx + centrex;
-      rightpnt->y = rightboundy + centrey;
-      rightpnt->z = 0;
-      rightpnt->time = flightlinepoints[0][0].time;
-      rightpnt->intensity = 0;
-      rightpnt->classification = 0;
-      rightpnt->flightline = 0;
-      rightpnt->rnumber = 0;
-      for(int i=0;i<(int)flightlinestot.size();i++){
-         double tempx = minplanx,tempy= minplany;
-         minplanx = startx + leftboundx;
-         minplany = starty + leftboundy;
-         int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-         int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-         minplanx = tempx;
-         minplany = tempy;
-         if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
+   int line=0,intensity=0,classification=0,rnumber=0;
+   point *leftpnt = new point;
+   leftpnt->x = leftboundx + centrex;
+   leftpnt->y = leftboundy + centrey;
+   leftpnt->z = 0;
+   leftpnt->time = flightlinepoints[0][0].time;
+   leftpnt->intensity = 0;
+   leftpnt->classification = 0;
+   leftpnt->flightline = 0;
+   leftpnt->rnumber = 0;
+   point *rightpnt = new point;
+   rightpnt->x = rightboundx + centrex;
+   rightpnt->y = rightboundy + centrey;
+   rightpnt->z = 0;
+   rightpnt->time = flightlinepoints[0][0].time;
+   rightpnt->intensity = 0;
+   rightpnt->classification = 0;
+   rightpnt->flightline = 0;
+   rightpnt->rnumber = 0;
+   for(int i=0;i<(int)flightlinestot.size();i++){
+//      double tempx = minplanx,tempy= minplany;
+      minplanx = startx + leftboundx;
+      minplany = starty + leftboundy;
+      int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
+      int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
+//      minplanx = tempx;
+//      minplany = tempy;
+      for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
 //         if(endindex < flightlinepoints[i].size()-1)endindex++;
-         int count = 0;
-         if(drawmovingaverage){
-            int index = flightlinestot.at(i) % 6;
-            switch(index){
-               case 0:red=0;green=1;blue=0;break;//Green
-               case 1:red=0;green=0;blue=1;break;//Blue
-               case 2:red=1;green=0;blue=0;break;//Red
-               case 3:red=0;green=1;blue=1;break;//Cyan
-               case 4:red=1;green=1;blue=0;break;//Yellow
-               case 5:red=1;green=0;blue=1;break;//Purple
-               default:red=green=blue=1;break;//White in the event of strangeness.
-            }
-            for(int j=startindex;j<=endindex;j++){
-               x = flightlinepoints[i][j].x;
-               y = flightlinepoints[i][j].y;
-               vertices[3*count]=x-centrex;
-               vertices[3*count+1]=y-centrey;
-               vertices[3*count+2]=linez[i][j]-centrez;
-               colours[3*count]=red;
-               colours[3*count+1]=green;
-               colours[3*count+2]=blue;
-               count++;
-            }
-            glDrawArrays(GL_LINE_STRIP,0,count);
+      int count = 0;
+      if(drawmovingaverage){
+         int index = flightlinestot.at(i) % 6;
+         switch(index){
+            case 0:red=0;green=1;blue=0;break;//Green
+            case 1:red=0;green=0;blue=1;break;//Blue
+            case 2:red=1;green=0;blue=0;break;//Red
+            case 3:red=0;green=1;blue=1;break;//Cyan
+            case 4:red=1;green=1;blue=0;break;//Yellow
+            case 5:red=1;green=0;blue=1;break;//Purple
+            default:red=green=blue=1;break;//White in the event of strangeness.
          }
-         count = 0;
-         if(drawpoints){
-            for(int j=startindex;j<=endindex;j++){
-               red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = flightlinepoints[i][j].x;
-               y = flightlinepoints[i][j].y;
-               z = flightlinepoints[i][j].z;
-               intensity = flightlinepoints[i][j].intensity;
-               if(heightcolour){//Colour by elevation.
-                  red = colourheightarray[3*(int)(10*(z-rminz))];
-                  green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-                  blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-               }
-               else if(intensitycolour){//Colour by intensity.
-                  red = colourintensityarray[3*(int)(intensity-rminintensity)];
-                  green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-                  blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-               }
-               else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = flightlinepoints[i][j].flightline;
-                   int index = line % 6;
-                   switch(index){
-                      case 0:red=0;green=1;blue=0;break;//Green
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=1;green=0;blue=0;break;//Red
-                      case 3:red=0;green=1;blue=1;break;//Cyan
-                      case 4:red=1;green=1;blue=0;break;//Yellow
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               else if(classcolour){//Colour by classification.
-                   classification = flightlinepoints[i][j].classification;
-                   int index = classification;
-                   switch(index){
-                      case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
-                      case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                      case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                      case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                      case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                      case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                      case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                      case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
-                      case 9:red=0;green=0;blue=1;break;//Blue for water.
-                      case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                      default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
-                   }
-               }
-               else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = flightlinepoints[i][j].rnumber;
-                   int index = rnumber;
-                   switch(index){
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=0;green=1;blue=1;break;//Cyan
-                      case 3:red=0;green=1;blue=0;break;//Green
-                      case 4:red=1;green=0;blue=0;break;//Red
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               if(heightbrightness){//Shade by height.
-                  red *= brightnessheightarray[(int)(z-rminz)];
-                  green *= brightnessheightarray[(int)(z-rminz)];
-                  blue *= brightnessheightarray[(int)(z-rminz)];
-               }
-               else if(intensitybrightness){//Shade by intensity.
-                  red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-               }
-               vertices[3*count]=x-centrex;
-               vertices[3*count+1]=y-centrey;
-               vertices[3*count+2]=z-centrez;
-               colours[3*count]=red;
-               colours[3*count+1]=green;
-               colours[3*count+2]=blue;
-               count++;
-            }
-            glDrawArrays(GL_POINTS,0,count);
+         for(int j=startindex;j<=endindex;j++){
+            x = flightlinepoints[i][j].x;
+            y = flightlinepoints[i][j].y;
+            vertices[3*count]=x-centrex;
+            vertices[3*count+1]=y-centrey;
+            vertices[3*count+2]=linez[i][j]-centrez;
+            colours[3*count]=red;
+            colours[3*count+1]=green;
+            colours[3*count+2]=blue;
+            count++;
          }
+         glDrawArrays(GL_LINE_STRIP,0,count);
       }
-      delete leftpnt;
-      delete rightpnt;
-   }
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
-   glDisableClientState(GL_VERTEX_ARRAY);
-   glDisableClientState(GL_COLOR_ARRAY);
-   glwindow->gl_end();
-   delete[] vertices;
-   delete[] colours;
-   return true;
-}
-
-//NOTE: This method is almost identical to the mainimage method. Only two lines are different, and could easily be replace with an if statement. The methods are kept separate as this one might change in the future to make it faster and/or more detailed.
-/*This method draws the preview used in panning etc.. Basically, if something must be drawn quickly, this method is used. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
- *
- *   for every bucket:
- *      for every point:
- *         determine colour and brightness of point
- *         place point
- *      end for
- *   end for
- *   draw all points
- *
- *Then the profiling box is drawn if it exists.
- *
- *
- * */
-bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   double red,green,blue;
-   double x=0,y=0,z=0;
-   int line=0,intensity=0,classification,rnumber;
-   int limit = bucketlimit;
-   for(int i=0;i<(int)flightlinestot.size();i++){
-      if((int)flightlinepoints[i].size()>limit)limit = (int)flightlinepoints[i].size();
-   }
-   float* vertices = new float[3*limit];//Needed for the glDrawArrays() call further down.
-   float* colours = new float[3*limit];//...
-   glEnableClientState(GL_VERTEX_ARRAY);//...
-   glEnableClientState(GL_COLOR_ARRAY);//...
-   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-   glColorPointer(3, GL_FLOAT, 0, colours);//...
-   if(false)for(int i=0;i<numbuckets;i++){//For every bucket...
-      int count=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
-      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
-         if(correctpointsbuckets[i][j]){
+      count = 0;
+      if(drawpoints){
+         for(int j=startindex;j<=endindex;j++){
             red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-            x = buckets[i]->getpoint(j).x;
-            y = buckets[i]->getpoint(j).y;
-            z = buckets[i]->getpoint(j).z;
-            intensity = buckets[i]->getpoint(j).intensity;
+            x = flightlinepoints[i][j].x;
+            y = flightlinepoints[i][j].y;
+            z = flightlinepoints[i][j].z;
+            intensity = flightlinepoints[i][j].intensity;
             if(heightcolour){//Colour by elevation.
                red = colourheightarray[3*(int)(10*(z-rminz))];
                green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -756,7 +473,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
             }
             else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                line = buckets[i]->getpoint(j).flightline;
+                line = flightlinepoints[i][j].flightline;
                 int index = line % 6;
                 switch(index){
                    case 0:red=0;green=1;blue=0;break;//Green
@@ -769,7 +486,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                 }
             }
             else if(classcolour){//Colour by classification.
-                classification = buckets[i]->getpoint(j).classification;
+                classification = flightlinepoints[i][j].classification;
                 int index = classification;
                 switch(index){
                    case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
@@ -787,7 +504,7 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                rnumber = buckets[i]->getpoint(j).rnumber;
+                rnumber = flightlinepoints[i][j].rnumber;
                 int index = rnumber;
                 switch(index){
                    case 1:red=0;green=0;blue=1;break;//Blue
@@ -816,149 +533,190 @@ bool Profile::previewimage(pointbucket** buckets,int numbuckets,int detail){
             colours[3*count+2]=blue;
             count++;
          }
+         glDrawArrays(GL_POINTS,0,count);
       }
-      glDrawArrays(GL_POINTS,0,count);
    }
-   if(true/*drawmovingaverage*/){
-      int line=0,intensity=0,classification=0,rnumber=0;
-      point *leftpnt = new point;
-      leftpnt->x = leftboundx + centrex;
-      leftpnt->y = leftboundy + centrey;
-      leftpnt->z = 0;
-      leftpnt->time = flightlinepoints[0][0].time;
-      leftpnt->intensity = 0;
-      leftpnt->classification = 0;
-      leftpnt->flightline = 0;
-      leftpnt->rnumber = 0;
-      point *rightpnt = new point;
-      rightpnt->x = rightboundx + centrex;
-      rightpnt->y = rightboundy + centrey;
-      rightpnt->z = 0;
-      rightpnt->time = flightlinepoints[0][0].time;
-      rightpnt->intensity = 0;
-      rightpnt->classification = 0;
-      rightpnt->flightline = 0;
-      rightpnt->rnumber = 0;
-      for(unsigned int i=0;i<flightlinestot.size();i++){
-         double tempx = minplanx,tempy= minplany;
-         minplanx = startx + leftboundx;
-         minplany = starty + leftboundy;
-         int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-         int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-         minplanx = tempx;
-         minplany = tempy;
-         if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
-//         if(endindex < flightlinepoints[i].size()-1)endindex++;
-         int count = 0;
-         if(drawmovingaverage){
-            int index = flightlinestot.at(i) % 6;
-            switch(index){
-               case 0:red=0;green=1;blue=0;break;//Green
-               case 1:red=0;green=0;blue=1;break;//Blue
-               case 2:red=1;green=0;blue=0;break;//Red
-               case 3:red=0;green=1;blue=1;break;//Cyan
-               case 4:red=1;green=1;blue=0;break;//Yellow
-               case 5:red=1;green=0;blue=1;break;//Purple
-               default:red=green=blue=1;break;//White in the event of strangeness.
-            }
-            for(int j=startindex;j<=endindex;j+=detail){
-               x = flightlinepoints[i][j].x;
-               y = flightlinepoints[i][j].y;
-               vertices[3*count]=x-centrex;
-               vertices[3*count+1]=y-centrey;
-               vertices[3*count+2]=linez[i][j]-centrez;
-               colours[3*count]=red;
-               colours[3*count+1]=green;
-               colours[3*count+2]=blue;
-               count++;
-            }
-            glDrawArrays(GL_LINE_STRIP,0,count);
-         }
-         count = 0;
-         if(drawpoints){
-            for(int j=startindex;j<=endindex;j+=detail){
-               red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-               x = flightlinepoints[i][j].x;
-               y = flightlinepoints[i][j].y;
-               z = flightlinepoints[i][j].z;
-               intensity = flightlinepoints[i][j].intensity;
-               if(heightcolour){//Colour by elevation.
-                  red = colourheightarray[3*(int)(10*(z-rminz))];
-                  green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-                  blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-               }
-               else if(intensitycolour){//Colour by intensity.
-                  red = colourintensityarray[3*(int)(intensity-rminintensity)];
-                  green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-                  blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-               }
-               else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                   line = flightlinepoints[i][j].flightline;
-                   int index = line % 6;
-                   switch(index){
-                      case 0:red=0;green=1;blue=0;break;//Green
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=1;green=0;blue=0;break;//Red
-                      case 3:red=0;green=1;blue=1;break;//Cyan
-                      case 4:red=1;green=1;blue=0;break;//Yellow
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               else if(classcolour){//Colour by classification.
-                   classification = flightlinepoints[i][j].classification;
-                   int index = classification;
-                   switch(index){
-                      case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
-                      case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                      case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                      case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                      case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                      case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                      case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                      case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+   delete leftpnt;
+   delete rightpnt;
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glDisableClientState(GL_VERTEX_ARRAY);
+   glDisableClientState(GL_COLOR_ARRAY);
+   glwindow->gl_end();
+   delete[] vertices;
+   delete[] colours;
+   return true;
+}
 
-                      case 9:red=0;green=0;blue=1;break;//Blue for water.
-                      case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                      default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
-                   }
-               }
-               else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                   rnumber = flightlinepoints[i][j].rnumber;
-                   int index = rnumber;
-                   switch(index){
-                      case 1:red=0;green=0;blue=1;break;//Blue
-                      case 2:red=0;green=1;blue=1;break;//Cyan
-                      case 3:red=0;green=1;blue=0;break;//Green
-                      case 4:red=1;green=0;blue=0;break;//Red
-                      case 5:red=1;green=0;blue=1;break;//Purple
-                      default:red=green=blue=1;break;//White in the event of strangeness.
-                   }
-               }
-               if(heightbrightness){//Shade by height.
-                  red *= brightnessheightarray[(int)(z-rminz)];
-                  green *= brightnessheightarray[(int)(z-rminz)];
-                  blue *= brightnessheightarray[(int)(z-rminz)];
-               }
-               else if(intensitybrightness){//Shade by intensity.
-                  red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-                  blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-               }
-               vertices[3*count]=x-centrex;
-               vertices[3*count+1]=y-centrey;
-               vertices[3*count+2]=z-centrez;
-               colours[3*count]=red;
-               colours[3*count+1]=green;
-               colours[3*count+2]=blue;
-               count++;
-            }
-            glDrawArrays(GL_POINTS,0,count);
-         }
-      }
-      delete leftpnt;
-      delete rightpnt;
+//NOTE: This method is almost identical to the mainimage method. Only two lines are different, and could easily be replace with an if statement. The methods are kept separate as this one might change in the future to make it faster and/or more detailed.
+/*This method draws the preview used in panning etc.. Basically, if something must be drawn quickly, this method is used. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
+ *
+ *   for every bucket:
+ *      for every point:
+ *         determine colour and brightness of point
+ *         place point
+ *      end for
+ *   end for
+ *   draw all points
+ *
+ *Then the profiling box is drawn if it exists.
+ *
+ *
+ * */
+bool Profile::previewimage(int detail){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
+   double red,green,blue;
+   double x=0,y=0,z=0;
+   int line=0,intensity=0,classification=0,rnumber=0;
+   int limit = bucketlimit;
+   for(int i=0;i<(int)flightlinestot.size();i++){
+      if((int)flightlinepoints[i].size()>limit)limit = (int)flightlinepoints[i].size();
    }
+   float* vertices = new float[3*limit];//Needed for the glDrawArrays() call further down.
+   float* colours = new float[3*limit];//...
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   point *leftpnt = new point;
+   leftpnt->x = leftboundx + centrex;
+   leftpnt->y = leftboundy + centrey;
+   leftpnt->z = 0;
+   leftpnt->time = flightlinepoints[0][0].time;
+   leftpnt->intensity = 0;
+   leftpnt->classification = 0;
+   leftpnt->flightline = 0;
+   leftpnt->rnumber = 0;
+   point *rightpnt = new point;
+   rightpnt->x = rightboundx + centrex;
+   rightpnt->y = rightboundy + centrey;
+   rightpnt->z = 0;
+   rightpnt->time = flightlinepoints[0][0].time;
+   rightpnt->intensity = 0;
+   rightpnt->classification = 0;
+   rightpnt->flightline = 0;
+   rightpnt->rnumber = 0;
+   for(unsigned int i=0;i<flightlinestot.size();i++){
+//      double tempx = minplanx,tempy= minplany;
+      minplanx = startx + leftboundx;
+      minplany = starty + leftboundy;
+      int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
+      int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
+//      minplanx = tempx;
+//      minplany = tempy;
+      for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
+//         if(endindex < flightlinepoints[i].size()-1)endindex++;
+      int count = 0;
+      if(drawmovingaverage){
+         int index = flightlinestot.at(i) % 6;
+         switch(index){
+            case 0:red=0;green=1;blue=0;break;//Green
+            case 1:red=0;green=0;blue=1;break;//Blue
+            case 2:red=1;green=0;blue=0;break;//Red
+            case 3:red=0;green=1;blue=1;break;//Cyan
+            case 4:red=1;green=1;blue=0;break;//Yellow
+            case 5:red=1;green=0;blue=1;break;//Purple
+            default:red=green=blue=1;break;//White in the event of strangeness.
+         }
+         for(int j=startindex;j<=endindex;j+=detail){
+            x = flightlinepoints[i][j].x;
+            y = flightlinepoints[i][j].y;
+            vertices[3*count]=x-centrex;
+            vertices[3*count+1]=y-centrey;
+            vertices[3*count+2]=linez[i][j]-centrez;
+            colours[3*count]=red;
+            colours[3*count+1]=green;
+            colours[3*count+2]=blue;
+            count++;
+         }
+         glDrawArrays(GL_LINE_STRIP,0,count);
+      }
+      count = 0;
+      if(drawpoints){
+         for(int j=startindex;j<=endindex;j+=detail){
+            red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+            x = flightlinepoints[i][j].x;
+            y = flightlinepoints[i][j].y;
+            z = flightlinepoints[i][j].z;
+            intensity = flightlinepoints[i][j].intensity;
+            if(heightcolour){//Colour by elevation.
+               red = colourheightarray[3*(int)(10*(z-rminz))];
+               green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
+               blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
+            }
+            else if(intensitycolour){//Colour by intensity.
+               red = colourintensityarray[3*(int)(intensity-rminintensity)];
+               green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
+               blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
+            }
+            else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+                line = flightlinepoints[i][j].flightline;
+                int index = line % 6;
+                switch(index){
+                   case 0:red=0;green=1;blue=0;break;//Green
+                   case 1:red=0;green=0;blue=1;break;//Blue
+                   case 2:red=1;green=0;blue=0;break;//Red
+                   case 3:red=0;green=1;blue=1;break;//Cyan
+                   case 4:red=1;green=1;blue=0;break;//Yellow
+                   case 5:red=1;green=0;blue=1;break;//Purple
+                   default:red=green=blue=1;break;//White in the event of strangeness.
+                }
+            }
+            else if(classcolour){//Colour by classification.
+                classification = flightlinepoints[i][j].classification;
+                int index = classification;
+                switch(index){
+                   case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                   case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
+                   case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
+                   case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
+                   case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
+                   case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
+                   case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
+                   case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+
+                   case 9:red=0;green=0;blue=1;break;//Blue for water.
+                   case 12:red=1;green=1;blue=1;break;//White for overlap points.
+                   default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                }
+            }
+            else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+                rnumber = flightlinepoints[i][j].rnumber;
+                int index = rnumber;
+                switch(index){
+                   case 1:red=0;green=0;blue=1;break;//Blue
+                   case 2:red=0;green=1;blue=1;break;//Cyan
+                   case 3:red=0;green=1;blue=0;break;//Green
+                   case 4:red=1;green=0;blue=0;break;//Red
+                   case 5:red=1;green=0;blue=1;break;//Purple
+                   default:red=green=blue=1;break;//White in the event of strangeness.
+                }
+            }
+            if(heightbrightness){//Shade by height.
+               red *= brightnessheightarray[(int)(z-rminz)];
+               green *= brightnessheightarray[(int)(z-rminz)];
+               blue *= brightnessheightarray[(int)(z-rminz)];
+            }
+            else if(intensitybrightness){//Shade by intensity.
+               red *= brightnessintensityarray[(int)(intensity-rminintensity)];
+               green *= brightnessintensityarray[(int)(intensity-rminintensity)];
+               blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            }
+            vertices[3*count]=x-centrex;
+            vertices[3*count+1]=y-centrey;
+            vertices[3*count+2]=z-centrez;
+            colours[3*count]=red;
+            colours[3*count+1]=green;
+            colours[3*count+2]=blue;
+            count++;
+         }
+         glDrawArrays(GL_POINTS,0,count);
+      }
+   }
+   delete leftpnt;
+   delete rightpnt;
    if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();

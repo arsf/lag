@@ -126,6 +126,8 @@ public:
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}//...
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}//...
 protected:
+   Glib::Mutex vertex_array_mutex;
+   Glib::Cond vertex_array_condition;
    pointbucket** buckets;//This is an array that contains pointers to pointbuckets. It is made from a vector.
    int numbuckets;//The number of pointbuckets in the array buckets.
    int detail;//The level of detail to draw in. Lower indicates more detail.

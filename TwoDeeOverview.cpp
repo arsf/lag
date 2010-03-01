@@ -30,6 +30,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    drawnsofarminy=0;
    drawnsofarmaxx=1;
    drawnsofarmaxy=1;
+   //Threading:
    thread_existsmain = false;
    thread_existsthread = false;
    interruptthread = false;
@@ -111,6 +112,7 @@ void TwoDeeOverview::InitGLDraw(){
 //This handler draws the contents of the arrays vertices and colours to the framebuffer. Note that the reason the OpenGL vertex array stuff is in here is because, apparently, the glDisableClientState() calls try to access the arrays, and this caused valgrind to squeal. It would make the program marginally faster to add a boolean variable "ending_GL_draw" so that EndGLDraw could end the vertex array enablement (and InitGLDraw could start it), but is it worth the global variable and the extra effort? Also, it is not certain, but it seems that since the vertex array stuff has moved here the missing bucket problem has gone, and it is also now very very difficult to make the thread cause a crash.
 void TwoDeeOverview::DrawGLToCard(){
    if(threaddebug)cout << "Boo!" << endl;
+//   vertex_array_mutex.lock();
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
    glEnableClientState(GL_VERTEX_ARRAY);//These relate to the enabling of vertex arrays and assigning the arrays to GL.
@@ -122,6 +124,8 @@ void TwoDeeOverview::DrawGLToCard(){
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
    drawing_to_GL = false;//The drawing thread running mainimage() may now continue. Also, new drawing threads may now be started.
+//   vertex_array_condition.signal();
+//   vertex_array_mutex.unlock();
 }
 //This handler exists so that flushing of the framebuffer can be done independently of drawing to it. This allows an arbitrary frequency of flushes to be easily set, to compromise between showing the user things are happening and the desire to reduce the flicker and the fact that more flushes will make drawing slower.
 void TwoDeeOverview::FlushGLToScreen(){
@@ -203,6 +207,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
    int line=0,intensity=0,classification=0,rnumber=0;
    double x=0,y=0,z=0;//Point values
    double red,green,blue;//Colour values
+//   vertex_array_mutex.lock();
    if(threaddebug)cout << "First array" << endl;
    vertices = new float[3*bucketlimit];
    if(threaddebug)cout << "Second array" << endl;
@@ -235,6 +240,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
          delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
          if(threaddebug)cout << "Delete colour array." << endl;
          delete[] colours;//...
+//         vertex_array_mutex.unlock();
          if(threaddebug)cout << "Booleans." << endl;
          interruptthread = false;//New threads like this will now not be interrupted.
          thread_existsthread = false;//New threads like this will now be allowed to act.
@@ -361,6 +367,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
          if(threaddebug)cout << "Sending draw signal." << endl;
          if(threaddebug)cout << "Yes!" << endl;
          drawing_to_GL = true;//Main thread must not attempt to create a new thread like this while this is waiting for a draw to the framebuffer.
+//         while(drawing_to_GL)vertex_array_condition.wait(vertex_array_mutex);
          signal_DrawGLToCard();
          if(i>=(numbuckets-1)||numbuckets>10)if((i+1)%10==0){
             flushing = true;//Main thread must not attempt to create a new thread like this while flushing has yet to occur.
@@ -381,6 +388,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
    delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
    if(threaddebug)cout << "Delete colour array." << endl;
    delete[] colours;//...
+//   vertex_array_mutex.unlock();
    if(threaddebug)cout << "Booleans." << endl;
    interruptthread = false;//New threads like this will now not be interrupted.
    thread_existsthread = false;//New threads like this will now be allowed to act.

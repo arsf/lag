@@ -17,7 +17,7 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
-   void make_moving_average();
+   void make_moving_average();//This creates an array of z values for the points in the profile that are dervied from the real z values through a moving average. This results in a smoothed line.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -49,27 +49,28 @@ public:
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
 protected:
-   double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower is means more detail, higher means less.
-   double minplanx,minplany;
-   vector<int> flightlinestot;
-   vector<point>* flightlinepoints;
-   double leftboundx,leftboundy,rightboundx,rightboundy;
-   double** linez;
-   int linezsize;
+   Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
+   
+   //Control:
    bool drawpoints;//Determines whether points are drawn.
    bool drawmovingaverage;//Determines whether the best fit line is drawn.
-   int mavrgrange;//Defines the range of the moving average, with 0 meaning no averaging.
    bool imageexists;//Determines whether to draw anything, based on the existance or nonexistance of anything to draw.
-   Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
+   
    //Point data and related stuff:
-   pointbucket** buckets;//This stores the buckets containing the points to be drawn.
-   int numbuckets;//The number of buckets in buckets.
-   bool** correctpointsbuckets;//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
- 
+   int totnumpoints;
+   int mavrgrange;//Defines the range of the moving average, with 0 meaning no averaging.
+   double** linez;//This array contains, for each flightline (upper level), the z coordinates for each point after calculation of the moving average.
+   int linezsize;//It is necessary to store th size of linez in class scope because the old version of linez is deleted before the new version is produced, needing a record of the old length that will not fall out of scope.
+   double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower means more detail, higher means less.
+   vector<int> flightlinestot;//This vector contains all the flightline numbers.
+   vector<point>* flightlinepoints;//This is a pointer (array) of vectors of points, representing for each flightline (the elements of the array) the points that it contains (the vectors).
+
    //Position variables:
+   double leftboundx,leftboundy,rightboundx,rightboundy;//The boundary coordinates of the window, translated into world coordinates.
    double centrex,centrey,centrez;//These give the centre of the viewport in image terms, rather than screen terms.
    double viewerx,viewery,viewerz;//These give the coordinates of the "eye", looking towards the centre.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
+   double minplanx,minplany;//These indicate the "minimum" coordinates of the viewable plane.
    double startx,starty;//The start coordinates of the profile.
    double endx,endy;//The end coordinates of the profile.
    double width;//The width of the profile.
@@ -91,12 +92,12 @@ protected:
    sigc::connection sigrulerend;
  
    //Methods:
-   int get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last);
-   bool linecomp(const point& a,const point& b);
  
    //Drawing:
-   bool mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image
-   bool previewimage(pointbucket** buckets,int numbuckets,int detail);//Draw the preview (for panning etc.).
+   bool mainimage(int detail);//Draw the main image
+   bool previewimage(int detail);//Draw the preview (for panning etc.).
+   int get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last);//This takes a point (usually artificial) and then returns the point whose "distance along the viewing plane" value is the cloeset to it or, more strictly, the one whose value would mean it would be just before it if the given point was already part of the vector.
+   bool linecomp(const point& a,const point& b);//This compares the two points passed to it and returns true if the first point is further from the "start line" of the plane than the second point. It is used both to sort the points along the plane and to search for points along the plane (called from get_closest_element_position).
  
    //Positioning methods:
    void resetview();//Determines what part of the image is displayed with orthographic projection.
