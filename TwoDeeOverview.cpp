@@ -288,7 +288,7 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
              classification = buckets[i]->getpoint(j).classification;
              int index = classification;
              switch(index){
-                case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
                 case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
                 case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
                 case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
@@ -298,8 +298,8 @@ void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail
                 case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
 
                 case 9:red=0;green=0;blue=1;break;//Blue for water.
-                case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                case 12:red=1;green=1;blue=0;break;//Yellow for overlap points.
+                default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
@@ -406,37 +406,7 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
-   //******************************************************************************Still not sure whether to draw the overlays (ruler,profile,fence) in GTK or OpenGL. GTK would require more work and duplication, and more complexity, but would allow the user to draw over the flightline while it was still drawing in full detail and from scratch. Hmmmmmmm...
-//   int line=0,intensity=0,classification=0,rnumber=0;
-//   double x=0,y=0,z=0;//Point values
    double altitude = rminz-1000;//This makes sure the preview box is drawn under the flightlines.
-//   double red,green,blue;//Colour values
-   float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
-//   float* colours = new float[3*bucketlimit];//...
-   glEnableClientState(GL_VERTEX_ARRAY);//...
-//   glEnableClientState(GL_COLOR_ARRAY);//...
-   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-//   glColorPointer(3, GL_FLOAT, 0, colours);//...
-   glColor3f(1.0,1.0,1.0);
-   for(int i=0;i<numbuckets;i++){//For every bucket...
-//      red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-      vertices[0]=buckets[i]->minx-centrex;
-      vertices[1]=buckets[i]->miny-centrey;
-      vertices[2]=altitude;
-      vertices[3]=buckets[i]->minx-centrex;
-      vertices[4]=buckets[i]->maxy-centrey;
-      vertices[5]=altitude;
-      vertices[6]=buckets[i]->maxx-centrex;
-      vertices[7]=buckets[i]->maxy-centrey;
-      vertices[8]=altitude;
-      vertices[9]=buckets[i]->maxx-centrex;
-      vertices[10]=buckets[i]->miny-centrey;
-      vertices[11]=altitude;
-//      colours[3*count]=red;
-//      colours[3*count+1]=green;
-//      colours[3*count+2]=blue;
-      glDrawArrays(GL_LINE_LOOP,0,4);
-   }
    double xpos = drawnsofarminx-centrex;//The position of the bottom left corner of where the region is to be copied TO. In world coordinates.
    double ypos = drawnsofarminy-centrey;//...
    double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
@@ -468,6 +438,36 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
 //   cout << drawnsofarminx*zoomlevel/ratio + get_width()/2 << " " << drawnsofarminy*zoomlevel/ratio + get_height()/2 << " " << drawnsofarmaxx*zoomlevel/ratio + get_width()/2 << " " << drawnsofarmaxy*zoomlevel/ratio + get_height()/2 << endl;
 //   glCopyPixels(origpanstartx-panstartx,panstarty-origpanstarty,get_width()+panstartx-origpanstartx,get_height()+origpanstarty-panstarty,GL_COLOR);
+   //******************************************************************************Still not sure whether to draw the overlays (ruler,profile,fence) in GTK or OpenGL. GTK would require more work and duplication, and more complexity, but would allow the user to draw over the flightline while it was still drawing in full detail and from scratch. Hmmmmmmm...
+//   int line=0,intensity=0,classification=0,rnumber=0;
+//   double x=0,y=0,z=0;//Point values
+//   double red,green,blue;//Colour values
+   float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
+//   float* colours = new float[3*bucketlimit];//...
+   glEnableClientState(GL_VERTEX_ARRAY);//...
+//   glEnableClientState(GL_COLOR_ARRAY);//...
+   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+//   glColorPointer(3, GL_FLOAT, 0, colours);//...
+   glColor3f(1.0,1.0,1.0);
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+//      red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+      vertices[0]=buckets[i]->minx-centrex;
+      vertices[1]=buckets[i]->miny-centrey;
+      vertices[2]=altitude;
+      vertices[3]=buckets[i]->minx-centrex;
+      vertices[4]=buckets[i]->maxy-centrey;
+      vertices[5]=altitude;
+      vertices[6]=buckets[i]->maxx-centrex;
+      vertices[7]=buckets[i]->maxy-centrey;
+      vertices[8]=altitude;
+      vertices[9]=buckets[i]->maxx-centrex;
+      vertices[10]=buckets[i]->miny-centrey;
+      vertices[11]=altitude;
+//      colours[3*count]=red;
+//      colours[3*count+1]=green;
+//      colours[3*count+2]=blue;
+      glDrawArrays(GL_LINE_LOOP,0,4);
+   }
    glFlush();//After all this effort, something must be drawn to the screen.
    glRasterPos2s(0,0);//Reset the raster position.
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -482,6 +482,7 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
 bool TwoDeeOverview::drawviewable(int imagetype){
    interruptthread = true;//This causes any existing drawing thread to stop.
+   glPointSize(pointsize);
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application.
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...

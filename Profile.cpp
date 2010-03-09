@@ -74,8 +74,8 @@ bool Profile::returntostart(){
    resetview();
    return drawviewable(1);
 }
-//FIX THIS COMMENT!
-//This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile and then draws them by calling drawviewable(1).
+
+//This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws.
 bool Profile::showprofile(double startx,double starty,double endx,double endy,double width){
    this->startx = startx;
    this->starty = starty;
@@ -133,15 +133,15 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
    else return false;
 }
 
-//This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio*zoomlevel is there to convert screen dimensions to image dimensions. gluLookAt is then used so that the viewpoint is that of seeing the centre from a position to the left of the profile, when looking from the start to the end of it.
+//Firstly, this determines the boundary of the viewable area in world coordinates (for use by the drawing method(s)). It then sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio*zoomlevel is there to convert screen dimensions to image dimensions. gluLookAt is then used so that the viewpoint is that of seeing the centre from a position to the right of the profile, when looking from the start to the end of it.
 void Profile::resetview(){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   leftboundx = -((get_width()/2)*ratio/zoomlevel) * breadth / length;
-   rightboundx = ((get_width()/2)*ratio/zoomlevel) * breadth / length;
-   leftboundy = -((get_width()/2)*ratio/zoomlevel) * height / length;
-   rightboundy = ((get_width()/2)*ratio/zoomlevel) * height / length;
+   leftboundx = -((get_width()/2)*ratio/zoomlevel) * breadth / length;//This part determines the boundary coordinates in world coordinates.
+   rightboundx = ((get_width()/2)*ratio/zoomlevel) * breadth / length;//...
+   leftboundy = -((get_width()/2)*ratio/zoomlevel) * height / length;//...
+   rightboundy = ((get_width()/2)*ratio/zoomlevel) * height / length;//...
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glOrtho(-(get_width()/2)*ratio/zoomlevel,
@@ -157,15 +157,16 @@ void Profile::resetview(){
              0,0,1);
 }
 
+//This returns the index (in the vector of points in a flightline) of the nearest point "before" the position along the horizontal line of the viewable plane of the point passed in. It is used for determining which points to draw by passing as a "point" the coordinates of the limits of the viewable plane. It needs to be passed a "point" because the linecomp function, which it uses, only accepts points because it was originally made just for sorting points. Fundamentally, it works similarly to a BINARY SEARCH algorithm.
 int Profile::get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last){
    vector<point>::iterator originalFirst = first;
    vector<point>::iterator middle;
    while(true){//INFINITE LOOP interrupted by returns.
       middle = first + distance(first,last)/2;
-      if(linecomp(*middle,*value))first = middle;
-      else if(linecomp(*value,*middle))last = middle;
-      else return distance(originalFirst,middle);
-      if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);
+      if(linecomp(*middle,*value))first = middle;//IF the passed point is further along the horizontal plane-line than the "middle" point then make the "first" point equal to the "middle" point.
+      else if(linecomp(*value,*middle))last = middle;//ELSE IF the opposite, make the "last" point equal to the "middle" point.
+      else return distance(originalFirst,middle);//ELSE, in the very rare event that the passed point is exactly equal in x and y coordinates (or, more correctly, its "hypotenuse is equal, as that can happen with the coordinates being different) return the position in the vector where that happens.
+      if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);//IF the "first" and "middle" are now in the same position AND the distance between first and last is now just 1, as will (almost, see above line) inevitably happen because of the properties of integer division (at the beginning of the loop), then return the distane between the original "first" and the current "middle", as this is the point that most closely approximates the position along the vector (and HORIZONTALLY across the plane) of the point passed in.
    }
 }
 
@@ -174,22 +175,23 @@ bool Profile::drawviewable(int imagetype){
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//No data in store, no data on screen.
       if (glwindow->is_double_buffered())glwindow->swap_buffers();
       else glFlush();
       return false;
    }
-  glViewport(0, 0, get_width(), get_height());
-  get_gl_window()->make_current(get_gl_context());
-  resetview();
+   glPointSize(pointsize);//These are here to prevent interference from the overview. The overview has similar protections.
+   glViewport(0, 0, get_width(), get_height());//...
+   get_gl_window()->make_current(get_gl_context());//...
+   resetview();//...
    int detail=1;//This determines how many points are skipped between reads.
-   if(imagetype==1){
-      detail=(int)(totnumpoints*maindetailmod/100000);
+   if(imagetype==1){//Main image:
+      detail=(int)(totnumpoints*maindetailmod/100000);//If there are very few points on the screen, show them all.
       if(detail<1)detail=1;
       mainimage(detail);
    }
-   else if(imagetype==2){
-      detail=(int)(totnumpoints*previewdetailmod/100000);
+   else if(imagetype==2){//Preview:
+      detail=(int)(totnumpoints*previewdetailmod/100000);//If there are very few points on the screen, show them all.
       if(detail<1)detail=1;
       previewimage(detail);
    }
@@ -206,17 +208,15 @@ bool Profile::on_pan_start(GdkEventButton* event){
 }
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
 bool Profile::on_pan(GdkEventMotion* event){
-//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-panstartx)*ratio/zoomlevel;
+   double hypotenuse = (event->x-panstartx)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
    centrex -= hypotenuse * breadth / length;
    centrey -= hypotenuse * height / length;
    centrez += (event->y-panstarty)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    panstartx=event->x;
    panstarty=event->y;
-   resetview();
    return drawviewable(2);
 }
 //At the end of the pan draw the full image.
@@ -230,12 +230,11 @@ bool Profile::on_ruler_start(GdkEventButton* event){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
+   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
    rulerstartx = rulerendx = centrex + viewerx + hypotenuse * breadth / length;
    rulerstarty = rulerendy = centrey + viewery + hypotenuse * height / length;
    rulerstartz = rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0");
-   makerulerbox();
    return drawviewable(1);
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
@@ -243,7 +242,7 @@ bool Profile::on_ruler(GdkEventMotion* event){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
+   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
    rulerendx = centrex + viewerx + hypotenuse * breadth / length;
    rulerendy = centrey + viewery + hypotenuse * height / length;
    rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
@@ -251,15 +250,15 @@ bool Profile::on_ruler(GdkEventMotion* event){
    xd = abs(rulerendx-rulerstartx);
    yd = abs(rulerendy-rulerstarty);
    zd = abs(rulerendz-rulerstartz);
-   hd = sqrt(xd*xd+yd*yd);
-   d = sqrt(hd*hd+zd*zd);
+   hd = sqrt(xd*xd+yd*yd);//Combined horizontal distance.
+   d = sqrt(hd*hd+zd*zd);//Combined horizontal and vertical distance.
    ostringstream dist,xdist,ydist,horizdist,zdist;
    dist << d;
    xdist << xd;
    ydist << yd;
    horizdist << hd;
    zdist << zd;
-   string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str();
+   string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str();
    rulerlabel->set_text(rulerstring);
    return drawviewable(1);
 }
@@ -269,14 +268,14 @@ bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
 void Profile::makerulerbox(){
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
-   glBegin(GL_LINES);
-      glVertex3d(rulerstartx-centrex,rulerstarty-centrey,rulerstartz-centrez);
-      glVertex3d(rulerendx-centrex,rulerendy-centrey,rulerendz-centrez);
-   glEnd();
+      glBegin(GL_LINES);
+         glVertex3d(rulerstartx-centrex,rulerstarty-centrey,rulerstartz-centrez);
+         glVertex3d(rulerendx-centrex,rulerendy-centrey,rulerendz-centrez);
+      glEnd();
    glLineWidth(1);
 }
 
-//First, half the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
+//First, the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
 bool Profile::on_zoom(GdkEventScroll* event){
    double breadth = endx - startx;
    double height = endy - starty;
@@ -420,13 +419,13 @@ bool Profile::mainimage(int detail){
    rightpnt->flightline = 0;
    rightpnt->rnumber = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
-//      double tempx = minplanx,tempy= minplany;
+      double tempx = minplanx,tempy= minplany;
       minplanx = startx + leftboundx;
       minplany = starty + leftboundy;
       int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
       int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-//      minplanx = tempx;
-//      minplany = tempy;
+      minplanx = tempx;
+      minplany = tempy;
       for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
 //         if(endindex < flightlinepoints[i].size()-1)endindex++;
       int count = 0;
@@ -489,7 +488,7 @@ bool Profile::mainimage(int detail){
                 classification = flightlinepoints[i][j].classification;
                 int index = classification;
                 switch(index){
-                   case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                   case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
                    case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
                    case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
                    case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
@@ -499,8 +498,8 @@ bool Profile::mainimage(int detail){
                    case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
 
                    case 9:red=0;green=0;blue=1;break;//Blue for water.
-                   case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                   default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                   case 12:red=1;green=1;blue=0;break;//Yellow for overlap points.
+                   default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
@@ -538,6 +537,7 @@ bool Profile::mainimage(int detail){
    }
    delete leftpnt;
    delete rightpnt;
+   if(rulering)makerulerbox();
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);
@@ -599,13 +599,13 @@ bool Profile::previewimage(int detail){
    rightpnt->flightline = 0;
    rightpnt->rnumber = 0;
    for(unsigned int i=0;i<flightlinestot.size();i++){
-//      double tempx = minplanx,tempy= minplany;
+      double tempx = minplanx,tempy= minplany;
       minplanx = startx + leftboundx;
       minplany = starty + leftboundy;
       int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
       int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-//      minplanx = tempx;
-//      minplany = tempy;
+      minplanx = tempx;
+      minplany = tempy;
       for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
 //         if(endindex < flightlinepoints[i].size()-1)endindex++;
       int count = 0;
@@ -668,7 +668,7 @@ bool Profile::previewimage(int detail){
                 classification = flightlinepoints[i][j].classification;
                 int index = classification;
                 switch(index){
-                   case 0:case 1:red=1;green=0;blue=0;break;//Red for non-classified.
+                   case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
                    case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
                    case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
                    case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
@@ -678,8 +678,8 @@ bool Profile::previewimage(int detail){
                    case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
 
                    case 9:red=0;green=0;blue=1;break;//Blue for water.
-                   case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                   default:red=1;green=1;blue=0;cout << "Undefined point." << endl;break;//Yellow for undefined.
+                   case 12:red=1;green=1;blue=0;break;//Yellow for overlap points.
+                   default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
@@ -717,7 +717,8 @@ bool Profile::previewimage(int detail){
    }
    delete leftpnt;
    delete rightpnt;
-   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
+   if(rulering)makerulerbox();
+//   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);

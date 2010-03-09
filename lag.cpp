@@ -594,7 +594,7 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("pointwidthselect",pointwidthselect);
             if(pointwidthselect){
                pointwidthselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
-               pointwidthselect->set_value(2);
+               pointwidthselect->set_value(1);
                pointwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselected));
             }
             refXml->get_widget("maindetailselect",maindetailselect);
