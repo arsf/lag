@@ -193,7 +193,8 @@ bool Profile::drawviewable(int imagetype){
    else if(imagetype==2){//Preview:
       detail=(int)(totnumpoints*previewdetailmod/100000);//If there are very few points on the screen, show them all.
       if(detail<1)detail=1;
-      previewimage(detail);
+      mainimage(detail);
+//      previewimage(detail);
    }
    return true;
 }
@@ -303,7 +304,7 @@ bool Profile::on_zoom(GdkEventScroll* event){
    return drawviewable(1);
 }
 
-//This method is for sort(). It projects the points onto a plane defined by the z axis and the line perpendicular to the viewing direction.
+//This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as that "start".
 bool Profile::linecomp(const point &a,const point &b){
    const double xa = a.x;
    const double xb = b.x;
@@ -311,13 +312,13 @@ bool Profile::linecomp(const point &a,const point &b){
    const double yb = b.y;
    double alongprofa,alongprofb;
    if(startx==endx){//If the profile is parallel to the y axis:
-      double mult=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
       if(starty<endy)mult=1;
       alongprofa = mult * (ya - minplany);
       alongprofb = mult * (yb - minplany);
    }
    else if(starty==endy){//If the profile is parallel to the x axis:
-      double mult=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
       if(startx<endx)mult=1;
       alongprofa = mult * (xa - minplanx);
       alongprofb = mult * (xb - minplanx);
@@ -325,26 +326,46 @@ bool Profile::linecomp(const point &a,const point &b){
    else{//If the profile is skewed:
       double breadth = endx - startx;
       double height = endy - starty;
-      double multx=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
+      double multx=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
       if(startx<endx)multx=1;
-      double multy=-1;//Used so that points are projecting onto the right side (NOT face) of the plane.
+      double multy=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
       if(starty<endy)multy=1;
-      double lengradbox = multx * multy * height / breadth;//Gradients of the profile and point-to-profile lines
-      double widgradbox = -1.0 / lengradbox;//...
-      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);//Constant values (y intercept) of the formulae for lines from each point to the profile line.
-      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);//...
-      //Testing points:
+      //Gradients of the profile and point-to-profile lines:
+      double lengradbox = multx * multy * height / breadth;//Profile line
+      double widgradbox = -1.0 / lengradbox;//Point-to-profile lines
+      //Constant values (y intercepts) of the formulae for lines from each point to the profile line:
+      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);
+      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);
+      //Identify the points of interecept for each point-to-profile line and the profile line:
+      /*0 (adjusted origin)
+       * \ Profile line       ____/p
+       *  \              ____/ Point line
+       *   \        ____/
+       *    \  ____/
+       *  ___\/P
+       * /    \
+       *       \
+       *        \
+       *                              
+       *  For point p:
+       *     x of P is interxp
+       *     y of P is interyp
+       *     z is ignored (or "swept along")
+       *     alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to find distance along the profile i.e distance from the adjusted origin.
+       *
+       * */
       double interxa,interxb,interya,interyb;
-      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point to the plane.
-      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point to the plane.
-      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point to the plane.
-      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point to the plane.
+      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point a to the plane.
+      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point a to the plane.
+      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point b to the plane.
+      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point b to the plane.
       alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
       alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
    }
    return alongprofa > alongprofb;
 }
 
+//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
 void Profile::make_moving_average(){
    if(linez!=NULL){
       for(int i=0;i<linezsize;i++){
@@ -359,7 +380,7 @@ void Profile::make_moving_average(){
       linez[i] = new double[numofpoints];
       for(int j=0;j<numofpoints;j++){
          double z=0,zcount=0;
-         for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){// (up to) the range (depending on how close to the edge the point is) add up points...
+         for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){//for (up to) the range (depending on how close to the edge the point is) add up the points...
             z+=flightlinepoints[i][j+k].z;
             zcount++;
          }
@@ -387,10 +408,10 @@ bool Profile::mainimage(int detail){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   double red,green,blue;
-   double x=0,y=0,z=0;
-   int limit = bucketlimit;
-   for(int i=0;i<(int)flightlinestot.size();i++){
+   double red,green,blue,z;
+   int intensity;
+   int limit = 0;
+   for(int i=0;i<(int)flightlinestot.size();i++){//The size of the vertex and colour arrays should be the same as that of the largest group of points, by flightline.
       if((int)flightlinepoints[i].size()>limit)limit = (int)flightlinepoints[i].size();
    }
    float* vertices = new float[3*limit];//Needed for the glDrawArrays() call further down.
@@ -399,8 +420,7 @@ bool Profile::mainimage(int detail){
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
-   int line=0,intensity=0,classification=0,rnumber=0;
-   point *leftpnt = new point;
+   point *leftpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
    leftpnt->x = leftboundx + centrex;
    leftpnt->y = leftboundy + centrey;
    leftpnt->z = 0;
@@ -409,7 +429,7 @@ bool Profile::mainimage(int detail){
    leftpnt->classification = 0;
    leftpnt->flightline = 0;
    leftpnt->rnumber = 0;
-   point *rightpnt = new point;
+   point *rightpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
    rightpnt->x = rightboundx + centrex;
    rightpnt->y = rightboundy + centrey;
    rightpnt->z = 0;
@@ -419,15 +439,11 @@ bool Profile::mainimage(int detail){
    rightpnt->flightline = 0;
    rightpnt->rnumber = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
-      double tempx = minplanx,tempy= minplany;
-      minplanx = startx + leftboundx;
-      minplany = starty + leftboundy;
+      minplanx = startx + leftboundx;//These ensure that the entire screen will be filled, otherwise, because the screen position of startx changes, only part of the point-set will be drawn.
+      minplany = starty + leftboundy;//...
       int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
       int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-      minplanx = tempx;
-      minplany = tempy;
-      for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
-//         if(endindex < flightlinepoints[i].size()-1)endindex++;
+      for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;//This is to ensure that the left edge of the screen always has a line crossing it if there are extra points beyond it, otherwise it will only draw up to, not beyond, the last point actually on-screen.
       int count = 0;
       if(drawmovingaverage){
          int index = flightlinestot.at(i) % 6;
@@ -440,26 +456,22 @@ bool Profile::mainimage(int detail){
             case 5:red=1;green=0;blue=1;break;//Purple
             default:red=green=blue=1;break;//White in the event of strangeness.
          }
-         for(int j=startindex;j<=endindex;j++){
-            x = flightlinepoints[i][j].x;
-            y = flightlinepoints[i][j].y;
-            vertices[3*count]=x-centrex;
-            vertices[3*count+1]=y-centrey;
-            vertices[3*count+2]=linez[i][j]-centrez;
-            colours[3*count]=red;
-            colours[3*count+1]=green;
-            colours[3*count+2]=blue;
+         for(int j=startindex;j<=endindex;j+=detail){
+            vertices[3*count] = flightlinepoints[i][j].x-centrex;
+            vertices[3*count+1] = flightlinepoints[i][j].y-centrey;
+            vertices[3*count+2] = linez[i][j]-centrez;
+            colours[3*count] = red;
+            colours[3*count+1] = green;
+            colours[3*count+2] = blue;
             count++;
          }
-         glDrawArrays(GL_LINE_STRIP,0,count);
+         glDrawArrays(GL_LINE_STRIP,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
       }
       count = 0;
       if(drawpoints){
-         for(int j=startindex;j<=endindex;j++){
+         for(int j=startindex;j<=endindex;j+=detail){
             red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-            x = flightlinepoints[i][j].x;
-            y = flightlinepoints[i][j].y;
-            z = flightlinepoints[i][j].z;
+            z = flightlinepoints[i][j].z;//This is here because it is used in calculations.
             intensity = flightlinepoints[i][j].intensity;
             if(heightcolour){//Colour by elevation.
                red = colourheightarray[3*(int)(10*(z-rminz))];
@@ -472,8 +484,7 @@ bool Profile::mainimage(int detail){
                blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
             }
             else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                line = flightlinepoints[i][j].flightline;
-                int index = line % 6;
+                int index = flightlinepoints[i][j].flightline % 6;
                 switch(index){
                    case 0:red=0;green=1;blue=0;break;//Green
                    case 1:red=0;green=0;blue=1;break;//Blue
@@ -485,9 +496,7 @@ bool Profile::mainimage(int detail){
                 }
             }
             else if(classcolour){//Colour by classification.
-                classification = flightlinepoints[i][j].classification;
-                int index = classification;
-                switch(index){
+                switch(flightlinepoints[i][j].classification){
                    case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
                    case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
                    case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
@@ -503,9 +512,7 @@ bool Profile::mainimage(int detail){
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                rnumber = flightlinepoints[i][j].rnumber;
-                int index = rnumber;
-                switch(index){
+                switch(flightlinepoints[i][j].rnumber){
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
                    case 3:red=0;green=1;blue=0;break;//Green
@@ -524,201 +531,20 @@ bool Profile::mainimage(int detail){
                green *= brightnessintensityarray[(int)(intensity-rminintensity)];
                blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
             }
-            vertices[3*count]=x-centrex;
-            vertices[3*count+1]=y-centrey;
+            vertices[3*count] = flightlinepoints[i][j].x-centrex;
+            vertices[3*count+1] = flightlinepoints[i][j].y-centrey;
             vertices[3*count+2]=z-centrez;
             colours[3*count]=red;
             colours[3*count+1]=green;
             colours[3*count+2]=blue;
             count++;
          }
-         glDrawArrays(GL_POINTS,0,count);
+         glDrawArrays(GL_LINE_STRIP,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
       }
    }
    delete leftpnt;
    delete rightpnt;
-   if(rulering)makerulerbox();
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
-   glDisableClientState(GL_VERTEX_ARRAY);
-   glDisableClientState(GL_COLOR_ARRAY);
-   glwindow->gl_end();
-   delete[] vertices;
-   delete[] colours;
-   return true;
-}
-
-//NOTE: This method is almost identical to the mainimage method. Only two lines are different, and could easily be replace with an if statement. The methods are kept separate as this one might change in the future to make it faster and/or more detailed.
-/*This method draws the preview used in panning etc.. Basically, if something must be drawn quickly, this method is used. First, the gl_window is acquired for drawing. It is then cleared, otherwise the method would just draw over the previous image and, since this image will probably have gaps in it, the old image would be somewhat visible. Then:
- *
- *   for every bucket:
- *      for every point:
- *         determine colour and brightness of point
- *         place point
- *      end for
- *   end for
- *   draw all points
- *
- *Then the profiling box is drawn if it exists.
- *
- *
- * */
-bool Profile::previewimage(int detail){
-   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
-   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   double red,green,blue;
-   double x=0,y=0,z=0;
-   int line=0,intensity=0,classification=0,rnumber=0;
-   int limit = bucketlimit;
-   for(int i=0;i<(int)flightlinestot.size();i++){
-      if((int)flightlinepoints[i].size()>limit)limit = (int)flightlinepoints[i].size();
-   }
-   float* vertices = new float[3*limit];//Needed for the glDrawArrays() call further down.
-   float* colours = new float[3*limit];//...
-   glEnableClientState(GL_VERTEX_ARRAY);//...
-   glEnableClientState(GL_COLOR_ARRAY);//...
-   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-   glColorPointer(3, GL_FLOAT, 0, colours);//...
-   point *leftpnt = new point;
-   leftpnt->x = leftboundx + centrex;
-   leftpnt->y = leftboundy + centrey;
-   leftpnt->z = 0;
-   leftpnt->time = flightlinepoints[0][0].time;
-   leftpnt->intensity = 0;
-   leftpnt->classification = 0;
-   leftpnt->flightline = 0;
-   leftpnt->rnumber = 0;
-   point *rightpnt = new point;
-   rightpnt->x = rightboundx + centrex;
-   rightpnt->y = rightboundy + centrey;
-   rightpnt->z = 0;
-   rightpnt->time = flightlinepoints[0][0].time;
-   rightpnt->intensity = 0;
-   rightpnt->classification = 0;
-   rightpnt->flightline = 0;
-   rightpnt->rnumber = 0;
-   for(unsigned int i=0;i<flightlinestot.size();i++){
-      double tempx = minplanx,tempy= minplany;
-      minplanx = startx + leftboundx;
-      minplany = starty + leftboundy;
-      int startindex = get_closest_element_position(rightpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-      int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
-      minplanx = tempx;
-      minplany = tempy;
-      for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;
-//         if(endindex < flightlinepoints[i].size()-1)endindex++;
-      int count = 0;
-      if(drawmovingaverage){
-         int index = flightlinestot.at(i) % 6;
-         switch(index){
-            case 0:red=0;green=1;blue=0;break;//Green
-            case 1:red=0;green=0;blue=1;break;//Blue
-            case 2:red=1;green=0;blue=0;break;//Red
-            case 3:red=0;green=1;blue=1;break;//Cyan
-            case 4:red=1;green=1;blue=0;break;//Yellow
-            case 5:red=1;green=0;blue=1;break;//Purple
-            default:red=green=blue=1;break;//White in the event of strangeness.
-         }
-         for(int j=startindex;j<=endindex;j+=detail){
-            x = flightlinepoints[i][j].x;
-            y = flightlinepoints[i][j].y;
-            vertices[3*count]=x-centrex;
-            vertices[3*count+1]=y-centrey;
-            vertices[3*count+2]=linez[i][j]-centrez;
-            colours[3*count]=red;
-            colours[3*count+1]=green;
-            colours[3*count+2]=blue;
-            count++;
-         }
-         glDrawArrays(GL_LINE_STRIP,0,count);
-      }
-      count = 0;
-      if(drawpoints){
-         for(int j=startindex;j<=endindex;j+=detail){
-            red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-            x = flightlinepoints[i][j].x;
-            y = flightlinepoints[i][j].y;
-            z = flightlinepoints[i][j].z;
-            intensity = flightlinepoints[i][j].intensity;
-            if(heightcolour){//Colour by elevation.
-               red = colourheightarray[3*(int)(10*(z-rminz))];
-               green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-               blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-            }
-            else if(intensitycolour){//Colour by intensity.
-               red = colourintensityarray[3*(int)(intensity-rminintensity)];
-               green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-               blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-            }
-            else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                line = flightlinepoints[i][j].flightline;
-                int index = line % 6;
-                switch(index){
-                   case 0:red=0;green=1;blue=0;break;//Green
-                   case 1:red=0;green=0;blue=1;break;//Blue
-                   case 2:red=1;green=0;blue=0;break;//Red
-                   case 3:red=0;green=1;blue=1;break;//Cyan
-                   case 4:red=1;green=1;blue=0;break;//Yellow
-                   case 5:red=1;green=0;blue=1;break;//Purple
-                   default:red=green=blue=1;break;//White in the event of strangeness.
-                }
-            }
-            else if(classcolour){//Colour by classification.
-                classification = flightlinepoints[i][j].classification;
-                int index = classification;
-                switch(index){
-                   case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
-                   case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                   case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                   case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                   case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                   case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                   case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                   case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
-                   case 9:red=0;green=0;blue=1;break;//Blue for water.
-                   case 12:red=1;green=1;blue=0;break;//Yellow for overlap points.
-                   default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
-                }
-            }
-            else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                rnumber = flightlinepoints[i][j].rnumber;
-                int index = rnumber;
-                switch(index){
-                   case 1:red=0;green=0;blue=1;break;//Blue
-                   case 2:red=0;green=1;blue=1;break;//Cyan
-                   case 3:red=0;green=1;blue=0;break;//Green
-                   case 4:red=1;green=0;blue=0;break;//Red
-                   case 5:red=1;green=0;blue=1;break;//Purple
-                   default:red=green=blue=1;break;//White in the event of strangeness.
-                }
-            }
-            if(heightbrightness){//Shade by height.
-               red *= brightnessheightarray[(int)(z-rminz)];
-               green *= brightnessheightarray[(int)(z-rminz)];
-               blue *= brightnessheightarray[(int)(z-rminz)];
-            }
-            else if(intensitybrightness){//Shade by intensity.
-               red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-               green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-               blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-            }
-            vertices[3*count]=x-centrex;
-            vertices[3*count+1]=y-centrey;
-            vertices[3*count+2]=z-centrez;
-            colours[3*count]=red;
-            colours[3*count+1]=green;
-            colours[3*count+2]=blue;
-            count++;
-         }
-         glDrawArrays(GL_POINTS,0,count);
-      }
-   }
-   delete leftpnt;
-   delete rightpnt;
-   if(rulering)makerulerbox();
-//   if(rulering)glCallList(5);//Draw the ruler if ruler mode is on.
+   if(rulering)makerulerbox();//Draw ruler is rulering mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);

@@ -17,7 +17,7 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
-   void make_moving_average();//This creates an array of z values for the points in the profile that are dervied from the real z values through a moving average. This results in a smoothed line.
+   void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -95,7 +95,6 @@ protected:
  
    //Drawing:
    bool mainimage(int detail);//Draw the main image
-   bool previewimage(int detail);//Draw the preview (for panning etc.).
    int get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last);//This takes a point (usually artificial) and then returns the point whose "distance along the viewing plane" value is the cloeset to it or, more strictly, the one whose value would mean it would be just before it if the given point was already part of the vector.
    bool linecomp(const point& a,const point& b);//This compares the two points passed to it and returns true if the first point is further from the "start line" of the plane than the second point. It is used both to sort the points along the plane and to search for points along the plane (called from get_closest_element_position).
  
