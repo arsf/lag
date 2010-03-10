@@ -539,7 +539,7 @@ bool Profile::mainimage(int detail){
             colours[3*count+2]=blue;
             count++;
          }
-         glDrawArrays(GL_LINE_STRIP,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
+         glDrawArrays(GL_POINTS,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
       }
    }
    delete leftpnt;
