@@ -128,9 +128,6 @@ public:
 protected:
    Glib::Mutex vertex_array_mutex;
    Glib::Cond vertex_array_condition;
-   pointbucket** buckets;//This is an array that contains pointers to pointbuckets. It is made from a vector.
-   int numbuckets;//The number of pointbuckets in the array buckets.
-   int detail;//The level of detail to draw in. Lower indicates more detail.
    int pointcount;//The number of points being drawn from the current bucket.
    float* vertices;//This contains the coordinates of all the points in the current bucket.
    float* colours;//This contains the RGB components of the colours of all the points in the current bucket.
@@ -143,13 +140,12 @@ protected:
    bool extraDrawing;//This indicates whether an extra draw signal, caused by a previous draw signal being blocked to avoid deadlock or race conditions, has been sent by the main thread to itself. If so, the main thread should not send any more until the current one is resolved.
    bool threaddebug;//If true, this causes a huge amount of spam to spew from the program whenever the drawing thread is in use, for debugging purposes.
    double drawnsofarminx,drawnsofarminy,drawnsofarmaxx,drawnsofarmaxy;//These define a rectangle that (very) roughly corresponds to how much of the flightline has been drawn so far. This is used for when panning, so that if there is not much already loaded then the bucket outlines are not completely covered by black.
-   double centrexsafe,centreysafe;//These are "safe" stores of the coordinates of the centre of the screen. Safe in that they will not change (we hope) while the drawing thread is running.
+   double centrexsafe,centreysafe;//These are "safe" stores of the coordinates of the centre of the screen. Safe in that they will not change (we hope) while the drawing thread is running. These are in object-wide scope, despite being used in multiple threads, because they are needed to draw the buckets properly when doing preview.
    Glib::Dispatcher signal_InitGLDraw;//Signal dispatcher from the drawing thread to the main thread to set up OpenGL for drawing.
    Glib::Dispatcher signal_EndGLDraw;//Signal dispatcher from the drawing thread to the main thread to clear up OpenGL after drawing is complete.
    Glib::Dispatcher signal_DrawGLToCard;//Signal dispatcher from the drawing thread to the main thread to draw the contents of the vertices and colours arrays to the framebuffer.
    Glib::Dispatcher signal_FlushGLToScreen;//Signal dispatcher from the drawing thread to the main thread to flush the contents of the framebuffer to the screen.
    Glib::Dispatcher signal_extraDraw;//Signal dispatcher from the main thread to itself to draw the points yet another time. This method is used as getting direct access to the variables affecting the main (GTK) thread would likely be very messy.
-   Glib::Thread* data_former_thread;//The drawing thread. Handle with care.
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    //Position variables:
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
@@ -216,7 +212,7 @@ protected:
    void FlushGLToScreen();//Flush the contents of the framebuffer to the screen.
  
    //Drawing:
-   void mainimage();//Draw the main image. This is used by the drawing thread. Handle with care.
+   void mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image. This is used by the drawing thread. Handle with care.
    bool drawbuckets(pointbucket** buckets,int numbuckets);//Draw the outlines of the buckets and, above them, the contents of the back buffer (which contains the last stuff drawn from scratch).
  
    //Positioning methods:

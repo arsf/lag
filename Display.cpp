@@ -23,6 +23,7 @@ Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    this->lidardata=lidardata;
    this->bucketlimit = bucketlimit;
    pointsize=1;
+   ratio = 1;
    //Colouring and shading:
    heightcolour = false;
    heightbrightness = false;
@@ -37,18 +38,17 @@ Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    linecolour = true;
    classcolour = false;
    returncolour = false;
-   colourheightarray = new double[2];
-   colourintensityarray = new double[2];
-   brightnessheightarray = new double[2];
-   brightnessintensityarray = new double[2];
+   colourheightarray = NULL;
+   colourintensityarray = NULL;
+   brightnessheightarray = NULL;
+   brightnessintensityarray = NULL;
 }
 
 Display::~Display(){
-   delete[] colourheightarray;
-   delete[] colourintensityarray;
-   delete[] brightnessheightarray;
-   delete[] brightnessintensityarray;
-//   delete lidarboundary;
+   if(colourheightarray!=NULL)delete[] colourheightarray;
+   if(colourintensityarray!=NULL)delete[] colourintensityarray;
+   if(brightnessheightarray!=NULL)delete[] brightnessheightarray;
+   if(brightnessintensityarray!=NULL)delete[] brightnessintensityarray;
 }
 
 //Draw on expose. 1 indicates that the non-preview image is drawn.
@@ -70,15 +70,15 @@ bool Display::on_configure_event(GdkEventConfigure* event){
 
 //Prepares the arrays for looking up the colours and shades of the points.
 void Display::coloursandshades(double maxz,double minz,int maxintensity,int minintensity){
-   delete[] colourheightarray;
-   delete[] colourintensityarray;
-   delete[] brightnessheightarray;
-   delete[] brightnessintensityarray;
+   if(colourheightarray!=NULL)delete[] colourheightarray;
+   if(colourintensityarray!=NULL)delete[] colourintensityarray;
+   if(brightnessheightarray!=NULL)delete[] brightnessheightarray;
+   if(brightnessintensityarray!=NULL)delete[] brightnessintensityarray;
    double red=0.0,green=0.0,blue=0.0;
    double z=0,intensity=0;
-   colourheightarray = new double[30*(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++){//Fill height colour array:
-      z = 0.1*(double)i + rminz;
+   colourheightarray = new double[30*(int)(rmaxz-rminz+4)];//This is at 30, rather than three, for a reason: three, one for each colour, by ten, so that the "resolution" of the colouring by height is 0.1 metres, not one whole metre. It makes it look better.
+   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++){//Fill height colour array (by ten for extra detail):
+      z = 0.1*(double)i + rminz;//0.1 for 0.1 metres for extra detail.
       colour_by(z,maxz,minz,red,green,blue);
       colourheightarray[3*i]=red;
       colourheightarray[3*i+1]=green;
@@ -152,24 +152,13 @@ double Display::brightness_by(double value,double maxvalue,double minvalue,doubl
   return multiplier;
 }
 
-//This method prepares the image for drawing and sets up OpenGl. It gets the data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets ups anti-aliasing, clearing and the initial view.
+//This method prepares the image for drawing and sets up OpenGl. It gets data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets up clearing and the initial view.
 void Display::prepare_image(){
-   //Initial state:
-   boundary* lidarboundary = lidardata->getboundary();
-   double xdif = lidarboundary->maxX-lidarboundary->minX;
-   double ydif = lidarboundary->maxY-lidarboundary->minY;
-      //Scaling to screen dimensions:
-      double swidth = get_screen()->get_width();
-      double sheight = get_screen()->get_height();
-      double xratio = xdif/swidth;
-      double yratio = ydif/sheight;
-      yratio*=1.3;
-      ratio = 0;
-      if(xratio>yratio)ratio = xratio;
-      else ratio = yratio;
    vector<pointbucket*> *pointvector;
    try{
+      boundary* lidarboundary = lidardata->getboundary();
       pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
+      delete lidarboundary;
    }catch(const char* e){
       cout << e << endl;
       cout << "No points returned." << endl;
@@ -177,48 +166,13 @@ void Display::prepare_image(){
    }
    int numbuckets = pointvector->size();
    pointbucket** buckets = &(*pointvector)[0];
-//   pointbucket** buckets = new pointbucket*[numbuckets];
-//   for(int i=0;i<numbuckets;i++){
-//      buckets[i]=pointvector->at(i);
-//   }
    double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
    int maxintensity = buckets[0]->maxintensity,minintensity = buckets[0]->minintensity;
    for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
-//      bool skip = false;
-//      if(skipNonC ||
-//         skipGround ||
-//         skipLowVeg ||
-//         skipMedVeg ||
-//         skipHighVeg ||
-//         skipBuildings ||
-//         skipNoise ||
-//         skipMass ||
-//         skipWater ||
-//         skipOverlap ||
-//         skipUndefined){
-//         classification = buckets[i]->points[j].classification;
-//         int index = classification;
-//         double incrementor = 2*abs(rmaxz-rminz);
-//         switch(index){
-//            case 0:case 1:if(skipNonC)skip=true;break;
-//            case 2:if(skipGround)skip=true;break;
-//            case 3:if(skipLowVeg)skip=true;break;
-//            case 4:if(skipMedVeg)skip=true;break;
-//            case 5:if(skipHighVeg)skip=true;break;
-//            case 6:if(skipBuildings)skip=true;break;
-//            case 7:if(skipNoise)skip=true;break;
-//            case 8:if(skipMass)skip=true;break;
-//            case 9:if(skipWater)skip=true;break;
-//            case 12:if(skipOverlap)skip=true;break;
-//            default:if(skipUndefined)skip=true;break;
-//         }
-//      }
-//      if(!skip)
-         if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
-         if(minz>buckets[i]->minz)minz = buckets[i]->minz;
-         if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
-         if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
-//      }
+      if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
+      if(minz>buckets[i]->minz)minz = buckets[i]->minz;
+      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
+      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
    }
    rmaxz = maxz; rminz = minz;
    rmaxintensity = maxintensity; rminintensity = minintensity;
@@ -242,9 +196,7 @@ void Display::prepare_image(){
    glEnable(GL_DEPTH_TEST);//Very important to include this! This allows us to see the things on the top above the things on the bottom!
    glViewport(0, 0, get_width(), get_height());
    resetview();
-//   delete[] buckets;
-   delete pointvector;
-   delete lidarboundary;
+   delete pointvector;//Must remain here, as buckets is just a pointer to its contents (and so does not need to be deleted as well) and it has other contents to be removed (presumably).
    glwindow->gl_end();
-   returntostart();
+   returntostart();//Set up initial view and draw it (though, for some reason, will not actually draw anything if this is the first time (i.e. the widget has just been realised); quite annoying).
 }

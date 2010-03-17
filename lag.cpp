@@ -19,17 +19,17 @@ using namespace std;
 string picturename;//Path of clippy image.
 const bool useclippy = false;//Whether or not to use clippy.
 
-bool drawwhentoggled = true;
+bool drawwhentoggled = true;//This variable prevents the image(s) from being drawn twice as a result of toggling a radio button (or similar), which deactivates (and therefore toggles again) another one in the same group. This variable must start as true, as the methods make it opposite before using it, so that things will de drawn after the second "toggling".
 
 quadtree* lidardata = NULL;//The flightlines are stored here.
 int bucketlimit = 100000;//How many points in each bucket, maximum.
-int cachelimit = 25000000;//How many points to hold in cache. 1 GB ~= 50000000 points.
+int cachelimit = 25000000;//How many points to hold in cache. 1 GB ~= 25000000 points.
 TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
 string exename = "";//The path of the executable.
 bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
 //Quadtree error handling:
-ostringstream *loaderrorstream;//Stringstream getting error messages from the quadtree.
+ostringstream *loaderrorstream = NULL;//Stringstream getting error messages from the quadtree.
 ofstream loaderroroutput;//Stream outputting error messages from the quadtree to a file.
 string loaderroroutputfile;//Path of file for error message output.
 
@@ -42,6 +42,8 @@ Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
 Gtk::SpinButton *pointskipselect = NULL;//How many points to skip after loading one.
 Gtk::CheckButton *fenceusecheck = NULL;//Check button determining whether the fence is used for loading flightlines.
 Gtk::Entry *asciicodeentry = NULL;//The type code for opening ASCII files.
+Gtk::SpinButton *cachesizeselect = NULL;//How many points to hold in cache.
+Gtk::Label *cachesizeGBlabel = NULL;//This displays the cache size in terms of gigabytes, approximately.
 //Overview:
 Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
 Gtk::CheckMenuItem *showprofilecheck = NULL;//Check button determining whether the profile box is viewable on the 2d overview.
@@ -146,6 +148,7 @@ void get_area(double &minX,double &minY,double &maxX,double &maxY){ tdo->getfenc
  *
  * */
 int testfilename(int argc,char *argv[],bool start,bool usearea){
+   cachelimit = cachesizeselect->get_value();
    try{//Attempt to get real files.
       string pointoffset,filename;
       if(argc < 3){
@@ -246,7 +249,6 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
       cout << "Why: " << e.why() << endl;
-//      cout << "Please check to make sure your files exist and the paths are properly spelled." << endl;
       loaderrorstream->str("");
       if(lidardata != NULL)delete lidardata;
       lidardata = NULL;
@@ -273,7 +275,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       prof->show_all();
    }
    loadedanyfiles = true;
-   return 1;
+   return 0;
 }
 //If either the add or refresh button is pressed, then this function takes the selected filenames and creates an imitation of a command-line command, which is then sent to testfilename() where the file will be opened.
 void on_filechooserdialogresponse(int response_id){
@@ -303,6 +305,13 @@ void on_filechooserdialogresponse(int response_id){
 }
 //When selected from the menu, the file choosers opens.
 void on_openfilemenuactivated(){ filechooserdialog->show_all(); }
+
+void on_cachesize_changed(){
+   ostringstream GB;
+   GB << ((double)cachesizeselect->get_value()*40)/1000000000;
+   string labelstring = "Approximately: " + GB.str() + " GB.";
+   cachesizeGBlabel->set_text(labelstring);
+}
 
 //If one of the colour radio menu items is selected (and, therefore, the others deselected) then set the values of the colour control variables in the overview to the values of the corresponding radio menu items.
 void on_colouractivated(){
@@ -546,6 +555,20 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("pointskipselect",pointskipselect);
             refXml->get_widget("fenceusecheck",fenceusecheck);
             refXml->get_widget("asciicodeentry",asciicodeentry);
+            refXml->get_widget("cachesizeselect",cachesizeselect);
+            if(cachesizeselect){
+               cachesizeselect->set_range(1000000,1000000000000);//That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 2009-10, so, if the rate of increase is that of quadrupling every five years, then 40 TB will be reached in less than 35 years.
+               cachesizeselect->set_value(25000000);//25000000 points is about 1 GB. On this 4 GB RAM machine, I only want LAG to use a quarter of my resources.
+               cachesizeselect->set_increments(1000000,1000000);
+               cachesizeselect->signal_value_changed().connect(sigc::ptr_fun(&on_cachesize_changed));
+            }
+            refXml->get_widget("cachesizeGBlabel",cachesizeGBlabel);
+            if(cachesizeGBlabel){
+               ostringstream GB;
+               GB << ((double)cachesizeselect->get_value()*40)/1000000000;
+               string labelstring = "Approximately: " + GB.str() + " GB.";
+               cachesizeGBlabel->set_text(labelstring);
+            }
             //Viewing options:
             refXml->get_widget("showprofilecheck",showprofilecheck);
             if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
@@ -593,7 +616,7 @@ int GUIset(int argc,char *argv[]){
             //For overview image viewing attributes:
             refXml->get_widget("pointwidthselect",pointwidthselect);
             if(pointwidthselect){
-               pointwidthselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
+               pointwidthselect->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
                pointwidthselect->set_value(1);
                pointwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselected));
             }
@@ -677,7 +700,7 @@ int GUIset(int argc,char *argv[]){
             //For overview image viewing attributes:
             refXml->get_widget("pointwidthselectprof",pointwidthselectprof);
             if(pointwidthselectprof){
-               pointwidthselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
+               pointwidthselectprof->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
                pointwidthselectprof->set_value(2);
                pointwidthselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselectedprof));
             }
@@ -784,11 +807,11 @@ int main(int argc, char** argv) {
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;
    loaderrorstream = new ostringstream();
-   lidardata = NULL;
-   return GUIset(argc, argv);//Make the GUI.
-   delete tdo;
-   delete prof;
+   int returnnumber = GUIset(argc, argv);//Make the GUI.
+   if(tdo!=NULL)delete tdo;
+   if(prof != NULL)delete prof;
    if(lidardata != NULL)delete lidardata;
    delete loaderrorstream;
    loaderroroutput.close();
+   return returnnumber;
 }

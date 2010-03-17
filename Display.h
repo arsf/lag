@@ -17,9 +17,8 @@ class Display : public Gtk::GL::DrawingArea{
 public:
    Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
    ~Display();
-   virtual bool returntostart() = 0;
+   virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
-   virtual bool drawviewable(int imagetype) = 0;
    //Setters:
    void setlidardata(quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
@@ -31,17 +30,6 @@ public:
    void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
-   void setskipNonC(bool skipNonC){this->skipNonC = skipNonC;}
-   void setskipGround(bool skipGround){this->skipGround = skipGround;}
-   void setskipLowVeg(bool skipLowVeg){this->skipLowVeg = skipLowVeg;}
-   void setskipMedVeg(bool skipMedVeg){this->skipMedVeg = skipMedVeg;}
-   void setskipHighVeg(bool skipHighVeg){this->skipHighVeg = skipHighVeg;}
-   void setskipBuildings(bool skipBuildings){this->skipBuildings = skipBuildings;}
-   void setskipNoise(bool skipNoise){this->skipNoise = skipNoise;}
-   void setskipMass(bool skipMass){this->skipMass = skipMass;}
-   void setskipWater(bool skipWater){this->skipWater = skipWater;}
-   void setskipOverlap(bool skipOverlap){this->skipOverlap = skipOverlap;}
-   void setskipUndefined(bool skipUndefined){this->skipUndefined = skipUndefined;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
 
@@ -73,18 +61,9 @@ protected:
    double* colourintensityarray;//Array containing colours for different intensities.
    double* brightnessheightarray;//Array containing shades for different heights.
    double* brightnessintensityarray;//Array containing shades for different intensities.
-   bool skipNonC;
-   bool skipGround;
-   bool skipLowVeg;
-   bool skipMedVeg;
-   bool skipHighVeg;
-   bool skipBuildings;
-   bool skipNoise;
-   bool skipMass;
-   bool skipWater;
-   bool skipOverlap;
-   bool skipUndefined;
    
+   //Methods:
+
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().
    bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.
@@ -96,7 +75,6 @@ protected:
  
    //Positioning methods:
    virtual void resetview() = 0;//Determines what part of the image is displayed with orthographic projection.
-   virtual bool on_zoom(GdkEventScroll* event) = 0;//Allows the user to zoom with the mouse wheel.
    bool on_configure_event(GdkEventConfigure* event);//Handles resizing of the window. Calls resetview().
 };
 #endif

@@ -197,7 +197,7 @@ void TwoDeeOverview::extraDraw(){
  *   Allow subsequent threads to act.
  *   (Thread ends).
  * */
-void TwoDeeOverview::mainimage(/*pointbucket** buckets,int numbuckets,int detail*/){
+void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    if(threaddebug)cout << "Wait?" << endl;
    while(thread_existsthread){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
    if(threaddebug)cout << "***Finished waiting." << endl;
@@ -487,9 +487,9 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...
    if(imagetype==1){//Draw the main image.
-      if(thread_existsmain||thread_existsthread)if(threaddebug)cout << "Help! Am stalling!" << endl;
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
-         if(!extraDrawing){//If not ding so already, prepare to draw again after the interrupt.
+         if(threaddebug)cout << "Help! Am stalling!" << endl;
+         if(!extraDrawing){//If not doing so already, prepare to draw again after the interrupt.
             extraDrawing = true;
             signal_extraDraw();
          }
@@ -511,17 +511,18 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          cout << "No points returned." << endl;
          return false;
       }
-      numbuckets = pointvector->size();
-      buckets = new pointbucket*[numbuckets];
+      int numbuckets = pointvector->size();
+      pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
          buckets[i]=(*pointvector)[i];
       }
-      detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
+      int detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
       detail=(int)(numbuckets*maindetailmod);//...
       if(detail<1)detail=1;//...
       interruptthread = false;//New threads should not be immediately interrupted.
       thread_existsmain = true;//No more threads should be made for now.
-      data_former_thread = Glib::Thread::create(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),false);//This thread will interpret the data before telling the main thread to draw.
+      Glib::Thread* data_former_thread;
+      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets,detail),false);//This thread will interpret the data before telling the main thread to draw.
       delete pointvector;
    }
    else if(imagetype==2){//Draw the preview.
@@ -556,6 +557,11 @@ bool TwoDeeOverview::returntostart(){
    boundary* lidarboundary = lidardata->getboundary();
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
+   double xratio = xdif/get_screen()->get_width();//This ratio defines, along with zoomlevel, the translation from world coordinates to window coordinates.
+   double yratio = ydif/get_screen()->get_height();//...
+   yratio*=1.3;//... (This accounts for some amount of "clutter" at the top and bottom of the screen in the form of taskbars etc.).
+   if(xratio>yratio)ratio = xratio;//...
+   else ratio = yratio;//...
    centrex = lidarboundary->minX+xdif/2;//Image should be centred at its centre.
    centrey = lidarboundary->minY+ydif/2;//...
    zoomlevel=1;//Back to the starting zoom, which should cause the entire image to be visible.
@@ -583,7 +589,6 @@ void TwoDeeOverview::resetview(){
 //This method causes the label below the toolbar to display information about a point that has been selected (using the right mouse button). It starts by setting the label to 0 0 0. It then determines the world coordinates selected from the window coordinates and calls a subset for that. However, assuming that any points are returned at all, an entire bucket's worth of points will be returned. These points are then narrowed down to one point firstly by calling the vetpoints() function to only get the points that lie in or overlap (I think) the square defined by the point's position and the pointsize and zoom position (i.e. the size of the point on the screen). After that, all remaining points are compared and the one on top, the one with the largest z, which would likely be the one the user see or sees mostly, is selected as THE point. Data about the point is extracted from it, with a reference to the quadtree to get the filename. The information displayed is the following: X, Y and Z values; the time; the intensity; the classification; the filename of the file the point is from and the return number.
 bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    string meh = "0\n0\n0";
-   rulerlabel->set_text(meh);
    double pointeroffx = eventx - get_width()/2;//This offset exists because, in world coordinates, 0 is the centre.
    double pointeroffy = eventy - get_height()/2;//...and the same for this one.
    double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;//Define an area of equal size to that of the points on the screen.
@@ -601,12 +606,14 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    }
    if(pointvector->size()>0){//If there aren't any points, don't bother.
       double midx = centrex + pointeroffx * ratio/zoomlevel;//This is needed for the vetpoints() function.
+      bool anypoint = false;
       int bucketno=0;
       int pointno=0;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
          bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->numberofpoints;j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
+               anypoint = true;
                if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point
                   bucketno=i;//Select them.
                   pointno=j;//...
@@ -629,8 +636,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
       rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
       string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
-      rulerlabel->set_text(pointstring);
+      if(anypoint)rulerlabel->set_text(pointstring);
+      else rulerlabel->set_text(meh);
    }
+   else rulerlabel->set_text(meh);
    delete pointvector;
    return true;
 }
