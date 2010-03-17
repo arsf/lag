@@ -69,7 +69,7 @@ class SerializableInnerBucket
 public:
     point *points;
     int size;
-    int length;
+    int numpoints;
     int increase;
 
     SerializableInnerBucket(){};
@@ -78,7 +78,7 @@ public:
     {
         points = (point*) malloc(initialsize * sizeof(point));
         size = initialsize;
-        length = 0;
+        numpoints = 0;
         this->increase = increase;
     };
 
@@ -86,19 +86,19 @@ public:
     {
         if (points != NULL)
         {
-            delete[] points;
+            free(points);
         }
     };
 
     inline void setpoint(point& newP)
     {
-        if (length == size)
+        if (numpoints == size)
         {
             size+=increase;
             points = (point*) realloc(points, size * sizeof(point));
         }
-        points[length]=newP;
-        length++;
+        points[numpoints]=newP;
+        numpoints++;
     }
 
 private:
@@ -110,9 +110,9 @@ private:
     void save(Archive & ar, const unsigned int version) const
     {
         ar & increase;
-        ar & length;
+        ar & numpoints;
         ar & size;
-        for (int k=0; k<length; k++)
+        for (int k=0; k<numpoints; k++)
         {
             ar & points[k];
         }
@@ -122,13 +122,13 @@ private:
     void load(Archive & ar, const unsigned int version)
     {
         ar & increase;
-        ar & length;
+        ar & numpoints;
         ar & size;
         if (size != 0)
         {
             points = new point[size];
 
-            for (int k = 0; k < length; k++)
+            for (int k = 0; k < numpoints; k++)
             {
                 ar & points[k];
             }

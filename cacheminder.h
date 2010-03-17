@@ -32,7 +32,7 @@ public:
     void cachethread();
     void startcachethread();
     void stopcachethread();
-
+    void clearcache();
 
 private:
     deque<pointbucket*> bucketsincache;

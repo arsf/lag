@@ -25,6 +25,9 @@ using namespace std;
 typedef tr1::unordered_map<uint8_t, string> flighthash;
 
 class quadtree{
+
+    
+
     quadtreenode *root;   
     int capacity;
     int flightlinenum;
@@ -36,61 +39,153 @@ class quadtree{
     string instancedirectory;
 public:
    
-   // constructor that builds a new tree from a loader object
-   quadtree(lidarpointloader *l, int cap, int nth, int cachesize, ostringstream *s = NULL);
+   /**
+     * a constructor that builds a new quad tree from a given lidarpointloader object
+     *
+     * @param loader lidarpointloader object for the file to be loaded
+     * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
+     * @param nth the number of points to skip between each loaded point
+     * @param cachesize the number of points to hold in ram at any one time
+     * @param errorstream string stream to which error messages will be appended
+     */
+   quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, ostringstream *errorstream = NULL);
    
-   // constructor that builds a new tree from a specified area of a file
-   quadtree(lidarpointloader *l,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *s = NULL);
-   
-   // constructor that builds a new tree with user defined dimensions
-   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *s = NULL);
+   /**
+     * a constructor that builds a new quadtree from a given lidarpointloader object using a fence
+     *
+     * @param loader lidarpointloader object for the file to be loaded
+     * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
+     * @param nth the number of points to skip between each loaded point
+     * @param cachesize the number of points to hold in ram at any one time
+     * @param errorstream string stream to which error messages will be appended
+     * @param minX X value of the lower left corner of the fence
+     * @param minY Y value of the lower left corner of the fence
+     * @param maxX X value of the upper right corner of the fence
+     * @param maxY Y value of the upper right corner of the fence
+     */
+   quadtree(lidarpointloader *loader,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *errorstream = NULL);
+
+
+   /**
+    * a constructor that builds a new quadtree with user defined dimensions
+    *
+    * @param minX X value of the lower left corner of the tree
+    * @param minY Y value of the lower left corner of the tree
+    * @param maxX X value of the upper right corner of the tree
+    * @param maxY Y value of the upper right corner of the tree
+    * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
+    * @param cachesize the number of points to hold in ram at any one time
+    * @param errorstream string stream to which error messages will be appended
+    */
+   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *errorstream = NULL);
    ~quadtree();
    
-   // inserts a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
+
+   /**
+    *  method to insert a new point into the quad tree, throws an exception if the point dosen't fall within the quadtree boundary
+    * 
+    * @param newP the new point to be inserted
+    */
    bool insert(point newP);
    
-   // debugging method, prints out the quadtree, only usefull in tiny quadtrees <50 points
+   /**
+    * debugging method, prints out the quadtree, only usefull in tiny quadtrees less than 50 points
+    */
    void print();
    
-   // returns true if the quadtree has no points
+   /**
+    *  method to check wether the quadtree contains any points
+    *
+    * @return true if the quadtree contains no points
+    */
    bool isEmpty();
    
-   // loads points from a Las file using the loader object given, nth defines how many points to
-   // ignore per point, ie nth = 9 means every 10th point is loaded, 0 means every point is loaded
-   void load(lidarpointloader *l, int nth);
+   /**
+    * method to load points from a Las file using the loader object given
+    *
+    * @param loader lidarpointloader object to be used
+    * @param nth the number of points to skipp between each point to be loaded
+    */
+   void load(lidarpointloader *loader, int nth);
    
-   // same as above but only loads points within the area given
-   void load(lidarpointloader *l, int nth, double minX, double minY, double maxX, double maxY);
+   /**
+    * method to load points from a Las file using the loader object given
+    *
+    * @param loader lidarpointloader object to be used
+    * @param nth the number of points to skipp between each point to be loaded
+    * @param minX X value of the lower left corner of the fence
+    * @param minY Y value of the lower left corner of the fence
+    * @param maxX X value of the upper right corner of the fence
+    * @param maxY Y value of the upper right corner of the fence
+    */
+   void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
    
-   // for a given area this method returns a pointer to a vector which contains
-   // pointers to all the buckets that could contain points falling within this area
-   // NOTE : this area must be defined by the lower left and up right points of a rectangle
-   // NOTE : this version adds the buckets of the subset to a cacheing list that is
-   // processed in the background by a seperate thread
+   /**
+    * method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
+    * that are in some area within the subset, this means that the subset contains points that
+    * are not within the boundary given.
+    *
+    * @param minX X value of the lower left corner of the subset
+    * @param minY Y value of the lower left corner of the subset
+    * @param maxX X value of the upper right corner of the subset
+    * @param maxY Y value of the upper right corner of the subset
+    *
+    * @return a pointer to a vector, which contains pointers to buckets. this must be deleted by the caller of this method
+    */
    vector<pointbucket*>* subset(double minX, double minY, double maxX, double maxY);
-   // this version does no include cacheing untill a point is actually accessed
-   // and is therefore usefull if only meta data from buckets is required.
+
+   /*
+    * placeholder
+    */
    vector<pointbucket*>* uncachedsubset(double minX, double minY, double maxX, double maxY);
    
-   // not implemented yet <----------- WARNING
+   /*
+    * placeholder
+    */
    point* search(int x,int y,int z);
    
-   // this method sorts the points within each bucket (this means that they are not
-   // sorted globely) the parameter defines which point attribute to sort by (accending)
+   /**
+    * method to sort the points into accending order within each bucket (this means that they are not
+    * sorted globely)
+    *
+    * @param v defines the type of sort required "H" indicates sort by height (Z)
+    */
    void sort(char v);
    
-   // for a given area this method returns a pointer to a vector which contains
-   // pointers to all the buckets that could contain points falling within this area
-   // NOTE : this method takes two points which forms a line and uses the width value
-   // to work out the actual area defined by the rectangle. if it finds the rectangle is axis aligned
-   // it deferes to the subset method which is faster in that case.
+   /**
+    * method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
+    * that are in some area within the subset, this means that the subset contains points that
+    * are not within the boundary given.
+    *
+    * @note this method takes two points which form a line and uses the width value
+    * to work out the actual area defined by the rectangle centered on that line. if it finds the rectangle is axis aligned
+    * it deferes to the subset method which is faster in that case.
+    *
+    * @param x1 the X position of the first point
+    * @param y1 the Y position of the first point
+    * @param x2 the X position of the second point
+    * @param y2 the Y position of the second point
+    * @param width the width of the rectangle (width/2 will be added to each side of the line)
+    *
+    * @return a pointer to a vector, which contains pointers to buckets. this must be deleted by the caller of this method
+    */
    vector<pointbucket*>* advsubset(double x1, double y1, double x2, double y2, double width);
    
-   // returns a boundary object representing the area the root node covers
+   /**
+    * method to get the area the root node covers
+    *
+    * @return a boundary object defining the area covered by the quadtrees root node (the area of the entire quadtree)
+    */
    boundary* getboundary();
    
-   //this method takes a flightlinenum and returns the associated filename 
-   // (the numbers are stored with each point because it takes less memory)
+   /**
+    * a method to find the filename associated with a flight line number
+    * (the numbers are stored with each point because it takes less memory than the file string)
+    *
+    * @param flightlinenum the number of the flight line
+    *
+    * @return a string containg the path that was used in the lidarpointloader for this flightline
+    */
    string getfilename(uint8_t flightlinenum);
    
 private:

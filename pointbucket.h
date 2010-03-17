@@ -29,17 +29,17 @@ class pointbucket
 {
 
 public:
-    int numberofpoints;
+    int numberofcachedpoints;
     unsigned short int minintensity, maxintensity;
     double minz, maxz;
     double minx, miny, maxx, maxy;
     cacheminder *MCP;
-    int numberofcachedpoints;
+    int numberofserializedpoints;
     bool serialized;
     bool incache;
     int cap;
     string filepath;
-    SerializableInnerBucket *b;
+    SerializableInnerBucket *innerbucket;
     boost::recursive_mutex cachemutex;
     string instancedirectory;
     int innerbucketsize;
@@ -69,12 +69,12 @@ public:
     {
         if (incache)
         {
-            return b->points[i];
+            return innerbucket->points[i];
         }
         else
         {
             cache(true);
-            return b->points[i];
+            return innerbucket->points[i];
         }
     }
 
@@ -83,18 +83,21 @@ public:
         if (!incache)
         {
             cache(true);
+
         }
-        if (b->size == b->length)
+        if (innerbucket->size == innerbucket->numpoints)
         {
-            if(!increasecache(true, b->increase))
+            if(!increasecache(true, innerbucket->increase))
             {
                 throw ramallocationexception("failed to acquire extra ram to allow more points to be inserted");
             }
-            innerbucketsize = b->size;
-
+            innerbucket->setpoint(newP);
+            innerbucketsize = innerbucket->size;
+            return;
         }
 
-        b->setpoint(newP);
+        innerbucket->setpoint(newP);
+        return;
     }
 
 };

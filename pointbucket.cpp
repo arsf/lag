@@ -18,10 +18,10 @@ using namespace std;
 
 pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory)
 {
-    numberofpoints = 0;
     numberofcachedpoints = 0;
+    numberofserializedpoints = 0;
     this->cap = cap;
-    innerbucketsize = 20000;
+    innerbucketsize = 25000;
     this->minx = minx;
     this->miny = miny;
     this->maxx = maxx;
@@ -41,7 +41,7 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
         boost::filesystem::create_directory(filepath);
     }
     filepath.append("/"+boost::lexical_cast<string>(minx)+"-"+boost::lexical_cast<string>(miny)+"_"+boost::lexical_cast<string>(maxy)+"-"+boost::lexical_cast<string>(maxx));
-
+    innerbucket = NULL;
 }
 
 
@@ -63,7 +63,7 @@ pointbucket::~pointbucket()
     if (incache)
     {
         MCP->releasecache(cap, this);
-        delete b;
+        delete innerbucket;
     }
 }
 
@@ -74,23 +74,24 @@ pointbucket::~pointbucket()
     // SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
 void pointbucket::uncache()
 {
+    cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it, also if serial version is out of date overwrite it
-    if (serialized == false || numberofcachedpoints != numberofpoints)
+    if (serialized == false || numberofserializedpoints != numberofcachedpoints)
     {
 
-        b->length=numberofpoints;
+        innerbucket->numpoints=numberofcachedpoints;
         std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
-        binaryouta << b;
+        binaryouta << innerbucket;
         ofs.close();
         serialized = true;
-        innerbucketsize = b->size;
+        innerbucketsize = innerbucket->size;
     }
     //clean up bucket
-    delete b;
-    b = NULL;
+    delete innerbucket;
+    innerbucket = NULL;
     // free memory only after removal is complete
     MCP->releasecache(innerbucketsize, this);
     incache = false;
@@ -104,6 +105,7 @@ void pointbucket::uncache()
     // if space cannot be found false is returned
 bool pointbucket::cache(bool force)
 {
+    assert(innerbucket == NULL);
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // if already cached just return
     if (incache)
@@ -117,16 +119,20 @@ bool pointbucket::cache(bool force)
         {
             return false;
         }
-        b = new SerializableInnerBucket();
+        innerbucket = new SerializableInnerBucket();
         // load the serial version from the filename assigned into a new bucket instance
+
+
+        
 
         std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
 
         boost::archive::binary_iarchive binaryina(ifs);
-        binaryina >> b;
+        binaryina >> innerbucket;
         ifs.close();
         incache = true;
-        numberofcachedpoints = numberofpoints;
+        cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
+        numberofserializedpoints = numberofcachedpoints;
         return true;
     }
     else
@@ -136,7 +142,7 @@ bool pointbucket::cache(bool force)
         {
             return false;
         }
-        b = new SerializableInnerBucket(innerbucketsize, 20000);
+        innerbucket = new SerializableInnerBucket(innerbucketsize, 25000);
         incache = true;
         return true;
     }

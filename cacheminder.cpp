@@ -7,6 +7,7 @@
 
 #include "cacheminder.h"
 #include <iostream>
+#include <deque>
 #include "boost/date_time/time_duration.hpp"
 #include "quadtreeexceptions.h"
 
@@ -21,6 +22,14 @@ cacheminder::cacheminder(int cachesize)
 // WANRING!!!: it is imperitive that the requestsize is correct and is always
 // identical to the relasesize given to the releasecache method below
 // if there don't match up things go downhill fast, see releasecache for justification
+
+void cacheminder::clearcache()
+{
+    while (!bucketsincache.empty())
+    {
+        bucketsincache.front()->uncache();
+    }
+}
 
 bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force)
 {
