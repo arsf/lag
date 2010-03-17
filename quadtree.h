@@ -109,7 +109,7 @@ public:
    void load(lidarpointloader *loader, int nth);
    
    /**
-    * method to load points from a Las file using the loader object given
+    * a method to load points from a Las file using the loader object given
     *
     * @param loader lidarpointloader object to be used
     * @param nth the number of points to skipp between each point to be loaded
@@ -121,7 +121,7 @@ public:
    void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
    
    /**
-    * method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
+    * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that
     * are not within the boundary given.
     *
@@ -145,7 +145,7 @@ public:
    point* search(int x,int y,int z);
    
    /**
-    * method to sort the points into accending order within each bucket (this means that they are not
+    * a method to sort the points into accending order within each bucket (this means that they are not
     * sorted globely)
     *
     * @param v defines the type of sort required "H" indicates sort by height (Z)
@@ -153,7 +153,7 @@ public:
    void sort(char v);
    
    /**
-    * method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
+    * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that
     * are not within the boundary given.
     *
@@ -172,7 +172,7 @@ public:
    vector<pointbucket*>* advsubset(double x1, double y1, double x2, double y2, double width);
    
    /**
-    * method to get the area the root node covers
+    * a method to get the area the root node covers
     *
     * @return a boundary object defining the area covered by the quadtrees root node (the area of the entire quadtree)
     */
@@ -189,10 +189,17 @@ public:
    string getfilename(uint8_t flightlinenum);
    
 private:
-   // this method expands the quadtree whose root is oldnode to contain the boundary passed
-   // as nb, to do this is creates a new root node above oldnode and makes the oldnode its child.
-   // NOTE : the method reassigns oldnode to point at the new root node providing a handle on the
-   // new top layer of the tree.
+   /**
+     * a method thats expands the quadtree to encompass new points
+     *
+     * @note : the returned pointer refers to the new root of the tree using the pointer
+     * from oldnode will lead to one of the new roots child nodes
+     *
+     * @param oldnode the root node of the current quadtree
+     * @param nb the boundary of the new points
+     *
+     * @return pointer to the new root of the tree
+     */
    quadtreenode* expandboundary(quadtreenode* oldnode, boundary* nb);
    
 };

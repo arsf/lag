@@ -499,7 +499,7 @@ bool quadtree::insert(point newP)
 
 bool compare(pointbucket *pb1, pointbucket *pb2)
 {
-   if (pb1->incache && !pb2->incache)
+   if (pb1->isincache() && !pb2->isincache())
    {
       return true;
    }

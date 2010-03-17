@@ -321,31 +321,9 @@ bool quadtreenode::insert(point newP)
             bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP, instancedirectory);
             //cout << "bucket " << bucket << " created " << endl;
          }
-         if (bucket->numberofpoints == 0)
-         {
-            bucket->maxintensity = newP.intensity;
-            bucket->minintensity = newP.intensity;
-            bucket->maxz = newP.z;
-            bucket->minz = newP.z;
-         }
-         if (newP.intensity > bucket->maxintensity)
-         {
-            bucket->maxintensity = newP.intensity;
-         }
-         if (newP.intensity < bucket->minintensity)
-         {
-            bucket->minintensity = newP.intensity;
-         }
-         if (newP.z > bucket->maxz)
-         {
-            bucket->maxz = newP.z;
-         }
-         if (newP.z < bucket->minz)
-         {
-            bucket->minz = newP.z;
-         }
+         
          bucket->setpoint(newP);
-         bucket->numberofpoints++;
+         
          numofpoints++;
          return true;
       }

@@ -28,11 +28,13 @@ class cacheminder;
 class pointbucket
 {
 
-public:
+
     int numberofpoints;
+
+
     unsigned short int minintensity, maxintensity;
-    double minz, maxz;
-    double minx, miny, maxx, maxy;
+    double minZ, maxZ;
+    double minX, minY, maxX, maxY;
     cacheminder *MCP;
     int numberofserializedpoints;
     bool serialized;
@@ -44,10 +46,25 @@ public:
     string instancedirectory;
     int innerbucketsize;
 
-
-    // constructer which initilizes the capacity of the bucket along with the boundary from
-    // parameters and the other varibles to defaults
-    pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory);
+public:
+    /**
+     *  constructer which initilizes the capacity of the bucket along with the boundary from
+     * parameters and the other varibles to defaults
+     *
+     * @param cap the number of points the bucket can hold
+     * @param
+     * @param minX X value of the lower left corner of the boundary
+     * @param minY Y value of the lower left corner of the boundary
+     * @param maxX X value of the upper right corner of the boundary
+     * @param maxY Y value of the upper right corner of the boundary
+     * @param MCP the cacheminder for this quadtree instance
+     * @param instanceddirectory string containing a path to a directory where temporary files will be saved
+     */
+    pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory);
+   
+    /**
+     * deconstructor
+     */
     ~pointbucket();
 
     // the uncache method removes the associated SerializableInnerBucket and writes
@@ -78,13 +95,38 @@ public:
         }
     }
 
-    inline void setpoint(point& newP)
+    void setpoint(point& newP)
     {
         if (!incache)
         {
             cache(true);
 
         }
+
+        if (numberofpoints == 0)
+         {
+            maxintensity = newP.intensity;
+            minintensity = newP.intensity;
+            maxZ = newP.z;
+            minZ = newP.z;
+         }
+         if (newP.intensity > maxintensity)
+         {
+            maxintensity = newP.intensity;
+         }
+         if (newP.intensity < minintensity)
+         {
+            minintensity = newP.intensity;
+         }
+         if (newP.z > maxZ)
+         {
+            maxZ = newP.z;
+         }
+         if (newP.z < minZ)
+         {
+            minZ = newP.z;
+         }
+
         if (innerbucket->size == innerbucket->numpoints)
         {
             if(!increasecache(true, innerbucket->increase))
@@ -93,13 +135,65 @@ public:
             }
             innerbucket->setpoint(newP);
             innerbucketsize = innerbucket->size;
-            return;
+            numberofpoints++;
+            
         }
 
+
         innerbucket->setpoint(newP);
+        numberofpoints++;
         return;
     }
 
+    inline int getnumberofpoints() const
+    {
+        return numberofpoints;
+    }
+
+    inline double getmaxX() const
+    {
+        return maxX;
+    }
+
+    inline double getmaxY() const
+    {
+        return maxY;
+    }
+
+    inline double getmaxZ() const
+    {
+        return maxZ;
+    }
+
+    inline double getminX() const
+    {
+        return minX;
+    }
+
+    inline double getminY() const
+    {
+        return minY;
+    }
+
+    inline double getminZ() const
+    {
+        return minZ;
+    }
+
+    bool isincache() const
+    {
+        return incache;
+    }
+
+    unsigned short int getmaxintensity() const
+    {
+        return maxintensity;
+    }
+
+    unsigned short int getminintensity() const
+    {
+        return minintensity;
+    }
 };
 
 

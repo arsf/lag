@@ -16,16 +16,16 @@ using namespace std;
 
 
 
-pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory)
+pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory)
 {
     numberofpoints = 0;
     numberofserializedpoints = 0;
     this->cap = cap;
     innerbucketsize = 25000;
-    this->minx = minx;
-    this->miny = miny;
-    this->maxx = maxx;
-    this->maxy = maxy;
+    this->minX = minX;
+    this->minY = minY;
+    this->maxX = maxX;
+    this->maxY = maxY;
     this->MCP = MCP;
     serialized = false;
     incache = false;
@@ -40,7 +40,7 @@ pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double 
 
         boost::filesystem::create_directory(filepath);
     }
-    filepath.append("/"+boost::lexical_cast<string>(minx)+"-"+boost::lexical_cast<string>(miny)+"_"+boost::lexical_cast<string>(maxy)+"-"+boost::lexical_cast<string>(maxx));
+    filepath.append("/"+boost::lexical_cast<string>(minX)+"-"+boost::lexical_cast<string>(minY)+"_"+boost::lexical_cast<string>(maxY)+"-"+boost::lexical_cast<string>(maxX));
     innerbucket = NULL;
 }
 
@@ -131,7 +131,7 @@ bool pointbucket::cache(bool force)
         binaryina >> innerbucket;
         ifs.close();
         incache = true;
-      //  cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
+       // cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
         numberofserializedpoints = numberofpoints;
         return true;
     }

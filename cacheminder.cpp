@@ -231,7 +231,7 @@ void cacheminder::cachethread()
             cout << "cache thread: que empty" << endl;
             break;
         }
-        if (cachetodo->front()->incache)
+        if (cachetodo->front()->isincache())
         {
             cachetodo->pop_front();
             continue;

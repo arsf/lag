@@ -66,12 +66,13 @@ struct boundary
 // it is simple a wrapper round an array to provide some basic information to the serialization methods
 class SerializableInnerBucket
 {
-public:
-    point *points;
+    friend class pointbucket;
+    
     int size;
     int numpoints;
     int increase;
-
+public:
+    point *points;
     SerializableInnerBucket(){};
 
     SerializableInnerBucket(int initialsize, int increase)
