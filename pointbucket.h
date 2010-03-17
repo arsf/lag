@@ -29,7 +29,7 @@ class pointbucket
 {
 
 public:
-    int numberofcachedpoints;
+    int numberofpoints;
     unsigned short int minintensity, maxintensity;
     double minz, maxz;
     double minx, miny, maxx, maxy;

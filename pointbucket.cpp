@@ -18,7 +18,7 @@ using namespace std;
 
 pointbucket::pointbucket(int cap, double minx, double miny, double maxx, double maxy, cacheminder *MCP, string instancedirectory)
 {
-    numberofcachedpoints = 0;
+    numberofpoints = 0;
     numberofserializedpoints = 0;
     this->cap = cap;
     innerbucketsize = 25000;
@@ -77,10 +77,10 @@ void pointbucket::uncache()
     cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it, also if serial version is out of date overwrite it
-    if (serialized == false || numberofserializedpoints != numberofcachedpoints)
+    if (serialized == false || numberofserializedpoints != numberofpoints)
     {
 
-        innerbucket->numpoints=numberofcachedpoints;
+        innerbucket->numpoints=numberofpoints;
         std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
 
         boost::archive::binary_oarchive binaryouta(ofs);
@@ -132,7 +132,7 @@ bool pointbucket::cache(bool force)
         ifs.close();
         incache = true;
         cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
-        numberofserializedpoints = numberofcachedpoints;
+        numberofserializedpoints = numberofpoints;
         return true;
     }
     else
