@@ -25,9 +25,9 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
 bool* vetpoints(pointbucket* points,double startx,double starty,double endx,double endy,double width){
    double width2 = width/2;
    double error = 0.000001;//Allows points on the line to be counted. May or may not be necessary/desirable.
-   bool* correctpoints = new bool[points->numberofpoints];//This will be returned later.
+   bool* correctpoints = new bool[points->getnumberofpoints()];//This will be returned later.
    if(startx==endx){//If the profile is parallel to the y axis:
-      for(int i=0;i<points->numberofpoints;i++){
+      for(int i=0;i<points->getnumberofpoints();i++){
          correctpoints[i]=false;
          if((starty-points->getpoint(i).y+error>0 && endy-points->getpoint(i).y-error<0) ||
             (starty-points->getpoint(i).y-error<0 && endy-points->getpoint(i).y+error>0)){
@@ -39,7 +39,7 @@ bool* vetpoints(pointbucket* points,double startx,double starty,double endx,doub
       }
    }
    else if(starty==endy){//If the profile is parallel to the x axis:
-      for(int i=0;i<points->numberofpoints;i++){
+      for(int i=0;i<points->getnumberofpoints();i++){
          correctpoints[i]=false;
          if((startx-points->getpoint(i).x+error>0 && endx-points->getpoint(i).x-error<0) ||
             (startx-points->getpoint(i).x-error<0 && endx-points->getpoint(i).x+error>0)){
@@ -64,7 +64,7 @@ bool* vetpoints(pointbucket* points,double startx,double starty,double endx,doub
       double lenconsboxright = startyright - (startxright*lengradbox);//...
       //Testing points:
       double interstart,interend,interleft,interright;
-      for(int i=0;i<points->numberofpoints;i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
+      for(int i=0;i<points->getnumberofpoints();i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
          interstart = points->getpoint(i).x * widgradbox + widconsboxstart;
          interend = points->getpoint(i).x * widgradbox + widconsboxend;
          interleft = points->getpoint(i).x * lengradbox + lenconsboxleft;

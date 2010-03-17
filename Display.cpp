@@ -166,22 +166,22 @@ void Display::prepare_image(){
    }
    int numbuckets = pointvector->size();
    pointbucket** buckets = &(*pointvector)[0];
-   double maxz = buckets[0]->maxz,minz = buckets[0]->minz;
-   int maxintensity = buckets[0]->maxintensity,minintensity = buckets[0]->minintensity;
+   double maxz = buckets[0]->getmaxZ(),minz = buckets[0]->getminZ();
+   int maxintensity = buckets[0]->getmaxintensity(),minintensity = buckets[0]->getminintensity();
    for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
-      if(maxz<buckets[i]->maxz)maxz = buckets[i]->maxz;
-      if(minz>buckets[i]->minz)minz = buckets[i]->minz;
-      if(maxintensity<buckets[i]->maxintensity)maxintensity = buckets[i]->maxintensity;
-      if(minintensity>buckets[i]->minintensity)minintensity = buckets[i]->minintensity;
+      if(maxz<buckets[i]->getmaxZ())maxz = buckets[i]->getmaxZ();
+      if(minz>buckets[i]->getminZ())minz = buckets[i]->getminZ();
+      if(maxintensity<buckets[i]->getmaxintensity())maxintensity = buckets[i]->getmaxintensity();
+      if(minintensity>buckets[i]->getminintensity())minintensity = buckets[i]->getminintensity();
    }
    rmaxz = maxz; rminz = minz;
    rmaxintensity = maxintensity; rminintensity = minintensity;
    if(maxz<=minz)maxz=minz+1;
    else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the buckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
       double* zdata = new double[numbuckets];
-      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->maxz;
+      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getmaxZ();
       double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
-      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->minz;
+      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getminZ();
       double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
       maxz=highperc;
       minz=lowperc;

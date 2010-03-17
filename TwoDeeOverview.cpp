@@ -223,7 +223,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    delete lidarboundary;
    for(int i=0;i<numbuckets;i++){//For every bucket...
       if(threaddebug)cout << i << " " << numbuckets << endl;
-      if(threaddebug)cout << buckets[i]->numberofpoints << endl;
+      if(threaddebug)cout << buckets[i]->getnumberofpoints() << endl;
       if(threaddebug)cout << detail << endl;
       if(threaddebug)cout << "If drawing, pause." << endl;
       while(drawing_to_GL){usleep(10);}//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
@@ -249,11 +249,11 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       }
       if(threaddebug)cout << "No interrupt." << endl;
       pointcount=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
-      if(buckets[i]->minx<drawnsofarminx)drawnsofarminx = buckets[i]->minx;//Set the boundary of the buckets selected so far.
-      if(buckets[i]->miny<drawnsofarminy)drawnsofarminy = buckets[i]->miny;//...
-      if(buckets[i]->maxx>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->maxx;//...
-      if(buckets[i]->maxy>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->maxy;//...
-      for(int j=0;j<buckets[i]->numberofpoints;j+=detail){//... and for every point, determine point colour and position:
+      if(buckets[i]->getminX()<drawnsofarminx)drawnsofarminx = buckets[i]->getminX();//Set the boundary of the buckets selected so far.
+      if(buckets[i]->getminY()<drawnsofarminy)drawnsofarminy = buckets[i]->getminY();//...
+      if(buckets[i]->getmaxX()>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->getmaxX();//...
+      if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
+      for(int j=0;j<buckets[i]->getnumberofpoints();j+=detail){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
 //         if(threaddebug)cout << "Get coords." << endl;
          x = buckets[i]->getpoint(j).x;
@@ -436,8 +436,6 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 //   if(bucketminx < 1)bucketminx = 1;//...
 //   if(bucketminy < 1)bucketminy = 1;//...
    glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
-//   cout << drawnsofarminx*zoomlevel/ratio + get_width()/2 << " " << drawnsofarminy*zoomlevel/ratio + get_height()/2 << " " << drawnsofarmaxx*zoomlevel/ratio + get_width()/2 << " " << drawnsofarmaxy*zoomlevel/ratio + get_height()/2 << endl;
-//   glCopyPixels(origpanstartx-panstartx,panstarty-origpanstarty,get_width()+panstartx-origpanstartx,get_height()+origpanstarty-panstarty,GL_COLOR);
    //******************************************************************************Still not sure whether to draw the overlays (ruler,profile,fence) in GTK or OpenGL. GTK would require more work and duplication, and more complexity, but would allow the user to draw over the flightline while it was still drawing in full detail and from scratch. Hmmmmmmm...
 //   int line=0,intensity=0,classification=0,rnumber=0;
 //   double x=0,y=0,z=0;//Point values
@@ -451,17 +449,17 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    glColor3f(1.0,1.0,1.0);
    for(int i=0;i<numbuckets;i++){//For every bucket...
 //      red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-      vertices[0]=buckets[i]->minx-centrex;
-      vertices[1]=buckets[i]->miny-centrey;
+      vertices[0]=buckets[i]->getminX()-centrex;
+      vertices[1]=buckets[i]->getminY()-centrey;
       vertices[2]=altitude;
-      vertices[3]=buckets[i]->minx-centrex;
-      vertices[4]=buckets[i]->maxy-centrey;
+      vertices[3]=buckets[i]->getminX()-centrex;
+      vertices[4]=buckets[i]->getmaxY()-centrey;
       vertices[5]=altitude;
-      vertices[6]=buckets[i]->maxx-centrex;
-      vertices[7]=buckets[i]->maxy-centrey;
+      vertices[6]=buckets[i]->getmaxX()-centrex;
+      vertices[7]=buckets[i]->getmaxY()-centrey;
       vertices[8]=altitude;
-      vertices[9]=buckets[i]->maxx-centrex;
-      vertices[10]=buckets[i]->miny-centrey;
+      vertices[9]=buckets[i]->getmaxX()-centrex;
+      vertices[10]=buckets[i]->getminY()-centrey;
       vertices[11]=altitude;
 //      colours[3*count]=red;
 //      colours[3*count+1]=green;
@@ -611,7 +609,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       int pointno=0;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
          bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
-         for(int j=0;j<pointvector->at(i)->numberofpoints;j++){//For all points...
+         for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
                anypoint = true;
                if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point

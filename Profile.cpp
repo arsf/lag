@@ -97,7 +97,7 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],startx,starty,endx,endy,width);
-      for(int j=0;j<(*pointvector)[i]->numberofpoints;j++){
+      for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points their flightline numbers and compiles a list of all the flightlines in the profile.
             if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j).flightline)==flightlinestot.end()){
                flightlinestot.push_back((*pointvector)[i]->getpoint(j).flightline);
@@ -110,7 +110,7 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
    totnumpoints = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
       for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
-         for(int k=0;k<(*pointvector)[j]->numberofpoints;k++){
+         for(int k=0;k<(*pointvector)[j]->getnumberofpoints();k++){
             if(correctpointsbuckets[j][k]){
                if((*pointvector)[j]->getpoint(k).flightline == flightlinestot[i]){
                   flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k));
