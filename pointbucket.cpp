@@ -74,7 +74,7 @@ pointbucket::~pointbucket()
     // SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
 void pointbucket::uncache()
 {
-    cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
+   // cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
     boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it, also if serial version is out of date overwrite it
     if (serialized == false || numberofserializedpoints != numberofpoints)
@@ -131,7 +131,7 @@ bool pointbucket::cache(bool force)
         binaryina >> innerbucket;
         ifs.close();
         incache = true;
-        cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
+      //  cout << "cacheing     actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
         numberofserializedpoints = numberofpoints;
         return true;
     }

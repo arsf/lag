@@ -199,8 +199,10 @@ void quadtreenode::subset(double minX, double minY, double maxX, double maxY, ve
       b->subset(minX, minY, maxX, maxY, buckets);
       c->subset(minX, minY, maxX, maxY, buckets);
       d->subset(minX, minY, maxX, maxY, buckets);
+      return;
    }
-   else
+
+   if(bucket != NULL)
    {
       // add bucket to the vector of buckets
       buckets->push_back(bucket);
@@ -513,7 +515,6 @@ bool lineintersect(double x1, double y1, double x2, double y2, double x3, double
 }
 
 // this method takes the forumula for 4 lines and checks if the x and y arguments are within them
-
 bool OBBpoint(double m1, double c1, double m2, double c2, double m3, double c3, double m4, double c4, double x, double y)
 {
    // find the point where an imaginary vertical line through the x value intersects with each line
