@@ -393,7 +393,6 @@ void on_showprofilecheck(){
 //When the value in the spinbutton for profile width is changed, tell the 2d overview, then make the new profile box and then draw it. This does NOT update the profile itself (or, at least, not yet). To update the profile after the width has been satisfactorily adjusted, the profiletoggle must be toggled and then untoggled.
 void on_profwidthselected(){
    tdo->setprofwidth(profwidthselect->get_value());
-   tdo->makeprofbox();
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 //   double startx,starty,endx,endy,width;//Experiment...
@@ -623,7 +622,7 @@ int GUIset(int argc,char *argv[]){
             refXml->get_widget("maindetailselect",maindetailselect);
             if(maindetailselect){
                maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-               maindetailselect->set_value(0.01);
+               maindetailselect->set_value(0.00);
                maindetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselected));
             }
             refXml->get_widget("returnbutton",returnbutton);
@@ -796,7 +795,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.02.19.1" << endl;
+   cout << "Build number: 2010.03.23.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

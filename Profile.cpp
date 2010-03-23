@@ -497,7 +497,7 @@ bool Profile::mainimage(int detail){
             }
             else if(classcolour){//Colour by classification.
                 switch(flightlinepoints[i][j].classification){
-                   case 0:case 1:red=1;green=1;blue=1;break;//White for non-classified.
+                   case 0:case 1:red=1;green=1;blue=0;break;//Yellow for non-classified.
                    case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
                    case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
                    case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
@@ -507,7 +507,7 @@ bool Profile::mainimage(int detail){
                    case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
 
                    case 9:red=0;green=0;blue=1;break;//Blue for water.
-                   case 12:red=1;green=1;blue=0;break;//Yellow for overlap points.
+                   case 12:red=1;green=1;blue=1;break;//White for overlap points.
                    default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
                 }
             }

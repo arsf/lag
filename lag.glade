@@ -1300,7 +1300,7 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
             </child>
             <child>
               <widget class="GtkCheckButton" id="classcheckbutton0">
-                <property name="label" translatable="yes">Non-classified [0,1] {Red}</property>
+                <property name="label" translatable="yes">Non-classified [0,1] {Yellow}</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -1420,7 +1420,7 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
             </child>
             <child>
               <widget class="GtkCheckButton" id="classcheckbuttonA">
-                <property name="label" translatable="yes">All other points [all other values] {Yellow}</property>
+                <property name="label" translatable="yes">All other points [all other values] {Red}</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
