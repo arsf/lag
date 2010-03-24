@@ -596,6 +596,19 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
    }
    c4 = y4 - (m4 * x4);
 
+
+   // this checks if any of the points of the subset fall within the nodes boundary
+   // showing a collision
+   if ((x1 < maxX && x1 > minX && y1 < maxY && y1 > minY) ||
+           (x2 < maxX && x2 > minX && y2 < maxY && y2 > minY) ||
+           (x3 < maxX && x3 > minX && y3 < maxY && y3 > minY) ||
+           (x4 < maxX && x4 > minX && y4 < maxY && y4 > minY))
+   {
+      addsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
+      return;
+   }
+  
+
    // pass the line formulas into the OBBpoint method, do this for each
    // of the four points of the node bounding box
    // if any return true then one of the points of the node bounding box is within
@@ -614,16 +627,7 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
 
 
 
-   // this checks if any of the points of the subset fall within the nodes boundary
-   // showing a collision
-   if ((x1 < maxX && x1 > minX && y1 < maxY && y1 > minY) ||
-           (x2 < maxX && x2 > minX && y2 < maxY && y2 > minY) ||
-           (x3 < maxX && x3 > minX && y3 < maxY && y3 > minY) ||
-           (x4 < maxX && x4 > minX && y4 < maxY && y4 > minY))
-   {
-      addsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
-      return;
-   }
+   
 
 
    // finally the four lines of the subset are compared to each of the four lines of

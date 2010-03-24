@@ -11,7 +11,7 @@
 #ifndef _QUADTREE_H
 #define	_QUADTREE_H
 
-#include "quadloader.h"
+
 #include "quadtreenode.h"
 #include <vector>
 #include "lidarpointloader.h"
@@ -24,10 +24,16 @@ using namespace std;
 
 typedef tr1::unordered_map<uint8_t, string> flighthash;
 
+/**
+ * this class represents a quadtree. all interaction with the quadtree by users (classes or physical users)
+ * is performed through this class. it holds metadata about the qaudtree along with a pointer to a single
+ * quadtreenode which is the root node. it provides functions to build the tree, load points and the access those points.
+ *
+ * @note the quadtree generates and uses a unique folder in the /tmp area of the machine it is run on
+ * to hold temporary data during exicution, if the program containing the quadtree end unexpectantly
+ * preventing the deconstructor from being called these temporary files will not be cleaned up.
+ */
 class quadtree{
-
-    
-
     quadtreenode *root;   
     int capacity;
     int flightlinenum;
@@ -64,6 +70,7 @@ public:
      * @param maxY Y value of the upper right corner of the fence
      */
    quadtree(lidarpointloader *loader,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *errorstream = NULL);
+
 
 
    /**
@@ -119,7 +126,8 @@ public:
     * @param maxY Y value of the upper right corner of the fence
     */
    void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
-   
+
+   void load(lidarpointloader *loader, int nth, double x1, double y1, double x2, double y2, double width);
    /**
     * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that
