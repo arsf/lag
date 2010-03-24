@@ -75,7 +75,7 @@ pointbucket::~pointbucket()
 void pointbucket::uncache()
 {
    // cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
-    boost::recursive_mutex::scoped_lock mylock(cachemutex);
+   // boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it, also if serial version is out of date overwrite it
     if (serialized == false || numberofserializedpoints != numberofpoints)
     {
@@ -106,7 +106,7 @@ void pointbucket::uncache()
 bool pointbucket::cache(bool force)
 {
     assert(innerbucket == NULL);
-    boost::recursive_mutex::scoped_lock mylock(cachemutex);
+    //boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // if already cached just return
     if (incache)
     {
@@ -151,7 +151,7 @@ bool pointbucket::cache(bool force)
 
 bool pointbucket::increasecache(bool force, int i)
 {
-    boost::recursive_mutex::scoped_lock mylock(cachemutex);
+   // boost::recursive_mutex::scoped_lock mylock(cachemutex);
    
     if (!incache)
     {
@@ -168,3 +168,90 @@ bool pointbucket::increasecache(bool force, int i)
     
 
 }
+
+void pointbucket::setpoint(point& newP)
+    {
+        if (!incache)
+        {
+            cache(true);
+
+        }
+
+        if (numberofpoints == 0)
+         {
+            maxintensity = newP.intensity;
+            minintensity = newP.intensity;
+            maxZ = newP.z;
+            minZ = newP.z;
+         }
+         if (newP.intensity > maxintensity)
+         {
+            maxintensity = newP.intensity;
+         }
+         if (newP.intensity < minintensity)
+         {
+            minintensity = newP.intensity;
+         }
+         if (newP.z > maxZ)
+         {
+            maxZ = newP.z;
+         }
+         if (newP.z < minZ)
+         {
+            minZ = newP.z;
+         }
+
+        if (innerbucket->size == innerbucket->numpoints)
+        {
+            if(!increasecache(true, innerbucket->increase))
+            {
+                throw ramallocationexception("failed to acquire extra ram to allow more points to be inserted");
+            }
+            innerbucket->setpoint(newP);
+            innerbucketsize = innerbucket->size;
+            numberofpoints++;
+
+        }
+
+
+        innerbucket->setpoint(newP);
+        numberofpoints++;
+        return;
+    }
+
+/*
+void pointbucket::generateraster(double width)
+{
+   double ratio = (maxX-minX)/(maxY-minY);
+   double height = width/ratio;
+   point *raster = new point[width][height];
+
+   for(int x=0; x<width; x++)
+   {
+      for(int y=0; y<height; y++)
+      {
+         raster[x][y].z = minZ-1;
+      }
+   }
+
+   for(int k=0; k<numberofpoints; k++)
+   {
+      point current = getpoint(k);
+      int x=abs((current.x % width)*10);
+      int y=abs((current.y % height)*10);
+
+      if(current.z > raster[x][y])
+      {
+         raster[x][y] = current;
+      }
+   }
+
+   for(int x=0; x<width; x++)
+   {
+      for(int y=0; y<height; y++)
+      {
+         raster[x][y].z = minZ-1;
+      }
+   }
+
+}*/

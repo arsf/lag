@@ -263,7 +263,7 @@ void quadtree::load(lidarpointloader *loader, int nth)
    boundary *nb = loader->getboundary();
    //int hackcounter = 0;
    // size of each block of points loaded
-   int arraysize = 10000;
+   int arraysize = 1000000;
 
    point *temp = new point[arraysize];
 
@@ -348,7 +348,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double minX, double minY,
    nb->minY = minY;
    nb->maxY = maxY;
 
-   int arraysize = 10000;
+   int arraysize = 1000000;
    point *temp = new point[arraysize];
    // expand boundary to cover new points
    root = expandboundary(root, nb);
@@ -518,7 +518,7 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    //MCP->clearcachetodo();
    //MCP->cachelist(buckets);
    //vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
-
+   cout << "subseting and sorting" << endl;
    // these additional subsets are to provide a list of buckets surrounding the
    // originol subset so as to allow them be precached incase the next subset
    // is only slightly different
@@ -591,7 +591,7 @@ void quadtree::sort(char v)
 
 vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, double y2, double width)
 {
-   // check its a line
+  /* // check its a line
    if (x1 == x2 && y1 == y2)
    {
       return NULL;
@@ -599,8 +599,9 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
 
    // work out from the 2 points and the forumula of the line they describe the four point of
    // the subset rectangle
+     */
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
-
+/*
    double m = NULL;
    if (x1 == x2 || y1 == y2)
    {
@@ -672,9 +673,46 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    double sy4 = y2 + deltay;
    double sx3 = x2 - deltax;
    double sy3 = y2 - deltay;
+*/
+
+
+   double a1,a2,a3;
+
+   a1=x1-x2;
+   a2=y1-y2;
+   a3=0;
+
+   double b1,b2,b3;
+
+   b1=0;
+   b2=0;
+   b3=1;
+
+   double ab1,ab2,ab3;
+
+   ab1 = (a2*b3)-(a3*b2);
+   ab2 = (a3*b1)-(a1*b3);
+   ab3 = (a1*b2)-(a2*b1);
+
+   double abmagnitude = sqrt(ab1*ab1+ab2*ab2+ab3*ab3);
+   double unitab1,unitab2,unitab3;
+   unitab1 = ab1/abmagnitude;
+   unitab2 = ab2/abmagnitude;
+   unitab3 = ab3/abmagnitude;
+
+   double p1x,p1y,p2x,p2y,p3x,p3y,p4x,p4y;
+
+   p1x=x1+(unitab1*width);
+   p1y=y1+(unitab2*width);
+   p2x=x1-(unitab1*width);
+   p2y=y1-(unitab2*width);
+   p3x=x2-(unitab1*width);
+   p3y=y2-(unitab2*width);
+   p4x=x2+(unitab1*width);
+   p4y=y2+(unitab2*width);
 
    // begin the recursive subsetting of the root node 
-   root->advsubset(sx1, sy1, sx2, sy2, sx3, sy3, sx4, sy4, buckets);
+   root->advsubset(p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, buckets);
    //MCP->cachelist(buckets);
    std::stable_sort(buckets->begin(), buckets->end(), compare);
    return buckets;

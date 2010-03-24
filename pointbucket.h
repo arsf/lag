@@ -21,10 +21,15 @@ using namespace std;
 
 class cacheminder;
 
-// this class is used to store the array of points in a node
-// it is neccessary because the array must be accompanied by
-// the number of points actually contained.
-
+/**
+ * this class represents a bucket which holds a colletion of points. it stores
+ * metadata about the points it holds and manages the caching and uncaching of the points
+ *
+ * while to other classes it appears that this class contains the points it infact dosen't.
+ * it has a pointer to a serializableinnerbucket which is a lightweight serilizable class which
+ * contains the point array. When the pointbucket caches or uncaches the points it infact remains in memory
+ * so that the meta data is always available and it is just the serilizableinnerbucket that is cached and uncached.
+ */
 class pointbucket
 {
 
@@ -43,8 +48,10 @@ class pointbucket
     string filepath;
     SerializableInnerBucket *innerbucket;
     boost::recursive_mutex cachemutex;
+    boost::recursive_mutex getmutex;
     string instancedirectory;
     int innerbucketsize;
+    
 
 public:
     /**
@@ -67,23 +74,51 @@ public:
      */
     ~pointbucket();
 
-    // the uncache method removes the associated SerializableInnerBucket and writes
-    // it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
+    /**
+     * a method which removes the associated SerializableInnerBucket and writes
+     * it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
+     */
     void uncache();
 
-    // the cache method requests some space in main memory and then loads the SerializableInnerBucket into it.
-    // this is only done if the SerializableInnerBucket is not already in cache.
-    // the parameter "force" defines wether the another bucket can be forced out of cache to accomodate this one
-    // if space cannot be found false is returned
+    /**
+     * a method that requests some space in main memory and then loads the point data from secondary memory to main memory into it.
+     * this is only done if the pointdata is not already in cache.
+     *
+     * @note this requests space equal to the current size of the serilizableinnerbucket
+     *
+     * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
+     * 
+     * @return true=memory assigned use it
+     */
     bool cache(bool force);
+
+    /**
+     * a method that requests some space in main memory
+     *
+     * @note this requests space equal to i. because cache is only freed by the uncache method which frees
+     * an amount based on the size of serilizableinnerbucket the increasecache method should only be used
+     * to increase the cache usage to the same level as the serilizableinnerbucket size when the size has increased after it was cached.
+     * (in other words be very very very carefull using this method)
+     *
+     * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
+     *
+     * @return true=memory assigned use it
+     */
     bool increasecache(bool force, int i);
 
-    // the getpoint method adds a layer between outside classes and the SerializableInnerBucket. this prevents
-    // outside classes from accessing the SerializableInnerBucket without the pointbuckets knowledge. This
-    // is important as the SerializableInnerBucket may not be cached. by providing this method all access to
-    // SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
+    /**
+     * a method that adds a layer between outside classes and the SerializableInnerBucket. this prevents
+     * outside classes from accessing the SerializableInnerBucket without the pointbuckets knowledge. This
+     * is important as the SerializableInnerBucket may not be cached. by providing this method all access to
+     * SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
+     *
+     * @param i the index of the point to get
+     *
+     * @return a reference to the desired point
+     */
     inline point& getpoint(int i)
     {
+        //boost::recursive_mutex::scoped_lock mylock(getmutex);
         if (incache)
         {
             return innerbucket->points[i];
@@ -95,56 +130,19 @@ public:
         }
     }
 
-    void setpoint(point& newP)
-    {
-        if (!incache)
-        {
-            cache(true);
 
-        }
-
-        if (numberofpoints == 0)
-         {
-            maxintensity = newP.intensity;
-            minintensity = newP.intensity;
-            maxZ = newP.z;
-            minZ = newP.z;
-         }
-         if (newP.intensity > maxintensity)
-         {
-            maxintensity = newP.intensity;
-         }
-         if (newP.intensity < minintensity)
-         {
-            minintensity = newP.intensity;
-         }
-         if (newP.z > maxZ)
-         {
-            maxZ = newP.z;
-         }
-         if (newP.z < minZ)
-         {
-            minZ = newP.z;
-         }
-
-        if (innerbucket->size == innerbucket->numpoints)
-        {
-            if(!increasecache(true, innerbucket->increase))
-            {
-                throw ramallocationexception("failed to acquire extra ram to allow more points to be inserted");
-            }
-            innerbucket->setpoint(newP);
-            innerbucketsize = innerbucket->size;
-            numberofpoints++;
-            
-        }
+    /**
+     * a method to add a new point to the serializableinnerbucket.
+     * it also checks the new point and updates the min and max values accordingly
+     *
+     * @param newP the new point to be added
+     */
+    void setpoint(point& newP);
 
 
-        innerbucket->setpoint(newP);
-        numberofpoints++;
-        return;
-    }
+    void generateraster(double width);
 
+    // getters
     inline int getnumberofpoints() const
     {
         return numberofpoints;

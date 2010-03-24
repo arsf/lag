@@ -19,6 +19,7 @@ class descriptiveexception : public exception
 private:
     const char *details;
 public:
+
     descriptiveexception(const char *details)
     {
         this->details = details;
@@ -28,8 +29,8 @@ public:
     {
         return details;
     }
-
 };
+
 
 class ramallocationexception : public descriptiveexception
 {
@@ -41,57 +42,49 @@ public:
     }
 
     ramallocationexception(const char *details)
-    : descriptiveexception(details)
-    {}
-
-
+    : descriptiveexception(details) { }
 };
+
 
 class fileexception : public descriptiveexception
 {
-
 public:
+
     virtual const char* what() const throw ()
     {
         return "file io exception";
     }
 
     fileexception(const char *details)
-    : descriptiveexception(details)
-    {}
-
+    : descriptiveexception(details) { }
 };
+
 
 class outofboundsexception : public descriptiveexception
 {
-
 public:
+
     virtual const char* what() const throw ()
     {
         return "a varible has fallen outside all possible boundarys or values";
     }
 
     outofboundsexception(const char *details)
-    : descriptiveexception(details)
-    {}
-
-
+    : descriptiveexception(details) { }
 };
+
 
 class nullpointerexception : public descriptiveexception
 {
-
 public:
+
     virtual const char* what() const throw ()
     {
         return "a method or attribute of a pointer which is null has been requested";
     }
 
     nullpointerexception(const char *details)
-    : descriptiveexception(details)
-    {}
-
-
+    : descriptiveexception(details) { }
 };
 
 

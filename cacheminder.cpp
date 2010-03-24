@@ -33,7 +33,7 @@ void cacheminder::clearcache()
 
 bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force)
 {
-    boost::recursive_mutex::scoped_lock mylock(quemutex);
+    //boost::recursive_mutex::scoped_lock mylock(quemutex);
     if (requestsize > totalcache)
     {
         throw ramallocationexception("request has been made to cache minder asking for more ram in a single block than available in total");
@@ -85,7 +85,7 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
 
 void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
 {
-    boost::recursive_mutex::scoped_lock mylock(quemutex);
+   // boost::recursive_mutex::scoped_lock mylock(quemutex);
     deque<pointbucket*>::iterator ity;
     for (ity = bucketsincache.begin(); ity < bucketsincache.end(); ity++)
     {
@@ -105,7 +105,7 @@ void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
 void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
 {
     {
-        boost::recursive_mutex::scoped_lock mylock(quemutex);
+     //   boost::recursive_mutex::scoped_lock mylock(quemutex);
 
         // if the cache limit has not been reached yet there is no need to clear the cache or cache new buckets in
         if(!cacheing)

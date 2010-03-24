@@ -13,6 +13,14 @@
 #include <string>
 using namespace std;
 
+
+/**
+ * this class represents a single node (leaf or nonleaf) within a quadtree.
+ *
+ * each node is defined by its boundary which places it within the quadtree and indicate which points fall within it.
+ * when a node excedes its capacity it creates four new child nodes which are leaves. in this way the number
+ * of nodes expands untill all the being inserted are held in non overflowing nodes.
+ */
 class quadtreenode
 {
     friend class quadtree;
@@ -69,7 +77,13 @@ class quadtreenode
     /**
      * a method to insert a new point into the node
      *
+     * @note if the insertion of the point causes the node to overflow then it creates
+     * four child nodes and inserts the point into one of thease (along with copying
+     * all the points it already contains into the corrisponding children)
+     *
      * @param newP the point to be inserted
+     *
+     * @return false=the point falls within this nodes boundary but the node is not a leaf, true=sucssesfull insertion
      */
     bool insert(point newP);
 
