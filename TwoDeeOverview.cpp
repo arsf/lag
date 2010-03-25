@@ -620,8 +620,7 @@ void TwoDeeOverview::resetview(){
    glLoadIdentity();//...
 }
 
-//Not totally bug-free:
-//This method causes the label below the toolbar to display information about a point that has been selected (using the right mouse button). It starts by setting the label to 0 0 0. It then determines the world coordinates selected from the window coordinates and calls a subset for that. However, assuming that any points are returned at all, an entire bucket's worth of points will be returned. These points are then narrowed down to one point firstly by calling the vetpoints() function to only get the points that lie in or overlap (I think) the square defined by the point's position and the pointsize and zoom position (i.e. the size of the point on the screen). After that, all remaining points are compared and the one on top, the one with the largest z, which would likely be the one the user see or sees mostly, is selected as THE point. Data about the point is extracted from it, with a reference to the quadtree to get the filename. The information displayed is the following: X, Y and Z values; the time; the intensity; the classification; the filename of the file the point is from and the return number.
+//This method causes the label below the toolbar to display information about a point that has been selected (using the right mouse button). It starts by setting the label to 0 0 0. It then determines the world coordinates selected from the window coordinates and calls a subset for that. However, assuming that any points are returned at all, an entire bucket's worth of points will be returned. These points are then narrowed down to one point firstly by calling the vetpoints() function to only get the points that lie in or overlap (I think) the square defined by the point's position and the pointsize and zoom position (i.e. the size of the point on the screen). After that, all remaining points are compared and the one on top, the one with the largest z, which would likely be the one the user sees or sees mostly, is selected as THE point. Data about the point is extracted from it, with a reference to the quadtree to get the filename. The information displayed is the following: X, Y and Z values; the time; the intensity; the classification; the filename of the file the point is from and the return number.
 bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    string meh = "0\n0\n0";
    double pointeroffx = eventx - get_width()/2;//This offset exists because, in world coordinates, 0 is the centre.
@@ -644,18 +643,32 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       bool anypoint = false;
       int bucketno=0;
       int pointno=0;
-      pausethread = true;//Want exclusive access to pointbucket::getpoint().
+      pausethread = true;//Wants exclusive access to pointbucket::getpoint().
       if(threaddebug)cout << 13 << endl;
       while(thread_running){usleep(10);}//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
-         bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
+         bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
-               anypoint = true;
+               if(!anypoint){
+                  bucketno=i;
+                  pointno=j;
+                  anypoint = true;
+               }
                if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point
                   bucketno=i;//Select them.
                   pointno=j;//...
+//                  Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+//                  if (!glwindow->gl_begin(get_gl_context()))return false;
+//                  double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
+//                     glColor3f(1.0,1.0,1.0);
+//                     glBegin(GL_POINTS);
+//                        glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex,pointvector->at(bucketno)->getpoint(pointno).y-centrey,altitude);
+//                     glEnd();
+//                  if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
+//                  else glFlush();
+//                  glwindow->gl_end();
                }
             }
          }
