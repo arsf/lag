@@ -139,6 +139,8 @@ protected:
    bool flushing;//This indicates whether the main thread is/should/will be busy flushing the contents of the framebuffer to the screen.
    bool extraDrawing;//This indicates whether an extra draw signal, caused by a previous draw signal being blocked to avoid deadlock or race conditions, has been sent by the main thread to itself. If so, the main thread should not send any more until the current one is resolved.
    bool threaddebug;//If true, this causes a huge amount of spam to spew from the program whenever the drawing thread is in use, for debugging purposes.
+   bool pausethread;//If this is true, the data manipulation thread will pause until it is set to false. This pausing is done because pointbucket::getpoint() is not threadsafe.
+   bool thread_running;//This indicates that the thread is running, and so will be using the pointbucket::getpoint() method often.
    double drawnsofarminx,drawnsofarminy,drawnsofarmaxx,drawnsofarmaxy;//These define a rectangle that (very) roughly corresponds to how much of the flightline has been drawn so far. This is used for when panning, so that if there is not much already loaded then the bucket outlines are not completely covered by black.
    double centrexsafe,centreysafe;//These are "safe" stores of the coordinates of the centre of the screen. Safe in that they will not change (we hope) while the drawing thread is running. These are in object-wide scope, despite being used in multiple threads, because they are needed to draw the buckets properly when doing preview.
    Glib::Dispatcher signal_InitGLDraw;//Signal dispatcher from the drawing thread to the main thread to set up OpenGL for drawing.

@@ -518,7 +518,7 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    //MCP->clearcachetodo();
    //MCP->cachelist(buckets);
    //vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
-   cout << "subseting and sorting" << endl;
+//   cout << "subseting and sorting" << endl;//Sorry Chris, but I could not have this in a build that users got: it fills too many lines of CLI output!
    // these additional subsets are to provide a list of buckets surrounding the
    // originol subset so as to allow them be precached incase the next subset
    // is only slightly different

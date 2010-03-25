@@ -38,6 +38,8 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    initialising_GL_draw = false;
    flushing = false;
    extraDrawing = false;
+   pausethread = false;
+   thread_running = false;
    //Profiling:
    profwidth=30;
    profiling=false;
@@ -202,6 +204,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    while(thread_existsthread){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
    if(threaddebug)cout << "***Finished waiting." << endl;
    thread_existsthread = true;//Any subsequent threads must wait until this becomes false again.
+   thread_running = true;//The thread now reserves the "right" to use the pointbucket::getpoint() method.
    centrexsafe = centrex;//These are "safe" versions of the centre coordinates, as they will not change while this thread is running, while the originals might.
    centreysafe = centrey;//...
    int line=0,intensity=0,classification=0,rnumber=0;
@@ -226,10 +229,31 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if(threaddebug)cout << buckets[i]->getnumberofpoints() << endl;
       if(threaddebug)cout << detail << endl;
       if(threaddebug)cout << "If drawing, pause." << endl;
-      while(drawing_to_GL){usleep(10);}//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
+      while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
+         if(threaddebug)cout << 1 << endl;
+         if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false). Is below as well for if drawing_to_GL is already false.
+            thread_running = false;
+            if(threaddebug)cout << 2 << endl;
+            while(pausethread){usleep(10);}
+            if(threaddebug)cout << 3 << endl;
+            thread_running = true;
+         }
+         if(threaddebug)cout << 4 << endl;
+         usleep(10);
+      }
+      if(threaddebug)cout << 5 << endl;
+      if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again.
+         thread_running = false;
+         if(threaddebug)cout << 6 << endl;
+         while(pausethread){usleep(10);}
+         if(threaddebug)cout << 7 << endl;
+         thread_running = true;
+      }
+      if(threaddebug)cout << 8 << endl;
       if(threaddebug)cout << "Not drawing (anymore)." << endl;
       if(threaddebug)cout << "Interrupt?" << endl;
       if(interruptthread){
+         thread_running = false;//This thread will not use pointbucket::getpoint() again.
          if(threaddebug)cout << "Interrupted." << endl;
          if(threaddebug)cout << "Delete data array." << endl;
          delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
@@ -364,11 +388,12 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if(threaddebug)cout << vertices[3*pointcount/2] << endl;
       if(threaddebug)cout << "Draw if not interrupted." << endl;
       if(!interruptthread){
-         if(threaddebug)cout << "Sending draw signal." << endl;
          if(threaddebug)cout << "Yes!" << endl;
          drawing_to_GL = true;//Main thread must not attempt to create a new thread like this while this is waiting for a draw to the framebuffer.
 //         while(drawing_to_GL)vertex_array_condition.wait(vertex_array_mutex);
+         if(threaddebug)cout << "Sending draw signal." << endl;
          signal_DrawGLToCard();
+         if(threaddebug)cout << "Flush?" << endl;
          if(i>=(numbuckets-1)||numbuckets>10)if((i+1)%10==0){
             flushing = true;//Main thread must not attempt to create a new thread like this while flushing has yet to occur.
             if(threaddebug)cout << "Sending flush signal." << endl;
@@ -377,7 +402,19 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       }
       else if(threaddebug)cout << "Draw interrupted." << endl;
    }
-   while(drawing_to_GL){usleep(10);}
+   while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
+      if(threaddebug)cout << 9 << endl;
+      if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false). Is below as well for if drawing_to_GL is already false.
+         thread_running = false;
+         if(threaddebug)cout << 10 << endl;
+         while(pausethread){usleep(10);}
+         if(threaddebug)cout << 11 << endl;
+         thread_running = true;
+      }
+      if(threaddebug)cout << 12 << endl;
+      usleep(10);
+   }
+   thread_running = false;//This thread will not use pointbucket::getpoint() again.
    if(threaddebug)cout << "Ending..." << endl;
    if(threaddebug)cout << "Delete data array." << endl;
    delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
@@ -607,6 +644,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       bool anypoint = false;
       int bucketno=0;
       int pointno=0;
+      pausethread = true;//Want exclusive access to pointbucket::getpoint().
+      if(threaddebug)cout << 13 << endl;
+      while(thread_running){usleep(10);}//Will sulk until gets such access.
+      if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
          bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
@@ -633,6 +674,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
       classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
       rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
+      pausethread = false;//Is bored with pointbucket::getpoint(), now.
+      if(threaddebug)cout << 15 << endl;
       string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
       if(anypoint)rulerlabel->set_text(pointstring);
       else rulerlabel->set_text(meh);
