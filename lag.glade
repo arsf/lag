@@ -993,8 +993,9 @@ Range</property>
   </widget>
   <widget class="GtkFileChooserDialog" id="filechooserdialog">
     <property name="border_width">5</property>
+    <property name="title" translatable="yes">Open a file</property>
     <property name="window_position">center-on-parent</property>
-    <property name="type_hint">dialog</property>
+    <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <property name="select_multiple">True</property>
     <child internal-child="vbox">
@@ -1275,9 +1276,9 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
   </widget>
   <widget class="GtkDialog" id="advancedoptionsdialog">
     <property name="border_width">5</property>
-    <property name="title" translatable="yes">Advanced Overview Options</property>
+    <property name="title" translatable="yes">Advanced viewing options</property>
     <property name="window_position">center-on-parent</property>
-    <property name="type_hint">dialog</property>
+    <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox3">
