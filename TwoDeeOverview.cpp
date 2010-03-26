@@ -659,41 +659,64 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
                if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point
                   bucketno=i;//Select them.
                   pointno=j;//...
-//                  Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-//                  if (!glwindow->gl_begin(get_gl_context()))return false;
-//                  double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
-//                     glColor3f(1.0,1.0,1.0);
-//                     glBegin(GL_POINTS);
-//                        glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex,pointvector->at(bucketno)->getpoint(pointno).y-centrey,altitude);
-//                     glEnd();
-//                  if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
-//                  else glFlush();
-//                  glwindow->gl_end();
                }
             }
          }
          delete pointsinarea;
       }
-      string flightline = lidardata->getfilename(pointvector->at(bucketno)->getpoint(pointno).flightline);//Returns the filepath.
-      unsigned int index = flightline.rfind("/");//Only the filename is desired, not the filepath.
-      if(index==string::npos)index=0;//...
-      else index++;//...
-      flightline = flightline.substr(index);//...
-      ostringstream x,y,z,time,intensity,classification,rnumber;
-      x << pointvector->at(bucketno)->getpoint(pointno).x;
-      y << pointvector->at(bucketno)->getpoint(pointno).y;
-      z << pointvector->at(bucketno)->getpoint(pointno).z;
-      time << pointvector->at(bucketno)->getpoint(pointno).time;
-      intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
-      classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
-      rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
+      if(anypoint){
+         if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain);
+         else{
+            drawviewable(2);
+            Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+            if (!glwindow->gl_begin(get_gl_context()))return false;
+            double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
+            glReadBuffer(GL_BACK);
+            glDrawBuffer(GL_FRONT);
+            glColor3f(1.0,1.0,1.0);
+   //         glBegin(GL_POINTS);
+   //            glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex,pointvector->at(bucketno)->getpoint(pointno).y-centrey,altitude);
+   //         glEnd();
+            glBegin(GL_LINE_LOOP);
+               glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+            glEnd();
+            glDrawBuffer(GL_BACK);
+            glFlush();
+            glwindow->gl_end();
+         }
+         string flightline = lidardata->getfilename(pointvector->at(bucketno)->getpoint(pointno).flightline);//Returns the filepath.
+         unsigned int index = flightline.rfind("/");//Only the filename is desired, not the filepath.
+         if(index==string::npos)index=0;//...
+         else index++;//...
+         flightline = flightline.substr(index);//...
+         ostringstream x,y,z,time,intensity,classification,rnumber;
+         x << pointvector->at(bucketno)->getpoint(pointno).x;
+         y << pointvector->at(bucketno)->getpoint(pointno).y;
+         z << pointvector->at(bucketno)->getpoint(pointno).z;
+         time << pointvector->at(bucketno)->getpoint(pointno).time;
+         intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
+         classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
+         rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
+         pausethread = false;//Is bored with pointbucket::getpoint(), now.
+         if(threaddebug)cout << 15 << endl;
+         string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
+         rulerlabel->set_text(pointstring);
+      }
+      else{ 
+         rulerlabel->set_text(meh);
+         if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain);
+         else drawviewable(2);
+      }
       pausethread = false;//Is bored with pointbucket::getpoint(), now.
-      if(threaddebug)cout << 15 << endl;
-      string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
-      if(anypoint)rulerlabel->set_text(pointstring);
-      else rulerlabel->set_text(meh);
    }
-   else rulerlabel->set_text(meh);
+   else{ 
+      rulerlabel->set_text(meh);
+      if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain);
+      else drawviewable(2);
+   }
    delete pointvector;
    return true;
 }
