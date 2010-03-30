@@ -8,6 +8,7 @@
 #include <cstring>
 #include <stdio.h>
 #include "quadtreeexceptions.h"
+#include "collisiondetection.h"
 
 
 ASCIIloader::ASCIIloader(const char *filename, const char *newformatstring)
@@ -224,7 +225,7 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double *
          tok = strtok (NULL, delim);
       }
 
-      if(!point_NAOrec(p.GetX(), p.GetY(), Xs, Ys, size))
+      if(!point_NAOrec(temp.x, temp.y, Xs, Ys, size))
         {
            counter = 0;
            continue;
