@@ -11,6 +11,7 @@
 #include "boost/lexical_cast.hpp"
 #include "time.h"
 #include "unistd.h"
+#include "collisiondetection.h"
 
 using namespace std;
 
@@ -321,32 +322,84 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
 }
 
-
-
-// this method loads points from a flightline that fall within an area of intrest
 void quadtree::load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY)
 {
+   load(loader, nth, minX, minY+((maxY-minY)/2), maxX, minY+((maxY-minY)/2), ((maxY-minY)/2));
+}
+
+// this method loads points from a flightline that fall within an area of intrest
+void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, double x2, double y2, double width)
+{
+   double a1,a2,a3;
+
+   a1=x1-x2;
+   a2=y1-y2;
+   a3=0;
+
+   double b1,b2,b3;
+
+   b1=0;
+   b2=0;
+   b3=1;
+
+   double ab1,ab2,ab3;
+
+   ab1 = (a2*b3)-(a3*b2);
+   ab2 = (a3*b1)-(a1*b3);
+   ab3 = (a1*b2)-(a2*b1);
+
+   double abmagnitude = sqrt(ab1*ab1+ab2*ab2+ab3*ab3);
+   double unitab1,unitab2,unitab3;
+   unitab1 = ab1/abmagnitude;
+   unitab2 = ab2/abmagnitude;
+   unitab3 = ab3/abmagnitude;
+
+   double *Xs = new double[4];
+   double *Ys = new double[4];
+
+   Xs[0]=x1+(unitab1*width);
+   Ys[0]=y1+(unitab2*width);
+   Xs[1]=x1-(unitab1*width);
+   Ys[1]=y1-(unitab2*width);
+   Xs[2]=x2-(unitab1*width);
+   Ys[2]=y2-(unitab2*width);
+   Xs[3]=x2+(unitab1*width);
+   Ys[3]=y2+(unitab2*width);
+
+   
+
+
    // add the flightline name flightline num pair to the table
    string tempstring(loader->getfilename());
    flighttable.insert(make_pair(flightlinenum, tempstring));
 
    // get new flight boundary
-   boundary *nb = loader->getboundary();
+   boundary *nb = new boundary();
    int outofboundscounter = 0;
-   if ((minX > nb->maxX && maxX > nb->maxX) || (minX < nb->minX && maxX < nb->minX))
+
+
+
+
+   if ((AOrec_NAOrec(nb->minX, nb->minY, nb->maxX, nb->maxY, Xs, Ys, 4)))
    {
-      throw outofboundsexception("area of interest falls outside new file");
+  //    throw outofboundsexception("area of interest falls outside new file");
    }
 
-   if ((minY > nb->maxY && maxY > nb->maxY) || (minY < nb->minY && maxY < nb->minY))
+   // find the simple bounding box of the new fence (using 4 as size as its a rectangle
+   double largestX,largestY,smallestX,smallestY;
+   largestX=Xs[0];smallestX=Xs[0];largestY=Ys[0];smallestY=Ys[0];
+   for (int k=1; k<4; k++)
    {
-      throw outofboundsexception("area of interest falls outside new file");
+      if(Xs[k] > largestX) {largestX=Xs[k];}
+      if(Xs[k] < smallestX) {smallestX=Xs[k];}
+      if(Ys[k] > largestY) {largestY=Ys[k];}
+      if(Ys[k] > smallestY) {smallestY=Ys[k];}
    }
 
-   nb->minX = minX;
-   nb->maxX = maxX;
-   nb->minY = minY;
-   nb->maxY = maxY;
+   nb->minX = smallestX;
+   nb->maxX = largestX;
+   nb->minY = smallestY;
+   nb->maxY = largestY;
 
    int arraysize = 1000000;
    point *temp = new point[arraysize];
@@ -361,7 +414,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double minX, double minY,
 
    do
    {
-      pointcount = loader->load(arraysize, nth, temp, flightlinenum, minX, minY, maxX, maxY);
+      pointcount = loader->load(arraysize, nth, temp, flightlinenum, Xs, Ys, 4);
       for (int k = 0; k < pointcount; k++)
       {
          // try and insert each point
@@ -402,6 +455,9 @@ void quadtree::load(lidarpointloader *loader, int nth, double minX, double minY,
       throw outofboundsexception("points from file outside header boundary, " + outofboundscounter);
    }
 }
+
+
+
 
 
 
@@ -518,7 +574,6 @@ vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, do
    //MCP->clearcachetodo();
    //MCP->cachelist(buckets);
    //vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
-//   cout << "subseting and sorting" << endl;//Sorry Chris, but I could not have this in a build that users got: it fills too many lines of CLI output!
    // these additional subsets are to provide a list of buckets surrounding the
    // originol subset so as to allow them be precached incase the next subset
    // is only slightly different
@@ -587,11 +642,10 @@ void quadtree::sort(char v)
 }
 
 // this method takes 2 points and a width, the points denote a line which is the center line
-// of a rectangle whos width is defined by the width, returns NULL if parameters wrong
-
+// of a rectangle whos width is defined by the width, returns NULL passed two identical points
 vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, double y2, double width)
 {
-  /* // check its a line
+   // check its a line
    if (x1 == x2 && y1 == y2)
    {
       return NULL;
@@ -599,7 +653,7 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
 
    // work out from the 2 points and the forumula of the line they describe the four point of
    // the subset rectangle
-     */
+     
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
 /*
    double m = NULL;
@@ -700,20 +754,20 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    unitab2 = ab2/abmagnitude;
    unitab3 = ab3/abmagnitude;
 
-   double p1x,p1y,p2x,p2y,p3x,p3y,p4x,p4y;
+   double *Xs = new double[4];
+   double *Ys = new double[4];
 
-   p1x=x1+(unitab1*width);
-   p1y=y1+(unitab2*width);
-   p2x=x1-(unitab1*width);
-   p2y=y1-(unitab2*width);
-   p3x=x2-(unitab1*width);
-   p3y=y2-(unitab2*width);
-   p4x=x2+(unitab1*width);
-   p4y=y2+(unitab2*width);
+   Xs[0]=x1+(unitab1*width);
+   Ys[0]=y1+(unitab2*width);
+   Xs[1]=x1-(unitab1*width);
+   Ys[1]=y1-(unitab2*width);
+   Xs[2]=x2-(unitab1*width);
+   Ys[2]=y2-(unitab2*width);
+   Xs[3]=x2+(unitab1*width);
+   Ys[3]=y2+(unitab2*width);
 
-   // begin the recursive subsetting of the root node 
-   root->advsubset(p1x, p1y, p2x, p2y, p3x, p3y, p4x, p4y, buckets);
-   //MCP->cachelist(buckets);
+   // begin the recursive subsetting of the root node
+   root->advsubset(Xs, Ys, 4, buckets);
    std::stable_sort(buckets->begin(), buckets->end(), compare);
    return buckets;
 }
