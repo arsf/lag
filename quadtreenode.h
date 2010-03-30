@@ -173,7 +173,7 @@ class quadtreenode
      *
      * @param buckets the pointer to a vector to which any correct nodes are added
      */
-    void advsubset(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, std::vector<pointbucket*> *buckets);
+    void advsubset(double *Xs, double *Ys, int size, vector<pointbucket*> *buckets);
 };
 
 

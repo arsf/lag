@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <limits>
 #include "quadtreeexceptions.h"
+#include "collisiondetection.h"
 
 using namespace std;
 
@@ -516,7 +517,7 @@ bool OBBpoint(double m1, double c1, double m2, double c2, double m3, double c3, 
 
 // method to add the bucket or recure into the child nodes
 // NOTE : this has been seperated from the advsubset method to allow a more logical format to that method
-
+/*
 void quadtreenode::addsubset(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, vector<pointbucket*> *buckets)
 {
    if (!leaf)
@@ -537,14 +538,14 @@ void quadtreenode::addsubset(double x1, double y1, double x2, double y2, double 
 
    }
 
-}
+}*/
 
 
 
 // this method takes 4 points that describe a rectangle of any orientation and 
 // fills the passed vector with buckets that collide with this rectangle
 
-void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, vector<pointbucket*> *buckets)
+void quadtreenode::advsubset(double *Xs, double *Ys, int size, vector<pointbucket*> *buckets)
 {
 
    // calculate the equations for the lines
@@ -552,7 +553,7 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
    //  NOTE : there is no check for axis orientated lines, this is handled by the quadtree
 
    // work out the forumla for each of the four lines described by the four points (y=mx+c)
-   double m1, c1, m2, c2, m3, c3, m4, c4;
+  /* double m1, c1, m2, c2, m3, c3, m4, c4;
    if (x1 > x2)
    {
       m1 = (y1 - y2) / (x1 - x2);
@@ -657,5 +658,29 @@ void quadtreenode::advsubset(double x1, double y1, double x2, double y2, double 
       addsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
       return;
    }
+*/
+
+
+   
+
+  if(AOrec_NAOrec(minX, minY, maxX, maxY, Xs, Ys, size))
+   {
+      if(!leaf)
+      {
+         a->advsubset(Xs, Ys, size, buckets);
+         b->advsubset(Xs, Ys, size, buckets);
+         c->advsubset(Xs, Ys, size, buckets);
+         d->advsubset(Xs, Ys, size, buckets);
+      }
+      else
+      {
+         if(bucket != NULL)
+         {
+            buckets->push_back(bucket);
+         }
+      }
+   }
+
+   
 
 }

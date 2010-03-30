@@ -16,6 +16,9 @@
 
 using namespace std;
 
+/**
+ * this class handles the loading of .LAS files.
+ */
 class LASloader : public lidarpointloader
 {
    const char *filename;
@@ -50,6 +53,8 @@ public:
     */
    int load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY);
 
+   int load(int n, int nth, point *points, int flightlinenum, double *Xs, double *Ys, int size);
+
    /**
     * a method to load points from the file.
     * this method takes argurments that cause it to load points seperated by a defined number of points into the provided array.
@@ -61,7 +66,7 @@ public:
     * @return the number of points actually loaded (either the same as n or if the end of the file is reached less)
     */
    int load(int n, int nth, point *points, int flightlinenum);
-   // WARNING: placeholder
+  
 
    /**
     * this is a placeholder and should not be used

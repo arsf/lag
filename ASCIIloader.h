@@ -73,6 +73,10 @@ public:
     */
    int load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY);
 
+
+   int load(int n, int nth, point *points, int flightlinenum, double *Xs, double *Ys, int size);
+
+
    /**
     * a method to load points from the file.
     * this method takes argurments that cause it to load points seperated by a defined number of points into the provided array.

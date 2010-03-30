@@ -140,7 +140,105 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double m
    //cout << pointcounter << endl;
    return pointcounter;
 }
-   
+
+
+int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double *Xs, double *Ys, int size)
+{
+   char delim[2] = "x";
+   delim[0]=formatstring[0];
+
+   point temp;
+   int wordcounter;
+   int counter = 0;
+   int pointcounter = 0;
+   char *tok;
+   char line[300];
+   temp.flightline = flightlinenum;
+
+   // get each line till enough points are loaded or the file ends
+   while (pointcounter != n && fgets(line, 300, fp) != NULL)
+   {
+
+      // discard if not nth point
+      if (counter != nth)
+      {
+         counter++;
+         continue;
+      }
+
+
+      temp.classification = NULL; temp.flightline = NULL; temp.intensity = NULL; temp.rnumber = NULL; temp.x = NULL; temp.y = NULL; temp.z = NULL; temp.time = NULL;
+
+      tok = strtok(line, delim);
+      wordcounter=0;
+
+      //loop untill the line has no more tokens
+      while (tok != NULL)
+      {
+
+         wordcounter++;
+
+         // use the corrisponding character in the format string to determine how
+         // to handle the corrisponding token
+         switch(formatstring[wordcounter])
+         {
+            case 'x':
+            {
+               temp.x = atof(tok);
+               break;
+            }
+             case 'y':
+            {
+               temp.y = atof(tok);
+               break;
+            }
+            case 'z':
+            {
+               temp.z = atof(tok);
+               break;
+            }
+            case 'i':
+            {
+               temp.intensity = atoi(tok);
+               break;
+            }
+            case 'c':
+            {
+               temp.classification = atoi(tok);
+               break;
+            }
+            case 'r':
+            {
+               temp.rnumber = atoi(tok);
+               break;
+            }
+            case 't':
+            {
+               temp.time = atof(tok);
+               break;
+            }
+            default:
+            {
+            }
+         }
+         tok = strtok (NULL, delim);
+      }
+
+      if(!point_NAOrec(p.GetX(), p.GetY(), Xs, Ys, size))
+        {
+           counter = 0;
+           continue;
+        }
+
+      // copy the valid points into the array
+      points[pointcounter] = temp;
+      pointcounter++;
+      counter=0;
+   }
+   //cout << pointcounter << endl;
+   return pointcounter;
+}
+
    
 int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
 {
