@@ -157,7 +157,7 @@ void Display::prepare_image(){
    vector<pointbucket*> *pointvector;
    try{
       boundary* lidarboundary = lidardata->getboundary();
-      pointvector = lidardata->subset(lidarboundary->minX,lidarboundary->minY,lidarboundary->maxX,lidarboundary->maxY);//Get ALL data.
+      pointvector = lidardata->advsubset(lidarboundary->minX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxY-lidarboundary->minY);//Get ALL data.
       delete lidarboundary;
    }catch(const char* e){
       cout << e << endl;

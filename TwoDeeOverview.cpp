@@ -534,15 +534,16 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       if(threaddebug)cout << "Changed offsets." << endl;
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
-      double miny = centrey-(get_height()/2)*ratio/zoomlevel;//...
-      double maxy = centrey+(get_height()/2)*ratio/zoomlevel;//...
       vector<pointbucket*> *pointvector;
       try{
          //Remember to change this to uncachesubset() later!
-   //      pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
-         pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+         pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
       }catch(const char* e){
          cout << e << endl;
+         cout << "No points returned." << endl;
+         return false;
+      }
+      if(pointvector==NULL||pointvector->size()==0){
          cout << "No points returned." << endl;
          return false;
       }
@@ -563,26 +564,23 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    else if(imagetype==2){//Draw the preview.
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
-      double miny = centrey-(get_height()/2)*ratio/zoomlevel;//...
-      double maxy = centrey+(get_height()/2)*ratio/zoomlevel;//...
-      vector<pointbucket*> *pointvector2;
+      vector<pointbucket*> *pointvector;
       try{
          //Remember to change this to uncachesubset() later!
-      //      pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
-         pointvector2 = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+         pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
       }catch(const char* e){
          cout << e << endl;
          cout << "No points returned." << endl;
          return false;
       }
-      int numbuckets2 = pointvector2->size();
-      pointbucket** buckets2 = new pointbucket*[numbuckets2];
-      for(int i=0;i<numbuckets2;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-         buckets2[i]=(*pointvector2)[i];
+      int numbuckets = pointvector->size();
+      pointbucket** buckets = new pointbucket*[numbuckets];
+      for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+         buckets[i]=(*pointvector)[i];
       }
-      drawbuckets(buckets2,numbuckets2);
-      delete pointvector2;
-      delete[] buckets2;
+      drawbuckets(buckets,numbuckets);
+      delete pointvector;
+      delete[] buckets;
    }
    return true;
 }
@@ -626,20 +624,22 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    double pointeroffx = eventx - get_width()/2;//This offset exists because, in world coordinates, 0 is the centre.
    double pointeroffy = eventy - get_height()/2;//...and the same for this one.
    double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;//Define an area of equal size to that of the points on the screen.
-   double miny = centrey + (-pointeroffy - pointsize/2)*ratio/zoomlevel;//...
    double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;//...
-   double maxy = centrey + (-pointeroffy + pointsize/2)*ratio/zoomlevel;//...
+   double midy = centrey - pointeroffy * ratio/zoomlevel;//...
    vector<pointbucket*> *pointvector;
    try{
       //Remember to change this to uncachesubset() later!
-      pointvector = lidardata->subset(minx,miny,maxx,maxy);//Get data.
+      pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,pointsize*ratio/zoomlevel);//Get data.
    }catch(const char* e){
       cout << e << endl;
       cout << "No points returned." << endl;
       return false;
    }
+   if(pointvector==NULL||pointvector->size()==0){
+      cout << "No points returned." << endl;
+      return false;
+   }
    if(pointvector->size()>0){//If there aren't any points, don't bother.
-      double midx = centrex + pointeroffx * ratio/zoomlevel;//This is needed for the vetpoints() function.
       bool anypoint = false;
       int bucketno=0;
       int pointno=0;
@@ -648,7 +648,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       while(thread_running){usleep(10);}//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
-         bool* pointsinarea = vetpoints(pointvector->at(i),midx,miny,midx,maxy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
+         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
                if(!anypoint){

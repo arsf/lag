@@ -95,6 +95,10 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
       imageexists=false;
       return false;
    }
+   if(pointvector==NULL||pointvector->size()==0){
+      cout << "No points returned." << endl;
+      return false;
+   }
    int numbuckets = pointvector->size();
    flightlinestot.clear();
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.

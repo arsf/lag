@@ -99,7 +99,14 @@ void on_aboutmenuactivated(){ about->show_all(); }
 void on_aboutresponse(int response_id){ about->hide_all(); }
 
 //Get the area to load the flightline(s) in by calling the overview's getfence() method.
-void get_area(double &minX,double &minY,double &maxX,double &maxY){ tdo->getfence(minX,minY,maxX,maxY); }
+void get_area(double &x1,double &y1,double &x2,double &y2,double &width){
+   double minX,minY,maxX,maxY;
+   tdo->getfence(minX,minY,maxX,maxY);
+   x1 = minX;
+   x2 = maxX;
+   y1 = y2 = (maxY + minY)/2;
+   width = maxY - minY;
+}
 /*Determines whether the input filename(s) are correct and, if so, creates or modifies the quadtree to accomodate the data. First it makes sure that a sufficient number of arguments have been passed to include the executable, point offset and at least one filename. It then extracts the point offset, which is used to skip a certain number of points between each read point, for faster loading. It then starts dealing withthe filenames:
  * Try:
  *    For all the filenames:
@@ -171,9 +178,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;
                      loaderrorstream->str("");
-                     double minX,minY,maxX,maxY;
-                     get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(loader,bucketlimit,poffs,minX,minY,maxX,maxY,cachelimit,loaderrorstream);
+                     double x1,y1,x2,y2,width;
+                     get_area(x1,y1,x2,y2,width);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,x1,y1,x2,y2,width,cachelimit,loaderrorstream);
                   }
                   else{//If not:
                      if(lidardata != NULL)delete lidardata;
@@ -184,9 +191,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                else{//... but for all other situations add to it.
                   if(usearea){//If using the fence:
-                     double minX,minY,maxX,maxY;
-                     get_area(minX,minY,maxX,maxY);
-                     lidardata->load(loader,poffs,minX,minY,maxX,maxY);
+                     double x1,y1,x2,y2,width;
+                     get_area(x1,y1,x2,y2,width);
+                     lidardata->load(loader,poffs,x1,y1,x2,y2,width);
                   }
                   else lidardata->load(loader,poffs);//If not.
                }
@@ -209,9 +216,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;
                      loaderrorstream->str("");
-                     double minX,minY,maxX,maxY;
-                     get_area(minX,minY,maxX,maxY);
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,minX,minY,maxX,maxY,cachelimit,loaderrorstream);
+                     double x1,y1,x2,y2,width;
+                     get_area(x1,y1,x2,y2,width);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,x1,y1,x2,y2,width,cachelimit,loaderrorstream);
                   }
                   else{//If not:
                      if(lidardata != NULL)delete lidardata;
@@ -222,9 +229,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                else{//... but for all other situations add to it.
                   if(usearea){//If using the fence:
-                     double minX,minY,maxX,maxY;
-                     get_area(minX,minY,maxX,maxY);
-                     lidardata->load(aloader,poffs,minX,minY,maxX,maxY);
+                     double x1,y1,x2,y2,width;
+                     get_area(x1,y1,x2,y2,width);
+                     lidardata->load(aloader,poffs,x1,y1,x2,y2,width);
                   }
                   else lidardata->load(aloader,poffs);//If not.
                }
