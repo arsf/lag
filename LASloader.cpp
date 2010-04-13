@@ -27,59 +27,7 @@ LASloader::~LASloader()
     ifs.close();
 }
 
-int LASloader::load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY)
-{
 
-    point temp;
-    int counter = 0;
-    int pointcounter = 0;
-    static int numpoints;
-    liblas::LASPoint p;
-    temp.flightline = flightlinenum;
-    // for each point
-    while (reader->ReadNextPoint() && pointcounter < n)
-    {
-
-        // discard if not nth point
-        if (counter != nth)
-        {
-            counter++;
-            continue;
-        }
-
-
-
-        p = reader->GetPoint();
-
-        // check if point falls within area of intrest
-        if (p.GetX() < minX || p.GetX() > maxX || p.GetY() < minY || p.GetY() > maxY)
-        {
-            counter = 0;
-            continue;
-        }
-
-
-        temp.x = p.GetX();
-        temp.y = p.GetY();
-        temp.z = p.GetZ();
-        temp.intensity = p.GetIntensity();
-        temp.rnumber = p.GetReturnNumber();
-        temp.time = p.GetTime();
-        temp.classification = p.GetClassification();
-
-        // copy temp into the array
-        points[pointcounter] = temp;
-
-        // keep track of the number of pointsloaded
-        pointcounter++;
-        numpoints++;
-
-        counter = 0;
-
-    }
-    return pointcounter;
-
-}
 
 int LASloader::load(int n, int nth, point *points, int flightlinenum)
 {

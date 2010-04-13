@@ -51,7 +51,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, os
 
 // this constructor creates a quadtree using a loader object for a given area of interest
 
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *errorstream)
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double x1, double y1, double x2, double y2, double width, int cachesize, ostringstream *errorstream)
 {
    if (errorstream == NULL)
    {
@@ -71,15 +71,14 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double minX, doub
    instancedirectory.append(boost::lexical_cast<string > (getpid()));
    instancedirectory.append(boost::lexical_cast<string > (this));
    boost::filesystem::create_directory(instancedirectory);
-   // use area of interest to create new tree that incompasses all points
-   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory);
+
+   root = NULL;
    flightlinenum = 0;
 
    // use area of intrest load
-   load(loader, nth, minX, minY, maxX, maxY);
+   load(loader, nth, x1, y1, x2, y2, width);
 
 }
-
 
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
@@ -112,6 +111,11 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
 // this method expands a quadtree to encompass a new boundary
 quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 {
+
+   if(oldnode == NULL)
+   {
+      oldnode = new quadtreenode(nb->minX, nb->minY, nb->maxX, nb->maxY, capacity, MCP, instancedirectory);
+   }
 
    boundary* b = oldnode->getbound();
 
@@ -311,21 +315,17 @@ void quadtree::load(lidarpointloader *loader, int nth)
             outs << endl;
          }
       }
-      //hackcounter+=pointcounter;
+
    }   while (pointcounter == arraysize);
    flightlinenum++;
 
-   // cout << "hackcounter says \"" << hackcounter <<" have just been loaded\"" << endl;
 
    delete[] temp;
    delete tempboundary;
 
 }
 
-void quadtree::load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY)
-{
-   load(loader, nth, minX, minY+((maxY-minY)/2), maxX, minY+((maxY-minY)/2), ((maxY-minY)/2));
-}
+
 
 // this method loads points from a flightline that fall within an area of intrest
 void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, double x2, double y2, double width)
@@ -564,38 +564,10 @@ bool compare(pointbucket *pb1, pointbucket *pb2)
    return false;
 }
 
-// this method takes a boundary and provides all the buckets that may contain 
-// points within that boundary
 
-vector<pointbucket*>* quadtree::subset(double minX, double minY, double maxX, double maxY)
-{
-   // create the return structure 
-   // NOTE: the caller of this method is responsible for cleaning up this data object 
-   vector<pointbucket*> *buckets = new vector<pointbucket*>;
-   root->subset(minX, minY, maxX, maxY, buckets);
-   //MCP->clearcachetodo();
-   //MCP->cachelist(buckets);
-   //vector<pointbucket*> *extrabuckets = new vector<pointbucket*>;
-   // these additional subsets are to provide a list of buckets surrounding the
-   // originol subset so as to allow them be precached incase the next subset
-   // is only slightly different
-   /*root->subset(minX-100, minY-100, maxX+100, maxY+100, extrabuckets);
-   MCP->pushcachetodo(extrabuckets);
-   root->subset(minX-200, minY-200, maxX+200, maxY+200, extrabuckets);
-   MCP->pushcachetodo(extrabuckets);
-   root->subset(minX-200, minY-300, maxX+300, maxY+300, extrabuckets);
-   MCP->pushcachetodo(extrabuckets);*/
-   std::stable_sort(buckets->begin(), buckets->end(), compare);
-   return buckets;
-}
 
-vector<pointbucket*>* quadtree::uncachedsubset(double minX, double minY, double maxX, double maxY)
-{
-   vector<pointbucket*> *buckets = new vector<pointbucket*>;
-   root->subset(minX, minY, maxX, maxY, buckets);
-   std::stable_sort(buckets->begin(), buckets->end(), compare);
-   return buckets;
-}
+
+
 
 
 

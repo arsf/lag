@@ -45,14 +45,11 @@ public:
     * @param nth the number of points to skip between loaded points
     * @param points the array to copy the loaded points into (should have n elements)
     * @param flightlinenum the number assigned to every point loaded as its flight line number
-    * @param minX X value of the lower left corner of the area
-    * @param minY Y value of the lower left corner of the area
-    * @param maxX X value of the upper right corner of the area
-    * @param maxY Y value of the upper right corner of the area
+    * @param Xs an array of doubles each of which is the x componant of a point of the polygon (in sequence)
+    * @param Ys an array of doubles each of which is the x componant of a point of the polygon (in sequence)
+    * @param size of the Xs and Ys arrays (therefore the number of points that define the polygon)
     * @return the number of points actually loaded (either the same as n or if the end of the file is reached less)
     */
-   int load(int n, int nth, point *points, int flightlinenum, double minX, double minY, double maxX, double maxY);
-
    int load(int n, int nth, point *points, int flightlinenum, double *Xs, double *Ys, int size);
 
    /**

@@ -57,19 +57,20 @@ public:
    quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, ostringstream *errorstream = NULL);
    
    /**
-     * a constructor that builds a new quadtree from a given lidarpointloader object using a fence
+     * a constructor that builds a new quadtree from a given lidarpointloader object using a fence defined by two points and a width (allowing any orientation
      *
      * @param loader lidarpointloader object for the file to be loaded
      * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
      * @param nth the number of points to skip between each loaded point
+     * @param x1 the X position of the first point
+     * @param y1 the Y position of the first point
+     * @param x2 the X position of the second point
+     * @param y2 the Y position of the second point
+     * @param width the width of the rectangle (width/2 will be added to each side of the line)
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
-     * @param minX X value of the lower left corner of the fence
-     * @param minY Y value of the lower left corner of the fence
-     * @param maxX X value of the upper right corner of the fence
-     * @param maxY Y value of the upper right corner of the fence
      */
-   quadtree(lidarpointloader *loader,int cap, int nth, double minX, double minY, double maxX, double maxY, int cachesize, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader,int cap, int nth, double x1, double y1, double x2, double y2, double width, int cachesize, ostringstream *errorstream = NULL);
 
 
 

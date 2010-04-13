@@ -125,18 +125,7 @@ class quadtreenode
      */
     quadtreenode* pickchild(point newP);
 
-    /**
-     * a method to add nodes that fall within a given boundary to a vector. this method
-     * is recursive so if the node is not a leaf it simply calls this method in its child nodes
-     * this means that every node below the node you first call it on is checked.
-     *
-     * @param minX X value of the lower left corner of the check area
-     * @param minY Y value of the lower left corner of the check area
-     * @param maxX X value of the upper right corner of the check area
-     * @param maxY Y value of the upper right corner of the check area
-     * @param buckets the pointer to a vector to which any correct nodes are added
-     */
-    void subset(double minX, double minY, double maxX, double maxY, std::vector<pointbucket*> *buckets);
+
 
     /**
      *  a method that sorts the bucket in the node and recurivly in all child nodes
@@ -161,14 +150,10 @@ class quadtreenode
      * @note this method creates the search area by drawing a line from point 1 to 2 to 3 to 4.
      * and searches the area within these lines these lines MUST describe a convex polygon
      *
-     * @param x1 X value of the lower left corner of the check area
-     * @param y1 Y value of the lower left corner of the check area
-     * @param x2 X value of the lower left corner of the check area
-     * @param y2 Y value of the lower left corner of the check area
-     * @param x3 X value of the lower left corner of the check area
-     * @param y3 Y value of the lower left corner of the check area
-     * @param x4 X value of the lower left corner of the check area
-     * @param y4 Y value of the lower left corner of the check area
+     * @param Xs pointer to an array of doubles each of which is the x componant of a point
+     * @param Ys pointer to an array of doubles each of which is the y componant of a point
+     * @param size the size of the Xs and Ys arrays
+     *
      *
      *
      * @param buckets the pointer to a vector to which any correct nodes are added
