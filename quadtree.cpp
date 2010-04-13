@@ -382,7 +382,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
 
    if ((AOrec_NAOrec(nb->minX, nb->minY, nb->maxX, nb->maxY, Xs, Ys, 4)))
    {
-  //    throw outofboundsexception("area of interest falls outside new file");
+      throw outofboundsexception("area of interest falls outside new file");
    }
 
    // find the simple bounding box of the new fence (using 4 as size as its a rectangle
@@ -393,7 +393,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
       if(Xs[k] > largestX) {largestX=Xs[k];}
       if(Xs[k] < smallestX) {smallestX=Xs[k];}
       if(Ys[k] > largestY) {largestY=Ys[k];}
-      if(Ys[k] > smallestY) {smallestY=Ys[k];}
+      if(Ys[k] < smallestY) {smallestY=Ys[k];}
    }
 
    nb->minX = smallestX;
@@ -450,6 +450,8 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
    }   while (pointcount == arraysize);
    flightlinenum++;
    delete[] temp;
+   delete[] Xs;
+   delete[] Ys;
    if (outofboundscounter > 0)
    {
       throw outofboundsexception("points from file outside header boundary, " + outofboundscounter);
