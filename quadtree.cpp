@@ -357,14 +357,14 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
    double *Xs = new double[4];
    double *Ys = new double[4];
 
-   Xs[0]=x1+(unitab1*width);
-   Ys[0]=y1+(unitab2*width);
-   Xs[1]=x1-(unitab1*width);
-   Ys[1]=y1-(unitab2*width);
-   Xs[2]=x2-(unitab1*width);
-   Ys[2]=y2-(unitab2*width);
-   Xs[3]=x2+(unitab1*width);
-   Ys[3]=y2+(unitab2*width);
+   Xs[0]=x1+(unitab1*width/2);
+   Ys[0]=y1+(unitab2*width/2);
+   Xs[1]=x1-(unitab1*width/2);
+   Ys[1]=y1-(unitab2*width/2);
+   Xs[2]=x2-(unitab1*width/2);
+   Ys[2]=y2-(unitab2*width/2);
+   Xs[3]=x2+(unitab1*width/2);
+   Ys[3]=y2+(unitab2*width/2);
 
    
 
@@ -629,79 +629,6 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    // the subset rectangle
      
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
-/*
-   double m = NULL;
-   if (x1 == x2 || y1 == y2)
-   {
-      double sx = x1;
-      double sy = y1;
-      double bx = x1;
-      double by = y1;
-      // as it is not known which of the subset points is which, the smallest and largest
-      // must be found and the bottom left and top right cords found
-      if (x1 == x2 && y1 > y2)
-      {
-         sx = x1 - (width / 2);
-         sy = y2;
-         bx = x2 + (width / 2);
-         by = y1;
-      }
-      if (x1 == x2 && y1 < y2)
-      {
-         sx = x1 - (width / 2);
-         sy = y1;
-         bx = x2 + (width / 2);
-         by = y2;
-      }
-
-      // as it is not known which of the subset points is which the smallest and largest 
-      // must be found and the bottom left and top right cords found   
-      if (y1 == y2 && x1 > x2)
-      {
-         sx = x2;
-         sy = y2 - (width / 2);
-         bx = x1;
-         by = y2 + (width / 2);
-      }
-      if (y1 == y2 && x1 < x2)
-      {
-         sx = x1;
-         sy = y2 - (width / 2);
-         bx = x2;
-         by = y2 + (width / 2);
-      }
-
-      // call the subset method. the recursion will continue through this now
-      // NOTE : this will only ever happen in the root node as it will
-      // be picked up immediatly, this means that a call to advsubset with a 
-      // axis orientated box is almost identical to a call to subset.
-      root->subset(sx, sy, bx, by, buckets);
-      return buckets;
-   }
-   else if (x1 > x2)
-   {
-      m = (y1 - y2) / (x1 - x2);
-   }
-   else if (x1 < x2)
-   {
-      m = (y2 - y1) / (x2 - x1);
-   }
-
-   // black magic maths to find the four corners of the rectangle
-   double pm = -1 / m;
-   double theta = atan(pm);
-   double L = width / 2;
-   double deltax = L * cos(theta);
-   double deltay = L * sin(theta);
-   double sx1 = x1 + deltax;
-   double sy1 = y1 + deltay;
-   double sx2 = x1 - deltax;
-   double sy2 = y1 - deltay;
-   double sx4 = x2 + deltax;
-   double sy4 = y2 + deltay;
-   double sx3 = x2 - deltax;
-   double sy3 = y2 - deltay;
-*/
 
 
    double a1,a2,a3;
@@ -731,14 +658,14 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    double *Xs = new double[4];
    double *Ys = new double[4];
 
-   Xs[0]=x1+(unitab1*width);
-   Ys[0]=y1+(unitab2*width);
-   Xs[1]=x1-(unitab1*width);
-   Ys[1]=y1-(unitab2*width);
-   Xs[2]=x2-(unitab1*width);
-   Ys[2]=y2-(unitab2*width);
-   Xs[3]=x2+(unitab1*width);
-   Ys[3]=y2+(unitab2*width);
+   Xs[0]=x1+(unitab1*(width/2));
+   Ys[0]=y1+(unitab2*(width/2));
+   Xs[1]=x1-(unitab1*(width/2));
+   Ys[1]=y1-(unitab2*(width/2));
+   Xs[2]=x2-(unitab1*(width/2));
+   Ys[2]=y2-(unitab2*(width/2));
+   Xs[3]=x2+(unitab1*(width/2));
+   Ys[3]=y2+(unitab2*(width/2));
 
    // begin the recursive subsetting of the root node
    root->advsubset(Xs, Ys, 4, buckets);
