@@ -19,6 +19,19 @@ public:
    ~Display();
    virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
+   //Getters:
+//   double getrmaxz(){return rmaxz;}
+//   double getrminz(){return rminz;}
+//   double getmaxz(){return maxz;}
+//   double getminz(){return minz;}
+//   double getzoffset(){return zoffset;}
+//   double getzfloor(){return zfloor;}
+//   int getrmaxintensity(){return rmaxintensity;}
+//   int getrminintensity(){return rminintensity;}
+//   int getmaxintensity(){return maxintensity;}
+//   int getminintensity(){return minintensity;}
+//   double getintensityoffset(){return intensityoffset;}
+//   double getintensityfloor(){return intensityfloor;}
    //Setters:
    void setlidardata(quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
@@ -30,6 +43,14 @@ public:
    void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
+//   void setmaxz(double maxz){this->maxz = maxz;}
+//   void setminz(double minz){this->minz = minz;}
+//   void setzoffset(double zoffset){this->zoffset = zoffset;}
+//   void setzfloor(double zfloor){this->zfloor = zfloor;}
+//   void setmaxintensity(int maxintensity){this->maxintensity = maxintensity;}
+//   void setminintensity(int minintensity){this->minintensity = minintensity;}
+//   void setintensityoffset(double intensityoffset){this->intensityoffset = intensityoffset;}
+//   void setintensityfloor(double intensityfloor){this->intensityfloor = intensityfloor;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
 
@@ -50,8 +71,8 @@ protected:
    double zfloor;//As above, but does not scale anything.
    bool intensitycolour;//True if want to colour by intensity.
    bool intensitybrightness;//True if want to shade by intensity.
-   int intensityoffset;//A minimum intensity brightness value that also scales higher values.
-   int intensityfloor;//As above, but does not scale anything.
+   double intensityoffset;//A minimum intensity brightness value that also scales higher values.
+   double intensityfloor;//As above, but does not scale anything.
    bool linecolour;//Whether to colour by flightline.
    bool classcolour;//Whether to colour by classification.
    bool returncolour;//Whether to colour by return.

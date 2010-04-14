@@ -31,7 +31,7 @@ Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    zfloor=0.25;
    intensitycolour = false;
    intensitybrightness = true;
-   intensityoffset = 0.0/3;
+   intensityoffset = 0;
    intensityfloor = 0;
    rmaxz=rminz=0;
    rmaxintensity=rminintensity=0;
@@ -97,6 +97,7 @@ void Display::coloursandshades(double maxz,double minz,int maxintensity,int mini
       z = i + (int)rminz;
       brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
    }
+   cout << brightnessheightarray[0] << " " << brightnessheightarray[(int)(rmaxz-rminz)] << endl;
    brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
    for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity brightness array:
       intensity = i + rminintensity;
@@ -148,7 +149,7 @@ void Display::colour_by(double value,double maxvalue,double minvalue,double& col
 
 //Given maximum and minimum values, find out the brightness a certain value should be mapped to.
 double Display::brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue){
-  double multiplier = floorvalue + offsetvalue + (1.0 - offsetvalue)*(value-minvalue)/(maxvalue-minvalue);
+  double multiplier = floorvalue + offsetvalue + (1.0 - floorvalue)*(value-minvalue)/(maxvalue-minvalue);
   return multiplier;
 }
 
@@ -177,16 +178,16 @@ void Display::prepare_image(){
    rmaxz = maxz; rminz = minz;
    rmaxintensity = maxintensity; rminintensity = minintensity;
    if(maxz<=minz)maxz=minz+1;
-   else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the buckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
-      double* zdata = new double[numbuckets];
-      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getmaxZ();
-      double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
-      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getminZ();
-      double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
-      maxz=highperc;
-      minz=lowperc;
-      delete[] zdata;
-   }
+//   else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the buckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
+//      double* zdata = new double[numbuckets];
+//      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getmaxZ();
+//      double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
+//      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getminZ();
+//      double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
+//      maxz=highperc;
+//      minz=lowperc;
+//      delete[] zdata;
+//   }
    coloursandshades(maxz,minz,maxintensity,minintensity);//Prepare colour and shading arrays.
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;

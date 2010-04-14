@@ -62,17 +62,27 @@ Gtk::SpinButton *pointwidthselect = NULL;//Determines the width of the points in
 Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
 Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
    //Advanced viewing options for the overview:
-   Gtk::CheckButton *classcheckbutton0 = NULL;//Elevate classifications with the respective codes:
-   Gtk::CheckButton *classcheckbutton2 = NULL;//...
-   Gtk::CheckButton *classcheckbutton3 = NULL;//...
-   Gtk::CheckButton *classcheckbutton4 = NULL;//...
-   Gtk::CheckButton *classcheckbutton5 = NULL;//...
-   Gtk::CheckButton *classcheckbutton6 = NULL;//...
-   Gtk::CheckButton *classcheckbutton7 = NULL;//...
-   Gtk::CheckButton *classcheckbutton8 = NULL;//...
-   Gtk::CheckButton *classcheckbutton9 = NULL;//...
-   Gtk::CheckButton *classcheckbutton12 = NULL;//...
-   Gtk::CheckButton *classcheckbuttonA = NULL;//"Anything else" classification elevator.
+      //False elevation:
+         Gtk::CheckButton *classcheckbutton0 = NULL;//Elevate classifications with the respective codes:
+         Gtk::CheckButton *classcheckbutton2 = NULL;//...
+         Gtk::CheckButton *classcheckbutton3 = NULL;//...
+         Gtk::CheckButton *classcheckbutton4 = NULL;//...
+         Gtk::CheckButton *classcheckbutton5 = NULL;//...
+         Gtk::CheckButton *classcheckbutton6 = NULL;//...
+         Gtk::CheckButton *classcheckbutton7 = NULL;//...
+         Gtk::CheckButton *classcheckbutton8 = NULL;//...
+         Gtk::CheckButton *classcheckbutton9 = NULL;//...
+         Gtk::CheckButton *classcheckbutton12 = NULL;//...
+         Gtk::CheckButton *classcheckbuttonA = NULL;//"Anything else" classification elevator.
+      //Colouring and shading:
+//         Gtk::Spinbutton *heightmaxselect = NULL;
+//         Gtk::Spinbutton *heightminselect = NULL;
+//         Gtk::Spinbutton *heightoffsetselect = NULL;
+//         Gtk::Spinbutton *heightfloorselect = NULL;
+//         Gtk::Spinbutton *intensitymaxselect = NULL;
+//         Gtk::Spinbutton *intensityminselect = NULL;
+//         Gtk::Spinbutton *intensityoffsetselect = NULL;
+//         Gtk::Spinbutton *intensityfloorselect = NULL;
 Gtk::ToggleToolButton *rulertoggleover = NULL;//Toggle button determining whether the ruler is viewable on the overview.
 Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
@@ -662,6 +672,22 @@ int GUIset(int argc,char *argv[]){
                if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
                refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
                if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
+//               refXml->get_widget("heightmaxselect",heightmaxselect);
+//               if(heightmaxselect)heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
+//               refXml->get_widget("heightminselect",heightminselect);
+//               if(heightminselect)heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
+//               refXml->get_widget("heightoffsetselect",heightoffsetselect);
+//               if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
+//               refXml->get_widget("heightfloorselect",heightfloorselect);
+//               if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
+//               refXml->get_widget("intensitymaxselect",intensitymaxselect);
+//               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
+//               refXml->get_widget("intensityminselect",intensityminselect);
+//               if(intensityminselect)intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
+//               refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
+//               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
+//               refXml->get_widget("intensityfloorselect",intensityfloorselect);
+//               if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
             //The ruler:
             refXml->get_widget("rulertoggleover",rulertoggleover);
             if(rulertoggleover)rulertoggleover->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggleover));
