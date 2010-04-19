@@ -56,8 +56,14 @@ int LASloader::load(int n, int nth, point *points, int flightlinenum)
         temp.z = p.GetZ();
         temp.classification = p.GetClassification();
         temp.intensity = p.GetIntensity();
-        temp.rnumber = p.GetReturnNumber();
+
         temp.time = p.GetTime();
+        temp.packedbyte = p.GetReturnNumber();
+        temp.packedbyte = temp.packedbyte | p.GetNumberOfReturns() << 3;
+        temp.packedbyte = temp.packedbyte | p.GetScanDirection() << 6;
+        temp.packedbyte = temp.packedbyte | p.GetFlightLineEdge() << 7;
+        temp.scanangle = p.GetScanAngleRank();
+        temp.pointsourceid = p.GetPointSourceID();
 
 
         // copy temp into the array
@@ -118,8 +124,14 @@ int LASloader::load(int n, int nth, point *points, int flightlinenum, double *Xs
         temp.z = p.GetZ();
         temp.classification = p.GetClassification();
         temp.intensity = p.GetIntensity();
-        temp.rnumber = p.GetReturnNumber();
+
         temp.time = p.GetTime();
+        temp.packedbyte = p.GetReturnNumber();
+        temp.packedbyte = temp.packedbyte | (p.GetNumberOfReturns() << 3);
+        temp.packedbyte = temp.packedbyte | (p.GetScanDirection() << 6);
+        temp.packedbyte = temp.packedbyte | (p.GetFlightLineEdge() << 7);
+        temp.scanangle = p.GetScanAngleRank();
+        temp.pointsourceid = p.GetPointSourceID();
 
 
         // copy temp into the array

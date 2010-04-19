@@ -827,6 +827,7 @@ int GUIset(int argc,char *argv[]){
    return 0;
 }
 
+
 int main(int argc, char** argv) {
    cout << "Build number: 2010.03.26.1" << endl;
    time_t starttime = time(NULL);
@@ -839,11 +840,11 @@ int main(int argc, char** argv) {
    exename.append(argv[0]);//Record the program name.
    loadedanyfiles = false;
    loaderrorstream = new ostringstream();
-   int returnnumber = GUIset(argc, argv);//Make the GUI.
+   int returnvalue = GUIset(argc, argv);//Make the GUI.
    if(tdo!=NULL)delete tdo;
    if(prof != NULL)delete prof;
    if(lidardata != NULL)delete lidardata;
    delete loaderrorstream;
    loaderroroutput.close();
-   return returnnumber;
+   return returnvalue;
 }

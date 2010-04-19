@@ -20,6 +20,14 @@
 
 // this struct contains the data for a single lidar point
 
+#define returnnumber 7
+#define numberofreturn 56
+#define scandirectionflag 64
+#define scanedgeflag 128
+
+
+
+
 struct point
 {
     double x;
@@ -31,8 +39,10 @@ struct point
     //byte for both classification and return number
     uint8_t classification;
     uint8_t flightline;
-    uint8_t rnumber;
+    uint8_t packedbyte;
+    uint8_t scanangle;
 
+    unsigned short int pointsourceid;
 
 private:
     friend class boost::serialization::access;
@@ -47,7 +57,9 @@ private:
         ar & intensity;
         ar & classification;
         ar & flightline;
-        ar & rnumber;
+        ar & packedbyte;
+        ar & scanangle;
+        ar & pointsourceid;
     }
 };
 

@@ -16,6 +16,7 @@
 #include <string>
 #include "quadtreestructs.h"
 #include "quadtreeexceptions.h"
+#include <stdint.h>
 
 using namespace std;
 
@@ -51,7 +52,7 @@ class pointbucket
     boost::recursive_mutex getmutex;
     string instancedirectory;
     int innerbucketsize;
-    
+    bool updated;
 
 public:
     /**
@@ -129,6 +130,30 @@ public:
             return innerbucket->points[i];
         }
     }
+
+    /**
+     * a method to allow the classification of a point in this bucket to be set to a desired value,
+     * this method provides an interface between users and the points which insures the points are cached
+     * before they are manipulated
+     *
+     * @param i the index of the point to set
+     * @param classification the new classification value of the point
+     */
+    inline void setclassification(int i, uint8_t classification)
+    {
+        if(incache)
+        {
+            innerbucket->points[i].classification = classification;
+        }
+        else
+        {
+            cache(true);
+            innerbucket->points[i].classification = classification;
+        }
+        updated = true;
+    }
+
+
 
 
     /**

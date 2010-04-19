@@ -435,7 +435,7 @@ bool Profile::mainimage(int detail){
    leftpnt->intensity = 0;
    leftpnt->classification = 0;
    leftpnt->flightline = 0;
-   leftpnt->rnumber = 0;
+   leftpnt->packedbyte = 0;
    point *rightpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
    rightpnt->x = rightboundx + centrex;
    rightpnt->y = rightboundy + centrey;
@@ -444,7 +444,7 @@ bool Profile::mainimage(int detail){
    rightpnt->intensity = 0;
    rightpnt->classification = 0;
    rightpnt->flightline = 0;
-   rightpnt->rnumber = 0;
+   rightpnt->packedbyte = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
       minplanx = startx + leftboundx;//These ensure that the entire screen will be filled, otherwise, because the screen position of startx changes, only part of the point-set will be drawn.
       minplany = starty + leftboundy;//...
@@ -519,7 +519,7 @@ bool Profile::mainimage(int detail){
                 }
             }
             else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-                switch(flightlinepoints[i][j].rnumber){
+                switch(flightlinepoints[i][j].packedbyte & returnnumber){
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
                    case 3:red=0;green=1;blue=0;break;//Green

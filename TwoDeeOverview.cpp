@@ -327,7 +327,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
-             rnumber = buckets[i]->getpoint(j).rnumber;
+             rnumber = buckets[i]->getpoint(j).packedbyte & returnnumber;
              int index = rnumber;
              switch(index){
                 case 1:red=0;green=0;blue=1;break;//Blue
@@ -699,7 +699,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          time << pointvector->at(bucketno)->getpoint(pointno).time;
          intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
          classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
-         rnumber << (int)pointvector->at(bucketno)->getpoint(pointno).rnumber;
+         rnumber << (int)(pointvector->at(bucketno)->getpoint(pointno).packedbyte & returnnumber);
          pausethread = false;//Is bored with pointbucket::getpoint(), now.
          if(threaddebug)cout << 15 << endl;
          string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";

@@ -58,7 +58,7 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double *
       }
 
 
-      temp.classification = NULL; temp.flightline = NULL; temp.intensity = NULL; temp.rnumber = NULL; temp.x = NULL; temp.y = NULL; temp.z = NULL; temp.time = NULL;
+      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.packedbyte = 0; temp.pointsourceid = 0;
 
       tok = strtok(line, delim);
       wordcounter=0;
@@ -100,12 +100,37 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double *
             }
             case 'r':
             {
-               temp.rnumber = atoi(tok);
+               temp.packedbyte = temp.packedbyte | atoi(tok);
                break;
             }
             case 't':
             {
                temp.time = atof(tok);
+               break;
+            }
+            case 's':
+            {
+               temp.scanangle = atoi(tok);
+               break;
+            }
+            case 'd':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 6);
+               break;
+            }
+            case 'n':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 3);
+               break;
+            }
+            case 'e':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 7);
+               break;
+            }
+            case 'p':
+            {
+               temp.pointsourceid = temp.pointsourceid;
                break;
             }
             default:
@@ -158,7 +183,7 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
          continue;
       }
 
-      temp.classification = NULL; temp.flightline = NULL; temp.intensity = NULL; temp.rnumber = NULL; temp.x = NULL; temp.y = NULL; temp.z = NULL; temp.time = NULL;
+      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.pointsourceid = 0;
 
       tok = strtok(line, delim);
       wordcounter=0;
@@ -200,12 +225,37 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
             }
             case 'r':
             {
-               temp.rnumber = atoi(tok);
+               temp.packedbyte = temp.packedbyte | atoi(tok);
                break;
             }
             case 't':
             {
                temp.time = atof(tok);
+               break;
+            }
+            case 's':
+            {
+               temp.scanangle = atoi(tok);
+               break;
+            }
+            case 'd':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 6);
+               break;
+            }
+            case 'n':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 3);
+               break;
+            }
+            case 'e':
+            {
+               temp.packedbyte = temp.packedbyte | (atoi(tok) << 7);
+               break;
+            }
+            case 'p':
+            {
+               temp.pointsourceid = temp.pointsourceid;
                break;
             }
             default:

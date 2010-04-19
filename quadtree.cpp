@@ -1,6 +1,7 @@
 
 #include "quadtree.h"
 
+
 #include <stdlib.h>
 #include <iostream>
 #include <cmath>
@@ -701,3 +702,38 @@ string quadtree::getfilename(uint8_t flightlinenum)
 }
 
 
+void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
+{
+   point *points = new point[1000000];
+   int counter = 0;
+   vector<pointbucket*> *buckets;
+   boundary *b = root->getbound();
+   int width = (b->maxX-b->minX);
+   buckets = advsubset(b->minX+(width/2), b->minY, b->minX+(width/2), b->maxY, (width+100));
+   pointbucket *current;
+   for(int k=0; k<buckets->size(); k++)
+   {
+      current = buckets->at(k);
+      for(int i=0; i<current->getnumberofpoints(); i++)
+      {
+         if(current->getpoint(i).flightline == flightlinenum)
+         {
+            points[counter] = current->getpoint(i);
+            counter++;
+            if(counter == 1000000)
+            {
+               saver->savepoints(counter, points);
+               counter = 0;
+            }
+
+         }
+
+      }
+   }
+   saver->savepoints(counter, points);
+   saver->finalizesave();
+
+   delete buckets;
+   delete b;
+   delete[] points;
+}

@@ -28,6 +28,11 @@ using namespace std;
  * 'c' classification<br>
  * 'r' return number<br>
  * 't' time<br>
+ * 's' scanangle<br>
+ * 'd' scan direction flag<br>
+ * 'n' number of returns<br>
+ * 'e' edge of scan flag<br>
+ * 'p' point source id<br>
  * '#' ignore (any column that does not fall into the above catagorys must be marked ignore)<br>
  *
  * for example:<br>

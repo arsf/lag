@@ -15,6 +15,7 @@
 #include "quadtreenode.h"
 #include <vector>
 #include "lidarpointloader.h"
+#include "lidarpointsaver.h"
 #include <sstream>
 #include <string>
 #include <tr1/unordered_map>
@@ -196,6 +197,8 @@ public:
     * @return a string containg the path that was used in the lidarpointloader for this flightline
     */
    string getfilename(uint8_t flightlinenum);
+
+   void saveflightline(uint8_t flightlinenum, lidarpointsaver *saver);
    
 private:
    /**

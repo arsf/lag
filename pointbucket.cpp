@@ -42,6 +42,7 @@ pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double 
     }
     filepath.append("/"+boost::lexical_cast<string>(minX)+"-"+boost::lexical_cast<string>(minY)+"_"+boost::lexical_cast<string>(maxY)+"-"+boost::lexical_cast<string>(maxX));
     innerbucket = NULL;
+    updated = false;
 }
 
 
@@ -77,7 +78,7 @@ void pointbucket::uncache()
    // cout << "uncaching    actual size " << innerbucket->size << "  size used " << innerbucketsize << endl;
    // boost::recursive_mutex::scoped_lock mylock(cachemutex);
     // check serial version already exists and if not create it, also if serial version is out of date overwrite it
-    if (serialized == false || numberofserializedpoints != numberofpoints)
+    if (serialized == false || numberofserializedpoints != numberofpoints || updated == true)
     {
 
         innerbucket->numpoints=numberofpoints;
