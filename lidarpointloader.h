@@ -11,7 +11,11 @@
 
 #include "quadtreestructs.h"
 
-
+/**
+ * This interface defines how classes which provide loading logic for lidar points must look
+ * the interface allows the quadtree to simply take any subclass and call its methods without understanding how the loading is being done
+ * this means that the logic for loading different formats is encapsulated in classes independant of the quadtree
+ */
 class lidarpointloader
 {
 public:

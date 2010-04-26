@@ -36,10 +36,25 @@ class LASsaver : public lidarpointsaver
 
 public:
 
+    /**
+     * a constructor for the class
+     *
+     * @param outputfilename the absolute or relative path of the file the points will be saved to
+     * @param inputfilename the absolute or relative path of the file that the points to be saved came from (used to copy the header across)
+     */
     LASsaver(const char *outputfilename, const char *inputfilename);
 
+    /**
+     * the method saves the array of points to a file in the LAS format
+     *
+     * @param n the number of points in the array
+     * @param points the array of points to be saved
+     */
     void savepoints(int n, point *points);
 
+    /**
+     * the method uses values calculated during the point saving to save an updated header
+     */
     void finalizesave();
 
 };

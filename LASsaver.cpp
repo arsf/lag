@@ -100,4 +100,5 @@ void LASsaver::finalizesave()
    newheader.SetPointRecordsByReturnCount(2, numofeachreturn[2]);
    newheader.SetPointRecordsByReturnCount(3, numofeachreturn[3]);
    writer->WriteHeader(newheader);
+   delete writer;
 }

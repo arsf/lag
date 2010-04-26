@@ -52,7 +52,7 @@ bool triangletest(double *Xs, double *Ys, int size, double px, double py)
 
 // function to test if a point lies within a polygon using the fact
 // that if it does a vector drawn outwards from that point will intersect
-// with the polygon an od number of times
+// with the polygon an odd number of times
 bool vectortest(double *Xs, double *Ys, int size, double px, double py)
 {
 
@@ -61,7 +61,7 @@ bool vectortest(double *Xs, double *Ys, int size, double px, double py)
    int j = size - 1;
    for (int k = 0; k < size; k++)
    {
-      if (Ys[k] < py && Ys[j] >= py || Ys[j] < py && Ys[k] >= py)
+      if ((Ys[k] < py && Ys[j] >= py) || (Ys[j] < py && Ys[k] >= py))
       {
          if (Xs[k]+(py - Ys[k]) / (Ys[j] - Ys[k])*(Xs[j] - Xs[k]) < px)
          {
@@ -80,6 +80,8 @@ bool point_NAOrec(double px, double py, double *Xs, double *Ys, int size)
    return vectortest(Xs, Ys, size, px, py);
 
 }
+
+
 
 // function to detect collision between an axis orientated rectangle and a rotated rectangle
 bool AOrec_NAOrec(double minX, double minY, double maxX, double maxY, double *Xs, double *Ys, int size)
@@ -140,7 +142,7 @@ bool axis_sep_test(double *poly1Xs, double *poly1Ys, int poly1size, double *poly
       aby = -vecx;
 
       // check that a parallel vector has not already been checked
-      for(int i=0; i<previousX.size(); i++)
+      for(unsigned int i=0; i<previousX.size(); i++)
       {
             if((previousX[i]*vecy)-(vecx*previousY[i]) == 0)
             {
@@ -179,7 +181,7 @@ bool axis_sep_test(double *poly1Xs, double *poly1Ys, int poly1size, double *poly
       }
 
       //cout << min1 << " " << max1 << " " << min2 << " " << max2 << endl;
-      // if the min max don't overlap when projected on this vector so the objects don't collide
+      // if the min max don't overlap when projected on this plane the objects don't collide
       if(min1 > max2 || max1 < min2)
       {
          return false;
@@ -204,7 +206,7 @@ bool axis_sep_test(double *poly1Xs, double *poly1Ys, int poly1size, double *poly
       aby = -vecx;
 
       // check that a parallel vector has not already been checked
-      for(int i=0; i<previousX.size(); i++)
+      for(unsigned int i=0; i<previousX.size(); i++)
       {
             if((previousX[i]*vecy)-(vecx*previousY[i]) == 0)
             {

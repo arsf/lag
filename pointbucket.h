@@ -165,7 +165,7 @@ public:
     void setpoint(point& newP);
 
 
-    void generateraster(double width);
+
 
     // getters
     inline int getnumberofpoints() const
