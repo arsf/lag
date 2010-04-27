@@ -10,7 +10,7 @@
 
 using namespace std;
 
-// self explanitory :P
+
 
 pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory)
 {
@@ -28,6 +28,7 @@ pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double 
    this->instancedirectory = instancedirectory;
    string s = boost::lexical_cast<string > (this);
    filepath = instancedirectory;
+   // append the pointbuckets 'this' pointer value to the filename with each pair of digits as a sub folder of the previous
    for (int k = s.size(); k > 3; k = k - 2)
    {
       filepath.append("/");
@@ -36,6 +37,7 @@ pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double 
 
       boost::filesystem::create_directory(filepath);
    }
+   // append the boundarys to the filename
    filepath.append("/" + boost::lexical_cast<string > (minX) + "-" + boost::lexical_cast<string > (minY) + "_" + boost::lexical_cast<string > (maxY) + "-" + boost::lexical_cast<string > (maxX));
    innerbucket = NULL;
    updated = false;

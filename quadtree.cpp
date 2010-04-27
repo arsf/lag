@@ -618,19 +618,19 @@ void quadtree::sort(char v)
 
 // this method takes 2 points and a width, the points denote a line which is the center line
 // of a rectangle whos width is defined by the width, returns NULL passed two identical points
-vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, double y2, double width)
+vector<pointbucket*>* quadtree::advsubset(double *Xs, double *Ys, int size)
 {
    // check its a line
-   if (x1 == x2 && y1 == y2)
+/*   if (x1 == x2 && y1 == y2)
    {
       return NULL;
-   }
+   }*/
 
    // work out from the 2 points and the forumula of the line they describe the four point of
    // the subset rectangle
      
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
-
+/*
 
    double a1,a2,a3;
 
@@ -666,10 +666,10 @@ vector<pointbucket*>* quadtree::advsubset(double x1, double y1, double x2, doubl
    Xs[2]=x2-(unitab1*(width/2));
    Ys[2]=y2-(unitab2*(width/2));
    Xs[3]=x2+(unitab1*(width/2));
-   Ys[3]=y2+(unitab2*(width/2));
+   Ys[3]=y2+(unitab2*(width/2));*/
 
    // begin the recursive subsetting of the root node
-   root->advsubset(Xs, Ys, 4, buckets);
+   root->advsubset(Xs, Ys, size, buckets);
    std::stable_sort(buckets->begin(), buckets->end(), compare);
    return buckets;
 }
@@ -708,8 +708,16 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
    int counter = 0;
    vector<pointbucket*> *buckets;
    boundary *b = root->getbound();
-   int width = (b->maxX-b->minX);
-   buckets = advsubset(b->minX+(width/2), b->minY, b->minX+(width/2), b->maxY, (width+100));
+
+   double *Xs = new double[4];
+   double *Ys = new double[4];
+
+   Xs[0] = Xs[1] = b->minX;
+   Xs[2] = Xs[3] = b->maxX;
+   Ys[0] = Ys[3] = b->minY;
+   Ys[1] = Ys[2] = b->maxX;
+
+   buckets = advsubset(Xs, Ys, 4);
    pointbucket *current;
    for(unsigned int k=0; k<buckets->size(); k++)
    {

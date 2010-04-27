@@ -179,7 +179,7 @@ public:
     *
     * @return a pointer to a vector, which contains pointers to buckets. this must be deleted by the caller of this method
     */
-   vector<pointbucket*>* advsubset(double x1, double y1, double x2, double y2, double width);
+   vector<pointbucket*>* advsubset(double *Xs, double *Ys, int size);
    
    /**
     * a method to get the area the root node covers
