@@ -711,7 +711,7 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
    int width = (b->maxX-b->minX);
    buckets = advsubset(b->minX+(width/2), b->minY, b->minX+(width/2), b->maxY, (width+100));
    pointbucket *current;
-   for(int k=0; k<buckets->size(); k++)
+   for(unsigned int k=0; k<buckets->size(); k++)
    {
       current = buckets->at(k);
       for(int i=0; i<current->getnumberofpoints(); i++)

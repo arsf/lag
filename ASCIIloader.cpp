@@ -58,7 +58,7 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum, double *
       }
 
 
-      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.packedbyte = 0; temp.pointsourceid = 0;
+      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.packedbyte = 0; temp.pointsourceid = 0; temp.scanangle = 0;
 
       tok = strtok(line, delim);
       wordcounter=0;
@@ -183,7 +183,7 @@ int ASCIIloader::load(int n, int nth, point *points, int flightlinenum)
          continue;
       }
 
-      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.pointsourceid = 0;
+      temp.classification = 0; temp.flightline = 0; temp.intensity = 0; temp.x = 0; temp.y = 0; temp.z = 0; temp.time = 0; temp.packedbyte = 0; temp.pointsourceid = 0; temp.scanangle = 0;
 
       tok = strtok(line, delim);
       wordcounter=0;

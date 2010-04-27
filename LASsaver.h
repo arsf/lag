@@ -17,6 +17,9 @@
 
 using namespace std;
 
+/*
+ * this class implements the interface provided in lidarpointsave
+ */
 class LASsaver : public lidarpointsaver
 {
     const char *outputfilename;
