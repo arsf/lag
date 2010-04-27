@@ -87,7 +87,6 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
       pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
       imageexists=true;
    }catch(descriptiveexception e){
-//      cout << e << endl;//This is from when it was catch(const char* e){
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
       cout << "Why: " << e.why() << endl;

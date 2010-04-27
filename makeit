@@ -1,5 +1,5 @@
 #For normal use (has optimisation):
-g++ -o lag.out -O4 -lglut -llas -L./liblas/lib/ -L/usr/lib64 -Wall -pedantic -lboost_filesystem -lboost_thread-mt -lboost_serialization -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2 gthread-2.0`-umalloc -ufree -urealloc -ucalloc ./TCMalloc/lib/libtcmalloc.a lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp lidar_loader.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp cacheminder.cpp pointbucket.cpp collisiondetection.cpp
+g++ -o lag.out -O4 -lglut -llas -L./liblas/lib/ -L/usr/lib64 -Wall -pedantic -lboost_filesystem -lboost_thread-mt -lboost_serialization -I./liblas/include/ `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2 gthread-2.0`-umalloc -ufree -urealloc -ucalloc ./TCMalloc/lib/libtcmalloc.a lag.cpp quadtree.cpp quadtreestructs.cpp quadtreenode.cpp TwoDeeOverview.cpp LASloader.cpp Profile.cpp MathFuncs.cpp ASCIIloader.cpp Display.cpp cacheminder.cpp pointbucket.cpp collisiondetection.cpp LASsaver.cpp
 #For profiling WITH optimisation:
 #g++ -O4 -pg -o profilingtestopt.out -lpthread -Wall -pedantic `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0` lag.cpp
 #For profiling WITHOUT optimisation:

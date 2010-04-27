@@ -19,19 +19,16 @@ public:
    ~Display();
    virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
+   void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
    //Getters:
-//   double getrmaxz(){return rmaxz;}
-//   double getrminz(){return rminz;}
-//   double getmaxz(){return maxz;}
-//   double getminz(){return minz;}
-//   double getzoffset(){return zoffset;}
-//   double getzfloor(){return zfloor;}
-//   int getrmaxintensity(){return rmaxintensity;}
-//   int getrminintensity(){return rminintensity;}
-//   int getmaxintensity(){return maxintensity;}
-//   int getminintensity(){return minintensity;}
-//   double getintensityoffset(){return intensityoffset;}
-//   double getintensityfloor(){return intensityfloor;}
+   double getrmaxz(){return rmaxz;}
+   double getrminz(){return rminz;}
+   double getzoffset(){return zoffset;}
+   double getzfloor(){return zfloor;}
+   int getrmaxintensity(){return rmaxintensity;}
+   int getrminintensity(){return rminintensity;}
+   double getintensityoffset(){return intensityoffset;}
+   double getintensityfloor(){return intensityfloor;}
    //Setters:
    void setlidardata(quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
@@ -43,14 +40,10 @@ public:
    void setheightbrightness(bool heightbrightness){this->heightbrightness=heightbrightness;}
    void setpointwidth(double pointsize){this->pointsize=pointsize;glPointSize(pointsize);}
    void setmaindetail(double maindetailmod){this->maindetailmod=maindetailmod;}
-//   void setmaxz(double maxz){this->maxz = maxz;}
-//   void setminz(double minz){this->minz = minz;}
-//   void setzoffset(double zoffset){this->zoffset = zoffset;}
-//   void setzfloor(double zfloor){this->zfloor = zfloor;}
-//   void setmaxintensity(int maxintensity){this->maxintensity = maxintensity;}
-//   void setminintensity(int minintensity){this->minintensity = minintensity;}
-//   void setintensityoffset(double intensityoffset){this->intensityoffset = intensityoffset;}
-//   void setintensityfloor(double intensityfloor){this->intensityfloor = intensityfloor;}
+   void setzoffset(double zoffset){this->zoffset = zoffset;}
+   void setzfloor(double zfloor){this->zfloor = zfloor;}
+   void setintensityoffset(double intensityoffset){this->intensityoffset = intensityoffset;}
+   void setintensityfloor(double intensityfloor){this->intensityfloor = intensityfloor;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
 
@@ -92,7 +85,6 @@ protected:
    //Colouring and shading:
    void colour_by(double value,double maxvalue,double minvalue,double& col1,double& col2,double& col3);//Colours by a numeric variable.
    double brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue);//Shades by a numeric variable.
-   void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
  
    //Positioning methods:
    virtual void resetview() = 0;//Determines what part of the image is displayed with orthographic projection.

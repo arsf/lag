@@ -1564,7 +1564,9 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1578,7 +1580,9 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1620,7 +1624,9 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="adjustment">0 0 1 0.01 100 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">2</property>
@@ -1634,7 +1640,9 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">2</property>
@@ -1648,9 +1656,61 @@ Haraldur Tristan Gunnarsson (GUI and data manipulation)</property>
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <widget class="GtkButton" id="drawingresetbutton">
+                <property name="label" translatable="yes">Reset</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
           </widget>
           <packing>
             <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkHSeparator" id="hseparator2">
+            <property name="visible">True</property>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkVBox" id="vbox18">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <widget class="GtkLabel" id="label11">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">&lt;b&gt;Other:&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+              </widget>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkCheckButton" id="clippycheck">
+                <property name="label" translatable="yes">Enable Viewing Assistant</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+              </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="position">5</property>
           </packing>
         </child>
         <child internal-child="action_area">

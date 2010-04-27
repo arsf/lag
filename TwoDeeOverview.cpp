@@ -363,7 +363,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             heightenUndefined){
             classification = buckets[i]->getpoint(j).classification;
             int index = classification;
-            double incrementor = 2*abs(rmaxz-rminz);
+            double incrementor = 100+abs(rmaxz-rminz);
             switch(index){
                case 0:case 1:if(heightenNonC)z+=incrementor;break;//Heighten non-classified.
                case 2:if(heightenGround)z+=incrementor;break;//Heighten the ground.
@@ -376,6 +376,10 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                case 9:if(heightenWater)z+=incrementor;break;//Heighten water.
                case 12:if(heightenOverlap)z+=incrementor;break;//Heighten overlaps.
                default:if(heightenUndefined)z+=incrementor;break;//Heighten anything else.
+            }
+            if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
+               z = rmaxz+900+z/1000;
+               if(z>rmaxz+990)z=rmaxz+990;
             }
          }
          vertices[3*pointcount+2]=z;
@@ -538,15 +542,14 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       try{
          //Remember to change this to uncachesubset() later!
          pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
-      }catch(const char* e){
-         cout << e << endl;
+      }catch(descriptiveexception e){
+         cout << "There has been an exception:" << endl;
+         cout << "What: " << e.what() << endl;
+         cout << "Why: " << e.why() << endl;
          cout << "No points returned." << endl;
          return false;
       }
-      if(pointvector==NULL||pointvector->size()==0){
-         cout << "No points returned." << endl;
-         return false;
-      }
+      if(pointvector==NULL||pointvector->size()==0){ return false; }
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -568,8 +571,10 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       try{
          //Remember to change this to uncachesubset() later!
          pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
-      }catch(const char* e){
-         cout << e << endl;
+      }catch(descriptiveexception e){
+         cout << "There has been an exception:" << endl;
+         cout << "What: " << e.what() << endl;
+         cout << "Why: " << e.why() << endl;
          cout << "No points returned." << endl;
          return false;
       }
@@ -630,8 +635,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    try{
       //Remember to change this to uncachesubset() later!
       pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,pointsize*ratio/zoomlevel);//Get data.
-   }catch(const char* e){
-      cout << e << endl;
+   }catch(descriptiveexception e){
+      cout << "There has been an exception:" << endl;
+      cout << "What: " << e.what() << endl;
+      cout << "Why: " << e.why() << endl;
       cout << "No points returned." << endl;
       return false;
    }

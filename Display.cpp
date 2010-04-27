@@ -28,7 +28,7 @@ Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    heightcolour = false;
    heightbrightness = false;
    zoffset=0;
-   zfloor=0.25;
+   zfloor=0;
    intensitycolour = false;
    intensitybrightness = true;
    intensityoffset = 0;
@@ -94,10 +94,9 @@ void Display::coloursandshades(double maxz,double minz,int maxintensity,int mini
    }
    brightnessheightarray = new double[(int)(rmaxz-rminz+4)];
    for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
-      z = i + (int)rminz;
+      z = i + rminz;//Please note that, as elsewhere in this method, the exact value rmaxz will not be reached, so its position in the array will not equal 1, while the first element will be 0.
       brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
    }
-   cout << brightnessheightarray[0] << " " << brightnessheightarray[(int)(rmaxz-rminz)] << endl;
    brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
    for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity brightness array:
       intensity = i + rminintensity;
@@ -160,8 +159,10 @@ void Display::prepare_image(){
       boundary* lidarboundary = lidardata->getboundary();
       pointvector = lidardata->advsubset(lidarboundary->minX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxY-lidarboundary->minY);//Get ALL data.
       delete lidarboundary;
-   }catch(const char* e){
-      cout << e << endl;
+   }catch(descriptiveexception e){
+      cout << "There has been an exception:" << endl;
+      cout << "What: " << e.what() << endl;
+      cout << "Why: " << e.why() << endl;
       cout << "No points returned." << endl;
       return;
    }
@@ -175,19 +176,10 @@ void Display::prepare_image(){
       if(maxintensity<buckets[i]->getmaxintensity())maxintensity = buckets[i]->getmaxintensity();
       if(minintensity>buckets[i]->getminintensity())minintensity = buckets[i]->getminintensity();
    }
+   if(maxz<=minz)maxz=minz+1;
+   if(maxintensity<=minintensity)maxintensity=minintensity+1;
    rmaxz = maxz; rminz = minz;
    rmaxintensity = maxintensity; rminintensity = minintensity;
-   if(maxz<=minz)maxz=minz+1;
-//   else{//Find the 0.01 and 99.99 percentiles of the height and intensity from the buckets. Not perfect (it could miss a hill in a bucket) but it does the job reasonably well:
-//      double* zdata = new double[numbuckets];
-//      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getmaxZ();
-//      double lowperc = percentilevalue(zdata,numbuckets,0.01,minz,maxz);
-//      for(int i=0;i<numbuckets;i++)zdata[i]=buckets[i]->getminZ();
-//      double highperc = percentilevalue(zdata,numbuckets,99.99,minz,maxz);
-//      maxz=highperc;
-//      minz=lowperc;
-//      delete[] zdata;
-//   }
    coloursandshades(maxz,minz,maxintensity,minintensity);//Prepare colour and shading arrays.
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;

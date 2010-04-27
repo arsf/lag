@@ -17,7 +17,9 @@ using namespace std;
 
 //EASTER EGG! Clippy!
 string picturename;//Path of clippy image.
-const bool useclippy = false;//Whether or not to use clippy.
+bool useclippy = false;//Whether or not to use clippy.
+Gtk::CheckButton *clippycheck = NULL;//Check button determining whether the users will be questioned about whether they need help.
+void on_clippycheck_toggled(){ useclippy = clippycheck->get_active(); }
 
 bool drawwhentoggled = true;//This variable prevents the image(s) from being drawn twice as a result of toggling a radio button (or similar), which deactivates (and therefore toggles again) another one in the same group. This variable must start as true, as the methods make it opposite before using it, so that things will de drawn after the second "toggling".
 
@@ -75,14 +77,15 @@ Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
          Gtk::CheckButton *classcheckbutton12 = NULL;//...
          Gtk::CheckButton *classcheckbuttonA = NULL;//"Anything else" classification elevator.
       //Colouring and shading:
-//         Gtk::Spinbutton *heightmaxselect = NULL;
-//         Gtk::Spinbutton *heightminselect = NULL;
-//         Gtk::Spinbutton *heightoffsetselect = NULL;
-//         Gtk::Spinbutton *heightfloorselect = NULL;
-//         Gtk::Spinbutton *intensitymaxselect = NULL;
-//         Gtk::Spinbutton *intensityminselect = NULL;
-//         Gtk::Spinbutton *intensityoffsetselect = NULL;
-//         Gtk::Spinbutton *intensityfloorselect = NULL;
+         Gtk::SpinButton *heightmaxselect = NULL;
+         Gtk::SpinButton *heightminselect = NULL;
+         Gtk::SpinButton *heightoffsetselect = NULL;
+         Gtk::SpinButton *heightfloorselect = NULL;
+         Gtk::SpinButton *intensitymaxselect = NULL;
+         Gtk::SpinButton *intensityminselect = NULL;
+         Gtk::SpinButton *intensityoffsetselect = NULL;
+         Gtk::SpinButton *intensityfloorselect = NULL;
+         Gtk::Button *drawingresetbutton = NULL;
 Gtk::ToggleToolButton *rulertoggleover = NULL;//Toggle button determining whether the ruler is viewable on the overview.
 Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
@@ -107,6 +110,22 @@ Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, i
 void on_aboutmenuactivated(){ about->show_all(); }
 //Hide the about dialog when close button activated.
 void on_aboutresponse(int response_id){ about->hide_all(); }
+
+void on_drawingresetbutton_clicked(){
+   heightmaxselect->set_range(tdo->getrminz()+1,tdo->getrmaxz());
+   heightmaxselect->set_value(tdo->getrmaxz());
+   heightminselect->set_range(tdo->getrminz(),tdo->getrmaxz()-1);
+   heightminselect->set_value(tdo->getrminz());
+   heightoffsetselect->set_value(0);
+   heightfloorselect->set_value(0);
+   intensitymaxselect->set_range(tdo->getrminintensity()+1,tdo->getrmaxintensity());
+   intensitymaxselect->set_value(tdo->getrmaxintensity());
+   intensityminselect->set_range(tdo->getrminintensity(),tdo->getrmaxintensity()-1);
+   intensityminselect->set_value(tdo->getrminintensity());
+   intensityoffsetselect->set_value(0);
+   intensityfloorselect->set_value(0);
+   //Draws as a result of the other callbacks, and only does so once because of threading (!!!!).
+}
 
 //Get the area to load the flightline(s) in by calling the overview's getfence() method.
 void get_area(double &x1,double &y1,double &x2,double &y2,double &width){
@@ -291,6 +310,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       vboxprof->pack_end(*prof,true,true);
       prof->show_all();
    }
+   on_drawingresetbutton_clicked();
    loadedanyfiles = true;
    return 0;
 }
@@ -528,6 +548,75 @@ void on_classcheckbutton8_toggled(){ tdo->setheightenMass(classcheckbutton8->get
 void on_classcheckbutton9_toggled(){ tdo->setheightenWater(classcheckbutton9->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
 void on_classcheckbutton12_toggled(){ tdo->setheightenOverlap(classcheckbutton12->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
 void on_classcheckbuttonA_toggled(){ tdo->setheightenUndefined(classcheckbuttonA->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
+//The drawing settings (please note that there is a reason why the profile is updated before the overview: if it is the other way around then the overview's drawing thread would be running so it will be unpredictable which part will execute OpenGL code first, which can sometimes mean that the overview will be drawn the same size as the profile, which might confuse users):
+void on_heightmaxselect_changed(){
+   heightminselect->set_range(tdo->getrminz(),heightmaxselect->get_value()-1);
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_heightminselect_changed(){
+   heightmaxselect->set_range(heightminselect->get_value()+1,tdo->getrmaxz());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_heightoffsetselect_changed(){
+   prof->setzoffset(heightoffsetselect->get_value());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   tdo->setzoffset(heightoffsetselect->get_value());
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_heightfloorselect_changed(){
+   prof->setzfloor(heightfloorselect->get_value());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   tdo->setzfloor(heightfloorselect->get_value());
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_intensitymaxselect_changed(){
+   intensityminselect->set_range(tdo->getrminintensity(),intensitymaxselect->get_value()-1);
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_intensityminselect_changed(){
+   intensitymaxselect->set_range(intensityminselect->get_value()+1,tdo->getrmaxintensity());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_intensityoffsetselect_changed(){
+   prof->setintensityoffset(intensityoffsetselect->get_value());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   tdo->setintensityoffset(intensityoffsetselect->get_value());
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+void on_intensityfloorselect_changed(){
+   prof->setintensityfloor(intensityfloorselect->get_value());
+   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(prof->is_realized())prof->drawviewable(1);
+   tdo->setintensityfloor(intensityfloorselect->get_value());
+   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
+   if(tdo->is_realized())tdo->drawviewable(1);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
 
 //Sets up the GUI.
 int GUIset(int argc,char *argv[]){
@@ -672,22 +761,26 @@ int GUIset(int argc,char *argv[]){
                if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
                refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
                if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
-//               refXml->get_widget("heightmaxselect",heightmaxselect);
-//               if(heightmaxselect)heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
-//               refXml->get_widget("heightminselect",heightminselect);
-//               if(heightminselect)heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
-//               refXml->get_widget("heightoffsetselect",heightoffsetselect);
-//               if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
-//               refXml->get_widget("heightfloorselect",heightfloorselect);
-//               if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
-//               refXml->get_widget("intensitymaxselect",intensitymaxselect);
-//               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
-//               refXml->get_widget("intensityminselect",intensityminselect);
-//               if(intensityminselect)intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
-//               refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
-//               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
-//               refXml->get_widget("intensityfloorselect",intensityfloorselect);
-//               if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
+               refXml->get_widget("heightmaxselect",heightmaxselect);
+               if(heightmaxselect)heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
+               refXml->get_widget("heightminselect",heightminselect);
+               if(heightminselect)heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
+               refXml->get_widget("heightoffsetselect",heightoffsetselect);
+               if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
+               refXml->get_widget("heightfloorselect",heightfloorselect);
+               if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
+               refXml->get_widget("intensitymaxselect",intensitymaxselect);
+               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
+               refXml->get_widget("intensityminselect",intensityminselect);
+               if(intensityminselect)intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
+               refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
+               if(intensityoffsetselect)intensityoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityoffsetselect_changed));
+               refXml->get_widget("intensityfloorselect",intensityfloorselect);
+               if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
+               refXml->get_widget("drawingresetbutton",drawingresetbutton);
+               if(drawingresetbutton)drawingresetbutton->signal_clicked().connect(sigc::ptr_fun(&on_drawingresetbutton_clicked));
+               refXml->get_widget("clippycheck",clippycheck);
+               if(clippycheck)clippycheck->signal_toggled().connect(sigc::ptr_fun(&on_clippycheck_toggled));
             //The ruler:
             refXml->get_widget("rulertoggleover",rulertoggleover);
             if(rulertoggleover)rulertoggleover->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggleover));
@@ -829,7 +922,7 @@ int GUIset(int argc,char *argv[]){
 
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.03.26.1" << endl;
+   cout << "Build number: 2010.04.27.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
