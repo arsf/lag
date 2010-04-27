@@ -241,7 +241,9 @@ bool Profile::on_ruler_start(GdkEventButton* event){
    rulerstartx = rulerendx = centrex + viewerx + hypotenuse * breadth / length;
    rulerstarty = rulerendy = centrey + viewery + hypotenuse * height / length;
    rulerstartz = rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0");
+   ostringstream zpos;
+   zpos << rulerendz;
+   rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0 Pos: " + zpos.str());
    return drawviewable(1);
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
@@ -259,13 +261,14 @@ bool Profile::on_ruler(GdkEventMotion* event){
    zd = abs(rulerendz-rulerstartz);
    hd = sqrt(xd*xd+yd*yd);//Combined horizontal distance.
    d = sqrt(hd*hd+zd*zd);//Combined horizontal and vertical distance.
-   ostringstream dist,xdist,ydist,horizdist,zdist;
+   ostringstream dist,xdist,ydist,horizdist,zdist,zpos;
    dist << d;
    xdist << xd;
    ydist << yd;
    horizdist << hd;
    zdist << zd;
-   string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str();
+   zpos << rulerendz;
+   string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str() + " Pos: " + zpos.str();
    rulerlabel->set_text(rulerstring);
    return drawviewable(1);
 }

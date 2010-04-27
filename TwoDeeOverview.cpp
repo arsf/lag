@@ -114,7 +114,6 @@ void TwoDeeOverview::InitGLDraw(){
 //This handler draws the contents of the arrays vertices and colours to the framebuffer. Note that the reason the OpenGL vertex array stuff is in here is because, apparently, the glDisableClientState() calls try to access the arrays, and this caused valgrind to squeal. It would make the program marginally faster to add a boolean variable "ending_GL_draw" so that EndGLDraw could end the vertex array enablement (and InitGLDraw could start it), but is it worth the global variable and the extra effort? Also, it is not certain, but it seems that since the vertex array stuff has moved here the missing bucket problem has gone, and it is also now very very difficult to make the thread cause a crash.
 void TwoDeeOverview::DrawGLToCard(){
    if(threaddebug)cout << "Boo!" << endl;
-//   vertex_array_mutex.lock();
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
    glEnableClientState(GL_VERTEX_ARRAY);//These relate to the enabling of vertex arrays and assigning the arrays to GL.
@@ -126,8 +125,6 @@ void TwoDeeOverview::DrawGLToCard(){
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
    drawing_to_GL = false;//The drawing thread running mainimage() may now continue. Also, new drawing threads may now be started.
-//   vertex_array_condition.signal();
-//   vertex_array_mutex.unlock();
 }
 //This handler exists so that flushing of the framebuffer can be done independently of drawing to it. This allows an arbitrary frequency of flushes to be easily set, to compromise between showing the user things are happening and the desire to reduce the flicker and the fact that more flushes will make drawing slower.
 void TwoDeeOverview::FlushGLToScreen(){
@@ -210,7 +207,6 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    int line=0,intensity=0,classification=0,rnumber=0;
    double x=0,y=0,z=0;//Point values
    double red,green,blue;//Colour values
-//   vertex_array_mutex.lock();
    if(threaddebug)cout << "First array" << endl;
    vertices = new float[3*bucketlimit];
    if(threaddebug)cout << "Second array" << endl;
@@ -264,7 +260,6 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
          delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
          if(threaddebug)cout << "Delete colour array." << endl;
          delete[] colours;//...
-//         vertex_array_mutex.unlock();
          if(threaddebug)cout << "Booleans." << endl;
          interruptthread = false;//New threads like this will now not be interrupted.
          thread_existsthread = false;//New threads like this will now be allowed to act.
@@ -279,12 +274,10 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
       for(int j=0;j<buckets[i]->getnumberofpoints();j+=detail){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-//         if(threaddebug)cout << "Get coords." << endl;
          x = buckets[i]->getpoint(j).x;
          y = buckets[i]->getpoint(j).y;
          z = buckets[i]->getpoint(j).z;
          intensity = buckets[i]->getpoint(j).intensity;
-//         if(threaddebug)cout << "Colours!" << endl;
          if(heightcolour){//Colour by elevation.
             red = colourheightarray[3*(int)(10*(z-rminz))];
             green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -429,7 +422,6 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
    if(threaddebug)cout << "Delete colour array." << endl;
    delete[] colours;//...
-//   vertex_array_mutex.unlock();
    if(threaddebug)cout << "Booleans." << endl;
    interruptthread = false;//New threads like this will now not be interrupted.
    thread_existsthread = false;//New threads like this will now be allowed to act.
@@ -439,10 +431,10 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
 
 //This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back.
 bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
-   glReadBuffer(GL_BACK);//We want to copy from here.
-   glDrawBuffer(GL_FRONT);//We want to draw to here.
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
+   glReadBuffer(GL_BACK);//We want to copy from here.
+   glDrawBuffer(GL_FRONT);//We want to draw to here.
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
    if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
@@ -460,10 +452,12 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
       yoffset = -ypos*zoomlevel/ratio - get_height()/2;//Minus sign because must be positive and ypos will be negative. Makes ypos into pixels and then subtracts half the height of the windo, as 0 (world coordinates) is in the centre. 
       ypos = -(get_height()/2)*ratio/zoomlevel;//This is set to the bottom edge of the screen.
    }
-   double* params = new double[4];//This section if for making sure that the xpos and ypos numbers are greater than or equal to zero, for otherwise NOTHING will be drawn:
-   glGetDoublev(GL_CURRENT_RASTER_POSITION,params);//...
-   if(params[0]<0)xpos++;//...For x.
-   if(params[1]<0)ypos++;//...For y.
+   double* params = new double[4];//This section is for making sure that the xpos and ypos numbers are greater than or equal to zero, for otherwise NOTHING will be drawn:
+   do{
+      glGetDoublev(GL_CURRENT_RASTER_POSITION,params);//...
+      if(params[0]<0)xpos++;//...For x.
+      if(params[1]<0)ypos++;//...For y.
+   }while(params[0]<0||params[1]<0);
    delete[] params;//...Do not need the other two elements: x and w.
    glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
    double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + get_width()/2 + xoffset;//These define the boundaries of the region to be copied FROM.
@@ -474,22 +468,12 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    if(bucketmaxy > get_height())bucketmaxy = get_height();//...
    if(bucketminx > bucketmaxx)bucketminx = bucketmaxx;//...Oh, and the bottom left corner must be further left and down than the top right corner.
    if(bucketminy > bucketmaxy)bucketminy = bucketmaxy;//...
-//   if(bucketminx < 1)bucketminx = 1;//...
-//   if(bucketminy < 1)bucketminy = 1;//...
    glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
-   //******************************************************************************Still not sure whether to draw the overlays (ruler,profile,fence) in GTK or OpenGL. GTK would require more work and duplication, and more complexity, but would allow the user to draw over the flightline while it was still drawing in full detail and from scratch. Hmmmmmmm...
-//   int line=0,intensity=0,classification=0,rnumber=0;
-//   double x=0,y=0,z=0;//Point values
-//   double red,green,blue;//Colour values
    float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
-//   float* colours = new float[3*bucketlimit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
-//   glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-//   glColorPointer(3, GL_FLOAT, 0, colours);//...
    glColor3f(1.0,1.0,1.0);
    for(int i=0;i<numbuckets;i++){//For every bucket...
-//      red = 0.0; green = 1.0; blue = 0.0;//Default colour.
       vertices[0]=buckets[i]->getminX()-centrex;
       vertices[1]=buckets[i]->getminY()-centrey;
       vertices[2]=altitude;
@@ -502,19 +486,14 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
       vertices[9]=buckets[i]->getmaxX()-centrex;
       vertices[10]=buckets[i]->getminY()-centrey;
       vertices[11]=altitude;
-//      colours[3*count]=red;
-//      colours[3*count+1]=green;
-//      colours[3*count+2]=blue;
       glDrawArrays(GL_LINE_LOOP,0,4);
    }
    glFlush();//After all this effort, something must be drawn to the screen.
    glRasterPos2s(0,0);//Reset the raster position.
    glDisableClientState(GL_VERTEX_ARRAY);
-//   glDisableClientState(GL_COLOR_ARRAY);
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
    delete[] vertices;
-//   delete[] colours;
    return true;
 }
 
@@ -642,10 +621,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       cout << "No points returned." << endl;
       return false;
    }
-   if(pointvector==NULL||pointvector->size()==0){
-      cout << "No points returned." << endl;
-      return false;
-   }
+   if(pointvector==NULL||pointvector->size()==0){ return false; }
    if(pointvector->size()>0){//If there aren't any points, don't bother.
       bool anypoint = false;
       int bucketno=0;
@@ -681,9 +657,6 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glReadBuffer(GL_BACK);
             glDrawBuffer(GL_FRONT);
             glColor3f(1.0,1.0,1.0);
-   //         glBegin(GL_POINTS);
-   //            glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex,pointvector->at(bucketno)->getpoint(pointno).y-centrey,altitude);
-   //         glEnd();
             glBegin(GL_LINE_LOOP);
                glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
                glVertex3d(pointvector->at(bucketno)->getpoint(pointno).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
@@ -745,6 +718,7 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       panstartx=event->x;
       panstarty=event->y;
+      drawviewable(2);
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -765,8 +739,6 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    if(event->button==1){
       profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-//      profeventstartx = event->x;
-//      profeventstarty = event->y;
       return drawviewable(2);
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -777,40 +749,6 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   //   Gdk::Color *col = new Gdk::Color("White");
-   //   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
-   //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   //   if (!glwindow->gl_begin(get_gl_context()))return false;
-   //   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   //   else glFlush();
-   //   glwindow->gl_end();
-   //   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),profeventstartx,profeventstarty,event->x,event->y);
-   ////   double breadth = profendx - profstartx;
-   ////   double height = profendy - profstarty;
-   ////   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   ////   double startpointx,startpointy,endpointx,endpointy;
-   ////   startpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   startpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   endpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   endpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
-   ////   startpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   startpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   endpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   endpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
-   ////   startpointx = (profstartx+(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   startpointy = (profstarty-(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   endpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   endpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
-   ////   startpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   startpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   endpointx = (profstartx-(profwidth/2)*height/length-centrex)*zoomlevel/ratio;
-   ////   endpointy = (profstarty+(profwidth/2)*breadth/length-centrey)*zoomlevel/ratio;
-   ////   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),startpointx,startpointy,endpointx,endpointy);
-   //   delete col;
-   //   return true;
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -839,8 +777,6 @@ bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    if(event->button==1){
       fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   //   fenceeventstartx = event->x;
-   //   fenceeventstarty = event->y;
       return drawviewable(2);
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -851,33 +787,22 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-   //   Gdk::Color *col = new Gdk::Color("White");
-   //   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
-   //   double boxstartx,boxstarty,boxendx,boxendy;
-   //   if(event->x>fenceeventstartx){
-   //      boxstartx = fenceeventstartx;
-   //      boxendx = event->x;
-   //   }
-   //   else{
-   //      boxstartx = event->x;
-   //      boxendx = fenceeventstartx;
-   //   }
-   //   if(event->y>fenceeventstarty){
-   //      boxstarty = fenceeventstarty;
-   //      boxendy = event->y;
-   //   }
-   //   else{
-   //      boxstarty = event->y;
-   //      boxendy = fenceeventstarty;
-   //   }
-   //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   //   if (!glwindow->gl_begin(get_gl_context()))return false;
-   //   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   //   else glFlush();
-   //   glwindow->gl_end();
-   //   get_gl_window()->draw_rectangle(get_style()->get_fg_gc(get_state()),false,boxstartx,boxstarty,boxendx-boxstartx,boxendy-boxstarty);
-   //   delete col;
-   //   return true;
+      double fenceminx = fencestartx,fencemaxx = fenceendx,fenceminy = fencestarty,fencemaxy = fenceendy;
+      if(fencestartx>fenceendx){
+         fenceminx = fenceendx;
+         fencemaxx = fencestartx;
+      }
+      if(fencestarty>fenceendy){
+         fenceminy = fenceendy;
+         fencemaxy = fencestarty;
+      }
+      ostringstream fenceminX,fencemaxX,fenceminY,fencemaxY;
+      fenceminX << fenceminx;
+      fencemaxX << fencemaxx;
+      fenceminY << fenceminy;
+      fencemaxY << fencemaxy;
+      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str();
+      rulerlabel->set_text(fencetext);
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -902,7 +827,10 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event){
    if(event->button==1){
       rulerstartx = rulerendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       rulerstarty = rulerendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-      rulerlabel->set_text("Distance: 0\nX: 0\nY: 0");
+      ostringstream xpos,ypos;
+      xpos << rulerendx;
+      ypos << rulerendy;
+      rulerlabel->set_text("Distance: 0\nX: 0 Pos: "+ xpos.str() + "\nY: 0 Pos: " + ypos.str());
       rulereventstartx = event->x;
       rulereventstarty = event->y;
       return drawviewable(2);
@@ -919,22 +847,14 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event){
       xd = abs(rulerendx-rulerstartx);
       yd = abs(rulerendy-rulerstarty);
       d = sqrt(xd*xd+yd*yd);
-      ostringstream dist,xdist,ydist;
+      ostringstream dist,xdist,ydist,xpos,ypos;
       dist << d;
       xdist << xd;
       ydist << yd;
-      string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + "\nY: " + ydist.str();
+      xpos << rulerendx;
+      ypos << rulerendy;
+      string rulerstring = "Distance: " + dist.str() +"\nX: " + xdist.str() + " Pos: " + xpos.str() + "\nY: " + ydist.str() + " Pos: " + ypos.str();
       rulerlabel->set_text(rulerstring);
-   //   Gdk::Color *col = new Gdk::Color("White");
-   //   get_style()->get_fg_gc(get_state())->set_rgb_fg_color(*col);
-   //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   //   if (!glwindow->gl_begin(get_gl_context()))return false;
-   //   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   //   else glFlush();
-   //   glwindow->gl_end();
-   //   get_gl_window()->draw_line(get_style()->get_fg_gc(get_state()),rulereventstartx,rulereventstarty,event->x,event->y);
-   //   delete col;
-   //   return true;
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);

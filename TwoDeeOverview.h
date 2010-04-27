@@ -126,8 +126,6 @@ public:
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}//...
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}//...
 protected:
-   Glib::Mutex vertex_array_mutex;
-   Glib::Cond vertex_array_condition;
    int pointcount;//The number of points being drawn from the current bucket.
    float* vertices;//This contains the coordinates of all the points in the current bucket.
    float* colours;//This contains the RGB components of the colours of all the points in the current bucket.
@@ -155,14 +153,12 @@ protected:
    double origpanstartx,origpanstarty;//Coordinates of the start of ALL pan moves since the last time the points were drawn to the screne from scratch.
  
    //Profiling:
-//   double profeventstartx,profeventstarty;//The start coordinates of the profile in pixels.
    double profstartx, profstarty;//The start coordinates for the profile in world units.
    double profendx, profendy;//The end coordinates for the profile in world units.
    double profwidth;//The width of the profile in world units.
    bool profiling;//Determines whether or not the profile should be drawn.
    bool showprofile;//Whether to display the profile box when not modifying it.
    //Fencing:
-//   double fenceeventstartx,fenceeventstarty;
    double fencestartx, fencestarty;//The start coordinates for the fence.
    double fenceendx, fenceendy;//The end coordinates for the fence.
    bool fencing;//Determines whether or not the fence should be drawn.
