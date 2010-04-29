@@ -22,7 +22,7 @@ public:
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
    void makerulerbox();//Make rectangle showing where the ruler is.
-   bool showprofile(double startx,double starty,double endx,double endy,double width);//Gets the parameters of the profile and then draws it to the screen.
+   bool showprofile(double* profxs,double* profys,int profps);//Gets the parameters of the profile and then draws it to the screen.
    void setupruler(){//Blocks pan signals and unblocks ruler signals:
       sigpanstart.block();
       sigpan.block();

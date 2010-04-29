@@ -388,21 +388,41 @@ void on_fencetoggle(){
 
 //When toggled, the 2d overview goes into profile selection mode. When untoggled, 2d overview goes out of profile selection mode and the profile parameters are sent to the profile area.
 void on_profiletoggle(){
+   cout << "z" << endl;
+   cout << profiletoggle->get_active() << endl;
+   cout << profiletoggle->is_realized() << endl;
    if(profiletoggle->get_active()){
+      cout << "a" << endl;
       if(fencetoggle->get_active())fencetoggle->set_active(false);
       if(rulertoggleover->get_active())rulertoggleover->set_active(false);
+      cout << "b" << endl;
       tdo->setupprofile();
+      cout << "c" << endl;
+      cout << tdo->is_realized() << endl;
       if(tdo->is_realized())tdo->drawviewable(2);
+      cout << "d" << endl;
    }
    else{
+      cout << "e" << endl;
    	tdo->unsetupprofile();
+      cout << "f" << endl;
       if(!window3->get_visible())window3->show_all();
-      double startx,starty,endx,endy,width;
-      tdo->getprofile(startx,starty,endx,endy,width);
-      prof->showprofile(startx,starty,endx,endy,width);
+      double *profxs,*profys;
+      int profps;
+      cout << "g" << endl;
+      tdo->getprofile(profxs,profys,profps);
+      prof->showprofile(profxs,profys,profps);
+      cout << "i" << endl;
+      delete[]profxs;
+      delete[]profys;
+      cout << "j" << endl;
+      cout << tdo->is_realized() << endl;
       if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
+      cout << "k" << endl;
    }
+   cout << tdo->is_realized() << endl;
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+   cout << "l" << endl;
 }
 
 ////When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.

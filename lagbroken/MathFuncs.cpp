@@ -21,6 +21,28 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
    return percval;
 }
 
+//Determines whether the points in the sent bucket fit within the profile area.
+bool* vetpoints(pointbucket* points,double* xs,double* ys,int numberofcorners){
+   bool* correctpoints = new bool[points->getnumberofpoints()];
+   bool pointinboundary;//Determines whether the point is within the boundary.
+   int lastcorner,currentcorner;//These define the edge being considered.
+   for(int i=0;i<points->getnumberofpoints();i++){//For every point:
+      pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
+      lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
+      for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
+         if((ys[currentcorner] < points->getpoint(i).y && ys[lastcorner] >= points->getpoint(i).y) ||
+            (ys[lastcorner] < points->getpoint(i).y && ys[currentcorner] >= points->getpoint(i).y)){//This segments the line to the length of the segment that helps define the boundary.
+            if(xs[currentcorner] + (points->getpoint(i).y - ys[currentcorner])/(ys[lastcorner] - ys[currentcorner]) * (xs[lastcorner] - xs[currentcorner]) < points->getpoint(i).x){//If the point is to the right of the line defined by the corners (and segmented by the above if statement), i.e. the edge:
+               pointinboundary = !pointinboundary;//If done an odd number of times, the point must be within the shape, otherwise without.
+            }
+         }
+         lastcorner = currentcorner;
+      }
+      correctpoints[i] = pointinboundary;
+   }
+   return correctpoints;
+}
+
 //Determines whether the points in the sent bucket fit within the profile box.
 bool* vetpoints(pointbucket* points,double startx,double starty,double endx,double endy,double width){
    double width2 = width/2;

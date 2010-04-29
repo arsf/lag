@@ -19,4 +19,7 @@ double percentilevalue(double* data,int datasize,double percentile,double minval
 //Determines whether the points in the sent bucket fit within the profile box.
 bool* vetpoints(pointbucket* points,double startx,double starty,double endx,double endy,double width);
 
+//Determines whether the points in the sent bucket fit within the profile area.
+bool* vetpoints(pointbucket* points,double* xs,double* ys,int numberofcorners);
+
 #endif

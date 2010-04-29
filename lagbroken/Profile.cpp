@@ -55,36 +55,44 @@ Profile::~Profile(){}
 
 //This is called by a "reset button". It returns the view to the initial one. It sets the centre of the screen to the centre of the profile (average in the case of Z) and then sets the viewer position and the ratio of world coordinates to window coordinates before resetting the view and then drawing.
 bool Profile::returntostart(){
+   cout << 8 << endl;
    centrex = (startx + endx)/2;//This way, all of the profile should be on-screen.
    centrey = (starty + endy)/2;//...
    centrez=0;
+   cout << 9 << endl;
    for(int i=0;i<(int)flightlinestot.size();i++){//Totalling z...
       centrez+=flightlinepoints[i][0].z;
       centrez+=flightlinepoints[i][flightlinepoints[i].size()-1].z;
    }
    centrez/=(2*flightlinestot.size());//Dividing to get average.
+   cout << 10 << endl;
    zoomlevel=1;
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   cout << 11 << endl;
    viewerx = width * height / length;//To the right when looking from start to end.
    viewery = -width * breadth / length;//...
    ratio = length/get_width();
+   cout << 12 << endl;
    ratio*=1.1;
    resetview();
+   cout << 13 << endl;
    return drawviewable(1);
 }
 
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws.
-bool Profile::showprofile(double startx,double starty,double endx,double endy,double width){
-   this->startx = startx;
-   this->starty = starty;
-   this->endx = endx;
-   this->endy = endy;
-   this->width = width;
+bool Profile::showprofile(double* profxs,double* profys,int profps){
+   cout << 1 << endl;
+   startx = (profxs[0]+profxs[1])/2;
+   starty = (profys[0]+profys[1])/2;
+   endx = (profxs[profps-1]+profxs[profps-2])/2;
+   endy = (profys[profps-1]+profys[profps-2])/2;
+   width = sqrt((profxs[0]-profxs[1])*(profxs[0]-profxs[1])+(profys[0]-profys[1])*(profys[0]-profys[1]));
+   cout << 2 << endl;
    vector<pointbucket*> *pointvector;
    try{
-      pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
+      pointvector = lidardata->advsubset(profxs,profys,profps);//Get data.
       imageexists=true;
    }catch(descriptiveexception e){
       cout << "There has been an exception:" << endl;
@@ -94,16 +102,24 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
       imageexists=false;
       return false;
    }
+   cout << 3 << endl;
    if(pointvector==NULL||pointvector->size()==0){
-      cout << "No points returned." << endl;
+      imageexists=false;
       return false;
    }
+   cout << 3.1 << endl;
    int numbuckets = pointvector->size();
+   cout << 3.2 << endl;
    flightlinestot.clear();
+   cout << 4 << endl;
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
+   cout << numbuckets << endl;
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-      correctpointsbuckets[i] = vetpoints((*pointvector)[i],startx,starty,endx,endy,width);
+      correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);
       for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
+//         cout << correctpointsbuckets[i][j] << " a " << endl;
+//         int blah = (*pointvector)[i]->getpoint(j).flightline;
+//         cout << blah << " b " << endl;
          if(correctpointsbuckets[i][j]){//This gets from all the points their flightline numbers and compiles a list of all the flightlines in the profile.
             if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j).flightline)==flightlinestot.end()){
                flightlinestot.push_back((*pointvector)[i]->getpoint(j).flightline);
@@ -111,6 +127,8 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
          }
       }
    }
+   cout << flightlinestot.size() << endl;
+   cout << 5 << endl;
    if(flightlinepoints!=NULL)delete[] flightlinepoints;
    flightlinepoints = new vector<point>[flightlinestot.size()];
    totnumpoints = 0;
@@ -129,12 +147,14 @@ bool Profile::showprofile(double startx,double starty,double endx,double endy,do
       minplany = starty;//...
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
    }
+   cout << 6 << endl;
    make_moving_average();
    glViewport(0, 0, get_width(), get_height());
    get_gl_window()->make_current(get_gl_context());
    delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
+   cout << 7 << endl;
    if(is_realized())return returntostart();
    else return false;
 }
@@ -178,6 +198,7 @@ int Profile::get_closest_element_position(point* value,vector<point>::iterator f
 
 //Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
 bool Profile::drawviewable(int imagetype){
+   cout << 14 << endl;
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
@@ -186,20 +207,24 @@ bool Profile::drawviewable(int imagetype){
       else glFlush();
       return false;
    }
+   cout << 15 << endl;
    glPointSize(pointsize);//These are here to prevent interference from the overview. The overview has similar protections.
    glViewport(0, 0, get_width(), get_height());//...
    get_gl_window()->make_current(get_gl_context());//...
    resetview();//...
+   cout << 16 << endl;
    int detail=1;//This determines how many points are skipped between reads.
    if(imagetype==1){//Main image:
       detail=(int)(totnumpoints*maindetailmod/100000);//If there are very few points on the screen, show them all.
       if(detail<1)detail=1;
+   cout << 17 << endl;
       mainimage(detail);
    }
    else if(imagetype==2){//Preview:
       detail=(int)(totnumpoints*previewdetailmod/100000);//If there are very few points on the screen, show them all.
       if(detail<1)detail=1;
       mainimage(detail);
+   cout << 17 << endl;
 //      previewimage(detail);
    }
    return true;
@@ -414,6 +439,7 @@ void Profile::make_moving_average(){
  *
  * */
 bool Profile::mainimage(int detail){
+   cout << 18 << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
@@ -423,30 +449,50 @@ bool Profile::mainimage(int detail){
    for(int i=0;i<(int)flightlinestot.size();i++){//The size of the vertex and colour arrays should be the same as that of the largest group of points, by flightline.
       if((int)flightlinepoints[i].size()>limit)limit = (int)flightlinepoints[i].size();
    }
+   cout << 19 << endl;
    float* vertices = new float[3*limit];//Needed for the glDrawArrays() call further down.
    float* colours = new float[3*limit];//...
    glEnableClientState(GL_VERTEX_ARRAY);//...
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
+   cout << 20 << endl;
    point *leftpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
+   cout << 20.1 << endl;
    leftpnt->x = leftboundx + centrex;
+   cout << 20.2 << endl;
    leftpnt->y = leftboundy + centrey;
+   cout << 20.3 << endl;
    leftpnt->z = 0;
+   cout << 20.4 << endl;
    leftpnt->time = flightlinepoints[0][0].time;
+   cout << 20.5 << endl;
    leftpnt->intensity = 0;
+   cout << 20.6 << endl;
    leftpnt->classification = 0;
+   cout << 20.7 << endl;
    leftpnt->flightline = 0;
+   cout << 20.8 << endl;
    leftpnt->packedbyte = 0;
+   cout << 20.9 << endl;
    point *rightpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
+   cout << 20.10 << endl;
    rightpnt->x = rightboundx + centrex;
+   cout << 20.11 << endl;
    rightpnt->y = rightboundy + centrey;
+   cout << 20.12 << endl;
    rightpnt->z = 0;
+   cout << 20.13 << endl;
    rightpnt->time = flightlinepoints[0][0].time;
+   cout << 20.14 << endl;
    rightpnt->intensity = 0;
+   cout << 20.15 << endl;
    rightpnt->classification = 0;
+   cout << 20.16 << endl;
    rightpnt->flightline = 0;
+   cout << 20.17 << endl;
    rightpnt->packedbyte = 0;
+   cout << 21 << endl;
    for(int i=0;i<(int)flightlinestot.size();i++){
       minplanx = startx + leftboundx;//These ensure that the entire screen will be filled, otherwise, because the screen position of startx changes, only part of the point-set will be drawn.
       minplany = starty + leftboundy;//...
@@ -454,6 +500,7 @@ bool Profile::mainimage(int detail){
       int endindex = get_closest_element_position(leftpnt,flightlinepoints[i].begin(),flightlinepoints[i].end());
       for(int l=0;l<detail*2;l++)if(endindex < (int)flightlinepoints[i].size()-1)endindex++;//This is to ensure that the left edge of the screen always has a line crossing it if there are extra points beyond it, otherwise it will only draw up to, not beyond, the last point actually on-screen.
       int count = 0;
+   cout << 22 << endl;
       if(drawmovingaverage){
          int index = flightlinestot.at(i) % 6;
          switch(index){
@@ -465,6 +512,7 @@ bool Profile::mainimage(int detail){
             case 5:red=1;green=0;blue=1;break;//Purple
             default:red=green=blue=1;break;//White in the event of strangeness.
          }
+   cout << 23 << endl;
          for(int j=startindex;j<=endindex;j+=detail){
             vertices[3*count] = flightlinepoints[i][j].x-centrex;
             vertices[3*count+1] = flightlinepoints[i][j].y-centrey;
@@ -474,9 +522,11 @@ bool Profile::mainimage(int detail){
             colours[3*count+2] = blue;
             count++;
          }
+   cout << 24 << endl;
          glDrawArrays(GL_LINE_STRIP,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
       }
       count = 0;
+   cout << 25 << endl;
       if(drawpoints){
          for(int j=startindex;j<=endindex;j+=detail){
             red = 0.0; green = 1.0; blue = 0.0;//Default colour.
@@ -548,11 +598,13 @@ bool Profile::mainimage(int detail){
             colours[3*count+2]=blue;
             count++;
          }
+   cout << 26 << endl;
          glDrawArrays(GL_POINTS,0,count);//Send contents of arrays to OpenGL, ready to be drawn when the buffer is flushed.
       }
    }
    delete leftpnt;
    delete rightpnt;
+   cout << 27 << endl;
    if(rulering)makerulerbox();//Draw ruler is rulering mode is on.
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
@@ -561,5 +613,6 @@ bool Profile::mainimage(int detail){
    glwindow->gl_end();
    delete[] vertices;
    delete[] colours;
+   cout << 28 << endl;
    return true;
 }
