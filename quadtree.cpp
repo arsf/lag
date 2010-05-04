@@ -52,7 +52,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, os
 
 // this constructor creates a quadtree using a loader object for a given area of interest
 
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double x1, double y1, double x2, double y2, double width, int cachesize, ostringstream *errorstream)
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, ostringstream *errorstream)
 {
    if (errorstream == NULL)
    {
@@ -77,7 +77,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double x1, double
    flightlinenum = 0;
 
    // use area of intrest load
-   load(loader, nth, x1, y1, x2, y2, width);
+   load(loader, nth, Xs, Ys, size);
 
 }
 
@@ -329,9 +329,9 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
 
 // this method loads points from a flightline that fall within an area of intrest
-void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, double x2, double y2, double width)
+void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, double size)
 {
-   double a1,a2,a3;
+   /*double a1,a2,a3;
 
    a1=x1-x2;
    a2=y1-y2;
@@ -367,7 +367,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
    Xs[3]=x2+(unitab1*width/2);
    Ys[3]=y2+(unitab2*width/2);
 
-   
+   */
 
 
    // add the flightline name flightline num pair to the table
@@ -381,7 +381,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
 
 
 
-   if ((AOrec_NAOrec(nb->minX, nb->minY, nb->maxX, nb->maxY, Xs, Ys, 4)))
+   if ((AOrec_NAOrec(nb->minX, nb->minY, nb->maxX, nb->maxY, Xs, Ys, size)))
    {
       throw outofboundsexception("area of interest falls outside new file");
    }
@@ -389,7 +389,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
    // find the simple bounding box of the new fence (using 4 as size as its a rectangle
    double largestX,largestY,smallestX,smallestY;
    largestX=Xs[0];smallestX=Xs[0];largestY=Ys[0];smallestY=Ys[0];
-   for (int k=1; k<4; k++)
+   for (int k=1; k<size; k++)
    {
       if(Xs[k] > largestX) {largestX=Xs[k];}
       if(Xs[k] < smallestX) {smallestX=Xs[k];}
@@ -415,7 +415,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
 
    do
    {
-      pointcount = loader->load(arraysize, nth, temp, flightlinenum, Xs, Ys, 4);
+      pointcount = loader->load(arraysize, nth, temp, flightlinenum, Xs, Ys, size);
       for (int k = 0; k < pointcount; k++)
       {
          // try and insert each point
@@ -451,8 +451,6 @@ void quadtree::load(lidarpointloader *loader, int nth, double x1, double y1, dou
    }   while (pointcount == arraysize);
    flightlinenum++;
    delete[] temp;
-   delete[] Xs;
-   delete[] Ys;
    if (outofboundscounter > 0)
    {
       throw outofboundsexception("points from file outside header boundary, " + outofboundscounter);

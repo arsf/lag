@@ -71,7 +71,7 @@ public:
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
      */
-   quadtree(lidarpointloader *loader,int cap, int nth, double x1, double y1, double x2, double y2, double width, int cachesize, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader,int cap, int nth, double *Xs, double *Ys, int size, int cachesize, ostringstream *errorstream = NULL);
 
 
 
@@ -129,7 +129,7 @@ public:
     */
    void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
 
-   void load(lidarpointloader *loader, int nth, double x1, double y1, double x2, double y2, double width);
+   void load(lidarpointloader *loader, int nth, double *Xs, double *Ys, double width);
    /**
     * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that
