@@ -329,7 +329,7 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
 
 // this method loads points from a flightline that fall within an area of intrest
-void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, double size)
+void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size)
 {
    /*double a1,a2,a3;
 

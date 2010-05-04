@@ -129,7 +129,7 @@ public:
     */
    void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
 
-   void load(lidarpointloader *loader, int nth, double *Xs, double *Ys, double width);
+   void load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size);
    /**
     * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that
