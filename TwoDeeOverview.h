@@ -85,12 +85,10 @@ public:
       rulering=false;
    }
    //Getters:
-   void getprofile(double &startx,double &starty,double &endx,double &endy,double &width){//Get coordinates for profile.
-      startx = profstartx;
-      starty = profstarty;
-      endx = profendx;
-      endy = profendy;
-      width = profwidth;
+   void getprofile(double*& profxs,double*& profys,int& profps){//Get coordinates for profile (currently for slanted profile only).
+      profxs = this->profxs;
+      profys = this->profys;
+      profps = this->profps;
    }
    void getfence(double &minX,double &minY,double &maxX,double &maxY){//Get coordinates for fence.
       if(fencestartx<=fenceendx){
@@ -126,6 +124,9 @@ public:
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}//...
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}//...
 protected:
+   double* profxs;
+   double* profys;
+   int profps;
    int pointcount;//The number of points being drawn from the current bucket.
    float* vertices;//This contains the coordinates of all the points in the current bucket.
    float* colours;//This contains the RGB components of the colours of all the points in the current bucket.

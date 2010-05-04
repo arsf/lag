@@ -157,7 +157,19 @@ void Display::prepare_image(){
    vector<pointbucket*> *pointvector;
    try{
       boundary* lidarboundary = lidardata->getboundary();
-      pointvector = lidardata->advsubset(lidarboundary->minX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxX,(lidarboundary->minY+lidarboundary->maxY)/2,lidarboundary->maxY-lidarboundary->minY);//Get ALL data.
+      double *xs = new double[4];
+      xs[0] = lidarboundary->minX;
+      xs[1] = lidarboundary->minX;
+      xs[2] = lidarboundary->maxX;
+      xs[3] = lidarboundary->maxX;
+      double *ys = new double[4];
+      ys[0] = lidarboundary->minY;
+      ys[1] = lidarboundary->maxY;
+      ys[2] = lidarboundary->maxY;
+      ys[3] = lidarboundary->minY;
+      pointvector = lidardata->advsubset(xs,ys,4);//Get ALL data.
+      delete[]xs;
+      delete[]ys;
       delete lidarboundary;
    }catch(descriptiveexception e){
       cout << "There has been an exception:" << endl;

@@ -84,7 +84,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
    width = sqrt((profxs[0]-profxs[1])*(profxs[0]-profxs[1])+(profys[0]-profys[1])*(profys[0]-profys[1]));
    vector<pointbucket*> *pointvector;
    try{
-      pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
+      pointvector = lidardata->advsubset(profxs,profys,profps);//Get data.
       imageexists=true;
    }catch(descriptiveexception e){
       cout << "There has been an exception:" << endl;
@@ -95,14 +95,14 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
       return false;
    }
    if(pointvector==NULL||pointvector->size()==0){
-      cout << "No points returned." << endl;
+      imageexists=false;
       return false;
    }
    int numbuckets = pointvector->size();
    flightlinestot.clear();
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
-      correctpointsbuckets[i] = vetpoints((*pointvector)[i],startx,starty,endx,endy,width);
+      correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);
       for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points their flightline numbers and compiles a list of all the flightlines in the profile.
             if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j).flightline)==flightlinestot.end()){

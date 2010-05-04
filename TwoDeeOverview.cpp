@@ -21,6 +21,9 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   profps = 0;
+   profxs = NULL;
+   profys = NULL;
    pointcount = 0;
    threaddebug = false;
    zoompower = 0.5;
@@ -100,7 +103,10 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
       signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
 }
 
-TwoDeeOverview::~TwoDeeOverview(){}
+TwoDeeOverview::~TwoDeeOverview(){
+   if(profxs!=NULL)delete[]profxs;
+   if(profys!=NULL)delete[]profys;
+}
 
 //Dispatcher handlers{
 //This handler prepares OpenGL for drawing the buckets, by "beginning" OpenGL and then clearing the buffers. It also then draws any profile or fencing boxes or the ruler.
@@ -517,10 +523,21 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       if(threaddebug)cout << "Changed offsets." << endl;
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
+      double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
+      double maxy = centrey-(get_height()/2)*ratio/zoomlevel;//...
+      double *xs = new double[4];
+      xs[0] = minx;
+      xs[1] = minx;
+      xs[2] = maxx;
+      xs[3] = maxx;
+      double *ys = new double[4];
+      ys[0] = miny;
+      ys[1] = maxy;
+      ys[2] = maxy;
+      ys[3] = miny;
       vector<pointbucket*> *pointvector;
       try{
-         //Remember to change this to uncachesubset() later!
-         pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
+         pointvector = lidardata->advsubset(xs,ys,4);//Get data.
       }catch(descriptiveexception e){
          cout << "There has been an exception:" << endl;
          cout << "What: " << e.what() << endl;
@@ -528,7 +545,9 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          cout << "No points returned." << endl;
          return false;
       }
-      if(pointvector==NULL||pointvector->size()==0){ return false; }
+      delete[]xs;
+      delete[]ys;
+      if(pointvector==NULL||pointvector->size()==0){ return false; }//These sometimes happen.
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -560,8 +579,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       ys[3] = miny;
       vector<pointbucket*> *pointvector;
       try{
-         //Remember to change this to uncachesubset() later!
-         pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,get_height()*ratio/zoomlevel);//Get data.
+         pointvector = lidardata->advsubset(xs,ys,4);//Get data.
       }catch(descriptiveexception e){
          cout << "There has been an exception:" << endl;
          cout << "What: " << e.what() << endl;
@@ -623,11 +641,22 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    double pointeroffy = eventy - get_height()/2;//...and the same for this one.
    double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;//Define an area of equal size to that of the points on the screen.
    double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;//...
-   double midy = centrey - pointeroffy * ratio/zoomlevel;//...
+   double miny = centrey - (pointeroffy + pointsize/2)*ratio/zoomlevel;//
+   double maxy = centrey - (pointeroffy - pointsize/2)*ratio/zoomlevel;//
+//   double midy = centrey - pointeroffy * ratio/zoomlevel;//...
+   double *xs = new double[4];
+   xs[0] = minx;
+   xs[1] = minx;
+   xs[2] = maxx;
+   xs[3] = maxx;
+   double *ys = new double[4];
+   ys[0] = miny;
+   ys[1] = maxy;
+   ys[2] = maxy;
+   ys[3] = miny;
    vector<pointbucket*> *pointvector;
    try{
-      //Remember to change this to uncachesubset() later!
-      pointvector = lidardata->advsubset(minx,centrey,maxx,centrey,pointsize*ratio/zoomlevel);//Get data.
+      pointvector = lidardata->advsubset(xs,ys,4);//Get data.
    }catch(descriptiveexception e){
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
@@ -635,6 +664,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       cout << "No points returned." << endl;
       return false;
    }
+   delete[]xs;
+   delete[]ys;
    if(pointvector==NULL||pointvector->size()==0){ return false; }
    if(pointvector->size()>0){//If there aren't any points, don't bother.
       bool anypoint = false;
@@ -645,7 +676,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       while(thread_running){usleep(10);}//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
-         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
+         bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
                if(!anypoint){
@@ -769,7 +800,25 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    else return false;
 }
 //Draw the full image at the end of selecting a profile.
-bool TwoDeeOverview::on_prof_end(GdkEventButton* event){return drawviewable(2);}
+bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
+   profps = 4;
+   if(profxs!=NULL)delete[]profxs;
+   if(profys!=NULL)delete[]profys;
+   profxs = new double[4];
+   profys = new double[4];
+   double breadth = profendx - profstartx;
+   double height = profendy - profstarty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   profxs[0] = profstartx-(profwidth/2)*height/length;
+   profxs[1] = profstartx+(profwidth/2)*height/length;
+   profxs[2] = profendx+(profwidth/2)*height/length;
+   profxs[3] = profendx-(profwidth/2)*height/length;
+   profys[0] = profstarty+(profwidth/2)*breadth/length;
+   profys[1] = profstarty-(profwidth/2)*breadth/length;
+   profys[2] = profendy-(profwidth/2)*breadth/length;
+   profys[3] = profendy+(profwidth/2)*breadth/length;
+   return drawviewable(2);
+}
 //This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then draws the rectangle.
 void TwoDeeOverview::makeprofbox(){
    double breadth = profendx - profstartx;

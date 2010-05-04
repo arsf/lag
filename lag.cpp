@@ -124,7 +124,7 @@ void on_drawingresetbutton_clicked(){
    intensityminselect->set_value(tdo->getrminintensity());
    intensityoffsetselect->set_value(0);
    intensityfloorselect->set_value(0);
-   //Draws as a result of the other callbacks, and only does so once because of threading (!!!!).
+   //Draws as a result of the other callbacks, and only does so once because of threading (!!!!), so it may be prudent to change this in the future so that there is only ever one call.
 }
 
 //Get the area to load the flightline(s) in by calling the overview's getfence() method.
