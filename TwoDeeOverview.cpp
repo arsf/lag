@@ -546,6 +546,18 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    else if(imagetype==2){//Draw the preview.
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
+      double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
+      double maxy = centrey-(get_height()/2)*ratio/zoomlevel;//...
+      double *xs = new double[4];
+      xs[0] = minx;
+      xs[1] = minx;
+      xs[2] = maxx;
+      xs[3] = maxx;
+      double *ys = new double[4];
+      ys[0] = miny;
+      ys[1] = maxy;
+      ys[2] = maxy;
+      ys[3] = miny;
       vector<pointbucket*> *pointvector;
       try{
          //Remember to change this to uncachesubset() later!
@@ -557,6 +569,8 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          cout << "No points returned." << endl;
          return false;
       }
+      delete[]xs;
+      delete[]ys;
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.

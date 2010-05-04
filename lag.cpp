@@ -397,9 +397,10 @@ void on_profiletoggle(){
    else{
    	tdo->unsetupprofile();
       if(!window3->get_visible())window3->show_all();
-      double startx,starty,endx,endy,width;
-      tdo->getprofile(startx,starty,endx,endy,width);
-      prof->showprofile(startx,starty,endx,endy,width);
+      double *profxs,*profys;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
+      int profps;
+      tdo->getprofile(profxs,profys,profps);
+      prof->showprofile(profxs,profys,profps);
       if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);

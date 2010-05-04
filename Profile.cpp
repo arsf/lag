@@ -76,12 +76,12 @@ bool Profile::returntostart(){
 }
 
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws.
-bool Profile::showprofile(double startx,double starty,double endx,double endy,double width){
-   this->startx = startx;
-   this->starty = starty;
-   this->endx = endx;
-   this->endy = endy;
-   this->width = width;
+bool Profile::showprofile(double* profxs,double* profys,int profps){
+   startx = (profxs[0]+profxs[1])/2;
+   starty = (profys[0]+profys[1])/2;
+   endx = (profxs[profps-1]+profxs[profps-2])/2;
+   endy = (profys[profps-1]+profys[profps-2])/2;
+   width = sqrt((profxs[0]-profxs[1])*(profxs[0]-profxs[1])+(profys[0]-profys[1])*(profys[0]-profys[1]));
    vector<pointbucket*> *pointvector;
    try{
       pointvector = lidardata->advsubset(startx,starty,endx,endy,width);//Get data.
