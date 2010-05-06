@@ -140,15 +140,21 @@ void Display::colour_by(double value,double maxvalue,double minvalue,double& col
   }
   else{//Cyan to White:
      col1 = 6*(value-minvalue)/range - 5.0;
-     if(col1>1.0)col1=1.0;
      col2 = 1.0;
      col3 = 1.0;
   }
+  if(col1>1.0)col1=1.0;//These prevent the situation where two negative values (for colour and brightness respectively) multiply to create a positive value giving a non-black colour:
+  if(col2>1.0)col2=1.0;//...
+  if(col3>1.0)col3=1.0;//...
+  if(col1<0.0)col1=0.0;//...
+  if(col2<0.0)col2=0.0;//...
+  if(col3<0.0)col3=0.0;//...
 }
 
 //Given maximum and minimum values, find out the brightness a certain value should be mapped to.
 double Display::brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue){
   double multiplier = floorvalue + offsetvalue + (1.0 - floorvalue)*(value-minvalue)/(maxvalue-minvalue);
+  if(multiplier < 0)multiplier = 0;//This prevents the situation where two negative values (for colour and brightness respectively) multiply to create a positive value giving a non-black colour.
   return multiplier;
 }
 

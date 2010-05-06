@@ -20,6 +20,8 @@ public:
    void clippy(string picturename);//EASTER EGG. Draws an image of an annoying person with an equally annoying message.  By the way, you look like you are trying to read this code. Would you like any help?
    bool returntostart();//Returns to the initial view.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
+   void makeprofboundaries();//Determine the boundaries of the profile from the start and end points of the user's clicks and drags and whether the profile is to be orthogonal or slanted.
+   void makefenceboundaries();//Determine the boundaries of the sfencee from the start and end points of the user's clicks and drags and whether the fence is to be orthogonal or slanted.
    void makeprofbox();//Make the box showing the profile area.
    void makefencebox();//Make the box showing the fence area.
    void makerulerbox();//Make rectangle showing where the ruler is.
@@ -90,26 +92,13 @@ public:
       profys = this->profys;
       profps = this->profps;
    }
-   void getfence(double &minX,double &minY,double &maxX,double &maxY){//Get coordinates for fence.
-      if(fencestartx<=fenceendx){
-         minX = fencestartx;
-         maxX = fenceendx;
-      }
-      else{
-         minX = fenceendx;
-         maxX = fencestartx;
-      }
-      if(fencestarty<=fenceendy){
-         minY = fencestarty;
-         maxY = fenceendy;
-      }
-      else{
-         minY = fenceendy;
-         maxY = fencestarty;
-      }
+   void getfence(double*& fencexs,double*& fenceys,int&fenceps){//Get coordinates for fence.
+      fencexs = this->fencexs;
+      fenceys = this->fenceys;
+      fenceps = this->fenceps;
    }
    //Setters:
-   void setprofwidth(double profwidth){this->profwidth = profwidth;}//Set width of the profile.
+   void setslantwidth(double slantwidth){this->slantwidth = slantwidth;}//Set width of the slanted profile or fence.
    void setshowprofile(double showprofile){this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
    void setshowfence(double showfence){this->showfence = showfence;}//Set whether fence should be seen when not being modified.
    void setheightenNonC(bool heightenNonC){this->heightenNonC = heightenNonC;}//These set whether various classifications should be highlighted by making them be drawn above other points:
@@ -123,10 +112,17 @@ public:
    void setheightenWater(bool heightenWater){this->heightenWater = heightenWater;}//...
    void setheightenOverlap(bool heightenOverlap){this->heightenOverlap = heightenOverlap;}//...
    void setheightenUndefined(bool heightenUndefined){this->heightenUndefined = heightenUndefined;}//...
+   void setorthogonalshape(bool orthogonalshape){this->orthogonalshape = orthogonalshape;}
+   void setslantedshape(bool slantedshape){this->slantedshape = slantedshape;}
 protected:
-   double* profxs;
-   double* profys;
-   int profps;
+   bool orthogonalshape;//Determines whether or not to draw an orthogonal box.
+   bool slantedshape;//Determines whether or not to draw a slanted box.
+   double* profxs;//Store the boundaries of the profile:
+   double* profys;//...
+   int profps;//Stores the number of corners for the profile.
+   double* fencexs;//Store the boundaries of the fence:
+   double* fenceys;//...
+   int fenceps;//Stores the number of corners for the fence.
    int pointcount;//The number of points being drawn from the current bucket.
    float* vertices;//This contains the coordinates of all the points in the current bucket.
    float* colours;//This contains the RGB components of the colours of all the points in the current bucket.
@@ -153,10 +149,10 @@ protected:
    double panstartx,panstarty;//Coordinates of the start of the pan move.
    double origpanstartx,origpanstarty;//Coordinates of the start of ALL pan moves since the last time the points were drawn to the screne from scratch.
  
+   double slantwidth;//The width of the slanted box in world units.
    //Profiling:
    double profstartx, profstarty;//The start coordinates for the profile in world units.
    double profendx, profendy;//The end coordinates for the profile in world units.
-   double profwidth;//The width of the profile in world units.
    bool profiling;//Determines whether or not the profile should be drawn.
    bool showprofile;//Whether to display the profile box when not modifying it.
    //Fencing:

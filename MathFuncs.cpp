@@ -32,7 +32,7 @@ bool* vetpoints(pointbucket* points,double* xs,double* ys,int numberofcorners){
       for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
          if((ys[currentcorner] < points->getpoint(i).y && ys[lastcorner] >= points->getpoint(i).y) ||
             (ys[lastcorner] < points->getpoint(i).y && ys[currentcorner] >= points->getpoint(i).y)){//This segments the line to the length of the segment that helps define the boundary.
-            if(xs[currentcorner] + (points->getpoint(i).y - ys[currentcorner])/(ys[lastcorner] - ys[currentcorner]) * (xs[lastcorner] - xs[currentcorner]) < points->getpoint(i).x){//If the point is to the right of the line defined by the corners (and segmented by the above if statement), i.e. the edge:
+            if(xs[currentcorner] + ((points->getpoint(i).y - ys[currentcorner])/(ys[lastcorner] - ys[currentcorner])) * (xs[lastcorner] - xs[currentcorner]) < points->getpoint(i).x){//If the point is to the right of the line defined by the corners (and segmented by the above if statement), i.e. the edge:
                pointinboundary = !pointinboundary;//If done an odd number of times, the point must be within the shape, otherwise without.
             }
          }

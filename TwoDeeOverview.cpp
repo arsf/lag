@@ -21,11 +21,8 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
-   profps = 0;
-   profxs = NULL;
-   profys = NULL;
    pointcount = 0;
-   threaddebug = false;
+   threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
    zoompower = 0.5;
    maindetailmod = 0.01;
    //Limits of pixel copying for the preview:
@@ -43,13 +40,22 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    extraDrawing = false;
    pausethread = false;
    thread_running = false;
-   //Profiling:
-   profwidth=30;
-   profiling=false;
-   showprofile=false;
-   //Fencing:
-   fencing=false;
-   showfence=false;
+   //Profiling and fencing:
+   orthogonalshape = false;
+   slantedshape = true;
+   slantwidth=30;
+      //Profiling:
+      profps = 0;
+      profxs = NULL;
+      profys = NULL;
+      profiling=false;
+      showprofile=false;
+      //Fencing:
+      fenceps = 0;
+      fencexs = NULL;
+      fenceys = NULL;
+      fencing=false;
+      showfence=false;
    //Rulering:
    rulering=false;
    rulerwidth=2;
@@ -102,7 +108,6 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
       signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
       signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
 }
-
 TwoDeeOverview::~TwoDeeOverview(){
    if(profxs!=NULL)delete[]profxs;
    if(profys!=NULL)delete[]profys;
@@ -165,6 +170,7 @@ void TwoDeeOverview::extraDraw(){
 }
 //...}
 
+//THREADS! BE AFRAID, BE VERY AFRAID.
 /*This method draws the main image. Note that redundancy in telling the main thread what to do is because the main thread's execution of the signals it receives is not deterministic because of the possibility of user interference.
  *
  *   Tell the main thread not to create any more threads until this one has finished most of its running.
@@ -506,8 +512,8 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
 bool TwoDeeOverview::drawviewable(int imagetype){
    interruptthread = true;//This causes any existing drawing thread to stop.
-   glPointSize(pointsize);
-   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application.
+   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
+   glPointSize(pointsize);//...
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...
    if(imagetype==1){//Draw the main image.
@@ -643,7 +649,6 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;//...
    double miny = centrey - (pointeroffy + pointsize/2)*ratio/zoomlevel;//
    double maxy = centrey - (pointeroffy - pointsize/2)*ratio/zoomlevel;//
-//   double midy = centrey - pointeroffy * ratio/zoomlevel;//...
    double *xs = new double[4];
    xs[0] = minx;
    xs[1] = minx;
@@ -664,8 +669,6 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       cout << "No points returned." << endl;
       return false;
    }
-   delete[]xs;
-   delete[]ys;
    if(pointvector==NULL||pointvector->size()==0){ return false; }
    if(pointvector->size()>0){//If there aren't any points, don't bother.
       bool anypoint = false;
@@ -676,6 +679,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       while(thread_running){usleep(10);}//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
+//         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getnumberofpoints();j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
@@ -743,6 +747,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       else drawviewable(2);
    }
    delete pointvector;
+   delete[]xs;//These are here because vetpoints needs to use them as well as advsubset.
+   delete[]ys;//...
    return true;
 }
 
@@ -801,38 +807,82 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
 }
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
-   profps = 4;
-   if(profxs!=NULL)delete[]profxs;
-   if(profys!=NULL)delete[]profys;
-   profxs = new double[4];
-   profys = new double[4];
-   double breadth = profendx - profstartx;
-   double height = profendy - profstarty;
-   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   profxs[0] = profstartx-(profwidth/2)*height/length;
-   profxs[1] = profstartx+(profwidth/2)*height/length;
-   profxs[2] = profendx+(profwidth/2)*height/length;
-   profxs[3] = profendx-(profwidth/2)*height/length;
-   profys[0] = profstarty+(profwidth/2)*breadth/length;
-   profys[1] = profstarty-(profwidth/2)*breadth/length;
-   profys[2] = profendy-(profwidth/2)*breadth/length;
-   profys[3] = profendy+(profwidth/2)*breadth/length;
+   makeprofboundaries();
    return drawviewable(2);
+}
+//Calculate the boundaries of the profile based on whether or not it is orthogonal or slanted and the start and end points of the user's clicks and drags.
+void TwoDeeOverview::makeprofboundaries(){
+   if(slantedshape){
+      profps = 4;
+      if(profxs!=NULL)delete[]profxs;
+      if(profys!=NULL)delete[]profys;
+      profxs = new double[4];
+      profys = new double[4];
+      double breadth = profendx - profstartx;
+      double height = profendy - profstarty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      profxs[0] = profstartx-(slantwidth/2)*height/length;
+      profxs[1] = profstartx+(slantwidth/2)*height/length;
+      profxs[2] = profendx+(slantwidth/2)*height/length;
+      profxs[3] = profendx-(slantwidth/2)*height/length;
+      profys[0] = profstarty+(slantwidth/2)*breadth/length;
+      profys[1] = profstarty-(slantwidth/2)*breadth/length;
+      profys[2] = profendy-(slantwidth/2)*breadth/length;
+      profys[3] = profendy+(slantwidth/2)*breadth/length;
+   }
+   else if(orthogonalshape){
+      profps = 4;
+      if(profxs!=NULL)delete[]profxs;
+      if(profys!=NULL)delete[]profys;
+      profxs = new double[4];
+      profys = new double[4];
+      if(abs(profstartx - profendx) > abs(profstarty - profendy)){//If the width is greater than the height of the profile:
+         profxs[0] = profstartx;//Then place start and end points on the vertical (different in x) sides, so that the view is along the y axis.
+         profxs[1] = profstartx;//...
+         profxs[2] = profendx;//...
+         profxs[3] = profendx;//...
+         profys[0] = profstarty;//...
+         profys[1] = profendy;//...
+         profys[2] = profendy;//...
+         profys[3] = profstarty;//...
+      }
+      else{//Otherwise:
+         profxs[0] = profstartx;//Then place start and end points on the horizontal (different in y) sides, so that the view is along the x axis.
+         profxs[1] = profendx;//...
+         profxs[2] = profendx;//...
+         profxs[3] = profstartx;//...
+         profys[0] = profstarty;//...
+         profys[1] = profstarty;//...
+         profys[2] = profendy;//...
+         profys[3] = profendy;//...
+      }
+   }
 }
 //This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then draws the rectangle.
 void TwoDeeOverview::makeprofbox(){
-   double breadth = profendx - profstartx;
-   double height = profendy - profstarty;
-   double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
-   if(length==0)length=1;
+   if(slantedshape){
+      double breadth = profendx - profstartx;
+      double height = profendy - profstarty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      if(length==0)length=1;
       glColor3f(1.0,1.0,1.0);
       glBegin(GL_LINE_LOOP);
-         glVertex3d(profstartx-(profwidth/2)*height/length-centrex,profstarty+(profwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profstartx+(profwidth/2)*height/length-centrex,profstarty-(profwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profendx+(profwidth/2)*height/length-centrex,profendy-(profwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profendx-(profwidth/2)*height/length-centrex,profendy+(profwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profstartx-(slantwidth/2)*height/length-centrex,profstarty+(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profstartx+(slantwidth/2)*height/length-centrex,profstarty-(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profendx+(slantwidth/2)*height/length-centrex,profendy-(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profendx-(slantwidth/2)*height/length-centrex,profendy+(slantwidth/2)*breadth/length-centrey,altitude);
       glEnd();
+   }
+   else if(orthogonalshape){
+      glColor3f(1.0,1.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+         glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+         glVertex3d(profendx-centrex,profendy-centrey,altitude);
+         glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+      glEnd();
+   }
 }
 
 //Initialises the coordinates of the fence and then draws preview.
@@ -872,10 +922,63 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    else return false;
 }
 //Draws the main image one more.
-bool TwoDeeOverview::on_fence_end(GdkEventButton* event){return drawviewable(2);}
+bool TwoDeeOverview::on_fence_end(GdkEventButton* event){
+   makefenceboundaries();
+   return drawviewable(2);
+}
+//Calculate the boundaries of the profile based on whether or not it is orthogonal or slanted and the start and end points of the user's clicks and drags.
+void TwoDeeOverview::makefenceboundaries(){
+   if(slantedshape){
+      fenceps = 4;
+      if(fencexs!=NULL)delete[]fencexs;
+      if(fenceys!=NULL)delete[]fenceys;
+      fencexs = new double[4];
+      fenceys = new double[4];
+      double breadth = fenceendx - fencestartx;
+      double height = fenceendy - fencestarty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      fencexs[0] = fencestartx-(slantwidth/2)*height/length;
+      fencexs[1] = fencestartx+(slantwidth/2)*height/length;
+      fencexs[2] = fenceendx+(slantwidth/2)*height/length;
+      fencexs[3] = fenceendx-(slantwidth/2)*height/length;
+      fenceys[0] = fencestarty+(slantwidth/2)*breadth/length;
+      fenceys[1] = fencestarty-(slantwidth/2)*breadth/length;
+      fenceys[2] = fenceendy-(slantwidth/2)*breadth/length;
+      fenceys[3] = fenceendy+(slantwidth/2)*breadth/length;
+   }
+   else if(orthogonalshape){
+      fenceps = 4;
+      if(fencexs!=NULL)delete[]fencexs;
+      if(fenceys!=NULL)delete[]fenceys;
+      fencexs = new double[4];
+      fenceys = new double[4];
+      fencexs[0] = fencestartx;
+      fencexs[1] = fencestartx;
+      fencexs[2] = fenceendx;
+      fencexs[3] = fenceendx;
+      fenceys[0] = fencestarty;
+      fenceys[1] = fenceendy;
+      fenceys[2] = fenceendy;
+      fenceys[3] = fencestarty;
+   }
+}
 //Makes the fence box.
 void TwoDeeOverview::makefencebox(){
-   double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
+   double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
+   if(slantedshape){
+      double breadth = fenceendx - fencestartx;
+      double height = fenceendy - fencestarty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      if(length==0)length=1;
+      glColor3f(1.0,1.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(fencestartx-(slantwidth/2)*height/length-centrex,fencestarty+(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(fencestartx+(slantwidth/2)*height/length-centrex,fencestarty-(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(fenceendx+(slantwidth/2)*height/length-centrex,fenceendy-(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(fenceendx-(slantwidth/2)*height/length-centrex,fenceendy+(slantwidth/2)*breadth/length-centrey,altitude);
+      glEnd();
+   }
+   else if(orthogonalshape){
       glColor3f(1.0,1.0,1.0);
       glBegin(GL_LINE_LOOP);
          glVertex3d(fencestartx-centrex,fencestarty-centrey,altitude);
@@ -883,6 +986,7 @@ void TwoDeeOverview::makefencebox(){
          glVertex3d(fenceendx-centrex,fenceendy-centrey,altitude);
          glVertex3d(fenceendx-centrex,fencestarty-centrey,altitude);
       glEnd();
+   }
 }
 
 //Find the starting coordinates of the ruler and set the label values to zero.
