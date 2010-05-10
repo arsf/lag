@@ -184,8 +184,22 @@ void Display::prepare_image(){
       cout << "No points returned." << endl;
       return;
    }
+   if(pointvector==NULL||pointvector->size()==0){//If there is no data, then clear the screen to show no data.
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClearDepth(1.0);
+      Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+      if (!glwindow->gl_begin(get_gl_context()))return;
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
+      else glFlush();
+      glwindow->gl_end();
+      return;
+   }
    int numbuckets = pointvector->size();
-   pointbucket** buckets = &(*pointvector)[0];
+   pointbucket** buckets = new pointbucket*[numbuckets];
+   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+      buckets[i]=(*pointvector)[i];
+   }
    double maxz = buckets[0]->getmaxZ(),minz = buckets[0]->getminZ();
    int maxintensity = buckets[0]->getmaxintensity(),minintensity = buckets[0]->getminintensity();
    for(int i=0;i<numbuckets;i++){//Find the maximum and minimum values from the buckets:
@@ -208,6 +222,7 @@ void Display::prepare_image(){
    glViewport(0, 0, get_width(), get_height());
    resetview();
    delete pointvector;//Must remain here, as buckets is just a pointer to its contents (and so does not need to be deleted as well) and it has other contents to be removed (presumably).
+   delete[]buckets;
    glwindow->gl_end();
    returntostart();//Set up initial view and draw it (though, for some reason, will not actually draw anything if this is the first time (i.e. the widget has just been realised); quite annoying).
 }

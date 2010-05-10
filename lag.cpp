@@ -305,9 +305,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     double *fencexs,*fenceys;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps;
-                     tdo->getfence(fencexs,fenceys,fenceps);
+                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
+                     int fenceps = 0;
+                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
                      if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
                      else{
                         cout << "No fence!" << endl;
@@ -323,9 +323,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                else{//... but for all other situations add to it.
                   if(usearea){//If using the fence:
-                     double *fencexs,*fenceys;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps;
-                     tdo->getfence(fencexs,fenceys,fenceps);
+                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
+                     int fenceps = 0;
+                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
                      if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(loader,poffs,fencexs,fenceys,fenceps);
                      else{
                         cout << "No fence!" << endl;
@@ -353,9 +353,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     double *fencexs,*fenceys;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps;
-                     tdo->getfence(fencexs,fenceys,fenceps);
+                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
+                     int fenceps = 0;
+                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
                      if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(aloader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
                      else{
                         cout << "No fence!" << endl;
@@ -371,9 +371,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
                }
                else{//... but for all other situations add to it.
                   if(usearea){//If using the fence:
-                     double *fencexs,*fenceys;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps;
-                     tdo->getfence(fencexs,fenceys,fenceps);
+                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
+                     int fenceps = 0;
+                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
                      if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(aloader,poffs,fencexs,fenceys,fenceps);
                      else{
                         cout << "No fence!" << endl;
@@ -413,11 +413,16 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       loadedanyfiles = false;
       return 22;
    }
+   cout << 1 << endl;
    tdo->setlidardata(lidardata,bucketlimit);//Provide the drawing objects access to the quadtree:
+   cout << 2 << endl;
    prof->setlidardata(lidardata,bucketlimit);//...
+   cout << 3 << endl;
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This might not work because of the bug that causes the flightline(s) not to be drawn immediately after loading. UPDATE: now it seems to draw just one bucket(!!!) immediately after loading.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
+      cout << "nleh" << endl;
       tdo->prepare_image();
+      cout << "mleh" << endl;
       tdo->drawviewable(1);
       prof->prepare_image();
       prof->drawviewable(1);
@@ -428,7 +433,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       vboxprof->pack_end(*prof,true,true);
       prof->show_all();
    }
+   cout << 4 << endl;
    on_drawingresetbutton_clicked();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
+   cout << 5 << endl;
    loadedanyfiles = true;
    return 0;
 }
@@ -544,9 +551,9 @@ void on_profiletoggle(){
    else{
    	tdo->unsetupprofile();
       if(!window3->get_visible())window3->show_all();
-      double *profxs,*profys;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
-      int profps;
-      tdo->getprofile(profxs,profys,profps);
+      double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
+      int profps = 0;
+      if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
       if(profxs!=NULL&&profys!=NULL)prof->showprofile(profxs,profys,profps);
       if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
@@ -937,7 +944,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.06.1" << endl;
+   cout << "Build number: 2010.05.10.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

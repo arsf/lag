@@ -457,19 +457,19 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
    double yoffset = 0;//...
    if(xpos < -(get_width()/2)*ratio/zoomlevel){//If the destination region's bottom left corner is off to the left:
-      xoffset = -xpos*zoomlevel/ratio - get_width()/2;//Minus sign because must be positive and xpos will be negative. Makes xpos into pixels and then subtracts half the width of the window, as 0 (world coordinates) is in the centre.
-      xpos = -(get_width()/2)*ratio/zoomlevel;//This is set to the left edge of the screen.
+      xoffset = 1-xpos*zoomlevel/ratio - get_width()/2;//Minus sign because must be positive and xpos will be negative. Makes xpos into pixels and then subtracts half the width of the window, as 0 (world coordinates) is in the centre.
+      xpos = -(-1+get_width()/2)*ratio/zoomlevel;//This is set to the left edge of the screen.
+      //Please note that without those '1's above there would be occasions where nothing is drawn over the grid when this block is called. The suspected cause is loss of precision from conversion to float by OpenGL/graphics card, as if the raster position is negative then behaviour is undefined, which, on my development machine, causes nothing to be drawn over the grid.
    }
    if(ypos < -(get_height()/2)*ratio/zoomlevel){//If the destination region's bottom left corner is off beyond the bottom:
-      yoffset = -ypos*zoomlevel/ratio - get_height()/2;//Minus sign because must be positive and ypos will be negative. Makes ypos into pixels and then subtracts half the height of the windo, as 0 (world coordinates) is in the centre. 
-      ypos = -(get_height()/2)*ratio/zoomlevel;//This is set to the bottom edge of the screen.
+      yoffset = 1-ypos*zoomlevel/ratio - get_height()/2;//Minus sign because must be positive and ypos will be negative. Makes ypos into pixels and then subtracts half the height of the windo, as 0 (world coordinates) is in the centre. 
+      ypos = -(-1+get_height()/2)*ratio/zoomlevel;//This is set to the bottom edge of the screen.
+      //Please note that without those '1's above there would be occasions where nothing is drawn over the grid when this block is called. The suspected cause is loss of precision from conversion to float by OpenGL/graphics card, as if the raster position is negative then behaviour is undefined, which, on my development machine, causes nothing to be drawn over the grid.
    }
    double* params = new double[4];//This section is for making sure that the xpos and ypos numbers are greater than or equal to zero, for otherwise NOTHING will be drawn:
-   do{
-      glGetDoublev(GL_CURRENT_RASTER_POSITION,params);//...
-      if(params[0]<0)xpos++;//...For x.
-      if(params[1]<0)ypos++;//...For y.
-   }while(params[0]<0||params[1]<0);
+//   glGetDoublev(GL_CURRENT_RASTER_POSITION,params);//...
+//   if(params[0]<0)xpos++;//...For x.
+//   if(params[1]<0)ypos++;//...For y.
    delete[] params;//...Do not need the other two elements: x and w.
    glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
    double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + get_width()/2 + xoffset;//These define the boundaries of the region to be copied FROM.
@@ -511,6 +511,7 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
 bool TwoDeeOverview::drawviewable(int imagetype){
+   cout << imagetype << endl;
    interruptthread = true;//This causes any existing drawing thread to stop.
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
    glPointSize(pointsize);//...
@@ -914,7 +915,7 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
       fencemaxX << fencemaxx;
       fenceminY << fenceminy;
       fencemaxY << fencemaxy;
-      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str();
+      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
       rulerlabel->set_text(fencetext);
       return drawviewable(2);
    }
