@@ -63,7 +63,7 @@ bool vectortest(double *Xs, double *Ys, int size, double px, double py)
    {
       if ((Ys[k] < py && Ys[j] >= py) || (Ys[j] < py && Ys[k] >= py))
       {
-         if (Xs[k]+(py - Ys[k]) / (Ys[j] - Ys[k])*(Xs[j] - Xs[k]) < px)
+         if (Xs[k]+((py - Ys[k]) / (Ys[j] - Ys[k])) * (Xs[j] - Xs[k]) < px)
          {
             in = !in;
          }
@@ -86,6 +86,8 @@ bool point_NAOrec(double px, double py, double *Xs, double *Ys, int size)
 // function to detect collision between an axis orientated rectangle and a rotated rectangle
 bool AOrec_NAOrec(double minX, double minY, double maxX, double maxY, double *Xs, double *Ys, int size)
 {
+
+   // find a simple bounding box for the non axis orientated area,
    double largestX,largestY,smallestX,smallestY;
    largestX=Xs[0];smallestX=Xs[0];largestY=Ys[0];smallestY=Ys[0];
    for (int k=1; k<size; k++)
@@ -96,18 +98,20 @@ bool AOrec_NAOrec(double minX, double minY, double maxX, double maxY, double *Xs
       if(Ys[k] < smallestY) {smallestY=Ys[k];}
    }
 
-   
+   // check simple bounding box against axis oriented box
    if (largestX < minX || smallestX > maxX || largestY < minY || smallestY > maxY)
    {
       return false;
    }
 
-
+   // convert AOrec to arrays of points
    double *bXs = new double[4];
    double *bYs = new double[4];
    bXs[0]=minX;bXs[1]=minX;bXs[2]=maxX;bXs[3]=maxX;
    bYs[0]=minY;bYs[1]=maxY;bYs[2]=maxY;bYs[3]=minY;
 
+
+//    compare the boxes as polygons using axis seperation theory
    return(axis_sep_test(Xs, Ys, 4, bXs, bYs, 4));
 
    delete[] bXs;

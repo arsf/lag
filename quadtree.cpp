@@ -378,13 +378,15 @@ void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, i
    boundary *nb = new boundary();
    int outofboundscounter = 0;
 
+   boundary *fb = loader->getboundary();
 
 
-
-   if ((AOrec_NAOrec(nb->minX, nb->minY, nb->maxX, nb->maxY, Xs, Ys, size)))
+   if (!AOrec_NAOrec(fb->minX, fb->minY, fb->maxX, fb->maxY, Xs, Ys, size))
    {
       throw outofboundsexception("area of interest falls outside new file");
    }
+
+   delete fb;
 
    // find the simple bounding box of the new fence (using 4 as size as its a rectangle
    double largestX,largestY,smallestX,smallestY;
@@ -618,11 +620,7 @@ void quadtree::sort(char v)
 // of a rectangle whos width is defined by the width, returns NULL passed two identical points
 vector<pointbucket*>* quadtree::advsubset(double *Xs, double *Ys, int size)
 {
-   // check its a line
-/*   if (x1 == x2 && y1 == y2)
-   {
-      return NULL;
-   }*/
+
 
    // work out from the 2 points and the forumula of the line they describe the four point of
    // the subset rectangle
