@@ -441,7 +441,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    return;
 }
 
-//This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back.
+//This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back. The method is orderd so that the top-most things are drawn first. This is because it is thought that having previously-drawn things obscure latterly-drawn things will reduce flicker.
 bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
@@ -456,21 +456,22 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    double ypos = drawnsofarminy-centrey;//...
    double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
    double yoffset = 0;//...
-   if(xpos < -(get_width()/2)*ratio/zoomlevel){//If the destination region's bottom left corner is off to the left:
-      xoffset = 1-xpos*zoomlevel/ratio - get_width()/2;//Minus sign because must be positive and xpos will be negative. Makes xpos into pixels and then subtracts half the width of the window, as 0 (world coordinates) is in the centre.
-      xpos = -(-1+get_width()/2)*ratio/zoomlevel;//This is set to the left edge of the screen.
-      //Please note that without those '1's above there would be occasions where nothing is drawn over the grid when this block is called. The suspected cause is loss of precision from conversion to float by OpenGL/graphics card, as if the raster position is negative then behaviour is undefined, which, on my development machine, causes nothing to be drawn over the grid.
+   GLint viewport[4];
+   GLdouble modelview[16];
+   GLdouble projection[16];
+   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
+   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
+   glGetDoublev(GL_PROJECTION_MATRIX,projection);
+   glGetIntegerv(GL_VIEWPORT,viewport);
+   gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
+   if(xpos < origx){
+      xoffset = (origx-xpos)*zoomlevel/ratio;//Converts the difference between the 'old' xpos and the edge of the screen into pixel values for modification of the region copied from.
+      xpos = origx;
    }
-   if(ypos < -(get_height()/2)*ratio/zoomlevel){//If the destination region's bottom left corner is off beyond the bottom:
-      yoffset = 1-ypos*zoomlevel/ratio - get_height()/2;//Minus sign because must be positive and ypos will be negative. Makes ypos into pixels and then subtracts half the height of the windo, as 0 (world coordinates) is in the centre. 
-      ypos = -(-1+get_height()/2)*ratio/zoomlevel;//This is set to the bottom edge of the screen.
-      //Please note that without those '1's above there would be occasions where nothing is drawn over the grid when this block is called. The suspected cause is loss of precision from conversion to float by OpenGL/graphics card, as if the raster position is negative then behaviour is undefined, which, on my development machine, causes nothing to be drawn over the grid.
+   if(ypos < origy){
+      yoffset = (origy-ypos)*zoomlevel/ratio;//Converts the difference between the 'old' ypos and the edge of the screen into pixel values for modification of the region copied from.
+      ypos = origy;
    }
-   double* params = new double[4];//This section is for making sure that the xpos and ypos numbers are greater than or equal to zero, for otherwise NOTHING will be drawn:
-//   glGetDoublev(GL_CURRENT_RASTER_POSITION,params);//...
-//   if(params[0]<0)xpos++;//...For x.
-//   if(params[1]<0)ypos++;//...For y.
-   delete[] params;//...Do not need the other two elements: x and w.
    glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
    double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + get_width()/2 + xoffset;//These define the boundaries of the region to be copied FROM.
    double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + get_height()/2 + yoffset;//...The offsets are here so that if the destination position should be too far left or down then these account for it. Otherwise the skeleton and copy part ways.
