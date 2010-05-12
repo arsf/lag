@@ -1195,9 +1195,8 @@ Christopher Finerty</property>
             <child>
               <widget class="GtkTable" id="table1">
                 <property name="visible">True</property>
-                <property name="n_rows">5</property>
+                <property name="n_rows">6</property>
                 <property name="n_columns">3</property>
-                <property name="homogeneous">True</property>
                 <child>
                   <widget class="GtkLabel" id="label4">
                     <property name="visible">True</property>
@@ -1226,6 +1225,7 @@ Christopher Finerty</property>
                   <packing>
                     <property name="top_attach">1</property>
                     <property name="bottom_attach">2</property>
+                    <property name="x_options"></property>
                   </packing>
                 </child>
                 <child>
@@ -1236,26 +1236,7 @@ Christopher Finerty</property>
                   <packing>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label8">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Offset</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label9">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Floor</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">4</property>
-                    <property name="bottom_attach">5</property>
+                    <property name="x_options"></property>
                   </packing>
                 </child>
                 <child>
@@ -1263,6 +1244,9 @@ Christopher Finerty</property>
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Draw settings:</property>
                   </widget>
+                  <packing>
+                    <property name="x_options"></property>
+                  </packing>
                 </child>
                 <child>
                   <widget class="GtkSpinButton" id="heightmaxselect">
@@ -1270,6 +1254,7 @@ Christopher Finerty</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
                     <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -1284,44 +1269,13 @@ Christopher Finerty</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
                     <property name="adjustment">0 0 100 1 10 0</property>
+                    <property name="digits">2</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkSpinButton" id="heightoffsetselect">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
-                    <property name="climb_rate">0.050000000000000003</property>
-                    <property name="digits">2</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkSpinButton" id="heightfloorselect">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
-                    <property name="climb_rate">0.050000000000000003</property>
-                    <property name="digits">2</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">4</property>
-                    <property name="bottom_attach">5</property>
                   </packing>
                 </child>
                 <child>
@@ -1353,19 +1307,41 @@ Christopher Finerty</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkSpinButton" id="intensityoffsetselect">
+                  <widget class="GtkLabel" id="label9">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Floor</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
+                    <property name="x_options"></property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label8">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Offset</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="x_options"></property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="heightfloorselect">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 1 0.01 100 0</property>
+                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
                     <property name="climb_rate">0.050000000000000003</property>
                     <property name="digits">2</property>
                   </widget>
                   <packing>
-                    <property name="left_attach">2</property>
-                    <property name="right_attach">3</property>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
                   </packing>
                 </child>
                 <child>
@@ -1380,8 +1356,73 @@ Christopher Finerty</property>
                   <packing>
                     <property name="left_attach">2</property>
                     <property name="right_attach">3</property>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="heightoffsetselect">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <property name="adjustment">0 0 1 0.01 0.10000000000000001 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
                     <property name="top_attach">4</property>
                     <property name="bottom_attach">5</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="intensityoffsetselect">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <property name="adjustment">0 0 1 0.01 100 0</property>
+                    <property name="climb_rate">0.050000000000000003</property>
+                    <property name="digits">2</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="right_attach">3</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkHScrollbar" id="heightscrollbar">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkHScrollbar" id="intensityscrollbar">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="right_attach">3</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label14">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">(Move range)</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                    <property name="x_options"></property>
                   </packing>
                 </child>
               </widget>
@@ -1520,9 +1561,6 @@ Christopher Finerty</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <widget class="GtkLabel" id="label13">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">N/A</property>
@@ -1533,6 +1571,9 @@ Christopher Finerty</property>
                     <property name="top_attach">1</property>
                     <property name="bottom_attach">2</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </widget>
               <packing>

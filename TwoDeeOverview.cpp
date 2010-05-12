@@ -512,7 +512,6 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
 bool TwoDeeOverview::drawviewable(int imagetype){
-   cout << imagetype << endl;
    interruptthread = true;//This causes any existing drawing thread to stop.
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
    glPointSize(pointsize);//...

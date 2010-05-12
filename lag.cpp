@@ -57,10 +57,12 @@ Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
    //Colouring and shading:
       Gtk::SpinButton *heightmaxselect = NULL;//Determines the maximum height for C&S.
       Gtk::SpinButton *heightminselect = NULL;//Determines the minimum height for C&S.
+      Gtk::HScrollbar *heightscrollbar = NULL;//Used for "stepping through" the height range (absolute minimum to absolute maximum) with a page size defined by the difference between heightmaxselect and heightminselect.
       Gtk::SpinButton *heightoffsetselect = NULL;//This increases all brightness levels by a fixed amount, if based on height.
       Gtk::SpinButton *heightfloorselect = NULL;//This increases brightness levels by a varying amount such that the lowest level will be increased by the value and higher levels by by a declining value until the level of 1.0, which will not increase at all.
       Gtk::SpinButton *intensitymaxselect = NULL;//Equivalent as for height:
       Gtk::SpinButton *intensityminselect = NULL;//...
+      Gtk::HScrollbar *intensityscrollbar = NULL;//...
       Gtk::SpinButton *intensityoffsetselect = NULL;//...
       Gtk::SpinButton *intensityfloorselect = NULL;//...
       Gtk::Button *drawingresetbutton = NULL;//Resets all other C&S widgets to initial values.
@@ -109,6 +111,12 @@ Gtk::SpinButton *movingaveragerangeselect = NULL;//The range of the moving avera
 Gtk::ToggleToolButton *rulertoggle = NULL;//Toggle button determining whether the ruler is viewable on the profile.
 Gtk::Label *rulerlabel = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the profile.
 
+//Signals:
+sigc::connection heightminconn;
+sigc::connection heightmaxconn;
+sigc::connection intensityminconn;
+sigc::connection intensitymaxconn;
+
 //Show the about dialog when respective menu item activated.
 void on_aboutmenuactivated(){ about->show_all(); }
 //Hide the about dialog when close button activated.
@@ -130,87 +138,114 @@ void on_classcheckbutton8_toggled(){ tdo->setheightenMass(classcheckbutton8->get
 void on_classcheckbutton9_toggled(){ tdo->setheightenWater(classcheckbutton9->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
 void on_classcheckbutton12_toggled(){ tdo->setheightenOverlap(classcheckbutton12->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
 void on_classcheckbuttonA_toggled(){ tdo->setheightenUndefined(classcheckbuttonA->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-//The drawing settings (please note that there is a reason why the profile is updated before the overview: if it is the other way around then the overview's drawing thread would be running so it will be unpredictable which part will execute OpenGL code first, which can sometimes mean that the overview will be drawn the same size as the profile, which might confuse users):
-void on_heightmaxselect_changed(){
-   heightminselect->set_range(tdo->getrminz(),heightmaxselect->get_value()-1);
+//The drawing settings:
+void changecoloursandshades(){
+   //Please note that there is a reason why the profile is updated before the overview: if it is the other way around then the overview's drawing thread would be running so it will be unpredictable which part will execute opengl code first, which can sometimes mean that the overview will be drawn the same size as the profile, which might confuse users:
    if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
    if(prof->is_realized())prof->drawviewable(1);
    if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
    if(tdo->is_realized())tdo->drawviewable(1);
+}
+void on_heightmaxselect_changed(){
+   heightminselect->set_range(tdo->getrminz(),heightmaxselect->get_value()-0.01);
+   heightscrollbar->get_adjustment()->set_page_size(heightmaxselect->get_value() - heightminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
+   heightscrollbar->set_increments(1,heightmaxselect->get_value() - heightminselect->get_value());
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 void on_heightminselect_changed(){
-   heightmaxselect->set_range(heightminselect->get_value()+1,tdo->getrmaxz());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   heightmaxselect->set_range(heightminselect->get_value()+0.01,tdo->getrmaxz());
+   heightscrollbar->set_value(heightminselect->get_value());//Value for the scrollbar only changed here as upper value is defined by this value and the page size.
+   heightscrollbar->get_adjustment()->set_page_size(heightmaxselect->get_value() - heightminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
+   heightscrollbar->set_increments(1,heightmaxselect->get_value() - heightminselect->get_value());
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+bool on_heightscrollbar_scrolled(Gtk::ScrollType scroll,double new_value){
+   if(new_value + heightscrollbar->get_adjustment()->get_page_size() > heightscrollbar->get_adjustment()->get_upper())new_value = heightscrollbar->get_adjustment()->get_upper() - heightscrollbar->get_adjustment()->get_page_size();//New upper value (new_value plus page size) must not exceed the maximum possible value, otherwise it might mess things up when used to set the ranges, below.
+   if(new_value == heightminselect->get_value())return true;
+   heightmaxconn.block();//Letting these signals continue would complicate things significantly, as they would then try to set this scrollbar's properties.
+   heightminconn.block();//...
+   heightmaxselect->set_range(new_value+0.01,tdo->getrmaxz());//Set the new ranges first so that the old ranges cannot clamp the new values.
+   heightminselect->set_range(tdo->getrminz(),new_value + heightscrollbar->get_adjustment()->get_page_size()-0.01);//...
+   heightmaxselect->set_value(new_value + heightscrollbar->get_adjustment()->get_page_size());
+   heightminselect->set_value(new_value);
+   heightmaxconn.unblock();
+   heightminconn.unblock();
+   changecoloursandshades();
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+   return true;
 }
 void on_heightoffsetselect_changed(){
    prof->setzoffset(heightoffsetselect->get_value());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   tdo->setzoffset(heightoffsetselect->get_value());
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 void on_heightfloorselect_changed(){
    prof->setzfloor(heightfloorselect->get_value());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   tdo->setzfloor(heightfloorselect->get_value());
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 void on_intensitymaxselect_changed(){
    intensityminselect->set_range(tdo->getrminintensity(),intensitymaxselect->get_value()-1);
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   intensityscrollbar->get_adjustment()->set_page_size(intensitymaxselect->get_value() - intensityminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
+   intensityscrollbar->set_increments(1,intensitymaxselect->get_value() - intensityminselect->get_value());
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 void on_intensityminselect_changed(){
    intensitymaxselect->set_range(intensityminselect->get_value()+1,tdo->getrmaxintensity());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   intensityscrollbar->set_value(intensityminselect->get_value());//Value for the scrollbar only changed here as upper value is defined by this value and the page size.
+   intensityscrollbar->get_adjustment()->set_page_size(intensitymaxselect->get_value() - intensityminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
+   intensityscrollbar->set_increments(1,intensitymaxselect->get_value() - intensityminselect->get_value());
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+bool on_intensityscrollbar_scrolled(Gtk::ScrollType scroll,double new_value){
+   if(new_value + intensityscrollbar->get_adjustment()->get_page_size() > intensityscrollbar->get_adjustment()->get_upper())new_value = intensityscrollbar->get_adjustment()->get_upper() - intensityscrollbar->get_adjustment()->get_page_size();//New upper value (new_value plus page size) must not exceed the maximum possible value, otherwise it might mess things up when used to set the ranges, below.
+   if(new_value == intensityminselect->get_value())return true;
+   intensitymaxconn.block();//Letting these signals continue would complicate things significantly, as they would then try to set this scrollbar's properties.
+   intensityminconn.block();//...
+   intensitymaxselect->set_range(intensityminselect->get_value()+1,tdo->getrmaxintensity());//Set the new ranges first so that the old ranges cannot clamp the new values.
+   intensityminselect->set_range(tdo->getrminintensity(),intensitymaxselect->get_value()-1);//...
+   intensitymaxselect->set_value(new_value + intensityscrollbar->get_adjustment()->get_page_size());
+   intensityminselect->set_value(new_value);
+   intensitymaxconn.unblock();
+   intensityminconn.unblock();
+   changecoloursandshades();
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+   return true;
 }
 void on_intensityoffsetselect_changed(){
    prof->setintensityoffset(intensityoffsetselect->get_value());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   tdo->setintensityoffset(intensityoffsetselect->get_value());
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 void on_intensityfloorselect_changed(){
    prof->setintensityfloor(intensityfloorselect->get_value());
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   tdo->setintensityfloor(intensityfloorselect->get_value());
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   changecoloursandshades();
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 //This resets the advanced colouring and shading options to the values indicated by the drawing objects.
 void on_drawingresetbutton_clicked(){
-   heightmaxselect->set_range(tdo->getrminz()+1,tdo->getrmaxz());
+   heightmaxselect->set_range(tdo->getrminz()+0.01,tdo->getrmaxz());
    heightmaxselect->set_value(tdo->getrmaxz());
-   heightminselect->set_range(tdo->getrminz(),tdo->getrmaxz()-1);
+   heightminselect->set_range(tdo->getrminz(),tdo->getrmaxz()-0.01);
    heightminselect->set_value(tdo->getrminz());
+   heightscrollbar->set_range(tdo->getrminz(),tdo->getrmaxz());
+   heightscrollbar->set_value(tdo->getrminz());
+   heightscrollbar->get_adjustment()->set_page_size(tdo->getrmaxz()-tdo->getrminz());
+   heightscrollbar->set_increments(0.01,tdo->getrmaxz()-tdo->getrminz());
    heightoffsetselect->set_value(0);
    heightfloorselect->set_value(0);
    intensitymaxselect->set_range(tdo->getrminintensity()+1,tdo->getrmaxintensity());
    intensitymaxselect->set_value(tdo->getrmaxintensity());
    intensityminselect->set_range(tdo->getrminintensity(),tdo->getrmaxintensity()-1);
    intensityminselect->set_value(tdo->getrminintensity());
+   intensityscrollbar->set_range(tdo->getrminintensity(),tdo->getrmaxintensity());
+   intensityscrollbar->set_value(tdo->getrminintensity());
+   intensityscrollbar->get_adjustment()->set_page_size(tdo->getrmaxintensity()-tdo->getrminintensity());
+   intensityscrollbar->set_increments(1,tdo->getrmaxintensity()-tdo->getrminintensity());
    intensityoffsetselect->set_value(0);
    intensityfloorselect->set_value(0);
    //Draws as a result of the other callbacks, and only does so once because of threading (!!!!), so it may be prudent to change this in the future so that there is only ever one call.
@@ -413,16 +448,11 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       loadedanyfiles = false;
       return 22;
    }
-   cout << 1 << endl;
    tdo->setlidardata(lidardata,bucketlimit);//Provide the drawing objects access to the quadtree:
-   cout << 2 << endl;
    prof->setlidardata(lidardata,bucketlimit);//...
-   cout << 3 << endl;
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This might not work because of the bug that causes the flightline(s) not to be drawn immediately after loading. UPDATE: now it seems to draw just one bucket(!!!) immediately after loading.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
-      cout << "nleh" << endl;
       tdo->prepare_image();
-      cout << "mleh" << endl;
       tdo->drawviewable(1);
       prof->prepare_image();
       prof->drawviewable(1);
@@ -433,9 +463,7 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       vboxprof->pack_end(*prof,true,true);
       prof->show_all();
    }
-   cout << 4 << endl;
    on_drawingresetbutton_clicked();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
-   cout << 5 << endl;
    loadedanyfiles = true;
    return 0;
 }
@@ -554,7 +582,12 @@ void on_profiletoggle(){
       double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
       int profps = 0;
       if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
-      if(profxs!=NULL&&profys!=NULL)prof->showprofile(profxs,profys,profps);
+      if(profxs!=NULL&&profys!=NULL){
+         tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
+         while(tdo->getthread_running()){usleep(10);}
+         prof->showprofile(profxs,profys,profps);
+         tdo->setpausethread(false);
+      }
       if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
@@ -760,17 +793,21 @@ int GUIset(int argc,char *argv[]){
                if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
             //Height and intensity threasholding and brightness modifiers:
                refXml->get_widget("heightmaxselect",heightmaxselect);
-               if(heightmaxselect)heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
+               if(heightmaxselect)heightmaxconn = heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
                refXml->get_widget("heightminselect",heightminselect);
-               if(heightminselect)heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
+               if(heightminselect)heightminconn = heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
+               refXml->get_widget("heightscrollbar",heightscrollbar);
+               if(heightscrollbar)heightscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_heightscrollbar_scrolled));
                refXml->get_widget("heightoffsetselect",heightoffsetselect);
                if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
                refXml->get_widget("heightfloorselect",heightfloorselect);
                if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
                refXml->get_widget("intensitymaxselect",intensitymaxselect);
-               if(intensitymaxselect)intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
+               if(intensitymaxselect)intensitymaxconn = intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
                refXml->get_widget("intensityminselect",intensityminselect);
-               if(intensityminselect)intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
+               if(intensityminselect)intensityminconn = intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
+               refXml->get_widget("intensityscrollbar",intensityscrollbar);
+               if(intensityscrollbar)intensityscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_intensityscrollbar_scrolled));
                refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
                if(intensityoffsetselect)intensityoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityoffsetselect_changed));
                refXml->get_widget("intensityfloorselect",intensityfloorselect);
@@ -944,7 +981,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.11.1" << endl;
+   cout << "Build number: 2010.05.12.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

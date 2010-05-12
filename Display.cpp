@@ -51,7 +51,7 @@ Display::~Display(){
    if(brightnessintensityarray!=NULL)delete[] brightnessintensityarray;
 }
 
-//Draw on expose. 1 indicates that the non-preview image is drawn.
+//Draw on expose.
 bool Display::on_expose_event(GdkEventExpose* event){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
