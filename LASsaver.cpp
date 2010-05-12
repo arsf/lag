@@ -75,7 +75,7 @@ void LASsaver::savepoints(int n, point* points)
          if(points[k].z < minZ){minZ = points[k].z;}
       }
 
-
+      point.SetTime(points[k].time);
       point.SetClassification(points[k].classification);
       point.SetCoordinates(points[k].x,points[k].y,points[k].z);
       point.SetFlightLineEdge(points[k].packedbyte & scanedgeflag);
