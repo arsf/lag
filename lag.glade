@@ -46,6 +46,20 @@
                         <property name="use_underline">True</property>
                       </widget>
                     </child>
+                    <child>
+                      <widget class="GtkCheckMenuItem" id="showfencecheck">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Show fence box</property>
+                        <property name="use_underline">True</property>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkCheckMenuItem" id="showdistancescalecheck">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Show the distance scale</property>
+                        <property name="use_underline">True</property>
+                      </widget>
+                    </child>
                   </widget>
                 </child>
               </widget>
@@ -419,6 +433,25 @@ options</property>
           <widget class="GtkMenuBar" id="menubar3">
             <property name="visible">True</property>
             <child>
+              <widget class="GtkMenuItem" id="viewprof">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">View</property>
+                <property name="use_underline">True</property>
+                <child>
+                  <widget class="GtkMenu" id="menu1">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkCheckMenuItem" id="showheightscalecheck">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Show height reference</property>
+                        <property name="use_underline">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                </child>
+              </widget>
+            </child>
+            <child>
               <widget class="GtkMenuItem" id="colourbymenu1">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Colour by</property>
@@ -703,14 +736,6 @@ Range</property>
         <child>
           <placeholder/>
         </child>
-      </widget>
-    </child>
-  </widget>
-  <widget class="GtkWindow" id="window4">
-    <property name="destroy_with_parent">True</property>
-    <child>
-      <widget class="GtkDrawingArea" id="drawingarea4">
-        <property name="visible">True</property>
       </widget>
     </child>
   </widget>

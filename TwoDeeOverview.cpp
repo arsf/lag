@@ -21,6 +21,8 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   showdistancescale = false;
+   drawneverything = false;
    pointcount = 0;
    threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
    zoompower = 0.5;
@@ -113,6 +115,13 @@ TwoDeeOverview::~TwoDeeOverview(){
    if(profys!=NULL)delete[]profys;
 }
 
+void TwoDeeOverview::drawoverlays(){
+   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
+   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
+   if(showdistancescale)makedistancescale();
+}
+
 //Dispatcher handlers{
 //This handler prepares OpenGL for drawing the buckets, by "beginning" OpenGL and then clearing the buffers. It also then draws any profile or fencing boxes or the ruler.
 void TwoDeeOverview::InitGLDraw(){
@@ -155,9 +164,7 @@ void TwoDeeOverview::EndGLDraw(){
    else glFlush();
    glReadBuffer(GL_BACK);
    glDrawBuffer(GL_FRONT);
-   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
-   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
+   drawoverlays();
    glFlush();
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
@@ -224,6 +231,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    if(threaddebug)cout << "Second array" << endl;
    colours = new float[3*bucketlimit];
    if(threaddebug)cout << "Initialise GL drawing." << endl;
+   drawneverything = false;
    initialising_GL_draw = true;//The main thread must not create any new threads like this while also being told to initialise OpenGL for drawing.
    signal_InitGLDraw();//Prepare OpenGL.
    boundary* lidarboundary = lidardata->getboundary();
@@ -423,6 +431,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if(threaddebug)cout << 12 << endl;
       usleep(10);
    }
+   drawneverything = true;
    thread_running = false;//This thread will not use pointbucket::getpoint() again.
    if(threaddebug)cout << "Ending..." << endl;
    if(threaddebug)cout << "Delete data array." << endl;
@@ -448,10 +457,8 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    glReadBuffer(GL_BACK);//We want to copy from here.
    glDrawBuffer(GL_FRONT);//We want to draw to here.
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
-   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
-   double altitude = rminz-1000;//This makes sure the preview box is drawn under the flightlines.
+   drawoverlays();
+   double altitude = rminz-1000;//This makes sure the preview grid and the framebuffer are drawn under the profile, ruler etc..
    double xpos = drawnsofarminx-centrex;//The position of the bottom left corner of where the region is to be copied TO. In world coordinates.
    double ypos = drawnsofarminy-centrey;//...
    double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
@@ -459,10 +466,10 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
-   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
+   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
    gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
    if(xpos < origx){
       xoffset = (origx-xpos)*zoomlevel/ratio;//Converts the difference between the 'old' xpos and the edge of the screen into pixel values for modification of the region copied from.
@@ -473,51 +480,55 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
       ypos = origy;
    }
    glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
-   double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + get_width()/2 + xoffset;//These define the boundaries of the region to be copied FROM.
-   double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + get_height()/2 + yoffset;//...The offsets are here so that if the destination position should be too far left or down then these account for it. Otherwise the skeleton and copy part ways.
-   double bucketmaxx = (drawnsofarmaxx-centrexsafe)*zoomlevel/ratio + get_width()/2;//...
-   double bucketmaxy = (drawnsofarmaxy-centreysafe)*zoomlevel/ratio + get_height()/2;//...
+   double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2 + xoffset;//These define the boundaries of the region to be copied FROM.
+   double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2 + yoffset;//...The offsets are here so that if the destination position should be too far left or down then these account for it. Otherwise the skeleton and copy part ways.
+   double bucketmaxx = (drawnsofarmaxx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2;//...
+   double bucketmaxy = (drawnsofarmaxy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2;//...
    if(bucketmaxx > get_width())bucketmaxx = get_width();//I think that having ANYTHING going beyond the boundaries of the screen will cause NOTHING to be drawn. Apparently bottom left corner does not matter here, though, only the top right (???).
    if(bucketmaxy > get_height())bucketmaxy = get_height();//...
    if(bucketminx > bucketmaxx)bucketminx = bucketmaxx;//...Oh, and the bottom left corner must be further left and down than the top right corner.
    if(bucketminy > bucketmaxy)bucketminy = bucketmaxy;//...
    glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
-   float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
-   glEnableClientState(GL_VERTEX_ARRAY);//...
-   glVertexPointer(3, GL_FLOAT, 0, vertices);//...
-   glColor3f(1.0,1.0,1.0);
-   for(int i=0;i<numbuckets;i++){//For every bucket...
-      vertices[0]=buckets[i]->getminX()-centrex;
-      vertices[1]=buckets[i]->getminY()-centrey;
-      vertices[2]=altitude;
-      vertices[3]=buckets[i]->getminX()-centrex;
-      vertices[4]=buckets[i]->getmaxY()-centrey;
-      vertices[5]=altitude;
-      vertices[6]=buckets[i]->getmaxX()-centrex;
-      vertices[7]=buckets[i]->getmaxY()-centrey;
-      vertices[8]=altitude;
-      vertices[9]=buckets[i]->getmaxX()-centrex;
-      vertices[10]=buckets[i]->getminY()-centrey;
-      vertices[11]=altitude;
-      glDrawArrays(GL_LINE_LOOP,0,4);
+   GLdouble endx,endy,endz;//The world coordinates of the origin for the screen coordinates.
+   gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&endx,&endy,&endz);
+   if(!drawneverything||(((drawnsofarmaxx-centrexsafe>endx&&centrex-centrexsafe>0)||(drawnsofarminx-centrexsafe<origx&&centrex-centrexsafe<0)||(drawnsofarmaxy-centreysafe>endy&&centrey-centreysafe>0)||(drawnsofarminy-centreysafe<origy&&centrey-centreysafe<0)))){//If not all the buckets have been drawn OR the boundaries of the drawn region extend beyond the screen AND the image has been moved in the opposite direction to that extension. i.e. if part of the image is/should be uncovered.
+      float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
+      glEnableClientState(GL_VERTEX_ARRAY);//...
+      glVertexPointer(3, GL_FLOAT, 0, vertices);//...
+      glColor3f(1.0,1.0,1.0);
+      for(int i=0;i<numbuckets;i++){//For every bucket...
+         vertices[0]=buckets[i]->getminX()-centrex;
+         vertices[1]=buckets[i]->getminY()-centrey;
+         vertices[2]=altitude;
+         vertices[3]=buckets[i]->getminX()-centrex;
+         vertices[4]=buckets[i]->getmaxY()-centrey;
+         vertices[5]=altitude;
+         vertices[6]=buckets[i]->getmaxX()-centrex;
+         vertices[7]=buckets[i]->getmaxY()-centrey;
+         vertices[8]=altitude;
+         vertices[9]=buckets[i]->getmaxX()-centrex;
+         vertices[10]=buckets[i]->getminY()-centrey;
+         vertices[11]=altitude;
+         glDrawArrays(GL_LINE_LOOP,0,4);
+      }
+      glDisableClientState(GL_VERTEX_ARRAY);
+      delete[] vertices;
    }
    glFlush();//After all this effort, something must be drawn to the screen.
    glRasterPos2s(0,0);//Reset the raster position.
-   glDisableClientState(GL_VERTEX_ARRAY);
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
-   delete[] vertices;
    return true;
 }
 
-//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2).
+//Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2). When this is called from the expose event (imagetype==3) it draws the main image (drawing speed is not so urgent now that it is threaded).
 bool TwoDeeOverview::drawviewable(int imagetype){
    interruptthread = true;//This causes any existing drawing thread to stop.
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
    glPointSize(pointsize);//...
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...
-   if(imagetype==1){//Draw the main image.
+   if(imagetype==1||imagetype==3){//Draw the main image.
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
          if(threaddebug)cout << "Help! Am stalling!" << endl;
          if(!extraDrawing){//If not doing so already, prepare to draw again after the interrupt.
@@ -569,7 +580,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets,detail),false);//This thread will interpret the data before telling the main thread to draw.
       delete pointvector;
    }
-   else if(imagetype==2){//Draw the preview.
+   else if(imagetype==2||imagetype==3){//Draw the preview.
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
       double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
@@ -753,16 +764,60 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    return true;
 }
 
+//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
+void TwoDeeOverview::makedistancescale(){
+   double rheight = get_height()*ratio/zoomlevel;
+   double order=1;
+   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculationi, while the former is a result of a series of integer calculations, so the results diverge.
+   if(rheight<=5)for(double i=rheight;i<10;i*=10)order/=10;//For when the user zooms really far in.
+   int nummarks = (int)(0.9*rheight/order);//Again, it would be tempting to use i here, but this is only one integer calculation while i is the result (probably) of several such calculations, and so has lost more precision.
+   while(nummarks>10){//The original order we calculated would give a number of scale widths from 5-50, but anything more than 10 is probably too much, so this loop doubles the order value until nummarks falls below 10.
+      order*=2;
+      nummarks = (int)(0.9*rheight/order);
+   }
+   double padding = (rheight - nummarks*order)/2;//It would be more aesthetically pleasing to centre the scale.
+   double altitude = rmaxz+1000;//This makes sure the scale is drawn on top of the flightlines.
+   GLint viewport[4];
+   GLdouble modelview[16];
+   GLdouble projection[16];
+   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
+   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
+   glGetDoublev(GL_PROJECTION_MATRIX,projection);
+   glGetIntegerv(GL_VIEWPORT,viewport);
+   gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
+   glColor3f(1.0,1.0,1.0);
+   glBegin(GL_LINES);
+      glVertex3d(origx + 50.0*ratio/zoomlevel,origy + padding,altitude);//Vertical line.
+      glVertex3d(origx + 50.0*ratio/zoomlevel,origy + padding + nummarks*order,altitude);//...
+      for(int i=0;i<=nummarks;i++){//Horizontal lines.
+         glVertex3d(origx + 50.0*ratio/zoomlevel,origy + padding + i*order,altitude);
+         glVertex3d(origx + 80.0*ratio/zoomlevel,origy + padding + i*order,altitude);
+      }
+   glEnd();
+   GLuint fontlists = glGenLists(128);//ASCII!
+   Pango::FontDescription font_desc("courier 12");
+   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
+   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
+   for(int i=0;i<=nummarks;i++){
+      glRasterPos3d(origx + 85.0*ratio/zoomlevel,origy + padding + i*order,altitude);//Draw numbers by the horizontal lines.
+      ostringstream number;
+      number << i*order;
+      glListBase(fontlists);
+      glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+   }
+}
+   
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    if(event->button==1){
-      origpanstartx = panstartx = event->x;
-      origpanstarty = panstarty = event->y;
+      panstartx = event->x;
+      panstarty = event->y;
       return true;
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
    else return false;
 }
+
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
 bool TwoDeeOverview::on_pan(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
@@ -770,7 +825,6 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
       panstartx=event->x;
       panstarty=event->y;
-      drawviewable(2);
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -778,11 +832,7 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 }
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
-   if(event->button==1){
-      origpanstartx=panstartx;
-      origpanstarty=panstarty;
-      return drawviewable(1);
-   }
+   if(event->button==1){ return drawviewable(1); }
    else return false;
 }
 
@@ -861,7 +911,7 @@ void TwoDeeOverview::makeprofboundaries(){
 }
 //This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then draws the rectangle.
 void TwoDeeOverview::makeprofbox(){
-   double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
+   double altitude = rmaxz+1000;//This makes sure the profile box is drawn on top of the flightlines.
    if(slantedshape){
       double breadth = profendx - profstartx;
       double height = profendy - profstarty;
@@ -965,7 +1015,7 @@ void TwoDeeOverview::makefenceboundaries(){
 }
 //Makes the fence box.
 void TwoDeeOverview::makefencebox(){
-   double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
+   double altitude = rmaxz+1000;//This makes sure the fence box is drawn on top of the flightlines.
    if(slantedshape){
       double breadth = fenceendx - fencestartx;
       double height = fenceendy - fencestarty;
@@ -1032,7 +1082,7 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event){
 bool TwoDeeOverview::on_ruler_end(GdkEventButton* event){return drawviewable(2);}
 //Make the ruler as a thick line.
 void TwoDeeOverview::makerulerbox(){
-   double altitude = rmaxz+1000;//This makes sure the profile box is drawn over the top of the flightlines.
+   double altitude = rmaxz+1000;//This makes sure the ruler is drawn on top of the flightlines.
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
    glBegin(GL_LINES);

@@ -25,6 +25,8 @@ public:
    void makeprofbox();//Make the box showing the profile area.
    void makefencebox();//Make the box showing the fence area.
    void makerulerbox();//Make rectangle showing where the ruler is.
+   void makedistancescale();//Make a scale for the LIDAR "map"
+   void drawoverlays();//Draw all of the above make methods.
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -103,6 +105,7 @@ public:
    void setslantwidth(double slantwidth){ this->slantwidth = slantwidth;}//Set width of the slanted profile or fence.
    void setshowprofile(double showprofile){ this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
    void setshowfence(double showfence){ this->showfence = showfence;}//Set whether fence should be seen when not being modified.
+   void setshowdistancescale(double showdistancescale){ this->showdistancescale = showdistancescale;}//Set whether the distance scale should be seen.
    void setorthogonalshape(bool orthogonalshape){ this->orthogonalshape = orthogonalshape; }
    void setslantedshape(bool slantedshape){ this->slantedshape = slantedshape; }
    void setpausethread(bool pausethread){ this->pausethread = pausethread; }
@@ -119,6 +122,8 @@ public:
       void setheightenOverlap(bool heightenOverlap){ this->heightenOverlap = heightenOverlap; }//...
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
+   bool showdistancescale;//Determines whether to draw the distance scale overlay.
+   bool drawneverything;//Stores whether all of the buckets were drawn the last time the drawing thread was invoked.
    bool orthogonalshape;//Determines whether or not to draw an orthogonal box.
    bool slantedshape;//Determines whether or not to draw a slanted box.
    double* profxs;//Store the boundaries of the profile:
@@ -151,7 +156,6 @@ protected:
    //Position variables:
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
-   double origpanstartx,origpanstarty;//Coordinates of the start of ALL pan moves since the last time the points were drawn to the screne from scratch.
  
    double slantwidth;//The width of the slanted box in world units.
    //Profiling:

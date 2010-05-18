@@ -18,6 +18,8 @@ public:
    Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
    ~Display();
    virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
+   virtual void drawoverlays() = 0;//Draw any relevant overlays.
+   virtual bool drawviewable(int imagetype) = 0;
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
    //Getters:

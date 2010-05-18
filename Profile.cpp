@@ -22,6 +22,7 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    viewerz = 0;
    startx = 0;
    starty = 0;
+   showheightscale = false;
    //Initialisation:
    flightlinepoints = NULL;
    linez = NULL;
@@ -176,7 +177,7 @@ int Profile::get_closest_element_position(point* value,vector<point>::iterator f
    }
 }
 
-//Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen.
+//Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen. The passed value should be 1 for the main image, 2 for the preview and 3 for the expose event (which is the same as the preview).
 bool Profile::drawviewable(int imagetype){
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
@@ -191,17 +192,11 @@ bool Profile::drawviewable(int imagetype){
    get_gl_window()->make_current(get_gl_context());//...
    resetview();//...
    int detail=1;//This determines how many points are skipped between reads.
-   if(imagetype==1){//Main image:
-      detail=(int)(totnumpoints*maindetailmod/100000);//If there are very few points on the screen, show them all.
-      if(detail<1)detail=1;
-      mainimage(detail);
-   }
-   else if(imagetype==2){//Preview:
-      detail=(int)(totnumpoints*previewdetailmod/100000);//If there are very few points on the screen, show them all.
-      if(detail<1)detail=1;
-      mainimage(detail);
-//      previewimage(detail);
-   }
+   //If there are very few points on the screen, show them all:
+   if(imagetype==1)detail=(int)(totnumpoints*maindetailmod/100000);//Main image.  
+   else if(imagetype==2||imagetype==3)detail=(int)(totnumpoints*previewdetailmod/100000);//Preview
+   if(detail<1)detail=1;
+   mainimage(detail);
    return true;
 }
 
@@ -284,7 +279,57 @@ void Profile::makerulerbox(){
       glEnd();
    glLineWidth(1);
 }
+void Profile::drawoverlays(){
+   if(rulering)makerulerbox();
+   if(showheightscale)makeZscale();
+}
 
+//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
+void Profile::makeZscale(){
+   double rheight = get_height()*ratio/zoomlevel;
+   double order=1;
+   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculationi, while the former is a result of a series of integer calculations, so the results diverge.
+   if(rheight<=5)for(double i=rheight;i<10;i*=10)order/=10;//For when the user zooms really far in.
+   int nummarks = (int)(0.9*rheight/order);//Again, it would be tempting to use i here, but this is only one integer calculation while i is the result (probably) of several such calculations, and so has lost more precision.
+   while(nummarks>10){//The original order we calculated would give a number of scale widths from 5-50, but anything more than 10 is probably too much, so this loop doubles the order value until nummarks falls below 10.
+      order*=2;
+      nummarks = (int)(0.9*rheight/order);
+   }
+   double padding = (rheight - nummarks*order)/2;//It would be more aesthetically pleasing to centre the scale.
+   GLint viewport[4];
+   GLdouble modelview[16];
+   GLdouble projection[16];
+   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
+   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
+   glGetDoublev(GL_PROJECTION_MATRIX,projection);
+   glGetIntegerv(GL_VIEWPORT,viewport);
+   gluUnProject(50,0,0.1,modelview,projection,viewport,&origx,&origy,&origz);
+   GLdouble origx2,origy2,origz2;
+   gluUnProject(80,0,0.1,modelview,projection,viewport,&origx2,&origy2,&origz2);
+   GLdouble origx3,origy3,origz3;
+   gluUnProject(85,0,0.1,modelview,projection,viewport,&origx3,&origy3,&origz3);
+   glColor3f(1.0,1.0,1.0);
+   glBegin(GL_LINES);
+      glVertex3d(origx,origy,origz + padding);//Vertical line.
+      glVertex3d(origx,origy,origz + padding + nummarks*order);//...
+      for(int i=0;i<=nummarks;i++){//Horizontal lines.
+         glVertex3d(origx,origy,origz + padding + i*order);
+         glVertex3d(origx2,origy2,origz2 + padding + i*order);
+      }
+   glEnd();
+   GLuint fontlists = glGenLists(128);//ASCII!
+   Pango::FontDescription font_desc("courier 12");
+   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
+   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
+   for(int i=0;i<=nummarks;i++){
+      glRasterPos3d(origx3,origy3,origz3 + padding + i*order);//Draw numbers by the horizontal lines.
+      ostringstream number;
+      number << origz3 + centrez + i*order + padding;
+      glListBase(fontlists);
+      glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+   }
+}
+   
 //First, the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
 bool Profile::on_zoom(GdkEventScroll* event){
    double breadth = endx - startx;
@@ -553,7 +598,7 @@ bool Profile::mainimage(int detail){
    }
    delete leftpnt;
    delete rightpnt;
-   if(rulering)makerulerbox();//Draw ruler is rulering mode is on.
+   drawoverlays();
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glDisableClientState(GL_VERTEX_ARRAY);

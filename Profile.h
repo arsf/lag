@@ -17,11 +17,13 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
+   void makerulerbox();//Make rectangle showing where the ruler is.
+   void makeZscale();//This makes a scale.
+   void drawoverlays();//Draw all of the above make methods.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
-   void makerulerbox();//Make rectangle showing where the ruler is.
    bool showprofile(double* profxs,double* profys,int profps);//Gets the parameters of the profile and then draws it to the screen.
    void setupruler(){//Blocks pan signals and unblocks ruler signals:
       sigpanstart.block();
@@ -48,8 +50,10 @@ public:
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
+   void setshowheightscale(bool showheightscale){this->showheightscale = showheightscale;}
 protected:
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
+   bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
    
    //Control:
    bool drawpoints;//Determines whether points are drawn.

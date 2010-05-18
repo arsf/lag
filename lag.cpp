@@ -80,6 +80,9 @@ Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
 //Overview:
    Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
    Gtk::CheckMenuItem *showprofilecheck = NULL;//Check button determining whether the profile box is viewable on the 2d overview.
+   Gtk::CheckMenuItem *showfencecheck = NULL;//Check button determining whether the fence box is viewable on the 2d overview.
+   Gtk::CheckMenuItem *showdistancescalecheck = NULL;//Check button determining whether the distance scale is viewable on the 2d overview.
+   Gtk::CheckMenuItem *showheightscalecheck = NULL;//Check button determining whether the height scale is viewable on the profile.
    Gtk::RadioMenuItem *colourbyintensitymenu = NULL;//Determines whether the image is coloured by intensity.
    Gtk::RadioMenuItem *colourbyheightmenu = NULL;//Determines whether the image is coloured by height.
    Gtk::RadioMenuItem *colourbyflightlinemenu = NULL;//Determines whether the image is coloured by flightline.
@@ -509,6 +512,18 @@ void on_showprofilecheck(){
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
+//When toggled, the fence box is shown on the 2d overview regardless of whether fencing mode is active.
+void on_showfencecheck(){
+   tdo->setshowfence(showfencecheck->get_active());
+   if(tdo->is_realized())tdo->drawviewable(2);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+//When toggled, the distance scale is shown on the 2d overview.
+void on_showdistancescalecheck(){
+   tdo->setshowdistancescale(showdistancescalecheck->get_active());
+   if(tdo->is_realized())tdo->drawviewable(2);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
 //If one of the colour radio menu items is selected (and, therefore, the others deselected) then set the values of the colour control variables in the overview to the values of the corresponding radio menu items.
 void on_colouractivated(){
    tdo->setintensitycolour(colourbyintensitymenu->get_active());
@@ -621,6 +636,12 @@ void on_slantwidthselected(){
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
+//When toggled, the height scale is shown on the profile.
+void on_showheightscalecheck(){
+   prof->setshowheightscale(showheightscalecheck->get_active());
+   if(prof->is_realized())prof->drawviewable(2);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
 //Does the same as on_colouractivated, except for the profile.
 void on_colouractivatedprof(){
    prof->setintensitycolour(colourbyintensitymenuprof->get_active());
@@ -729,6 +750,10 @@ int GUIset(int argc,char *argv[]){
          //Viewing options:
             refXml->get_widget("showprofilecheck",showprofilecheck);
             if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
+            refXml->get_widget("showfencecheck",showfencecheck);
+            if(showfencecheck)showfencecheck->signal_activate().connect(sigc::ptr_fun(&on_showfencecheck));
+            refXml->get_widget("showdistancescalecheck",showdistancescalecheck);
+            if(showdistancescalecheck)showdistancescalecheck->signal_activate().connect(sigc::ptr_fun(&on_showdistancescalecheck));
             //For determining how to colour the overview:
                Gtk::RadioMenuItem *colourbynonemenu = NULL;
                refXml->get_widget("colourbynonemenu",colourbynonemenu);
@@ -862,6 +887,8 @@ int GUIset(int argc,char *argv[]){
       window3->set_title("LAG Profile");
       refXml->get_widget("vboxprof",vboxprof);
       if(vboxprof){
+         refXml->get_widget("showheightscalecheck",showheightscalecheck);
+         if(showheightscalecheck)showheightscalecheck->signal_activate().connect(sigc::ptr_fun(&on_showheightscalecheck));
          //For determining how to colour the profile:
          Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
          refXml->get_widget("colourbynonemenuprof",colourbynonemenuprof);
@@ -907,7 +934,7 @@ int GUIset(int argc,char *argv[]){
          refXml->get_widget("previewdetailselectprof",previewdetailselectprof);
          if(previewdetailselectprof){
             previewdetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-            previewdetailselectprof->set_value(0.3);
+            previewdetailselectprof->set_value(0);
             previewdetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselectedprof));
          }
          refXml->get_widget("pointshowtoggle",pointshowtoggle);
@@ -981,7 +1008,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.12.1" << endl;
+   cout << "Build number: 2010.05.18.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
