@@ -614,6 +614,11 @@ void quadtree::sort(char v)
    {
       root->sort(heightsort);
    }
+
+   if (v == 'T')
+   {
+      root->sort(timesort);
+   }
 }
 
 // this method takes 2 points and a width, the points denote a line which is the center line
