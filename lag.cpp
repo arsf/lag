@@ -82,7 +82,7 @@ Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
    Gtk::CheckMenuItem *showprofilecheck = NULL;//Check button determining whether the profile box is viewable on the 2d overview.
    Gtk::CheckMenuItem *showfencecheck = NULL;//Check button determining whether the fence box is viewable on the 2d overview.
    Gtk::CheckMenuItem *showdistancescalecheck = NULL;//Check button determining whether the distance scale is viewable on the 2d overview.
-   Gtk::CheckMenuItem *showheightscalecheck = NULL;//Check button determining whether the height scale is viewable on the profile.
+   Gtk::CheckMenuItem *showlegendcheck = NULL;//Check button determining whether the distance scale is viewable on the 2d overview.
    Gtk::RadioMenuItem *colourbyintensitymenu = NULL;//Determines whether the image is coloured by intensity.
    Gtk::RadioMenuItem *colourbyheightmenu = NULL;//Determines whether the image is coloured by height.
    Gtk::RadioMenuItem *colourbyflightlinemenu = NULL;//Determines whether the image is coloured by flightline.
@@ -100,6 +100,7 @@ Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
    Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview.
 //Profile:
 Gtk::Window *window3 = NULL;
+Gtk::CheckMenuItem *showheightscalecheck = NULL;//Check button determining whether the height scale is viewable on the profile.
 Gtk::RadioMenuItem *colourbyintensitymenuprof = NULL;//Determines whether the profile is coloured by intensity.
 Gtk::RadioMenuItem *colourbyheightmenuprof = NULL;//Determines whether the profile is coloured by height.
 Gtk::RadioMenuItem *colourbyflightlinemenuprof = NULL;//Determines whether the profile is coloured by flightline.
@@ -524,6 +525,12 @@ void on_showdistancescalecheck(){
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
+//When toggled, the legend is shown on the 2d overview.
+void on_showlegendcheck(){
+   tdo->setshowlegend(showlegendcheck->get_active());
+   if(tdo->is_realized())tdo->drawviewable(2);
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
 //If one of the colour radio menu items is selected (and, therefore, the others deselected) then set the values of the colour control variables in the overview to the values of the corresponding radio menu items.
 void on_colouractivated(){
    tdo->setintensitycolour(colourbyintensitymenu->get_active());
@@ -593,16 +600,7 @@ void on_profiletoggle(){
    }
    else{
    	tdo->unsetupprofile();
-      if(!window3->get_visible())window3->show_all();
-      double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
-      int profps = 0;
-      if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
-      if(profxs!=NULL&&profys!=NULL){
-         tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
-         while(tdo->getthread_running()){usleep(10);}
-         prof->showprofile(profxs,profys,profps);
-         tdo->setpausethread(false);
-      }
+      if(tdo->is_realized()&&!window3->get_visible())window3->show_all();
       if(tdo->is_realized()&&!profiletoggle->get_active()&&!rulertoggleover->get_active()&&!fencetoggle->get_active())tdo->drawviewable(2);
    }
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
@@ -660,6 +658,20 @@ void on_brightnessactivatedprof(){
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 
+//This grabs the profile from the overview.
+void on_showprofilebutton_clicked(){
+   if(tdo->is_realized()&&!window3->get_visible())window3->show_all();
+   double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
+   int profps = 0;
+   if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
+   if(profxs!=NULL&&profys!=NULL){
+      tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
+      while(tdo->getthread_running()){usleep(10);}
+      prof->showprofile(profxs,profys,profps);
+      tdo->setpausethread(false);
+   }
+   if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
 //This returns the profile to its original position.
 void on_returnbuttonprof_clicked(){
    if(prof->is_realized())prof->returntostart();
@@ -696,6 +708,16 @@ void on_rulertoggle(){
    else prof->unsetupruler();
    if(prof->is_realized())prof->drawviewable(1);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
+}
+
+bool on_tdo_key_press(GdkEventKey* event){
+   if(event->keyval == GDK_P || event->keyval == GDK_p)on_showprofilebutton_clicked();
+   return true;
+}
+
+bool on_prof_key_press(GdkEventKey* event){
+   if(event->keyval == GDK_P || event->keyval == GDK_p)on_showprofilebutton_clicked();
+   return true;
 }
 
 //Sets up the GUI.
@@ -754,6 +776,8 @@ int GUIset(int argc,char *argv[]){
             if(showfencecheck)showfencecheck->signal_activate().connect(sigc::ptr_fun(&on_showfencecheck));
             refXml->get_widget("showdistancescalecheck",showdistancescalecheck);
             if(showdistancescalecheck)showdistancescalecheck->signal_activate().connect(sigc::ptr_fun(&on_showdistancescalecheck));
+            refXml->get_widget("showlegendcheck",showlegendcheck);
+            if(showlegendcheck)showlegendcheck->signal_activate().connect(sigc::ptr_fun(&on_showlegendcheck));
             //For determining how to colour the overview:
                Gtk::RadioMenuItem *colourbynonemenu = NULL;
                refXml->get_widget("colourbynonemenu",colourbynonemenu);
@@ -950,6 +974,9 @@ int GUIset(int argc,char *argv[]){
          Gtk::ToolButton *returnbuttonprof = NULL;
          refXml->get_widget("returnbuttonprof",returnbuttonprof);
          if(returnbuttonprof)returnbuttonprof->signal_clicked().connect(sigc::ptr_fun(&on_returnbuttonprof_clicked));
+         Gtk::ToolButton *showprofilebutton = NULL;
+         refXml->get_widget("showprofilebutton",showprofilebutton);
+         if(showprofilebutton)showprofilebutton->signal_clicked().connect(sigc::ptr_fun(&on_showprofilebutton_clicked));
       }
       window3->show_all();
    }
@@ -964,6 +991,9 @@ int GUIset(int argc,char *argv[]){
    }
    tdo = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);
    tdo->set_size_request(200,200);
+   window2->add_events(Gdk::KEY_PRESS_MASK);
+   window2->set_can_focus(true);
+   window2->signal_key_press_event().connect(sigc::ptr_fun(&on_tdo_key_press));
    //Initialisations:
    tdo->setintensitycolour(colourbyintensitymenu->get_active());
    tdo->setheightcolour(colourbyheightmenu->get_active());
@@ -988,6 +1018,9 @@ int GUIset(int argc,char *argv[]){
    }
    prof = new Profile(glconfig2,lidardata,bucketlimit,rulerlabel);
    prof->set_size_request(200,200);
+   window3->add_events(Gdk::KEY_PRESS_MASK);
+   window3->set_can_focus(true);
+   window3->signal_key_press_event().connect(sigc::ptr_fun(&on_prof_key_press));
    //Initialisations:
    prof->setintensitycolour(colourbyintensitymenuprof->get_active());
    prof->setheightcolour(colourbyheightmenuprof->get_active());
@@ -1008,7 +1041,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.18.1" << endl;
+   cout << "Build number: 2010.05.21.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

@@ -19,6 +19,7 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   samplemaxz = sampleminz = 0;
    viewerz = 0;
    startx = 0;
    starty = 0;
@@ -58,12 +59,13 @@ Profile::~Profile(){}
 bool Profile::returntostart(){
    centrex = (startx + endx)/2;//This way, all of the profile should be on-screen.
    centrey = (starty + endy)/2;//...
-   centrez=0;
-   for(int i=0;i<(int)flightlinestot.size();i++){//Totalling z...
-      centrez+=flightlinepoints[i][0].z;
-      centrez+=flightlinepoints[i][flightlinepoints[i].size()-1].z;
-   }
-   centrez/=(2*flightlinestot.size());//Dividing to get average.
+   centrez = (samplemaxz + sampleminz)/2;
+//   centrez=0;
+//   for(int i=0;i<(int)flightlinestot.size();i++){//Totalling z...
+//      centrez+=flightlinepoints[i][0].z;
+//      centrez+=flightlinepoints[i][flightlinepoints[i].size()-1].z;
+//   }
+//   centrez/=(2*flightlinestot.size());//Dividing to get average.
    zoomlevel=1;
    double breadth = endx - startx;
    double height = endy - starty;
@@ -71,6 +73,8 @@ bool Profile::returntostart(){
    viewerx = width * height / length;//To the right when looking from start to end.
    viewery = -width * breadth / length;//...
    ratio = length/get_width();
+   double Z = samplemaxz - sampleminz;
+   if(ratio<Z/get_height())ratio = Z/get_height();
    ratio*=1.1;
    resetview();
    return drawviewable(1);
@@ -115,6 +119,8 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
    if(flightlinepoints!=NULL)delete[] flightlinepoints;
    flightlinepoints = new vector<point>[flightlinestot.size()];
    totnumpoints = 0;
+   samplemaxz = rminz;
+   sampleminz = rmaxz;
    for(int i=0;i<(int)flightlinestot.size();i++){
       for(int j=0;j<numbuckets;j++){//Get all points that should be accounted for:
          for(int k=0;k<(*pointvector)[j]->getnumberofpoints();k++){
@@ -122,6 +128,8 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
                if((*pointvector)[j]->getpoint(k).flightline == flightlinestot[i]){
                   flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k));
                   totnumpoints++;
+                  if(samplemaxz<(*pointvector)[j]->getpoint(k).z)samplemaxz = (*pointvector)[j]->getpoint(k).z;
+                  if(sampleminz>(*pointvector)[j]->getpoint(k).z)sampleminz = (*pointvector)[j]->getpoint(k).z;
                }
             }
          }
@@ -307,7 +315,7 @@ void Profile::makeZscale(){
    GLdouble origx2,origy2,origz2;
    gluUnProject(80,0,0.1,modelview,projection,viewport,&origx2,&origy2,&origz2);
    GLdouble origx3,origy3,origz3;
-   gluUnProject(85,0,0.1,modelview,projection,viewport,&origx3,&origy3,&origz3);
+   gluUnProject(85,0,0.1,modelview,projection,viewport,&origx3,&origy3,&origz3);//DAMN! Precision problems when zoomed right in! This is because all OpenGL functions on most graphics cards use floats only, not doubles. Might want to replace this with my own method (!!!).
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINES);
       glVertex3d(origx,origy,origz + padding);//Vertical line.
@@ -559,13 +567,12 @@ bool Profile::mainimage(int detail){
                    case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
                    case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
                    case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
                    case 9:red=0;green=0;blue=1;break;//Blue for water.
                    case 12:red=1;green=1;blue=1;break;//White for overlap points.
                    default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
                 }
             }
-            else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+            else if(returncolour){//Colour by return.
                 switch(flightlinepoints[i][j].packedbyte & returnnumber){
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
@@ -576,9 +583,9 @@ bool Profile::mainimage(int detail){
                 }
             }
             if(heightbrightness){//Shade by height.
-               red *= brightnessheightarray[(int)(z-rminz)];
-               green *= brightnessheightarray[(int)(z-rminz)];
-               blue *= brightnessheightarray[(int)(z-rminz)];
+               red *= brightnessheightarray[(int)(10*(z-rminz))];
+               green *= brightnessheightarray[(int)(10*(z-rminz))];
+               blue *= brightnessheightarray[(int)(10*(z-rminz))];
             }
             else if(intensitybrightness){//Shade by intensity.
                red *= brightnessintensityarray[(int)(intensity-rminintensity)];

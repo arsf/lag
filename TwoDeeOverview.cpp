@@ -22,6 +22,7 @@
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    showdistancescale = false;
+   showlegend = false;
    drawneverything = false;
    pointcount = 0;
    threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
@@ -120,6 +121,7 @@ void TwoDeeOverview::drawoverlays(){
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
    if(showdistancescale)makedistancescale();
+   if(showlegend)makecolourlegend();
 }
 
 //Dispatcher handlers{
@@ -151,6 +153,10 @@ void TwoDeeOverview::FlushGLToScreen(){
    if(threaddebug)cout << "Lalalalalaaa!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
+   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
+   glPointSize(pointsize);//...
+   glViewport(0, 0, get_width(), get_height());//...
+   resetview();//...
    if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
    else glFlush();
    glwindow->gl_end();
@@ -333,13 +339,12 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                 case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
                 case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
                 case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-
                 case 9:red=0;green=0;blue=1;break;//Blue for water.
                 case 12:red=1;green=1;blue=1;break;//White for overlap points.
                 default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
              }
          }
-         else if(returncolour){//Colour by flightline. Repeat 6 distinct colours.
+         else if(returncolour){//Colour by return.
              rnumber = buckets[i]->getpoint(j).packedbyte & returnnumber;
              int index = rnumber;
              switch(index){
@@ -352,9 +357,9 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          if(heightbrightness){//Shade by height.
-            red *= brightnessheightarray[(int)(z-rminz)];
-            green *= brightnessheightarray[(int)(z-rminz)];
-            blue *= brightnessheightarray[(int)(z-rminz)];
+            red *= brightnessheightarray[(int)(10*(z-rminz))];
+            green *= brightnessheightarray[(int)(10*(z-rminz))];
+            blue *= brightnessheightarray[(int)(10*(z-rminz))];
          }
          else if(intensitybrightness){//Shade by intensity.
             red *= brightnessintensityarray[(int)(intensity-rminintensity)];
@@ -565,7 +570,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       }
       delete[]xs;
       delete[]ys;
-      if(pointvector==NULL||pointvector->size()==0){ return false; }//These sometimes happen.
+      if(pointvector==NULL/*||pointvector->size()==0*/){ return false; }//These sometimes happen.
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -764,6 +769,125 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    return true;
 }
 
+void TwoDeeOverview::makecolourlegend(){
+   double rheight = get_height()*ratio/zoomlevel;
+   double padding = 0.05*rheight;
+   double altitude = rmaxz+1000;//This makes sure the scale is drawn on top of the flightlines.
+   double hoffset = 10;
+   double hwidth = 20;
+   GLint viewport[4];
+   GLdouble modelview[16];
+   GLdouble projection[16];
+   GLdouble cornx,corny,cornz;//The world coordinates of the top right corner sof the window.
+   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
+   glGetDoublev(GL_PROJECTION_MATRIX,projection);
+   glGetIntegerv(GL_VIEWPORT,viewport);
+   gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&cornx,&corny,&cornz);
+   glColor3d(1.0,1.0,1.0);//White.
+   GLuint fontlists = glGenLists(128);//ASCII!
+   Pango::FontDescription font_desc("courier 12");
+   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
+   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
+   glListBase(fontlists);
+   if(heightcolour||intensitycolour){
+      double cbmax = cbmaxz,cbmin = cbminz;
+      double length = 0.9*rheight/6;
+      int textwidth=0,textheight=0;
+      if(intensitycolour){
+         cbmax = cbmaxintensity;
+         cbmin = cbminintensity;
+      }
+      for(int i=0;i<7;i++){
+         ostringstream number;
+         number << ((6-i)*cbmax + i*cbmin)/6;
+         create_pango_layout(number.str())->get_size(textwidth,textheight);
+         glRasterPos3d(cornx - (hoffset + hwidth + 1.3*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
+         glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+      }
+      glBegin(GL_QUAD_STRIP);
+         for(int i=0;i<7;i++){
+            double red,green,blue;
+            colour_by(((6-i)*cbmax + i*cbmin)/6,cbmax,cbmin,red,green,blue);
+            glColor3d(red,green,blue);
+            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length,altitude);
+            glVertex3d(cornx-hoffset*ratio/zoomlevel,corny-padding-i*length,altitude);
+         }
+      glEnd();
+   }
+   else if(classcolour){
+      double length = 0.9*rheight/10;
+      double red=0,green=0,blue=0;
+      string text = "";
+      int textwidth=0,textheight=0;
+      for(int i=0;i<11;i++){
+         switch(i){
+            case 0:red=1;green=1;blue=0;text = "Non-classified";break;//Yellow for non-classified.
+            case 1:red=0.6;green=0.3;blue=0;text = "Ground";break;//Brown for ground.
+            case 2:red=0;green=0.3;blue=0;text = "Low vegetation";break;//Dark green for low vegetation.
+            case 3:red=0;green=0.6;blue=0;text = "Medium vegetation";break;//Medium green for medium vegetation.
+            case 4:red=0;green=1;blue=0;;text = "High vegetation";break;//Bright green for high vegetation.
+            case 5:red=0;green=1;blue=0;text = "Buildings";break;//Cyan for buildings.
+            case 6:red=1;green=0;blue=1;text = "Noise (low points)";break;//Purple for low point (noise).
+            case 7:red=0.5;green=0.5;blue=0.5;text = "Model key-point (mass point)";break;//Grey for model key-point (mass point).
+            case 8:red=0;green=0;blue=1;text = "Water";break;//Blue for water.
+            case 9:red=1;green=1;blue=1;text = "Overlap";break;//White for overlap points.
+            default:red=1;green=0;blue=0;text = "Undefined";break;//Red for undefined.
+         }
+         glColor3d(1.0,1.0,1.0);//White.
+         create_pango_layout(text)->get_size(textwidth,textheight);
+         glRasterPos3d(cornx - (hoffset + hwidth + 1.5*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
+         glCallLists(text.length(),GL_UNSIGNED_BYTE,text.c_str());
+         glBegin(GL_QUADS);
+            glColor3d(red,green,blue);
+            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-hoffset*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-hoffset*ratio/zoomlevel,corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,altitude);
+         glEnd();
+      }
+   }
+   else if(returncolour){
+      double length = 0.9*rheight/5;
+      double red=0,green=0,blue=0;
+      string text = "";
+      int textwidth=0,textheight=0;
+      for(int i=0;i<6;i++){
+         switch(i){
+            case 0:red=0;green=0;blue=1;text = "First";break;//Blue
+            case 1:red=0;green=1;blue=1;text = "Second";break;//Cyan
+            case 2:red=0;green=1;blue=0;text = "Third";break;//Green
+            case 3:red=1;green=0;blue=0;text = "Fourth";break;//Red
+            case 4:red=1;green=0;blue=1;text = "Fifth";break;//Purple
+            default:red=green=blue=1;text = "Trouble at mill";break;//White in the event of strangeness.
+         }
+         glColor3d(1.0,1.0,1.0);//White.
+         create_pango_layout(text)->get_size(textwidth,textheight);
+         glRasterPos3d(cornx - (hoffset + hwidth + 1.8*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
+         glCallLists(text.length(),GL_UNSIGNED_BYTE,text.c_str());
+         glBegin(GL_QUADS);
+            glColor3d(red,green,blue);
+            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-hoffset*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-hoffset*ratio/zoomlevel,corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,altitude);
+            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,altitude);
+         glEnd();
+      }
+   }
+//   else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+//       line = buckets[i]->getpoint(j).flightline;
+//       int index = line % 6;
+//       switch(index){
+//          case 0:red=0;green=1;blue=0;break;//Green
+//          case 1:red=0;green=0;blue=1;break;//Blue
+//          case 2:red=1;green=0;blue=0;break;//Red
+//          case 3:red=0;green=1;blue=1;break;//Cyan
+//          case 4:red=1;green=1;blue=0;break;//Yellow
+//          case 5:red=1;green=0;blue=1;break;//Purple
+//          default:red=green=blue=1;break;//White in the event of strangeness.
+//       }
+//   }
+}
+
 //This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
 void TwoDeeOverview::makedistancescale(){
    double rheight = get_height()*ratio/zoomlevel;
@@ -851,6 +975,22 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+      double profminx = profstartx,profmaxx = profendx,profminy = profstarty,profmaxy = profendy;
+      if(profstartx>profendx){
+         profminx = profendx;
+         profmaxx = profstartx;
+      }
+      if(profstarty>profendy){
+         profminy = profendy;
+         profmaxy = profstarty;
+      }
+      ostringstream profminX,profmaxX,profminY,profmaxY;
+      profminX << profminx;
+      profmaxX << profmaxx;
+      profminY << profminy;
+      profmaxY << profmaxy;
+      string proftext = "MinX: " + profminX.str() + " MaxX: " + profmaxX.str() + "\nMinY: " + profminY.str() + " MaxY: " + profmaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
+      rulerlabel->set_text(proftext);
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -859,6 +999,7 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
    makeprofboundaries();
+   grab_focus();
    return drawviewable(2);
 }
 //Calculate the boundaries of the profile based on whether or not it is orthogonal or slanted and the start and end points of the user's clicks and drags.
@@ -917,22 +1058,75 @@ void TwoDeeOverview::makeprofbox(){
       double height = profendy - profstarty;
       double length = sqrt(breadth*breadth+height*height);//Right triangle.
       if(length==0)length=1;
-      glColor3f(1.0,1.0,1.0);
       glBegin(GL_LINE_LOOP);
+         glColor3f(1.0,1.0,1.0);
          glVertex3d(profstartx-(slantwidth/2)*height/length-centrex,profstarty+(slantwidth/2)*breadth/length-centrey,altitude);
          glVertex3d(profstartx+(slantwidth/2)*height/length-centrex,profstarty-(slantwidth/2)*breadth/length-centrey,altitude);
+         glColor3f(1.0,0.0,0.0);
+         glVertex3d(profstartx+(slantwidth/2)*height/length-centrex,profstarty-(slantwidth/2)*breadth/length-centrey,altitude);
+         glVertex3d(profendx+(slantwidth/2)*height/length-centrex,profendy-(slantwidth/2)*breadth/length-centrey,altitude);
+         glColor3f(1.0,1.0,1.0);
          glVertex3d(profendx+(slantwidth/2)*height/length-centrex,profendy-(slantwidth/2)*breadth/length-centrey,altitude);
          glVertex3d(profendx-(slantwidth/2)*height/length-centrex,profendy+(slantwidth/2)*breadth/length-centrey,altitude);
       glEnd();
    }
    else if(orthogonalshape){
-      glColor3f(1.0,1.0,1.0);
-      glBegin(GL_LINE_LOOP);
-         glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-         glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-         glVertex3d(profendx-centrex,profendy-centrey,altitude);
-         glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-      glEnd();
+      if(abs(profstartx - profendx) > abs(profstarty - profendy)){//If the width is greater than the height of the profile:
+         if((profendy<profstarty&&profstartx<profendx)||(profendy>profstarty&&profstartx>profendx)){
+            glBegin(GL_LINE_LOOP);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+               glColor3f(1.0,0.0,0.0);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+            glEnd();
+         }
+         else{
+            glBegin(GL_LINE_LOOP);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glColor3f(1.0,0.0,0.0);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+            glEnd();
+         }
+      }
+      else{//Otherwise:
+         if((profendx<profstartx&&profstarty>profendy)||(profendx>profstartx&&profstarty<profendy)){
+            glBegin(GL_LINE_LOOP);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+               glColor3f(1.0,0.0,0.0);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+            glEnd();
+         }
+         else{
+            glBegin(GL_LINE_LOOP);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glColor3f(1.0,0.0,0.0);
+               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+               glColor3f(1.0,1.0,1.0);
+               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
+               glVertex3d(profendx-centrex,profendy-centrey,altitude);
+            glEnd();
+         }
+      }
    }
 }
 
@@ -1021,7 +1215,7 @@ void TwoDeeOverview::makefencebox(){
       double height = fenceendy - fencestarty;
       double length = sqrt(breadth*breadth+height*height);//Right triangle.
       if(length==0)length=1;
-      glColor3f(1.0,1.0,1.0);
+      glColor3f(0.0,0.0,1.0);
       glBegin(GL_LINE_LOOP);
          glVertex3d(fencestartx-(slantwidth/2)*height/length-centrex,fencestarty+(slantwidth/2)*breadth/length-centrey,altitude);
          glVertex3d(fencestartx+(slantwidth/2)*height/length-centrex,fencestarty-(slantwidth/2)*breadth/length-centrey,altitude);
@@ -1030,7 +1224,7 @@ void TwoDeeOverview::makefencebox(){
       glEnd();
    }
    else if(orthogonalshape){
-      glColor3f(1.0,1.0,1.0);
+      glColor3f(0.0,0.0,1.0);
       glBegin(GL_LINE_LOOP);
          glVertex3d(fencestartx-centrex,fencestarty-centrey,altitude);
          glVertex3d(fencestartx-centrex,fenceendy-centrey,altitude);

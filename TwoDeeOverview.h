@@ -26,6 +26,7 @@ public:
    void makefencebox();//Make the box showing the fence area.
    void makerulerbox();//Make rectangle showing where the ruler is.
    void makedistancescale();//Make a scale for the LIDAR "map"
+   void makecolourlegend();
    void drawoverlays();//Draw all of the above make methods.
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
@@ -106,6 +107,7 @@ public:
    void setshowprofile(double showprofile){ this->showprofile = showprofile;}//Set whether profile box should be seen when not being modified.
    void setshowfence(double showfence){ this->showfence = showfence;}//Set whether fence should be seen when not being modified.
    void setshowdistancescale(double showdistancescale){ this->showdistancescale = showdistancescale;}//Set whether the distance scale should be seen.
+   void setshowlegend(double showlegend){ this->showlegend = showlegend;}//Set whether the colour legend should be seen.
    void setorthogonalshape(bool orthogonalshape){ this->orthogonalshape = orthogonalshape; }
    void setslantedshape(bool slantedshape){ this->slantedshape = slantedshape; }
    void setpausethread(bool pausethread){ this->pausethread = pausethread; }
@@ -122,6 +124,7 @@ public:
       void setheightenOverlap(bool heightenOverlap){ this->heightenOverlap = heightenOverlap; }//...
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
+   bool showlegend;//Determines whether the colour legend should be drawn, if applicable.
    bool showdistancescale;//Determines whether to draw the distance scale overlay.
    bool drawneverything;//Stores whether all of the buckets were drawn the last time the drawing thread was invoked.
    bool orthogonalshape;//Determines whether or not to draw an orthogonal box.

@@ -48,6 +48,8 @@ public:
    void setintensityfloor(double intensityfloor){this->intensityfloor = intensityfloor;}
 protected:
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
+   double cbmaxz,cbminz;
+   int cbmaxintensity,cbminintensity;
 
    //Point data and related stuff:
    quadtree* lidardata;//The point data is stored here.

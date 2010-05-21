@@ -24,6 +24,7 @@ Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    this->bucketlimit = bucketlimit;
    pointsize=1;
    ratio = 1;
+   cbmaxz=cbminz=0;
    //Colouring and shading:
    heightcolour = false;
    heightbrightness = false;
@@ -71,6 +72,10 @@ bool Display::on_configure_event(GdkEventConfigure* event){
 
 //Prepares the arrays for looking up the colours and shades of the points.
 void Display::coloursandshades(double maxz,double minz,int maxintensity,int minintensity){
+   cbmaxz = maxz;
+   cbminz = minz;
+   cbmaxintensity = maxintensity;
+   cbminintensity = minintensity;
    if(colourheightarray!=NULL)delete[] colourheightarray;
    if(colourintensityarray!=NULL)delete[] colourintensityarray;
    if(brightnessheightarray!=NULL)delete[] brightnessheightarray;
@@ -93,9 +98,9 @@ void Display::coloursandshades(double maxz,double minz,int maxintensity,int mini
       colourintensityarray[3*i+1]=green;
       colourintensityarray[3*i+2]=blue;
    }
-   brightnessheightarray = new double[(int)(rmaxz-rminz+4)];
-   for(int i=0;i<(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
-      z = i + rminz;//Please note that, as elsewhere in this method, the exact value rmaxz will not be reached, so its position in the array will not equal 1, while the first element will be 0.
+   brightnessheightarray = new double[30*(int)(rmaxz-rminz+4)];//This is at 30, rather than three, for a reason: three, one for each colour, by ten, so that the "resolution" of the colouring by height is 0.1 metres, not one whole metre. It makes it look better.
+   for(int i=0;i<10*(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
+      z = 0.1*(double)i + rminz;//Please note that, as elsewhere in this method, the exact value rmaxz will not be reached, so its position in the array will probably not be the first to equal 1, while the first element will be 0 and be for rminz.
       brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
    }
    brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
@@ -156,6 +161,7 @@ void Display::colour_by(double value,double maxvalue,double minvalue,double& col
 double Display::brightness_by(double value,double maxvalue,double minvalue,double offsetvalue,double floorvalue){
   double multiplier = floorvalue + offsetvalue + (1.0 - floorvalue)*(value-minvalue)/(maxvalue-minvalue);
   if(multiplier < 0)multiplier = 0;//This prevents the situation where two negative values (for colour and brightness respectively) multiply to create a positive value giving a non-black colour.
+  if(multiplier > 1)multiplier = 1;//This prevents the situation where a non-white colour can be made paler (rather than simply brighter) as a result of its RGB values being multiplied by somenumber greater than 1. Otherwise, non-white colours can eventually be mad white when brightness mode is on.
   return multiplier;
 }
 

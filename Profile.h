@@ -54,6 +54,7 @@ public:
 protected:
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
+   double samplemaxz,sampleminz;//Store the maximum and minimum heights of the profile sample.
    
    //Control:
    bool drawpoints;//Determines whether points are drawn.
