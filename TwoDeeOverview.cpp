@@ -975,22 +975,7 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-      double profminx = profstartx,profmaxx = profendx,profminy = profstarty,profmaxy = profendy;
-      if(profstartx>profendx){
-         profminx = profendx;
-         profmaxx = profstartx;
-      }
-      if(profstarty>profendy){
-         profminy = profendy;
-         profmaxy = profstarty;
-      }
-      ostringstream profminX,profmaxX,profminY,profmaxY;
-      profminX << profminx;
-      profmaxX << profmaxx;
-      profminY << profminy;
-      profmaxY << profmaxy;
-      string proftext = "MinX: " + profminX.str() + " MaxX: " + profmaxX.str() + "\nMinY: " + profminY.str() + " MaxY: " + profmaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(proftext);
+      drawprofinfo();
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -1048,6 +1033,36 @@ void TwoDeeOverview::makeprofboundaries(){
          profys[2] = profendy;//...
          profys[3] = profendy;//...
       }
+   }
+}
+void TwoDeeOverview::drawprofinfo(){
+   if(orthogonalshape){
+      double profminx = profstartx,profmaxx = profendx,profminy = profstarty,profmaxy = profendy;
+      if(profstartx>profendx){
+         profminx = profendx;
+         profmaxx = profstartx;
+      }
+      if(profstarty>profendy){
+         profminy = profendy;
+         profmaxy = profstarty;
+      }
+      ostringstream profminX,profmaxX,profminY,profmaxY;
+      profminX << profminx;
+      profmaxX << profmaxx;
+      profminY << profminy;
+      profmaxY << profmaxy;
+      string proftext = "MinX: " + profminX.str() + " MaxX: " + profmaxX.str() + "\nMinY: " + profminY.str() + " MaxY: " + profmaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
+      rulerlabel->set_text(proftext);
+   }
+   else if(slantedshape){
+      ostringstream profStartX,profStartY,profEndX,profEndY,profWidth;
+      profStartX << profstartx;
+      profStartY << profstarty;
+      profEndX << profendx;
+      profEndY << profendy;
+      profWidth << slantwidth;
+      string proftext = "Start = (" + profStartX.str() + "," + profStartY.str() + ") \nEnd = (" + profEndX.str() + "," + profEndY.str() + ") \nWidth = " + profWidth.str();//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
+      rulerlabel->set_text(proftext);
    }
 }
 //This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then draws the rectangle.
@@ -1145,22 +1160,7 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-      double fenceminx = fencestartx,fencemaxx = fenceendx,fenceminy = fencestarty,fencemaxy = fenceendy;
-      if(fencestartx>fenceendx){
-         fenceminx = fenceendx;
-         fencemaxx = fencestartx;
-      }
-      if(fencestarty>fenceendy){
-         fenceminy = fenceendy;
-         fencemaxy = fencestarty;
-      }
-      ostringstream fenceminX,fencemaxX,fenceminY,fencemaxY;
-      fenceminX << fenceminx;
-      fencemaxX << fencemaxx;
-      fenceminY << fenceminy;
-      fencemaxY << fencemaxy;
-      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(fencetext);
+      drawfenceinfo();
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -1205,6 +1205,36 @@ void TwoDeeOverview::makefenceboundaries(){
       fenceys[1] = fenceendy;
       fenceys[2] = fenceendy;
       fenceys[3] = fencestarty;
+   }
+}
+void TwoDeeOverview::drawfenceinfo(){
+   if(orthogonalshape){
+      double fenceminx = fencestartx,fencemaxx = fenceendx,fenceminy = fencestarty,fencemaxy = fenceendy;
+      if(fencestartx>fenceendx){
+         fenceminx = fenceendx;
+         fencemaxx = fencestartx;
+      }
+      if(fencestarty>fenceendy){
+         fenceminy = fenceendy;
+         fencemaxy = fencestarty;
+      }
+      ostringstream fenceminX,fencemaxX,fenceminY,fencemaxY;
+      fenceminX << fenceminx;
+      fencemaxX << fencemaxx;
+      fenceminY << fenceminy;
+      fencemaxY << fencemaxy;
+      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
+      rulerlabel->set_text(fencetext);
+   }
+   else if(slantedshape){
+      ostringstream fenceStartX,fenceStartY,fenceEndX,fenceEndY,fenceWidth;
+      fenceStartX << fencestartx;
+      fenceStartY << fencestarty;
+      fenceEndX << fenceendx;
+      fenceEndY << fenceendy;
+      fenceWidth << slantwidth;
+      string fencetext = "Start = (" + fenceStartX.str() + "," + fenceStartY.str() + ") \nEnd = (" + fenceEndX.str() + "," + fenceEndY.str() + ") \nWidth = " + fenceWidth.str();//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
+      rulerlabel->set_text(fencetext);
    }
 }
 //Makes the fence box.

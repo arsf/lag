@@ -31,7 +31,8 @@ Make indices for elevation less than a metre in magnitude. 10cm?***             
 
 multiple windows
 20. seperate windows have seperate draw options + more than one window, same functionality different views
-16. indication of where profile is on main window + 17. move profile with cursor keys
+16. indication of where profile is on main window                                      Done.
+17. move profile with cursor keys
 
 
 3d features
@@ -47,8 +48,8 @@ clasification
 23. classification macro? *
 
 wish list
-11. height elevation difference map (usable with area of intrest)
-25. harg as a clippy the paperclip*********************
+11. height elevation difference map (usable with area of intrest)                      Instead can change thresholds.
+25. harg as a clippy the paperclip*********************                                Done! Very uninteractive, though.
 
 
 
@@ -68,22 +69,22 @@ Importance undefined:
 
 
 
-Split the draw operation into threads, and split away from interface. Should be embarrassingly parallel, as drawing is split into bits (buckets) anyway.*
+Split the draw operation into threads, and split away from interface. Should be embarrassingly parallel, as drawing is split into bits (buckets) anyway.*                                                         Drawing is split into a thread (and more complicated shenanigans) but the drawing itself is not split into buckets. Would probably be pointless.
 
-Use separate threads for each window.**
+Use separate threads for each window.**                                                It appears that this happens anyway, to an extent.
 
-Fix viewport problem with multiple windows and remove hack.***
+Fix viewport problem with multiple windows and remove hack.***                         Hack turns out not to be a hack, really. Done in so far as it is neater and more consistent.
 
-Try to make preview look nicer.*
+Try to make preview look nicer.*                                                       Done for overview only.
 
-Make point size user-changeable.*
+Make point size user-changeable.*                                                      Done.
 
 Make ruler width user-changeable.*
 
 Include scan angle, and colour by it. Brightness?*
 
-Option to put noise points at top.*
+Option to put noise points at top.*                                                    Done.
 
-Ability to open files with different number of skipped points.*
+Ability to open files with different number of skipped points.*                        Done, just not through one use of "refresh"
 
-Some way to see what flightline a point is from.***
+Some way to see what flightline a point is from.***                                    Done

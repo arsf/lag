@@ -630,6 +630,8 @@ void on_slantwidthselected(){
    tdo->setslantwidth(slantwidthselect->get_value());
    tdo->makeprofboundaries();
    tdo->makefenceboundaries();
+   tdo->drawprofinfo();
+   tdo->drawfenceinfo();
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -1041,7 +1043,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.21.1" << endl;
+   cout << "Build number: 2010.05.24.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));

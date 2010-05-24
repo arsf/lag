@@ -23,6 +23,8 @@ public:
    void makeprofboundaries();//Determine the boundaries of the profile from the start and end points of the user's clicks and drags and whether the profile is to be orthogonal or slanted.
    void makefenceboundaries();//Determine the boundaries of the sfencee from the start and end points of the user's clicks and drags and whether the fence is to be orthogonal or slanted.
    void makeprofbox();//Make the box showing the profile area.
+   void drawprofinfo();
+   void drawfenceinfo();
    void makefencebox();//Make the box showing the fence area.
    void makerulerbox();//Make rectangle showing where the ruler is.
    void makedistancescale();//Make a scale for the LIDAR "map"
