@@ -213,6 +213,7 @@ bool Profile::on_pan_start(GdkEventButton* event){
    if(event->button==1){
       panstartx = event->x;
       panstarty = event->y;
+      get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    }
    return true;
 }
@@ -247,6 +248,7 @@ bool Profile::on_ruler_start(GdkEventButton* event){
    ostringstream zpos;
    zpos << rulerendz;
    rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0 Pos: " + zpos.str());
+   get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return drawviewable(1);
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
@@ -363,6 +365,7 @@ bool Profile::on_zoom(GdkEventScroll* event){
    centrey -= hypotenuse * height / length;
    centrez += (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
+   get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return drawviewable(1);
 }
 

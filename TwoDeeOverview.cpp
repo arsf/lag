@@ -766,6 +766,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    delete pointvector;
    delete[]xs;//These are here because vetpoints needs to use them as well as advsubset.
    delete[]ys;//...
+   get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return true;
 }
 
@@ -936,6 +937,7 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
    if(event->button==1){
       panstartx = event->x;
       panstarty = event->y;
+      get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return true;
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -965,6 +967,7 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    if(event->button==1){
       profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+      get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -1150,6 +1153,7 @@ bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    if(event->button==1){
       fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
       fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+      get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -1275,6 +1279,7 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event){
       rulerlabel->set_text("Distance: 0\nX: 0 Pos: "+ xpos.str() + "\nY: 0 Pos: " + ypos.str());
       rulereventstartx = event->x;
       rulereventstarty = event->y;
+      get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
    else if(event->button==3)return pointinfo(event->x,event->y);
@@ -1333,6 +1338,7 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrex -= (event->x-get_width()/2)*ratio/zoomlevel;
    centrey += (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
+   get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return drawviewable(1);
 }
 

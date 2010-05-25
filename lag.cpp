@@ -37,8 +37,8 @@ quadtree* lidardata = NULL;//The flightlines are stored here.
    string loaderroroutputfile;//Path of file for error message output.
 
 //Gtk objects:
-Gtk::VBox *vboxtdo = NULL;//Contains the overview.
-Gtk::VBox *vboxprof = NULL;//Contains the profile.
+Gtk::EventBox *eventboxtdo = NULL;//Contains the overview.
+Gtk::EventBox *eventboxprof = NULL;//Contains the profile.
 Gtk::AboutDialog *about = NULL;//Information about LAG.
 //Advanced viewing options:
 Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
@@ -446,9 +446,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       if(lidardata != NULL)delete lidardata;
       lidardata = NULL;
       tdo->hide_all();
-      vboxtdo->remove(*tdo);
+      eventboxtdo->remove();
       prof->hide_all();
-      vboxprof->remove(*prof);
+      eventboxprof->remove();
       loadedanyfiles = false;
       return 22;
    }
@@ -462,9 +462,9 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
       prof->drawviewable(1);
    }
    else{//Otherwise, pack them into the vboxes and then show them, which will do as the above block does.
-      vboxtdo->pack_end(*tdo,true,true);
+      eventboxtdo->add(*tdo);
       tdo->show_all();
-      vboxprof->pack_end(*prof,true,true);
+      eventboxprof->add(*prof);
       prof->show_all();
    }
    on_drawingresetbutton_clicked();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
@@ -713,12 +713,11 @@ void on_rulertoggle(){
 }
 
 bool on_tdo_key_press(GdkEventKey* event){
-   if(event->keyval == GDK_P || event->keyval == GDK_p)on_showprofilebutton_clicked();
+   if(event->keyval == GDK_P || event->keyval == GDK_p || event->keyval == GDK_space)on_showprofilebutton_clicked();
    return true;
 }
-
 bool on_prof_key_press(GdkEventKey* event){
-   if(event->keyval == GDK_P || event->keyval == GDK_p)on_showprofilebutton_clicked();
+   if(event->keyval == GDK_P || event->keyval == GDK_p || event->keyval == GDK_space)on_showprofilebutton_clicked();
    return true;
 }
 
@@ -749,159 +748,159 @@ int GUIset(int argc,char *argv[]){
    refXml->get_widget("window2", window2);
    if(window2){//The overview window:
       window2->set_title("LAG Overview");
-      refXml->get_widget("vboxtdo",vboxtdo);
-      if(vboxtdo){
-         //Menues:
-         //For opening files:
-            refXml->get_widget("openfilemenuitem",openfilemenuitem);
-            if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
-            refXml->get_widget("filechooserdialog",filechooserdialog);
-            if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
-            refXml->get_widget("pointskipselect",pointskipselect);
-            refXml->get_widget("fenceusecheck",fenceusecheck);
-            refXml->get_widget("asciicodeentry",asciicodeentry);
-            refXml->get_widget("cachesizeselect",cachesizeselect);
-            if(cachesizeselect){
-               cachesizeselect->set_range(1000000,1000000000000);//That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 2009-10, so, if the rate of increase is that of quadrupling every five years, then 40 TB will be reached in less than 35 years.
-               cachesizeselect->set_value(25000000);//25000000 points is about 1 GB. On this 4 GB RAM machine, I only want LAG to use a quarter of my resources.
-               cachesizeselect->set_increments(1000000,1000000);
-               refXml->get_widget("cachesizeGBlabel",cachesizeGBlabel);
-               if(cachesizeGBlabel){
-                  on_cachesize_changed();
-                  cachesizeselect->signal_value_changed().connect(sigc::ptr_fun(&on_cachesize_changed));
-               }
+      //Menues:
+      //For opening files:
+         refXml->get_widget("openfilemenuitem",openfilemenuitem);
+         if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
+         refXml->get_widget("filechooserdialog",filechooserdialog);
+         if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
+         refXml->get_widget("pointskipselect",pointskipselect);
+         refXml->get_widget("fenceusecheck",fenceusecheck);
+         refXml->get_widget("asciicodeentry",asciicodeentry);
+         refXml->get_widget("cachesizeselect",cachesizeselect);
+         if(cachesizeselect){
+            cachesizeselect->set_range(1000000,1000000000000);//That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 2009-10, so, if the rate of increase is that of quadrupling every five years, then 40 TB will be reached in less than 35 years.
+            cachesizeselect->set_value(25000000);//25000000 points is about 1 GB. On this 4 GB RAM machine, I only want LAG to use a quarter of my resources.
+            cachesizeselect->set_increments(1000000,1000000);
+            refXml->get_widget("cachesizeGBlabel",cachesizeGBlabel);
+            if(cachesizeGBlabel){
+               on_cachesize_changed();
+               cachesizeselect->signal_value_changed().connect(sigc::ptr_fun(&on_cachesize_changed));
             }
-         //Viewing options:
-            refXml->get_widget("showprofilecheck",showprofilecheck);
-            if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
-            refXml->get_widget("showfencecheck",showfencecheck);
-            if(showfencecheck)showfencecheck->signal_activate().connect(sigc::ptr_fun(&on_showfencecheck));
-            refXml->get_widget("showdistancescalecheck",showdistancescalecheck);
-            if(showdistancescalecheck)showdistancescalecheck->signal_activate().connect(sigc::ptr_fun(&on_showdistancescalecheck));
-            refXml->get_widget("showlegendcheck",showlegendcheck);
-            if(showlegendcheck)showlegendcheck->signal_activate().connect(sigc::ptr_fun(&on_showlegendcheck));
-            //For determining how to colour the overview:
-               Gtk::RadioMenuItem *colourbynonemenu = NULL;
-               refXml->get_widget("colourbynonemenu",colourbynonemenu);
-               if(colourbynonemenu)colourbynonemenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-               refXml->get_widget("colourbyintensitymenu",colourbyintensitymenu);
-               if(colourbyintensitymenu)colourbyintensitymenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-               refXml->get_widget("colourbyheightmenu",colourbyheightmenu);
-               if(colourbyheightmenu)colourbyheightmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-               refXml->get_widget("colourbyflightlinemenu",colourbyflightlinemenu);
-               if(colourbyflightlinemenu)colourbyflightlinemenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-               refXml->get_widget("colourbyclassificationmenu",colourbyclassificationmenu);
-               if(colourbyclassificationmenu)colourbyclassificationmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-               refXml->get_widget("colourbyreturnmenu",colourbyreturnmenu);
-               if(colourbyreturnmenu)colourbyreturnmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
-            //For determining how to shade the overview:
-               Gtk::RadioMenuItem *brightnessbynonemenu = NULL;
-               refXml->get_widget("brightnessbynonemenu",brightnessbynonemenu);
-               if(brightnessbynonemenu)brightnessbynonemenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
-               refXml->get_widget("brightnessbyintensitymenu",brightnessbyintensitymenu);
-               if(brightnessbyintensitymenu)brightnessbyintensitymenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
-               refXml->get_widget("brightnessbyheightmenu",brightnessbyheightmenu);
-               if(brightnessbyheightmenu)brightnessbyheightmenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
-         //Help menu:
-            Gtk::MenuItem *aboutmenu = NULL;
-            refXml->get_widget("aboutmenu",aboutmenu);
-            if(aboutmenu)aboutmenu->signal_activate().connect(sigc::ptr_fun(&on_aboutmenuactivated));
-            refXml->get_widget("about",about);
-            if(about)about->signal_response().connect(sigc::ptr_fun(&on_aboutresponse));
+         }
+      //Viewing options:
+         refXml->get_widget("showprofilecheck",showprofilecheck);
+         if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
+         refXml->get_widget("showfencecheck",showfencecheck);
+         if(showfencecheck)showfencecheck->signal_activate().connect(sigc::ptr_fun(&on_showfencecheck));
+         refXml->get_widget("showdistancescalecheck",showdistancescalecheck);
+         if(showdistancescalecheck)showdistancescalecheck->signal_activate().connect(sigc::ptr_fun(&on_showdistancescalecheck));
+         refXml->get_widget("showlegendcheck",showlegendcheck);
+         if(showlegendcheck)showlegendcheck->signal_activate().connect(sigc::ptr_fun(&on_showlegendcheck));
+         //For determining how to colour the overview:
+            Gtk::RadioMenuItem *colourbynonemenu = NULL;
+            refXml->get_widget("colourbynonemenu",colourbynonemenu);
+            if(colourbynonemenu)colourbynonemenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+            refXml->get_widget("colourbyintensitymenu",colourbyintensitymenu);
+            if(colourbyintensitymenu)colourbyintensitymenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+            refXml->get_widget("colourbyheightmenu",colourbyheightmenu);
+            if(colourbyheightmenu)colourbyheightmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+            refXml->get_widget("colourbyflightlinemenu",colourbyflightlinemenu);
+            if(colourbyflightlinemenu)colourbyflightlinemenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+            refXml->get_widget("colourbyclassificationmenu",colourbyclassificationmenu);
+            if(colourbyclassificationmenu)colourbyclassificationmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+            refXml->get_widget("colourbyreturnmenu",colourbyreturnmenu);
+            if(colourbyreturnmenu)colourbyreturnmenu->signal_activate().connect(sigc::ptr_fun(&on_colouractivated));
+         //For determining how to shade the overview:
+            Gtk::RadioMenuItem *brightnessbynonemenu = NULL;
+            refXml->get_widget("brightnessbynonemenu",brightnessbynonemenu);
+            if(brightnessbynonemenu)brightnessbynonemenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
+            refXml->get_widget("brightnessbyintensitymenu",brightnessbyintensitymenu);
+            if(brightnessbyintensitymenu)brightnessbyintensitymenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
+            refXml->get_widget("brightnessbyheightmenu",brightnessbyheightmenu);
+            if(brightnessbyheightmenu)brightnessbyheightmenu->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivated));
+      //Help menu:
+         Gtk::MenuItem *aboutmenu = NULL;
+         refXml->get_widget("aboutmenu",aboutmenu);
+         if(aboutmenu)aboutmenu->signal_activate().connect(sigc::ptr_fun(&on_aboutmenuactivated));
+         refXml->get_widget("about",about);
+         if(about)about->signal_response().connect(sigc::ptr_fun(&on_aboutresponse));
 
-         //Toolbar:
-         Gtk::ToolButton *returnbutton = NULL;//This returns the viewpoint to the initial one for that file or selection of files.
-         refXml->get_widget("returnbutton",returnbutton);
-         if(returnbutton)returnbutton->signal_clicked().connect(sigc::ptr_fun(&on_returnbutton_clicked));
-         //Advanced viewing options:
-            Gtk::ToolButton *advancedbutton = NULL;
-            refXml->get_widget("advancedbutton",advancedbutton);
-            if(advancedbutton)advancedbutton->signal_clicked().connect(sigc::ptr_fun(&on_advancedbutton_clicked));
-            refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
-            if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::ptr_fun(&on_advancedoptionsdialog_response));
-            //False elevation:
-               refXml->get_widget("classcheckbutton0",classcheckbutton0);
-               if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton0_toggled));
-               refXml->get_widget("classcheckbutton2",classcheckbutton2);
-               if(classcheckbutton2)classcheckbutton2->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton2_toggled));
-               refXml->get_widget("classcheckbutton3",classcheckbutton3);
-               if(classcheckbutton3)classcheckbutton3->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton3_toggled));
-               refXml->get_widget("classcheckbutton4",classcheckbutton4);
-               if(classcheckbutton4)classcheckbutton4->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton4_toggled));
-               refXml->get_widget("classcheckbutton5",classcheckbutton5);
-               if(classcheckbutton5)classcheckbutton5->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton5_toggled));
-               refXml->get_widget("classcheckbutton6",classcheckbutton6);
-               if(classcheckbutton6)classcheckbutton6->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton6_toggled));
-               refXml->get_widget("classcheckbutton7",classcheckbutton7);
-               if(classcheckbutton7)classcheckbutton7->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton7_toggled));
-               refXml->get_widget("classcheckbutton8",classcheckbutton8);
-               if(classcheckbutton8)classcheckbutton8->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton8_toggled));
-               refXml->get_widget("classcheckbutton9",classcheckbutton9);
-               if(classcheckbutton9)classcheckbutton9->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton9_toggled));
-               refXml->get_widget("classcheckbutton12",classcheckbutton12);
-               if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
-               refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
-               if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
-            //Height and intensity threasholding and brightness modifiers:
-               refXml->get_widget("heightmaxselect",heightmaxselect);
-               if(heightmaxselect)heightmaxconn = heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
-               refXml->get_widget("heightminselect",heightminselect);
-               if(heightminselect)heightminconn = heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
-               refXml->get_widget("heightscrollbar",heightscrollbar);
-               if(heightscrollbar)heightscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_heightscrollbar_scrolled));
-               refXml->get_widget("heightoffsetselect",heightoffsetselect);
-               if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
-               refXml->get_widget("heightfloorselect",heightfloorselect);
-               if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
-               refXml->get_widget("intensitymaxselect",intensitymaxselect);
-               if(intensitymaxselect)intensitymaxconn = intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
-               refXml->get_widget("intensityminselect",intensityminselect);
-               if(intensityminselect)intensityminconn = intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
-               refXml->get_widget("intensityscrollbar",intensityscrollbar);
-               if(intensityscrollbar)intensityscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_intensityscrollbar_scrolled));
-               refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
-               if(intensityoffsetselect)intensityoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityoffsetselect_changed));
-               refXml->get_widget("intensityfloorselect",intensityfloorselect);
-               if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
-               refXml->get_widget("drawingresetbutton",drawingresetbutton);
-               if(drawingresetbutton)drawingresetbutton->signal_clicked().connect(sigc::ptr_fun(&on_drawingresetbutton_clicked));
-            //Detail (points to skip) level:
-               refXml->get_widget("maindetailselect",maindetailselect);
-               if(maindetailselect){
-                  maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-                  maindetailselect->set_value(0.00);
-                  maindetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselected));
-               }
-            //EASTER EGG! Clippy!:
-               refXml->get_widget("clippycheck",clippycheck);
-               if(clippycheck)clippycheck->signal_toggled().connect(sigc::ptr_fun(&on_clippycheck_toggled));
-         //For overview image viewing attributes:
-            refXml->get_widget("pointwidthselect",pointwidthselect);
-            if(pointwidthselect){
-               pointwidthselect->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
-               pointwidthselect->set_value(1);
-               pointwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselected));
+      //Toolbar:
+      Gtk::ToolButton *returnbutton = NULL;//This returns the viewpoint to the initial one for that file or selection of files.
+      refXml->get_widget("returnbutton",returnbutton);
+      if(returnbutton)returnbutton->signal_clicked().connect(sigc::ptr_fun(&on_returnbutton_clicked));
+      //Advanced viewing options:
+         Gtk::ToolButton *advancedbutton = NULL;
+         refXml->get_widget("advancedbutton",advancedbutton);
+         if(advancedbutton)advancedbutton->signal_clicked().connect(sigc::ptr_fun(&on_advancedbutton_clicked));
+         refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
+         if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::ptr_fun(&on_advancedoptionsdialog_response));
+         //False elevation:
+            refXml->get_widget("classcheckbutton0",classcheckbutton0);
+            if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton0_toggled));
+            refXml->get_widget("classcheckbutton2",classcheckbutton2);
+            if(classcheckbutton2)classcheckbutton2->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton2_toggled));
+            refXml->get_widget("classcheckbutton3",classcheckbutton3);
+            if(classcheckbutton3)classcheckbutton3->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton3_toggled));
+            refXml->get_widget("classcheckbutton4",classcheckbutton4);
+            if(classcheckbutton4)classcheckbutton4->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton4_toggled));
+            refXml->get_widget("classcheckbutton5",classcheckbutton5);
+            if(classcheckbutton5)classcheckbutton5->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton5_toggled));
+            refXml->get_widget("classcheckbutton6",classcheckbutton6);
+            if(classcheckbutton6)classcheckbutton6->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton6_toggled));
+            refXml->get_widget("classcheckbutton7",classcheckbutton7);
+            if(classcheckbutton7)classcheckbutton7->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton7_toggled));
+            refXml->get_widget("classcheckbutton8",classcheckbutton8);
+            if(classcheckbutton8)classcheckbutton8->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton8_toggled));
+            refXml->get_widget("classcheckbutton9",classcheckbutton9);
+            if(classcheckbutton9)classcheckbutton9->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton9_toggled));
+            refXml->get_widget("classcheckbutton12",classcheckbutton12);
+            if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
+            refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
+            if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
+         //Height and intensity threasholding and brightness modifiers:
+            refXml->get_widget("heightmaxselect",heightmaxselect);
+            if(heightmaxselect)heightmaxconn = heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
+            refXml->get_widget("heightminselect",heightminselect);
+            if(heightminselect)heightminconn = heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
+            refXml->get_widget("heightscrollbar",heightscrollbar);
+            if(heightscrollbar)heightscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_heightscrollbar_scrolled));
+            refXml->get_widget("heightoffsetselect",heightoffsetselect);
+            if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
+            refXml->get_widget("heightfloorselect",heightfloorselect);
+            if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
+            refXml->get_widget("intensitymaxselect",intensitymaxselect);
+            if(intensitymaxselect)intensitymaxconn = intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
+            refXml->get_widget("intensityminselect",intensityminselect);
+            if(intensityminselect)intensityminconn = intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
+            refXml->get_widget("intensityscrollbar",intensityscrollbar);
+            if(intensityscrollbar)intensityscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_intensityscrollbar_scrolled));
+            refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
+            if(intensityoffsetselect)intensityoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityoffsetselect_changed));
+            refXml->get_widget("intensityfloorselect",intensityfloorselect);
+            if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
+            refXml->get_widget("drawingresetbutton",drawingresetbutton);
+            if(drawingresetbutton)drawingresetbutton->signal_clicked().connect(sigc::ptr_fun(&on_drawingresetbutton_clicked));
+         //Detail (points to skip) level:
+            refXml->get_widget("maindetailselect",maindetailselect);
+            if(maindetailselect){
+               maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
+               maindetailselect->set_value(0.00);
+               maindetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselected));
             }
-         //The ruler:
-            refXml->get_widget("rulertoggleover",rulertoggleover);
-            if(rulertoggleover)rulertoggleover->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggleover));
-            refXml->get_widget("rulerlabelover",rulerlabelover);
-         //Fence and profile toggles and attribute selectors:
-            refXml->get_widget("fencetoggle",fencetoggle);
-            if(fencetoggle)fencetoggle->signal_toggled().connect(sigc::ptr_fun(&on_fencetoggle));
-            refXml->get_widget("profiletoggle",profiletoggle);
-            if(profiletoggle)profiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_profiletoggle));
-            refXml->get_widget("orthogonalrectshapetoggle",orthogonalrectshapetoggle);
-            if(orthogonalrectshapetoggle)orthogonalrectshapetoggle->signal_toggled().connect(sigc::ptr_fun(&on_orthogonalrectshapetoggle));
-            refXml->get_widget("slantedrectshapetoggle",slantedrectshapetoggle);
-            if(slantedrectshapetoggle)slantedrectshapetoggle->signal_toggled().connect(sigc::ptr_fun(&on_slantedrectshapetoggle));
-            refXml->get_widget("slantwidthselect",slantwidthselect);
-            if(slantwidthselect){
-               slantwidthselect->set_range(0,30000);//Essentially arbitrary. Would there be any situation where a width greater than 30 km would be wanted?
-               slantwidthselect->set_value(5);
-               slantwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_slantwidthselected));
-            }
-      }
+         //EASTER EGG! Clippy!:
+            refXml->get_widget("clippycheck",clippycheck);
+            if(clippycheck)clippycheck->signal_toggled().connect(sigc::ptr_fun(&on_clippycheck_toggled));
+      //For overview image viewing attributes:
+         refXml->get_widget("pointwidthselect",pointwidthselect);
+         if(pointwidthselect){
+            pointwidthselect->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
+            pointwidthselect->set_value(1);
+            pointwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselected));
+         }
+      //The ruler:
+         refXml->get_widget("rulertoggleover",rulertoggleover);
+         if(rulertoggleover)rulertoggleover->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggleover));
+         refXml->get_widget("rulerlabelover",rulerlabelover);
+      //Fence and profile toggles and attribute selectors:
+         refXml->get_widget("fencetoggle",fencetoggle);
+         if(fencetoggle)fencetoggle->signal_toggled().connect(sigc::ptr_fun(&on_fencetoggle));
+         refXml->get_widget("profiletoggle",profiletoggle);
+         if(profiletoggle)profiletoggle->signal_toggled().connect(sigc::ptr_fun(&on_profiletoggle));
+         refXml->get_widget("orthogonalrectshapetoggle",orthogonalrectshapetoggle);
+         if(orthogonalrectshapetoggle)orthogonalrectshapetoggle->signal_toggled().connect(sigc::ptr_fun(&on_orthogonalrectshapetoggle));
+         refXml->get_widget("slantedrectshapetoggle",slantedrectshapetoggle);
+         if(slantedrectshapetoggle)slantedrectshapetoggle->signal_toggled().connect(sigc::ptr_fun(&on_slantedrectshapetoggle));
+         refXml->get_widget("slantwidthselect",slantwidthselect);
+         if(slantwidthselect){
+            slantwidthselect->set_range(0,30000);//Essentially arbitrary. Would there be any situation where a width greater than 30 km would be wanted?
+            slantwidthselect->set_value(5);
+            slantwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_slantwidthselected));
+         }
+
+         refXml->get_widget("eventboxtdo",eventboxtdo);
+         eventboxtdo->signal_key_press_event().connect(sigc::ptr_fun(&on_tdo_key_press));
       window2->show_all();
    }
    else {
@@ -911,75 +910,75 @@ int GUIset(int argc,char *argv[]){
    refXml->get_widget("window3", window3);
    if(window3){
       window3->set_title("LAG Profile");
-      refXml->get_widget("vboxprof",vboxprof);
-      if(vboxprof){
-         refXml->get_widget("showheightscalecheck",showheightscalecheck);
-         if(showheightscalecheck)showheightscalecheck->signal_activate().connect(sigc::ptr_fun(&on_showheightscalecheck));
-         //For determining how to colour the profile:
-         Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
-         refXml->get_widget("colourbynonemenuprof",colourbynonemenuprof);
-         if(colourbynonemenuprof)colourbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
-         refXml->get_widget("colourbyintensitymenuprof",colourbyintensitymenuprof);
-         if(colourbyintensitymenuprof)colourbyintensitymenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
-         refXml->get_widget("colourbyheightmenuprof",colourbyheightmenuprof);
-         if(colourbyheightmenuprof)colourbyheightmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
-         refXml->get_widget("colourbyflightlinemenuprof",colourbyflightlinemenuprof);
-         if(colourbyflightlinemenuprof)colourbyflightlinemenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
-         refXml->get_widget("colourbyclassificationmenuprof",colourbyclassificationmenuprof);
-         if(colourbyclassificationmenuprof)colourbyclassificationmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
-         refXml->get_widget("colourbyreturnmenuprof",colourbyreturnmenuprof);
-         if(colourbyreturnmenuprof)colourbyreturnmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("showheightscalecheck",showheightscalecheck);
+      if(showheightscalecheck)showheightscalecheck->signal_activate().connect(sigc::ptr_fun(&on_showheightscalecheck));
+      //For determining how to colour the profile:
+      Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
+      refXml->get_widget("colourbynonemenuprof",colourbynonemenuprof);
+      if(colourbynonemenuprof)colourbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("colourbyintensitymenuprof",colourbyintensitymenuprof);
+      if(colourbyintensitymenuprof)colourbyintensitymenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("colourbyheightmenuprof",colourbyheightmenuprof);
+      if(colourbyheightmenuprof)colourbyheightmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("colourbyflightlinemenuprof",colourbyflightlinemenuprof);
+      if(colourbyflightlinemenuprof)colourbyflightlinemenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("colourbyclassificationmenuprof",colourbyclassificationmenuprof);
+      if(colourbyclassificationmenuprof)colourbyclassificationmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
+      refXml->get_widget("colourbyreturnmenuprof",colourbyreturnmenuprof);
+      if(colourbyreturnmenuprof)colourbyreturnmenuprof->signal_activate().connect(sigc::ptr_fun(&on_colouractivatedprof));
 
-         //For determining how to shade the profile:
-         Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
-         refXml->get_widget("brightnessbynonemenuprof",brightnessbynonemenuprof);
-         if(brightnessbynonemenuprof)brightnessbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
-         refXml->get_widget("brightnessbyintensitymenuprof",brightnessbyintensitymenuprof);
-         if(brightnessbyintensitymenuprof)brightnessbyintensitymenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
-         refXml->get_widget("brightnessbyheightmenuprof",brightnessbyheightmenuprof);
-         if(brightnessbyheightmenuprof)brightnessbyheightmenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
+      //For determining how to shade the profile:
+      Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
+      refXml->get_widget("brightnessbynonemenuprof",brightnessbynonemenuprof);
+      if(brightnessbynonemenuprof)brightnessbynonemenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
+      refXml->get_widget("brightnessbyintensitymenuprof",brightnessbyintensitymenuprof);
+      if(brightnessbyintensitymenuprof)brightnessbyintensitymenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
+      refXml->get_widget("brightnessbyheightmenuprof",brightnessbyheightmenuprof);
+      if(brightnessbyheightmenuprof)brightnessbyheightmenuprof->signal_activate().connect(sigc::ptr_fun(&on_brightnessactivatedprof));
 
-         //The ruler:
-         refXml->get_widget("rulertoggle",rulertoggle);
-         if(rulertoggle)rulertoggle->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggle));
-         refXml->get_widget("rulerlabel",rulerlabel);
+      //The ruler:
+      refXml->get_widget("rulertoggle",rulertoggle);
+      if(rulertoggle)rulertoggle->signal_toggled().connect(sigc::ptr_fun(&on_rulertoggle));
+      refXml->get_widget("rulerlabel",rulerlabel);
 
-         //For overview image viewing attributes:
-         refXml->get_widget("pointwidthselectprof",pointwidthselectprof);
-         if(pointwidthselectprof){
-            pointwidthselectprof->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
-            pointwidthselectprof->set_value(2);
-            pointwidthselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselectedprof));
-         }
-         refXml->get_widget("maindetailselectprof",maindetailselectprof);
-         if(maindetailselectprof){
-            maindetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-            maindetailselectprof->set_value(0);
-            maindetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselectedprof));
-         }
-         refXml->get_widget("previewdetailselectprof",previewdetailselectprof);
-         if(previewdetailselectprof){
-            previewdetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-            previewdetailselectprof->set_value(0);
-            previewdetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselectedprof));
-         }
-         refXml->get_widget("pointshowtoggle",pointshowtoggle);
-         if(pointshowtoggle)pointshowtoggle->signal_toggled().connect(sigc::ptr_fun(&on_pointshowtoggle));
-         refXml->get_widget("lineshowtoggle",lineshowtoggle);
-         if(lineshowtoggle)lineshowtoggle->signal_toggled().connect(sigc::ptr_fun(&on_lineshowtoggle));
-         refXml->get_widget("movingaveragerangeselect",movingaveragerangeselect);
-         if(movingaveragerangeselect){
-            movingaveragerangeselect->set_range(0,30000);//Essentially arbitrary.
-            movingaveragerangeselect->set_value(5);
-            movingaveragerangeselect->signal_value_changed().connect(sigc::ptr_fun(&on_movingaveragerangeselect));
-         }
-         Gtk::ToolButton *returnbuttonprof = NULL;
-         refXml->get_widget("returnbuttonprof",returnbuttonprof);
-         if(returnbuttonprof)returnbuttonprof->signal_clicked().connect(sigc::ptr_fun(&on_returnbuttonprof_clicked));
-         Gtk::ToolButton *showprofilebutton = NULL;
-         refXml->get_widget("showprofilebutton",showprofilebutton);
-         if(showprofilebutton)showprofilebutton->signal_clicked().connect(sigc::ptr_fun(&on_showprofilebutton_clicked));
+      //For overview image viewing attributes:
+      refXml->get_widget("pointwidthselectprof",pointwidthselectprof);
+      if(pointwidthselectprof){
+         pointwidthselectprof->set_range(1,300);//Essentially arbitrary. Would there be any situation where a width greater than 300 pixels would be wanted? Very far future?
+         pointwidthselectprof->set_value(2);
+         pointwidthselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselectedprof));
       }
+      refXml->get_widget("maindetailselectprof",maindetailselectprof);
+      if(maindetailselectprof){
+         maindetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
+         maindetailselectprof->set_value(0);
+         maindetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselectedprof));
+      }
+      refXml->get_widget("previewdetailselectprof",previewdetailselectprof);
+      if(previewdetailselectprof){
+         previewdetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
+         previewdetailselectprof->set_value(0);
+         previewdetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselectedprof));
+      }
+      refXml->get_widget("pointshowtoggle",pointshowtoggle);
+      if(pointshowtoggle)pointshowtoggle->signal_toggled().connect(sigc::ptr_fun(&on_pointshowtoggle));
+      refXml->get_widget("lineshowtoggle",lineshowtoggle);
+      if(lineshowtoggle)lineshowtoggle->signal_toggled().connect(sigc::ptr_fun(&on_lineshowtoggle));
+      refXml->get_widget("movingaveragerangeselect",movingaveragerangeselect);
+      if(movingaveragerangeselect){
+         movingaveragerangeselect->set_range(0,30000);//Essentially arbitrary.
+         movingaveragerangeselect->set_value(5);
+         movingaveragerangeselect->signal_value_changed().connect(sigc::ptr_fun(&on_movingaveragerangeselect));
+      }
+      Gtk::ToolButton *returnbuttonprof = NULL;
+      refXml->get_widget("returnbuttonprof",returnbuttonprof);
+      if(returnbuttonprof)returnbuttonprof->signal_clicked().connect(sigc::ptr_fun(&on_returnbuttonprof_clicked));
+      Gtk::ToolButton *showprofilebutton = NULL;
+      refXml->get_widget("showprofilebutton",showprofilebutton);
+      if(showprofilebutton)showprofilebutton->signal_clicked().connect(sigc::ptr_fun(&on_showprofilebutton_clicked));
+
+      refXml->get_widget("eventboxprof",eventboxprof);
+      eventboxprof->signal_key_press_event().connect(sigc::ptr_fun(&on_prof_key_press));
       window3->show_all();
    }
    Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
@@ -993,9 +992,6 @@ int GUIset(int argc,char *argv[]){
    }
    tdo = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);
    tdo->set_size_request(200,200);
-   window2->add_events(Gdk::KEY_PRESS_MASK);
-   window2->set_can_focus(true);
-   window2->signal_key_press_event().connect(sigc::ptr_fun(&on_tdo_key_press));
    //Initialisations:
    tdo->setintensitycolour(colourbyintensitymenu->get_active());
    tdo->setheightcolour(colourbyheightmenu->get_active());
@@ -1020,9 +1016,6 @@ int GUIset(int argc,char *argv[]){
    }
    prof = new Profile(glconfig2,lidardata,bucketlimit,rulerlabel);
    prof->set_size_request(200,200);
-   window3->add_events(Gdk::KEY_PRESS_MASK);
-   window3->set_can_focus(true);
-   window3->signal_key_press_event().connect(sigc::ptr_fun(&on_prof_key_press));
    //Initialisations:
    prof->setintensitycolour(colourbyintensitymenuprof->get_active());
    prof->setheightcolour(colourbyheightmenuprof->get_active());
@@ -1043,7 +1036,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.24.1" << endl;
+   cout << "Build number: 2010.05.25.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
