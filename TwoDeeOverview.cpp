@@ -44,25 +44,28 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    pausethread = false;
    thread_running = false;
    //Profiling and fencing:
-   orthogonalshape = false;
-   slantedshape = true;
-   slantwidth=30;
       //Profiling:
-      profps = 0;
-      profxs = NULL;
-      profys = NULL;
       profiling=false;
       showprofile=false;
       //Fencing:
-      fenceps = 0;
-      fencexs = NULL;
-      fenceys = NULL;
       fencing=false;
       showfence=false;
    //Rulering:
    rulering=false;
    rulerwidth=2;
    this->rulerlabel = rulerlabel;
+   double* white = new double[3];
+   white[0] = white[1] = white[2] = 1.0;
+   double* red = new double[3];
+   red[0] = 1.0;
+   red[1] = red[2] = 0.0;
+   profbox = new BoxOverlay(rulerlabel,white,red);
+   profbox->setcentre(centrex,centrey);
+   double* blue = new double[3];
+   blue[0] = blue[1] = 0.0;
+   blue[2] = 1.0;
+   fencebox = new BoxOverlay(rulerlabel,blue,blue);
+   fencebox->setcentre(centrex,centrey);
    //Classification heightening:
    heightenNonC = false;
    heightenGround = false;
@@ -111,15 +114,12 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
       signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
       signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
 }
-TwoDeeOverview::~TwoDeeOverview(){
-   if(profxs!=NULL)delete[]profxs;
-   if(profys!=NULL)delete[]profys;
-}
+TwoDeeOverview::~TwoDeeOverview(){ }
 
 void TwoDeeOverview::drawoverlays(){
-   if(profiling||showprofile)makeprofbox();//Draw the profile box if profile mode is on.
+   if(profiling||showprofile)profbox->makebox(rmaxz);//Draw the profile box if profile mode is on.
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(fencing||showfence)makefencebox();//Draw the fence box if fence mode is on.
+   if(fencing||showfence)fencebox->makebox(rmaxz);//Draw the fence box if fence mode is on.
    if(showdistancescale)makedistancescale();
    if(showlegend)makecolourlegend();
 }
@@ -634,6 +634,8 @@ bool TwoDeeOverview::returntostart(){
    yratio*=1.3;//... (This accounts for some amount of "clutter" at the top and bottom of the screen in the form of taskbars etc.).
    if(xratio>yratio)ratio = xratio;//...
    else ratio = yratio;//...
+   profbox->setratio(ratio);
+   fencebox->setratio(ratio);
    centrex = lidarboundary->minX+xdif/2;//Image should be centred at its centre.
    centrey = lidarboundary->minY+ydif/2;//...
    zoomlevel=1;//Back to the starting zoom, which should cause the entire image to be visible.
@@ -719,7 +721,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             drawviewable(2);
             Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
             if (!glwindow->gl_begin(get_gl_context()))return false;
-            double altitude = rmaxz+1000;//This makes sure the fence box is drawn over the top of the flightlines.
+            double altitude = rmaxz+1000;//This makes sure the highlight is drawn over the top of the flightlines.
             glReadBuffer(GL_BACK);
             glDrawBuffer(GL_FRONT);
             glColor3f(1.0,1.0,1.0);
@@ -949,6 +951,8 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       centrex -= (event->x-panstartx)*ratio/zoomlevel;
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
+      profbox->setcentre(centrex,centrey);
+      fencebox->setcentre(centrex,centrey);
       panstartx=event->x;
       panstarty=event->y;
       return drawviewable(2);
@@ -965,8 +969,7 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
 //At the beginning of profiling, defines the start point and, for the moment, the end point of the profile, Prepares the profile box for drawing and then calls the drawing method.
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
    if(event->button==1){
-      profstartx = profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
-      profstarty = profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+      profbox->on_start(event->x,event->y,get_width(),get_height());
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
@@ -976,9 +979,8 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
 //Updates the end point of the profile and then gets the vertical and horisontal differences betweent the start and end points. These are used to determine the length of the profile and hence the positions of the vertices of the profile rectangle. Then the drawing method is called.
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-      profendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
-      profendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-      drawprofinfo();
+      profbox->on_(event->x,event->y,get_width(),get_height());
+      profbox->drawinfo();
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -986,173 +988,14 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event){
 }
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
-   makeprofboundaries();
-   grab_focus();
+   profbox->makeboundaries();
    return drawviewable(2);
-}
-//Calculate the boundaries of the profile based on whether or not it is orthogonal or slanted and the start and end points of the user's clicks and drags.
-void TwoDeeOverview::makeprofboundaries(){
-   if(slantedshape){
-      profps = 4;
-      if(profxs!=NULL)delete[]profxs;
-      if(profys!=NULL)delete[]profys;
-      profxs = new double[4];
-      profys = new double[4];
-      double breadth = profendx - profstartx;
-      double height = profendy - profstarty;
-      double length = sqrt(breadth*breadth+height*height);//Right triangle.
-      profxs[0] = profstartx-(slantwidth/2)*height/length;
-      profxs[1] = profstartx+(slantwidth/2)*height/length;
-      profxs[2] = profendx+(slantwidth/2)*height/length;
-      profxs[3] = profendx-(slantwidth/2)*height/length;
-      profys[0] = profstarty+(slantwidth/2)*breadth/length;
-      profys[1] = profstarty-(slantwidth/2)*breadth/length;
-      profys[2] = profendy-(slantwidth/2)*breadth/length;
-      profys[3] = profendy+(slantwidth/2)*breadth/length;
-   }
-   else if(orthogonalshape){
-      profps = 4;
-      if(profxs!=NULL)delete[]profxs;
-      if(profys!=NULL)delete[]profys;
-      profxs = new double[4];
-      profys = new double[4];
-      if(abs(profstartx - profendx) > abs(profstarty - profendy)){//If the width is greater than the height of the profile:
-         profxs[0] = profstartx;//Then place start and end points on the vertical (different in x) sides, so that the view is along the y axis.
-         profxs[1] = profstartx;//...
-         profxs[2] = profendx;//...
-         profxs[3] = profendx;//...
-         profys[0] = profstarty;//...
-         profys[1] = profendy;//...
-         profys[2] = profendy;//...
-         profys[3] = profstarty;//...
-      }
-      else{//Otherwise:
-         profxs[0] = profstartx;//Then place start and end points on the horizontal (different in y) sides, so that the view is along the x axis.
-         profxs[1] = profendx;//...
-         profxs[2] = profendx;//...
-         profxs[3] = profstartx;//...
-         profys[0] = profstarty;//...
-         profys[1] = profstarty;//...
-         profys[2] = profendy;//...
-         profys[3] = profendy;//...
-      }
-   }
-}
-void TwoDeeOverview::drawprofinfo(){
-   if(orthogonalshape){
-      double profminx = profstartx,profmaxx = profendx,profminy = profstarty,profmaxy = profendy;
-      if(profstartx>profendx){
-         profminx = profendx;
-         profmaxx = profstartx;
-      }
-      if(profstarty>profendy){
-         profminy = profendy;
-         profmaxy = profstarty;
-      }
-      ostringstream profminX,profmaxX,profminY,profmaxY;
-      profminX << profminx;
-      profmaxX << profmaxx;
-      profminY << profminy;
-      profmaxY << profmaxy;
-      string proftext = "MinX: " + profminX.str() + " MaxX: " + profmaxX.str() + "\nMinY: " + profminY.str() + " MaxY: " + profmaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(proftext);
-   }
-   else if(slantedshape){
-      ostringstream profStartX,profStartY,profEndX,profEndY,profWidth;
-      profStartX << profstartx;
-      profStartY << profstarty;
-      profEndX << profendx;
-      profEndY << profendy;
-      profWidth << slantwidth;
-      string proftext = "Start = (" + profStartX.str() + "," + profStartY.str() + ") \nEnd = (" + profEndX.str() + "," + profEndY.str() + ") \nWidth = " + profWidth.str();//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(proftext);
-   }
-}
-//This makes the box showing the profile area. It calculates the ratio between the length of the profile and its x and y dimensions. It then draws the rectangle.
-void TwoDeeOverview::makeprofbox(){
-   double altitude = rmaxz+1000;//This makes sure the profile box is drawn on top of the flightlines.
-   if(slantedshape){
-      double breadth = profendx - profstartx;
-      double height = profendy - profstarty;
-      double length = sqrt(breadth*breadth+height*height);//Right triangle.
-      if(length==0)length=1;
-      glBegin(GL_LINE_LOOP);
-         glColor3f(1.0,1.0,1.0);
-         glVertex3d(profstartx-(slantwidth/2)*height/length-centrex,profstarty+(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profstartx+(slantwidth/2)*height/length-centrex,profstarty-(slantwidth/2)*breadth/length-centrey,altitude);
-         glColor3f(1.0,0.0,0.0);
-         glVertex3d(profstartx+(slantwidth/2)*height/length-centrex,profstarty-(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profendx+(slantwidth/2)*height/length-centrex,profendy-(slantwidth/2)*breadth/length-centrey,altitude);
-         glColor3f(1.0,1.0,1.0);
-         glVertex3d(profendx+(slantwidth/2)*height/length-centrex,profendy-(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(profendx-(slantwidth/2)*height/length-centrex,profendy+(slantwidth/2)*breadth/length-centrey,altitude);
-      glEnd();
-   }
-   else if(orthogonalshape){
-      if(abs(profstartx - profendx) > abs(profstarty - profendy)){//If the width is greater than the height of the profile:
-         if((profendy<profstarty&&profstartx<profendx)||(profendy>profstarty&&profstartx>profendx)){
-            glBegin(GL_LINE_LOOP);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-               glColor3f(1.0,0.0,0.0);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-            glEnd();
-         }
-         else{
-            glBegin(GL_LINE_LOOP);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glColor3f(1.0,0.0,0.0);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-            glEnd();
-         }
-      }
-      else{//Otherwise:
-         if((profendx<profstartx&&profstarty>profendy)||(profendx>profstartx&&profstarty<profendy)){
-            glBegin(GL_LINE_LOOP);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-               glColor3f(1.0,0.0,0.0);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-            glEnd();
-         }
-         else{
-            glBegin(GL_LINE_LOOP);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profendx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glColor3f(1.0,0.0,0.0);
-               glVertex3d(profstartx-centrex,profstarty-centrey,altitude);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-               glColor3f(1.0,1.0,1.0);
-               glVertex3d(profstartx-centrex,profendy-centrey,altitude);
-               glVertex3d(profendx-centrex,profendy-centrey,altitude);
-            glEnd();
-         }
-      }
-   }
 }
 
 //Initialises the coordinates of the fence and then draws preview.
 bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
    if(event->button==1){
-      fencestartx = fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
-      fencestarty = fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+      fencebox->on_start(event->x,event->y,get_width(),get_height());
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
@@ -1162,9 +1005,8 @@ bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
 //Updates end coordinates of the fence and then draws preview.
 bool TwoDeeOverview::on_fence(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-      fenceendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
-      fenceendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
-      drawfenceinfo();
+      fencebox->on_(event->x,event->y,get_width(),get_height());
+      fencebox->drawinfo();
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
@@ -1172,100 +1014,8 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
 }
 //Draws the main image one more.
 bool TwoDeeOverview::on_fence_end(GdkEventButton* event){
-   makefenceboundaries();
+   fencebox->makeboundaries();
    return drawviewable(2);
-}
-//Calculate the boundaries of the profile based on whether or not it is orthogonal or slanted and the start and end points of the user's clicks and drags.
-void TwoDeeOverview::makefenceboundaries(){
-   if(slantedshape){
-      fenceps = 4;
-      if(fencexs!=NULL)delete[]fencexs;
-      if(fenceys!=NULL)delete[]fenceys;
-      fencexs = new double[4];
-      fenceys = new double[4];
-      double breadth = fenceendx - fencestartx;
-      double height = fenceendy - fencestarty;
-      double length = sqrt(breadth*breadth+height*height);//Right triangle.
-      fencexs[0] = fencestartx-(slantwidth/2)*height/length;
-      fencexs[1] = fencestartx+(slantwidth/2)*height/length;
-      fencexs[2] = fenceendx+(slantwidth/2)*height/length;
-      fencexs[3] = fenceendx-(slantwidth/2)*height/length;
-      fenceys[0] = fencestarty+(slantwidth/2)*breadth/length;
-      fenceys[1] = fencestarty-(slantwidth/2)*breadth/length;
-      fenceys[2] = fenceendy-(slantwidth/2)*breadth/length;
-      fenceys[3] = fenceendy+(slantwidth/2)*breadth/length;
-   }
-   else if(orthogonalshape){
-      fenceps = 4;
-      if(fencexs!=NULL)delete[]fencexs;
-      if(fenceys!=NULL)delete[]fenceys;
-      fencexs = new double[4];
-      fenceys = new double[4];
-      fencexs[0] = fencestartx;
-      fencexs[1] = fencestartx;
-      fencexs[2] = fenceendx;
-      fencexs[3] = fenceendx;
-      fenceys[0] = fencestarty;
-      fenceys[1] = fenceendy;
-      fenceys[2] = fenceendy;
-      fenceys[3] = fencestarty;
-   }
-}
-void TwoDeeOverview::drawfenceinfo(){
-   if(orthogonalshape){
-      double fenceminx = fencestartx,fencemaxx = fenceendx,fenceminy = fencestarty,fencemaxy = fenceendy;
-      if(fencestartx>fenceendx){
-         fenceminx = fenceendx;
-         fencemaxx = fencestartx;
-      }
-      if(fencestarty>fenceendy){
-         fenceminy = fenceendy;
-         fencemaxy = fencestarty;
-      }
-      ostringstream fenceminX,fencemaxX,fenceminY,fencemaxY;
-      fenceminX << fenceminx;
-      fencemaxX << fencemaxx;
-      fenceminY << fenceminy;
-      fencemaxY << fencemaxy;
-      string fencetext = "MinX: " + fenceminX.str() + " MaxX: " + fencemaxX.str() + "\nMinY: " + fenceminY.str() + " MaxY: " + fencemaxY.str() + "\n-----";//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(fencetext);
-   }
-   else if(slantedshape){
-      ostringstream fenceStartX,fenceStartY,fenceEndX,fenceEndY,fenceWidth;
-      fenceStartX << fencestartx;
-      fenceStartY << fencestarty;
-      fenceEndX << fenceendx;
-      fenceEndY << fenceendy;
-      fenceWidth << slantwidth;
-      string fencetext = "Start = (" + fenceStartX.str() + "," + fenceStartY.str() + ") \nEnd = (" + fenceEndX.str() + "," + fenceEndY.str() + ") \nWidth = " + fenceWidth.str();//This is to ensure that the label's height never differs from three character lines, as otherwise it will sometimes change height which will cause the viewport to be updated and, therefore, the image to be cleared, which plays havoc with drawbuckets().
-      rulerlabel->set_text(fencetext);
-   }
-}
-//Makes the fence box.
-void TwoDeeOverview::makefencebox(){
-   double altitude = rmaxz+1000;//This makes sure the fence box is drawn on top of the flightlines.
-   if(slantedshape){
-      double breadth = fenceendx - fencestartx;
-      double height = fenceendy - fencestarty;
-      double length = sqrt(breadth*breadth+height*height);//Right triangle.
-      if(length==0)length=1;
-      glColor3f(0.0,0.0,1.0);
-      glBegin(GL_LINE_LOOP);
-         glVertex3d(fencestartx-(slantwidth/2)*height/length-centrex,fencestarty+(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(fencestartx+(slantwidth/2)*height/length-centrex,fencestarty-(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(fenceendx+(slantwidth/2)*height/length-centrex,fenceendy-(slantwidth/2)*breadth/length-centrey,altitude);
-         glVertex3d(fenceendx-(slantwidth/2)*height/length-centrex,fenceendy+(slantwidth/2)*breadth/length-centrey,altitude);
-      glEnd();
-   }
-   else if(orthogonalshape){
-      glColor3f(0.0,0.0,1.0);
-      glBegin(GL_LINE_LOOP);
-         glVertex3d(fencestartx-centrex,fencestarty-centrey,altitude);
-         glVertex3d(fencestartx-centrex,fenceendy-centrey,altitude);
-         glVertex3d(fenceendx-centrex,fenceendy-centrey,altitude);
-         glVertex3d(fenceendx-centrex,fencestarty-centrey,altitude);
-      glEnd();
-   }
 }
 
 //Find the starting coordinates of the ruler and set the label values to zero.
@@ -1339,6 +1089,10 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrey += (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
    get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
+   profbox->setcentre(centrex,centrey);
+   profbox->setzoomlevel(zoomlevel);
+   fencebox->setcentre(centrex,centrey);
+   fencebox->setzoomlevel(zoomlevel);
    return drawviewable(1);
 }
 

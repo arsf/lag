@@ -609,9 +609,10 @@ void on_profiletoggle(){
 void on_orthogonalrectshapetoggle(){
    if(orthogonalrectshapetoggle->get_active())if(slantedrectshapetoggle->get_active())slantedrectshapetoggle->set_active(false);
    if(!orthogonalrectshapetoggle->get_active())if(!slantedrectshapetoggle->get_active())slantedrectshapetoggle->set_active(true);
-   tdo->setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->makeprofboundaries();
-   tdo->makefenceboundaries();
+   tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   tdo->getprofbox()->makeboundaries();
+   tdo->getfencebox()->makeboundaries();
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -619,19 +620,21 @@ void on_orthogonalrectshapetoggle(){
 void on_slantedrectshapetoggle(){
    if(slantedrectshapetoggle->get_active())if(orthogonalrectshapetoggle->get_active())orthogonalrectshapetoggle->set_active(false);
    if(!slantedrectshapetoggle->get_active())if(!orthogonalrectshapetoggle->get_active())orthogonalrectshapetoggle->set_active(true);
-   tdo->setslantedshape(slantedrectshapetoggle->get_active());
-   tdo->makeprofboundaries();
-   tdo->makefenceboundaries();
+   tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
+   tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
+   tdo->getprofbox()->makeboundaries();
+   tdo->getfencebox()->makeboundaries();
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
 //When the value in the spinbutton for slanted shape width is changed, tell the 2d overview, then make the new slanted box and then draw it. This does NOT update the profile itself (or, at least, not yet) if the slanted box is for a profile. To update the profile after the width has been satisfactorily adjusted, the profiletoggle must be toggled and then untoggled.
 void on_slantwidthselected(){
-   tdo->setslantwidth(slantwidthselect->get_value());
-   tdo->makeprofboundaries();
-   tdo->makefenceboundaries();
-   tdo->drawprofinfo();
-   tdo->drawfenceinfo();
+   tdo->getprofbox()->setslantwidth(slantwidthselect->get_value());
+   tdo->getfencebox()->setslantwidth(slantwidthselect->get_value());
+   tdo->getprofbox()->makeboundaries();
+   tdo->getfencebox()->makeboundaries();
+   tdo->getprofbox()->drawinfo();
+   tdo->getfencebox()->drawinfo();
    if(tdo->is_realized())tdo->drawviewable(2);
    if(useclippy==true)if(tdo->is_realized())tdo->clippy(picturename);
 }
@@ -1000,11 +1003,14 @@ int GUIset(int argc,char *argv[]){
    tdo->setreturncolour(colourbyreturnmenu->get_active());
    tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
    tdo->setheightbrightness(brightnessbyheightmenu->get_active());
-   tdo->setslantwidth(slantwidthselect->get_value());
    tdo->setpointwidth(pointwidthselect->get_value());
    tdo->setmaindetail(maindetailselect->get_value());
-   tdo->setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->setslantedshape(slantedrectshapetoggle->get_active());
+   tdo->getprofbox()->setslantwidth(slantwidthselect->get_value());
+   tdo->getfencebox()->setslantwidth(slantwidthselect->get_value());
+   tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
+   tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
+   tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
    Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
    glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
    if (glconfig2==NULL){
@@ -1036,7 +1042,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.05.25.1" << endl;
+   cout << "Build number: 2010.05.27.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
