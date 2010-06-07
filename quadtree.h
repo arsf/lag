@@ -58,16 +58,14 @@ public:
    quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, ostringstream *errorstream = NULL);
    
    /**
-     * a constructor that builds a new quadtree from a given lidarpointloader object using a fence defined by two points and a width (allowing any orientation
+     * a constructor that builds a new quadtree from a given lidarpointloader object using a convex polygon defined by a series of points
      *
      * @param loader lidarpointloader object for the file to be loaded
      * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
      * @param nth the number of points to skip between each loaded point
-     * @param x1 the X position of the first point
-     * @param y1 the Y position of the first point
-     * @param x2 the X position of the second point
-     * @param y2 the Y position of the second point
-     * @param width the width of the rectangle (width/2 will be added to each side of the line)
+     * @param Xs pointer to an array of the x values for the polgon point series
+     * @param Ys pointer to an array of the y values for the polgon point series
+     * @param size the number of points in in the polgon therefore the length of Xs Ys arrays
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
      */
@@ -118,7 +116,7 @@ public:
    void load(lidarpointloader *loader, int nth);
    
    /**
-    * a method to load points from a Las file using the loader object given
+    * a method to load points within a rectangular fence from a Las file using the loader object given
     *
     * @param loader lidarpointloader object to be used
     * @param nth the number of points to skipp between each point to be loaded
@@ -129,7 +127,18 @@ public:
     */
    void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
 
+  /**
+   * a method to load points within a fence defined by a convex polygon from a las file using the loader object given
+   *
+   * @param loader lidarpointloader object to be used
+   * @param nth the number of points to skipp between each point to be loaded
+   * @param Xs pointer to an array of the x values for the polgon point series
+   * @param Ys pointer to an array of the y values for the polgon point series
+   * @param size the number of points in in the polgon therefore the length of Xs Ys arrays
+   */
    void load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size);
+
+
    /**
     * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
     * that are in some area within the subset, this means that the subset contains points that

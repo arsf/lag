@@ -47,6 +47,8 @@ public:
      */
     LASsaver(const char *outputfilename, const char *inputfilename);
 
+    ~LASsaver();
+
     /**
      * the method saves the array of points to a file in the LAS format
      *

@@ -36,7 +36,18 @@ LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 
 
 
+LASsaver::~LASsaver()
+{
+   if (writer != NULL)
+   {
+      this->finalizesave();
+   }
 
+   delete writer;
+   delete reader;
+   delete[] numofeachreturn;
+   
+}
 
 
 void LASsaver::savepoints(int n, point* points)

@@ -713,10 +713,11 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
    double *Xs = new double[4];
    double *Ys = new double[4];
 
+   // i should have been shot for this
    Xs[0] = Xs[1] = b->minX;
    Xs[2] = Xs[3] = b->maxX;
    Ys[0] = Ys[3] = b->minY;
-   Ys[1] = Ys[2] = b->maxX;
+   Ys[1] = Ys[2] = b->maxY;
 
    buckets = advsubset(Xs, Ys, 4);
    pointbucket *current;
