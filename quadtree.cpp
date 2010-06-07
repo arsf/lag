@@ -735,13 +735,10 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
                saver->savepoints(counter, points);
                counter = 0;
             }
-
          }
-
       }
    }
    saver->savepoints(counter, points);
-   saver->finalizesave();
 
    delete buckets;
    delete b;

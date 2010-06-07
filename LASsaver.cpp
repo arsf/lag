@@ -22,8 +22,9 @@ LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 
 
    reader = new liblas::LASReader(ifs);
-   oldheader = reader->GetHeader();
-   newheader = oldheader;
+   newheader = reader->GetHeader();
+   delete reader;
+
 
    numofreturn = 0;
    numofeachreturn = new int[10];
@@ -38,15 +39,17 @@ LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 
 LASsaver::~LASsaver()
 {
-   if (writer != NULL)
-   {
-      this->finalizesave();
-   }
-
+   newheader.SetMax(maxX, maxY, maxZ);
+   newheader.SetMin(minX, minY, minZ);
+   newheader.SetPointRecordsCount(numofreturn);
+   newheader.SetPointRecordsByReturnCount(0, numofeachreturn[0]);
+   newheader.SetPointRecordsByReturnCount(1, numofeachreturn[1]);
+   newheader.SetPointRecordsByReturnCount(2, numofeachreturn[2]);
+   newheader.SetPointRecordsByReturnCount(3, numofeachreturn[3]);
+   writer->WriteHeader(newheader);
    delete writer;
-   delete reader;
    delete[] numofeachreturn;
-   
+
 }
 
 
@@ -58,7 +61,7 @@ void LASsaver::savepoints(int n, point* points)
       writer = new liblas::LASWriter(ofs, newheader);
       first = true;
    }
-   cout << "saving " << n << " points" << endl;
+   //cout << "saving " << n << " points" << endl;
    liblas::LASPoint point;
    point = liblas::LASPoint();
    for(int k=0; k<n; k++)
@@ -101,15 +104,3 @@ void LASsaver::savepoints(int n, point* points)
    }
 }
 
-void LASsaver::finalizesave()
-{
-   newheader.SetMax(maxX, maxY, maxZ);
-   newheader.SetMin(minX, minY, minZ);
-   newheader.SetPointRecordsCount(numofreturn);
-   newheader.SetPointRecordsByReturnCount(0, numofeachreturn[0]);
-   newheader.SetPointRecordsByReturnCount(1, numofeachreturn[1]);
-   newheader.SetPointRecordsByReturnCount(2, numofeachreturn[2]);
-   newheader.SetPointRecordsByReturnCount(3, numofeachreturn[3]);
-   writer->WriteHeader(newheader);
-   delete writer;
-}

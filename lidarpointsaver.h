@@ -24,11 +24,6 @@ public:
      */
     virtual void savepoints(int n, point *points) = 0;
 
-    /**
-     * This method is called once by the quadtree once all points have been sent to the "savepoints" method
-     * it provides the ability to perform tasks immediatly after the pionts are saved and its actions will depend on the format being saved.
-     */
-    virtual void finalizesave() = 0;
 };
 
 #endif	/* _LIDARPOINTSAVER_H */

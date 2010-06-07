@@ -57,10 +57,7 @@ public:
      */
     void savepoints(int n, point *points);
 
-    /**
-     * the method uses values calculated during the point saving to save an updated header
-     */
-    void finalizesave();
+
 
 };
 
