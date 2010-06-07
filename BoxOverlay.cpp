@@ -1,3 +1,9 @@
+/*
+ * File: BoxOverlay.cpp
+ * Author: Haraldur Tristan Gunnarsson
+ * Written: June 2010
+ *
+ * */
 #include <gtkmm.h>
 #include <vector>
 #include <iostream>

@@ -1,7 +1,7 @@
 /*
  * File: Profile.h
  * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - January 2010
+ * Written: December 2009 - June 2010
  *
  * */
 #include <gtkmm.h>
@@ -17,14 +17,16 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
+   bool classify(uint8_t classification);
    void makerulerbox();//Make rectangle showing where the ruler is.
+   void makefencebox();//Make rectangle showing where the fence is.
    void makeZscale();//This makes a scale.
    void drawoverlays();//Draw all of the above make methods.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
-   bool showprofile(double* profxs,double* profys,int profps);//Gets the parameters of the profile and then draws it to the screen.
+   bool showprofile(double* profxs,double* profys,int profps,bool changeview);//Gets the parameters of the profile and then draws it to the screen.
    void setupruler(){//Blocks pan signals and unblocks ruler signals:
       sigpanstart.block();
       sigpan.block();
@@ -45,21 +47,47 @@ public:
       if(is_realized())get_window()->set_cursor();
       rulering=false;
    }
+   void setupfence(){//Blocks pan signals and unblocks fence signals:
+      sigpanstart.block();
+      sigpan.block();
+      sigpanend.block();
+      sigfencestart.unblock();
+      sigfence.unblock();
+      sigfenceend.unblock();
+      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      fencing=true;
+   }
+   void unsetupfence(){//Blocks fence signals and unblocks pan signals:
+      sigpanstart.unblock();
+      sigpan.unblock();
+      sigpanend.unblock();
+      sigfencestart.block();
+      sigfence.block();
+      sigfenceend.block();
+      if(is_realized())get_window()->set_cursor();
+      fencing=false;
+   }
    //Setters:
    void setdrawpoints(bool drawpoints){this->drawpoints=drawpoints;}
    void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
    void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
    void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
    void setshowheightscale(bool showheightscale){this->showheightscale = showheightscale;}
+   void setslantwidth(double slantwidth){this->slantwidth = slantwidth;}
+   void setslanted(double slanted){this->slanted = slanted;}
 protected:
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
    double samplemaxz,sampleminz;//Store the maximum and minimum heights of the profile sample.
+   double *profxs,*profys;
+   int profps;
    
    //Control:
    bool drawpoints;//Determines whether points are drawn.
    bool drawmovingaverage;//Determines whether the best fit line is drawn.
    bool imageexists;//Determines whether to draw anything, based on the existance or nonexistance of anything to draw.
+   bool slanted;
+   double slantwidth;
    
    //Point data and related stuff:
    int totnumpoints;
@@ -85,6 +113,10 @@ protected:
    double rulerendx, rulerendy,rulerendz;//The end coordinates for the ruler.
    double rulerwidth;//The width of the ruler.
    bool rulering;//Determines whether or not the ruler should be drawn.
+   //Fencing:
+   double fencestartx, fencestarty,fencestartz;//The start coordinates for the fence.
+   double fenceendx, fenceendy,fenceendz;//The end coordinates for the fence.
+   bool fencing;//Determines whether or not the fence should be drawn.
  
    //Signal handlers:
    //Panning:
@@ -95,6 +127,10 @@ protected:
    sigc::connection sigrulerstart;
    sigc::connection sigruler;
    sigc::connection sigrulerend;
+   //Fencing:
+   sigc::connection sigfencestart;
+   sigc::connection sigfence;
+   sigc::connection sigfenceend;
  
    //Methods:
  
@@ -115,5 +151,9 @@ protected:
    bool on_ruler_start(GdkEventButton* event);
    bool on_ruler(GdkEventMotion* event);
    bool on_ruler_end(GdkEventButton* event);
+   //Fencing control:   //These allow the user to fence by clicking and dragging.
+   bool on_fence_start(GdkEventButton* event);
+   bool on_fence(GdkEventMotion* event);
+   bool on_fence_end(GdkEventButton* event);
 
 };

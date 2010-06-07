@@ -1,7 +1,7 @@
 /*
  * File: MathFuncs.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - February 2010
+ * Written: December 2009 - June 2010
  *
  * */
 #include "MathFuncs.h"

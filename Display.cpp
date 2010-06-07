@@ -1,7 +1,7 @@
 /*
  * File: Display.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: January 2010
+ * Written: January - June 2010
  *
  * */
 #include <gtkmm.h>
@@ -98,13 +98,13 @@ void Display::coloursandshades(double maxz,double minz,int maxintensity,int mini
       colourintensityarray[3*i+1]=green;
       colourintensityarray[3*i+2]=blue;
    }
-   brightnessheightarray = new double[30*(int)(rmaxz-rminz+4)];//This is at 30, rather than three, for a reason: three, one for each colour, by ten, so that the "resolution" of the colouring by height is 0.1 metres, not one whole metre. It makes it look better.
-   for(int i=0;i<10*(int)(rmaxz-rminz)+3;i++){//Fill height brightness array:
+   brightnessheightarray = new double[10*(int)(rmaxz-rminz+4)];//This is at 30, rather than three, for a reason: three, one for each colour, by ten, so that the "resolution" of the colouring by height is 0.1 metres, not one whole metre. It makes it look better.
+   for(int i=0;i<10*(int)(rmaxz-rminz+4);i++){//Fill height brightness array:
       z = 0.1*(double)i + rminz;//Please note that, as elsewhere in this method, the exact value rmaxz will not be reached, so its position in the array will probably not be the first to equal 1, while the first element will be 0 and be for rminz.
       brightnessheightarray[i] = brightness_by(z,maxz,minz,zoffset,zfloor);
    }
    brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
-   for(int i=0;i<rmaxintensity-rminintensity+3;i++){//Fill intensity brightness array:
+   for(int i=0;i<rmaxintensity-rminintensity+4;i++){//Fill intensity brightness array:
       intensity = i + rminintensity;
       brightnessintensityarray[i] = brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor);
    }

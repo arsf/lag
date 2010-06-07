@@ -1,7 +1,7 @@
 /*
  * File: TwoDeeOverview.h
  * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - February 2010
+ * Written: November 2009 - June 2010
  *
  * */
 #include <gtkmm.h>
@@ -17,6 +17,7 @@ class TwoDeeOverview : public Display{
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
    ~TwoDeeOverview();
+   void waitforpause(){while(thread_running){usleep(10);}}
    void clippy(string picturename);//EASTER EGG. Draws an image of an annoying person with an equally annoying message.  By the way, you look like you are trying to read this code. Would you like any help?
    bool returntostart();//Returns to the initial view.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
@@ -102,6 +103,7 @@ public:
    void setshowdistancescale(double showdistancescale){ this->showdistancescale = showdistancescale;}//Set whether the distance scale should be seen.
    void setshowlegend(double showlegend){ this->showlegend = showlegend;}//Set whether the colour legend should be seen.
    void setpausethread(bool pausethread){ this->pausethread = pausethread; }
+   void setreversez(bool reversez){this->reversez = reversez;}
    //Classification:
       void setheightenNonC(bool heightenNonC){ this->heightenNonC = heightenNonC;}//These set whether various classifications should be highlighted by making them be drawn above other points:
       void setheightenGround(bool heightenGround){ this->heightenGround = heightenGround; }//...
@@ -115,6 +117,7 @@ public:
       void setheightenOverlap(bool heightenOverlap){ this->heightenOverlap = heightenOverlap; }//...
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
+   bool reversez;
    BoxOverlay* fencebox;
    BoxOverlay* profbox;
    bool showlegend;//Determines whether the colour legend should be drawn, if applicable.

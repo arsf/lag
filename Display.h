@@ -1,7 +1,7 @@
 /*
  * File: Display.h
  * Author: Haraldur Tristan Gunnarsson
- * Written: January 2010
+ * Written: January - June 2010
  *
  * */
 #include <gtkmm.h>

@@ -1,7 +1,7 @@
 /*
  * File: TwoDeeOverview.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - February 2010
+ * Written: November 2009 - June 2010
  *
  * WARNING! THIS IS A THREADED ENVIRONMENT. CARELESSNESS WILL BE REWARDED WITH EXTREME PREJUDICE (YES, YOU READ THAT CORRECTLY)!
  *
@@ -21,6 +21,7 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   reversez = false;
    showdistancescale = false;
    showlegend = false;
    drawneverything = false;
@@ -118,8 +119,8 @@ TwoDeeOverview::~TwoDeeOverview(){ }
 
 void TwoDeeOverview::drawoverlays(){
    if(profiling||showprofile)profbox->makebox(rmaxz);//Draw the profile box if profile mode is on.
-   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(fencing||showfence)fencebox->makebox(rmaxz);//Draw the fence box if fence mode is on.
+   if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
    if(showdistancescale)makedistancescale();
    if(showlegend)makecolourlegend();
 }
@@ -400,7 +401,8 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                if(z>rmaxz+990)z=rmaxz+990;
             }
          }
-         vertices[3*pointcount+2]=z;
+         if(!reversez)vertices[3*pointcount+2]=z;//If all is normal, the height is z.
+         else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range all they occupy, the values are reversed.
          colours[3*pointcount]=red;
          colours[3*pointcount+1]=green;
          colours[3*pointcount+2]=blue;
@@ -640,6 +642,10 @@ bool TwoDeeOverview::returntostart(){
    centrey = lidarboundary->minY+ydif/2;//...
    zoomlevel=1;//Back to the starting zoom, which should cause the entire image to be visible.
    resetview();//Update matrices.
+   profbox->setcentre(centrex,centrey);
+   profbox->setzoomlevel(zoomlevel);
+   fencebox->setcentre(centrex,centrey);
+   fencebox->setzoomlevel(zoomlevel);
    delete lidarboundary;
    return drawviewable(1);
 }
@@ -695,7 +701,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       int pointno=0;
       pausethread = true;//Wants exclusive access to pointbucket::getpoint().
       if(threaddebug)cout << 13 << endl;
-      while(thread_running){usleep(10);}//Will sulk until gets such access.
+//      while(thread_running){usleep(10);}//Will sulk until gets such access.
+      waitforpause();//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
 //         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
@@ -707,7 +714,11 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
                   pointno=j;
                   anypoint = true;
                }
-               if(pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point
+               if(!reversez && pointvector->at(i)->getpoint(j).z >= pointvector->at(bucketno)->getpoint(pointno).z){//...and if they are higher than the currently selected point assuming the z values are not being reversed.
+                  bucketno=i;//Select them.
+                  pointno=j;//...
+               }
+               else if(reversez && pointvector->at(i)->getpoint(j).z <= pointvector->at(bucketno)->getpoint(pointno).z){//...or, alternatively, if they are lower than the currently selected point assuming the z values ARE being reversed.
                   bucketno=i;//Select them.
                   pointno=j;//...
                }
@@ -740,7 +751,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          if(index==string::npos)index=0;//...
          else index++;//...
          flightline = flightline.substr(index);//...
-         ostringstream x,y,z,time,intensity,classification,rnumber;
+         ostringstream x,y,z,time,intensity,classification,rnumber,flightlinenumber;
          x << pointvector->at(bucketno)->getpoint(pointno).x;
          y << pointvector->at(bucketno)->getpoint(pointno).y;
          z << pointvector->at(bucketno)->getpoint(pointno).z;
@@ -748,9 +759,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          intensity << pointvector->at(bucketno)->getpoint(pointno).intensity;
          classification << (int)pointvector->at(bucketno)->getpoint(pointno).classification;
          rnumber << (int)(pointvector->at(bucketno)->getpoint(pointno).packedbyte & returnnumber);
+         flightlinenumber << (int)(pointvector->at(bucketno)->getpoint(pointno).flightline);
          pausethread = false;//Is bored with pointbucket::getpoint(), now.
          if(threaddebug)cout << 15 << endl;
-         string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + ", Return number: " + rnumber.str() + ".";
+         string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + " (" + flightlinenumber.str() + "), Return number: " + rnumber.str() + ".";
          rulerlabel->set_text(pointstring);
       }
       else{ 
@@ -781,7 +793,7 @@ void TwoDeeOverview::makecolourlegend(){
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
-   GLdouble cornx,corny,cornz;//The world coordinates of the top right corner sof the window.
+   GLdouble cornx,corny,cornz;//The world coordinates of the top right corner of the window.
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
@@ -876,19 +888,6 @@ void TwoDeeOverview::makecolourlegend(){
          glEnd();
       }
    }
-//   else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-//       line = buckets[i]->getpoint(j).flightline;
-//       int index = line % 6;
-//       switch(index){
-//          case 0:red=0;green=1;blue=0;break;//Green
-//          case 1:red=0;green=0;blue=1;break;//Blue
-//          case 2:red=1;green=0;blue=0;break;//Red
-//          case 3:red=0;green=1;blue=1;break;//Cyan
-//          case 4:red=1;green=1;blue=0;break;//Yellow
-//          case 5:red=1;green=0;blue=1;break;//Purple
-//          default:red=green=blue=1;break;//White in the event of strangeness.
-//       }
-//   }
 }
 
 //This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.

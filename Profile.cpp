@@ -1,7 +1,7 @@
 /*
  * File: Profile.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - January 2010
+ * Written: December 2009 - June 2010
  *
  * */
 #include <gtkmm.h>
@@ -19,7 +19,11 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   slanted = true;
+   slantwidth = 5;
    samplemaxz = sampleminz = 0;
+   profxs=profys=NULL;
+   profps=0;
    viewerz = 0;
    startx = 0;
    starty = 0;
@@ -37,8 +41,14 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    mavrgrange = 5;
    //Rulering:
    rulering=false;
-   rulerwidth=2;
+   rulerwidth=3;
    this->rulerlabel = rulerlabel;
+   rulerstartx = rulerstarty = rulerstartz = 0;
+   rulerendx = rulerendy = rulerendz = 0;
+   //Fencing:
+   fencing=false;
+   fencestartx = fencestarty = fencestartz = 0;
+   fenceendx = fenceendy = fenceendz = 0;
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&Profile::on_zoom));
@@ -51,9 +61,18 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lid
    sigrulerstart.block();
    sigruler.block();
    sigrulerend.block();
+   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_fence_start));
+   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_fence));
+   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_fence_end));
+   sigfencestart.block();
+   sigfence.block();
+   sigfenceend.block();
 }
 
-Profile::~Profile(){}
+Profile::~Profile(){
+   if(profxs!=NULL)delete[]profxs;
+   if(profys!=NULL)delete[]profys;
+}
 
 //This is called by a "reset button". It returns the view to the initial one. It sets the centre of the screen to the centre of the profile (average in the case of Z) and then sets the viewer position and the ratio of world coordinates to window coordinates before resetting the view and then drawing.
 bool Profile::returntostart(){
@@ -81,12 +100,25 @@ bool Profile::returntostart(){
 }
 
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws.
-bool Profile::showprofile(double* profxs,double* profys,int profps){
-   startx = (profxs[0]+profxs[1])/2;
-   starty = (profys[0]+profys[1])/2;
-   endx = (profxs[profps-1]+profxs[profps-2])/2;
-   endy = (profys[profps-1]+profys[profps-2])/2;
-   width = sqrt((profxs[0]-profxs[1])*(profxs[0]-profxs[1])+(profys[0]-profys[1])*(profys[0]-profys[1]));
+bool Profile::showprofile(double* profxs,double* profys,int profps,bool changeview){
+   //Defining profile parameters (used elsewhere only):{
+      startx = (profxs[0]+profxs[1])/2;
+      starty = (profys[0]+profys[1])/2;
+      endx = (profxs[profps-1]+profxs[profps-2])/2;
+      endy = (profys[profps-1]+profys[profps-2])/2;
+      width = sqrt((profxs[0]-profxs[1])*(profxs[0]-profxs[1])+(profys[0]-profys[1])*(profys[0]-profys[1]));
+      minplanx = startx;//These are the initial values, as the initial position of the viewing area will be defined by the start and end coordinates of the profile.
+      minplany = starty;//...
+      this->profps = profps;
+      if(this->profxs!=NULL)delete[]this->profxs;
+      if(this->profys!=NULL)delete[]this->profys;
+      this->profxs = new double[this->profps];
+      this->profys = new double[this->profps];
+      for(int i = 0;i < this->profps;i++){
+         this->profxs[i] = profxs[i];
+         this->profys[i] = profys[i];
+      }
+   //...}
    vector<pointbucket*> *pointvector;
    try{
       pointvector = lidardata->advsubset(profxs,profys,profps);//Get data.
@@ -106,7 +138,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
    int numbuckets = pointvector->size();
    flightlinestot.clear();
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
-   for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+   for(int i=0;i<numbuckets;i++){
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);
       for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points their flightline numbers and compiles a list of all the flightlines in the profile.
@@ -134,8 +166,6 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
             }
          }
       }
-      minplanx = startx;//These are the initial values, as the initial position of the viewing area will be defiend by the start and end coordinates of the profile.
-      minplany = starty;//...
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right.
    }
    make_moving_average();
@@ -144,8 +174,219 @@ bool Profile::showprofile(double* profxs,double* profys,int profps){
    delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
-   if(is_realized())return returntostart();
+   if(is_realized()){
+      if(changeview){
+         fencestartx = fencestarty = fencestartz = 0;//This is to prevent the situation where a fence is preserved from profile to profile in a warped fashion allowing accidental classification.
+         fenceendx = fenceendy = fenceendz = 0;//...
+         return returntostart();
+      }
+      else return drawviewable(1);
+   }
    else return false;
+}
+
+bool Profile::classify(uint8_t classification){
+   if(!imageexists)return false;
+   if(fencestartx == fenceendx && fencestarty == fenceendy)return false;
+   if(fencestartz == fenceendz)return false;
+   if(slanted){
+      double *xs,*ys,*zs;
+      xs = new double[4];
+      ys = new double[4];
+      zs = new double[4];
+      int numberofcorners = 4;
+      double breadth = fenceendx - fencestartx;
+      double height = fenceendy - fencestarty;
+      double deltaz = fenceendz - fencestartz;
+      double horiz = sqrt(breadth*breadth + height*height);//Right triangle
+      double length = sqrt(breadth*breadth + height*height + deltaz*deltaz);//Right triangle IN 3D!
+      double horizratio = horiz/length;
+      double deltazratio = deltaz/length;
+      if(length==0)length=1;
+      xs[0] = fencestartx - (slantwidth/2)*deltazratio*breadth/horiz;
+      xs[1] = fencestartx + (slantwidth/2)*deltazratio*breadth/horiz;
+      xs[2] = fenceendx + (slantwidth/2)*deltazratio*breadth/horiz;
+      xs[3] = fenceendx - (slantwidth/2)*deltazratio*breadth/horiz;
+      ys[0] = fencestarty - (slantwidth/2)*deltazratio*height/horiz;
+      ys[1] = fencestarty + (slantwidth/2)*deltazratio*height/horiz;
+      ys[2] = fenceendy + (slantwidth/2)*deltazratio*height/horiz;
+      ys[3] = fenceendy - (slantwidth/2)*deltazratio*height/horiz;
+      zs[0] = fencestartz + (slantwidth/2)*horizratio;
+      zs[1] = fencestartz - (slantwidth/2)*horizratio;
+      zs[2] = fenceendz - (slantwidth/2)*horizratio;
+      zs[3] = fenceendz + (slantwidth/2)*horizratio;
+      vector<pointbucket*> *pointvector;
+      try{
+         pointvector = lidardata->advsubset(profxs,profys,profps);//Get data.
+      }catch(descriptiveexception e){
+         cout << "There has been an exception:" << endl;
+         cout << "What: " << e.what() << endl;
+         cout << "Why: " << e.why() << endl;
+         cout << "No points returned." << endl;
+         return false;
+      }
+      if(pointvector==NULL||pointvector->size()==0){
+         return false;
+      }
+      int numbuckets = pointvector->size();
+      bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
+      bool pointinboundary;//Determines whether the point is within the boundary.
+      int lastcorner,currentcorner;//These define the edge being considered.
+      point *pnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      pnt->z = 0;
+      pnt->time = flightlinepoints[0][0].time;
+      pnt->intensity = 0;
+      pnt->classification = 0;
+      pnt->flightline = 0;
+      pnt->packedbyte = 0;
+      for(int i=0;i<numbuckets;i++){
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);
+         for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
+            if(correctpointsbuckets[i][j]){
+               pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
+               lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
+               for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
+                  if((zs[currentcorner] < (*pointvector)[i]->getpoint(j).z && zs[lastcorner] >= (*pointvector)[i]->getpoint(j).z) ||
+                     (zs[lastcorner] < (*pointvector)[i]->getpoint(j).z && zs[currentcorner] >= (*pointvector)[i]->getpoint(j).z)){//This segments the line to the length of the segment that helps define the boundary.
+                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getpoint(j).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);
+                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getpoint(j).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);
+                     if(linecomp((*pointvector)[i]->getpoint(j),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an off number of times then the point must be within the shape, otherwise without.
+                  }
+                  lastcorner = currentcorner;
+               }
+               if(pointinboundary)(*pointvector)[i]->setclassification(j,classification);
+            }
+         }
+      }
+      for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
+      delete[] correctpointsbuckets;
+      delete pnt;
+   }
+   else{
+      point *startpnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      startpnt->x = fencestartx;
+      startpnt->y = fencestarty;
+      startpnt->z = 0;
+      startpnt->time = flightlinepoints[0][0].time;
+      startpnt->intensity = 0;
+      startpnt->classification = 0;
+      startpnt->flightline = 0;
+      startpnt->packedbyte = 0;
+      point *endpnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      endpnt->x = fenceendx;
+      endpnt->y = fenceendy;
+      endpnt->z = 0;
+      endpnt->time = flightlinepoints[0][0].time;
+      endpnt->intensity = 0;
+      endpnt->classification = 0;
+      endpnt->flightline = 0;
+      endpnt->packedbyte = 0;
+      vector<pointbucket*> *pointvector;
+      try{
+         pointvector = lidardata->advsubset(profxs,profys,profps);//Get data.
+      }catch(descriptiveexception e){
+         cout << "There has been an exception:" << endl;
+         cout << "What: " << e.what() << endl;
+         cout << "Why: " << e.why() << endl;
+         cout << "No points returned." << endl;
+         return false;
+      }
+      if(pointvector==NULL||pointvector->size()==0){
+         return false;
+      }
+      int numbuckets = pointvector->size();
+      bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
+      for(int i=0;i<numbuckets;i++){
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);
+         for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
+            if(correctpointsbuckets[i][j]){
+               if(((*pointvector)[i]->getpoint(j).z < fencestartz && (*pointvector)[i]->getpoint(j).z > fenceendz) ||
+                  ((*pointvector)[i]->getpoint(j).z > fencestartz && (*pointvector)[i]->getpoint(j).z < fenceendz)){
+                  if((linecomp(*startpnt,(*pointvector)[i]->getpoint(j)) && linecomp((*pointvector)[i]->getpoint(j),*endpnt)) ||
+                     (linecomp((*pointvector)[i]->getpoint(j),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getpoint(j)))){
+                     (*pointvector)[i]->setclassification(j,classification);
+                  }
+               }
+            }
+         }
+      }
+      for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
+      delete[] correctpointsbuckets;
+      delete startpnt;
+      delete endpnt;
+   }
+   int tempps = profps;
+   double* tempxs = new double[tempps];
+   double* tempys = new double[tempps];
+   for(int i = 0;i < tempps;i++){
+      tempxs[i] = profxs[i];
+      tempys[i] = profys[i];
+   }
+   showprofile(tempxs,tempys,tempps,false);
+   delete[]tempxs;
+   delete[]tempys;
+   return true;
+}
+
+//This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as that "start".
+bool Profile::linecomp(const point &a,const point &b){
+   const double xa = a.x;
+   const double xb = b.x;
+   const double ya = a.y;
+   const double yb = b.y;
+   double alongprofa,alongprofb;
+   if(startx==endx){//If the profile is parallel to the y axis:
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      if(starty<endy)mult=1;
+      alongprofa = mult * (ya - minplany);
+      alongprofb = mult * (yb - minplany);
+   }
+   else if(starty==endy){//If the profile is parallel to the x axis:
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      if(startx<endx)mult=1;
+      alongprofa = mult * (xa - minplanx);
+      alongprofb = mult * (xb - minplanx);
+   }
+   else{//If the profile is skewed:
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double multx=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      if(startx<endx)multx=1;
+      double multy=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      if(starty<endy)multy=1;
+      //Gradients of the profile and point-to-profile lines:
+      double lengradbox = multx * multy * height / breadth;//Profile line
+      double widgradbox = -1.0 / lengradbox;//Point-to-profile lines
+      //Constant values (y intercepts) of the formulae for lines from each point to the profile line:
+      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);
+      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);
+      //Identify the points of interecept for each point-to-profile line and the profile line:
+      /*0 (adjusted origin)
+       * \ Profile line       ____/p
+       *  \              ____/ Point line
+       *   \        ____/
+       *    \  ____/
+       *  ___\/P
+       * /    \
+       *       \
+       *        \
+       *                              
+       *  For point p:
+       *     x of P is interxp
+       *     y of P is interyp
+       *     z is ignored (or "swept along")
+       *     alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to find distance along the profile i.e distance from the adjusted origin.
+       *
+       * */
+      double interxa,interxb,interya,interyb;
+      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point a to the plane.
+      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point a to the plane.
+      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point b to the plane.
+      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point b to the plane.
+      alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+      alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+   }
+   return alongprofa > alongprofb;
 }
 
 //Firstly, this determines the boundary of the viewable area in world coordinates (for use by the drawing method(s)). It then sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio*zoomlevel is there to convert screen dimensions to image dimensions. gluLookAt is then used so that the viewpoint is that of seeing the centre from a position to the right of the profile, when looking from the start to the end of it.
@@ -236,6 +477,60 @@ bool Profile::on_pan_end(GdkEventButton* event){
    else return false;
 }
 
+//Find the starting coordinates of the fence and set the label values to zero.
+bool Profile::on_fence_start(GdkEventButton* event){
+   double breadth = endx - startx;
+   double height = endy - starty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+   fencestartx = fenceendx = centrex + viewerx + hypotenuse * breadth / length;
+   fencestarty = fenceendy = centrey + viewery + hypotenuse * height / length;
+   fencestartz = fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+   get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
+   return drawviewable(1);
+}
+//Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the fence.
+bool Profile::on_fence(GdkEventMotion* event){
+   double breadth = endx - startx;
+   double height = endy - starty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+   fenceendx = centrex + viewerx + hypotenuse * breadth / length;
+   fenceendy = centrey + viewery + hypotenuse * height / length;
+   fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+   return drawviewable(1);
+}
+//Draw again. This is for if/when the on_fence() method calls drawviewable(2) rather than drawviewable(1).
+bool Profile::on_fence_end(GdkEventButton* event){return drawviewable(1);}
+//Make the fence as a thick line.
+void Profile::makefencebox(){
+   if(slanted){
+      double breadth = fenceendx - fencestartx;
+      double height = fenceendy - fencestarty;
+      double deltaz = fenceendz - fencestartz;
+      double horiz = sqrt(breadth*breadth + height*height);//Right triangle
+      double length = sqrt(breadth*breadth + height*height + deltaz*deltaz);//Right triangle IN 3D!
+      double horizratio = horiz/length;
+      double deltazratio = deltaz/length;
+      if(length==0)length=1;
+      glColor3f(0.0,0.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(fencestartx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,fencestarty - (slantwidth/2)*deltazratio*height/horiz - centrey,fencestartz + (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fencestartx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,fencestarty + (slantwidth/2)*deltazratio*height/horiz - centrey,fencestartz - (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fenceendx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,fenceendy + (slantwidth/2)*deltazratio*height/horiz - centrey,fenceendz - (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fenceendx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,fenceendy - (slantwidth/2)*deltazratio*height/horiz - centrey,fenceendz + (slantwidth/2)*horizratio - centrez);
+      glEnd();
+   }
+   else{
+      glColor3f(0.0,0.0,1.0);
+      glBegin(GL_LINE_LOOP);
+         glVertex3d(fencestartx-centrex,fencestarty-centrey,fencestartz-centrez);
+         glVertex3d(fencestartx-centrex,fencestarty-centrey,fenceendz-centrez);
+         glVertex3d(fenceendx-centrex,fenceendy-centrey,fenceendz-centrez);
+         glVertex3d(fenceendx-centrex,fenceendy-centrey,fencestartz-centrez);
+      glEnd();
+   }
+}
 //Find the starting coordinates of the ruler and set the label values to zero.
 bool Profile::on_ruler_start(GdkEventButton* event){
    double breadth = endx - startx;
@@ -282,7 +577,7 @@ bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
 //Make the ruler as a thick line.
 void Profile::makerulerbox(){
    glColor3f(1.0,1.0,1.0);
-   glLineWidth(3);
+   glLineWidth(rulerwidth);
       glBegin(GL_LINES);
          glVertex3d(rulerstartx-centrex,rulerstarty-centrey,rulerstartz-centrez);
          glVertex3d(rulerendx-centrex,rulerendy-centrey,rulerendz-centrez);
@@ -291,6 +586,7 @@ void Profile::makerulerbox(){
 }
 void Profile::drawoverlays(){
    if(rulering)makerulerbox();
+   if(fencing)makefencebox();
    if(showheightscale)makeZscale();
 }
 
@@ -367,67 +663,6 @@ bool Profile::on_zoom(GdkEventScroll* event){
    resetview();
    get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return drawviewable(1);
-}
-
-//This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as that "start".
-bool Profile::linecomp(const point &a,const point &b){
-   const double xa = a.x;
-   const double xb = b.x;
-   const double ya = a.y;
-   const double yb = b.y;
-   double alongprofa,alongprofb;
-   if(startx==endx){//If the profile is parallel to the y axis:
-      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
-      if(starty<endy)mult=1;
-      alongprofa = mult * (ya - minplany);
-      alongprofb = mult * (yb - minplany);
-   }
-   else if(starty==endy){//If the profile is parallel to the x axis:
-      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
-      if(startx<endx)mult=1;
-      alongprofa = mult * (xa - minplanx);
-      alongprofb = mult * (xb - minplanx);
-   }
-   else{//If the profile is skewed:
-      double breadth = endx - startx;
-      double height = endy - starty;
-      double multx=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
-      if(startx<endx)multx=1;
-      double multy=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
-      if(starty<endy)multy=1;
-      //Gradients of the profile and point-to-profile lines:
-      double lengradbox = multx * multy * height / breadth;//Profile line
-      double widgradbox = -1.0 / lengradbox;//Point-to-profile lines
-      //Constant values (y intercepts) of the formulae for lines from each point to the profile line:
-      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);
-      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);
-      //Identify the points of interecept for each point-to-profile line and the profile line:
-      /*0 (adjusted origin)
-       * \ Profile line       ____/p
-       *  \              ____/ Point line
-       *   \        ____/
-       *    \  ____/
-       *  ___\/P
-       * /    \
-       *       \
-       *        \
-       *                              
-       *  For point p:
-       *     x of P is interxp
-       *     y of P is interyp
-       *     z is ignored (or "swept along")
-       *     alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to find distance along the profile i.e distance from the adjusted origin.
-       *
-       * */
-      double interxa,interxb,interya,interyb;
-      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point a to the plane.
-      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point a to the plane.
-      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point b to the plane.
-      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point b to the plane.
-      alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
-      alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
-   }
-   return alongprofa > alongprofb;
 }
 
 //This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
