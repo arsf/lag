@@ -21,10 +21,13 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   raiseline = false;
+   linetoraise = 0;
+   drawnsinceload = false;
+   drawneverything = false;
    reversez = false;
    showdistancescale = false;
    showlegend = false;
-   drawneverything = false;
    pointcount = 0;
    threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
    zoompower = 0.5;
@@ -401,6 +404,13 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                if(z>rmaxz+990)z=rmaxz+990;
             }
          }
+         if(raiseline)if(linetoraise == buckets[i]->getpoint(j).flightline){
+            z += 100+abs(rmaxz-rminz);
+            if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
+               z = rmaxz+900+z/1000;
+               if(z>rmaxz+990)z=rmaxz+990;
+            }
+         }
          if(!reversez)vertices[3*pointcount+2]=z;//If all is normal, the height is z.
          else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range all they occupy, the values are reversed.
          colours[3*pointcount]=red;
@@ -530,12 +540,25 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2). When this is called from the expose event (imagetype==3) it draws the main image (drawing speed is not so urgent now that it is threaded).
 bool TwoDeeOverview::drawviewable(int imagetype){
+//   cout << imagetype << endl;
+   if(thread_running && imagetype == 3 && drawnsinceload){
+      Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+      if (!glwindow->gl_begin(get_gl_context()))return false;
+      get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
+      glPointSize(pointsize);//...
+      glViewport(0, 0, get_width(), get_height());//...
+      resetview();//...
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
+      else glFlush();
+      glwindow->gl_end();
+      return true;
+   }
    interruptthread = true;//This causes any existing drawing thread to stop.
    get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
    glPointSize(pointsize);//...
    glViewport(0, 0, get_width(), get_height());//...
    resetview();//...
-   if(imagetype==1||imagetype==3){//Draw the main image.
+   if(imagetype==1 || (!drawnsinceload && imagetype == 3)){//Draw the main image.
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
          if(threaddebug)cout << "Help! Am stalling!" << endl;
          if(!extraDrawing){//If not doing so already, prepare to draw again after the interrupt.
@@ -546,6 +569,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       }
       if(threaddebug)cout << "Am fluid" << endl;
       if(threaddebug)cout << "Changed offsets." << endl;
+      if(imagetype == 3)drawnsinceload = true;
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
       double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
@@ -587,7 +611,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets,detail),false);//This thread will interpret the data before telling the main thread to draw.
       delete pointvector;
    }
-   else if(imagetype==2||imagetype==3){//Draw the preview.
+   else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload)){//Draw the preview.
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
       double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
@@ -1093,8 +1117,4 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    fencebox->setcentre(centrex,centrey);
    fencebox->setzoomlevel(zoomlevel);
    return drawviewable(1);
-}
-
-void TwoDeeOverview::clippy(string picturename){//Annoy the user with an easter egg.
-   get_gl_window()->draw_pixbuf(get_style()->get_fg_gc(get_state()),Gdk::Pixbuf::create_from_file(picturename),0,0,0,0,-1,-1,Gdk::RGB_DITHER_NONE,0,0);
 }

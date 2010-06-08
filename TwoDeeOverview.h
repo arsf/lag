@@ -103,7 +103,9 @@ public:
    void setshowdistancescale(double showdistancescale){ this->showdistancescale = showdistancescale;}//Set whether the distance scale should be seen.
    void setshowlegend(double showlegend){ this->showlegend = showlegend;}//Set whether the colour legend should be seen.
    void setpausethread(bool pausethread){ this->pausethread = pausethread; }
-   void setreversez(bool reversez){this->reversez = reversez;}
+   void setreversez(bool reversez){ this->reversez = reversez; }
+   void setraiseline(bool raiseline){ this->raiseline = raiseline; }
+   void setlinetoraise(int linetoraise){ this->linetoraise = linetoraise; }
    //Classification:
       void setheightenNonC(bool heightenNonC){ this->heightenNonC = heightenNonC;}//These set whether various classifications should be highlighted by making them be drawn above other points:
       void setheightenGround(bool heightenGround){ this->heightenGround = heightenGround; }//...
@@ -117,6 +119,9 @@ public:
       void setheightenOverlap(bool heightenOverlap){ this->heightenOverlap = heightenOverlap; }//...
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
+   bool raiseline;
+   int linetoraise;
+   bool drawnsinceload;
    bool reversez;
    BoxOverlay* fencebox;
    BoxOverlay* profbox;

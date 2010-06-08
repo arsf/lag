@@ -605,43 +605,25 @@ options</property>
               <widget class="GtkToolbar" id="toolbar3">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkToolItem" id="toolbutton6">
+                  <widget class="GtkToolButton" id="returnbuttonprof">
                     <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkToolbar" id="toolbar1">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <widget class="GtkToolButton" id="showprofilebutton">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Get profile</property>
-                            <property name="stock_id">gtk-goto-bottom</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolButton" id="returnbuttonprof">
-                            <property name="visible">True</property>
-                            <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Return to start</property>
-                            <property name="stock_id">gtk-jump-to</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                      </widget>
-                    </child>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="label" translatable="yes">Return to start</property>
+                    <property name="stock_id">gtk-jump-to</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolButton" id="showprofilebutton">
+                    <property name="visible">True</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Get profile</property>
+                    <property name="stock_id">gtk-goto-bottom</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
                   </packing>
                 </child>
                 <child>
@@ -695,39 +677,21 @@ options</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkToolItem" id="toolitem2">
+                  <widget class="GtkToggleToolButton" id="pointshowtoggle">
                     <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkToolbar" id="toolbar4">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <widget class="GtkToggleToolButton" id="pointshowtoggle">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Show points</property>
-                            <property name="stock_id">gtk-yes</property>
-                            <property name="active">True</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToggleToolButton" id="lineshowtoggle">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Show lines</property>
-                            <property name="stock_id">gtk-apply</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                      </widget>
-                    </child>
+                    <property name="label" translatable="yes">Show points</property>
+                    <property name="stock_id">gtk-yes</property>
+                    <property name="active">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="lineshowtoggle">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Show lines</property>
+                    <property name="stock_id">gtk-apply</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
@@ -777,153 +741,6 @@ Range</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkSeparatorToolItem" id="separatortoolitem8">
-                    <property name="visible">True</property>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkToolItem" id="toolbutton8">
-                    <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkToolbar" id="toolbar6">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <widget class="GtkToolButton" id="classbutton">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Classify</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-select-color</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolItem" id="toolbutton9">
-                            <property name="visible">True</property>
-                            <child>
-                              <widget class="GtkToolbar" id="toolbar7">
-                                <property name="visible">True</property>
-                                <child>
-                                  <widget class="GtkToggleToolButton" id="orthogonalprof">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">toolbutton10</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="stock_id">gtk-media-stop</property>
-                                    <property name="active">True</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="homogeneous">True</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <widget class="GtkToggleToolButton" id="slantedprof">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">toolbutton11</property>
-                                    <property name="use_underline">True</property>
-                                    <property name="stock_id">gtk-close</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="homogeneous">True</property>
-                                  </packing>
-                                </child>
-                              </widget>
-                            </child>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                      </widget>
-                    </child>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkToolItem" id="toolbutton1">
-                    <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkToolbar" id="toolbar5">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <widget class="GtkToggleToolButton" id="fencetoggleprof">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Fence</property>
-                            <property name="stock_id">gtk-zoom-fit</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolItem" id="toolbutton5">
-                            <property name="visible">True</property>
-                            <child>
-                              <widget class="GtkHBox" id="hbox5">
-                                <property name="visible">True</property>
-                                <child>
-                                  <widget class="GtkLabel" id="label17">
-                                    <property name="visible">True</property>
-                                    <property name="label" translatable="yes">Width</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <widget class="GtkVSeparator" id="vseparator2">
-                                    <property name="visible">True</property>
-                                    <property name="orientation">vertical</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <widget class="GtkSpinButton" id="slantwidthselectprof">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">&#x25CF;</property>
-                                    <property name="adjustment">0 0 100 0.10000000000000001 0.10000000000000001 0</property>
-                                    <property name="digits">2</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
-                              </widget>
-                            </child>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                      </widget>
-                    </child>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="GtkSeparatorToolItem" id="separatortoolitem7">
                     <property name="visible">True</property>
                   </widget>
@@ -932,15 +749,111 @@ Range</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkToggleToolButton" id="rulertoggle">
+                  <widget class="GtkToolButton" id="classbutton">
                     <property name="visible">True</property>
                     <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Classify</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-select-color</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="fencetoggleprof">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Fence</property>
+                    <property name="stock_id">gtk-zoom-fit</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolItem" id="toolbutton1">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox2">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <widget class="GtkSpinButton" id="slantwidthselectprof">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">0 0 100 0.10000000000000001 0.10000000000000001 0</property>
+                            <property name="digits">2</property>
+                          </widget>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="label17">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Fence width</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSeparatorToolItem" id="separatortoolitem8">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="orthogonalprof">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">toolbutton10</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-media-stop</property>
+                    <property name="active">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="slantedprof">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">toolbutton11</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-close</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSeparatorToolItem" id="toolbutton5">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToggleToolButton" id="rulertoggle">
+                    <property name="visible">True</property>
                     <property name="label" translatable="yes">Ruler</property>
                     <property name="stock_id">gtk-justify-fill</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -1299,7 +1212,7 @@ Christopher Finerty</property>
             <child>
               <widget class="GtkLabel" id="label2">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">&lt;b&gt;Draw certain points higher:&lt;/b&gt;</property>
+                <property name="label" translatable="yes">&lt;b&gt;Raise points:&lt;/b&gt;</property>
                 <property name="use_markup">True</property>
               </widget>
               <packing>
@@ -1883,16 +1796,15 @@ Christopher Finerty</property>
               </packing>
             </child>
             <child>
-              <widget class="GtkHBox" id="hbox2">
+              <widget class="GtkTable" id="table3">
                 <property name="visible">True</property>
+                <property name="n_rows">3</property>
+                <property name="n_columns">2</property>
                 <child>
                   <widget class="GtkLabel" id="label15">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes"> Classify as (see above):</property>
                   </widget>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
                 </child>
                 <child>
                   <widget class="GtkSpinButton" id="classificationselect">
@@ -1900,9 +1812,52 @@ Christopher Finerty</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
                     <property name="adjustment">7 0 255 1 10 0</property>
+                    <property name="wrap">True</property>
                   </widget>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label18">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Raise flightline:</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="raiselineselect">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="invisible_char">&#x25CF;</property>
+                    <property name="adjustment">0 0 100 1 1 0</property>
+                    <property name="wrap">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="raiselinecheck">
+                    <property name="label" translatable="yes">Raise flightline?</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
                   </packing>
                 </child>
               </widget>

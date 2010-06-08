@@ -66,6 +66,8 @@ Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
       Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
       Gtk::SpinButton *maindetailselectprof = NULL;//Determines how many points are skipped displaying the main profile image.
       Gtk::SpinButton *previewdetailselectprof = NULL;//Determines how many points are skipped displaying the profile preview.
+      Gtk::SpinButton *raiselineselect = NULL;
+      Gtk::CheckButton *raiselinecheck = NULL;
 //File chooser:
 Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
    Gtk::SpinButton *pointskipselect = NULL;//How many points to skip while loading one.
@@ -277,6 +279,15 @@ void on_previewdetailselectedprof(){
    prof->setpreviewdetail(previewdetailselectprof->get_value());
    if(prof->is_realized())prof->drawviewable(2);
 }
+void on_raiselineselected(){
+   tdo->setlinetoraise(raiselineselect->get_value_as_int());
+   if(tdo->is_realized())if(raiselinecheck->get_active())tdo->drawviewable(1);
+}
+//When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
+void on_raiselinecheck(){
+   tdo->setraiseline(raiselinecheck->get_active());
+   if(tdo->is_realized())tdo->drawviewable(1);
+}
 
 /*Determines whether the input filename(s) are correct and, if so, creates or modifies the quadtree to accomodate the data. First it makes sure that a sufficient number of arguments have been passed to include the executable, point offset and at least one filename. It then extracts the point offset, which is used to skip a certain number of points between each read point, for faster loading. It then starts dealing withthe filenames:
  * Try:
@@ -474,6 +485,23 @@ int testfilename(int argc,char *argv[],bool start,bool usearea){
    }
    on_drawingresetbutton_clicked();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
    loadedanyfiles = true;
+   string flightline,list="";
+   int count = 0;
+   try{
+      while(true){
+         flightline = lidardata->getfilename(count);
+         ostringstream number;
+         number << count;
+         list += number.str() + ":  " + flightline + "\n";
+         count++;
+      }
+   }
+   catch(descriptiveexception e){
+      flightlinelistlabel->set_text(list);
+      if(count<1)count = 1;
+      flightlinesaveselect->set_range(0,count-1);
+      raiselineselect->set_range(0,count-1);
+   }
    return 0;
 }
 //If either the add or refresh button is pressed, then this function takes the selected filenames and creates an imitation of a command-line command, which is then sent to testfilename() where the file will be opened.
@@ -526,23 +554,7 @@ void on_flightlinesaveselected(){
 void on_savefilemenuactivated(){
    if(tdo->is_realized())filesaverdialog->show_all();
    else return;
-   string flightline,list="";
-   int count = 0;
-   try{
-      while(true){
-         flightline = lidardata->getfilename(count);
-         ostringstream number;
-         number << count;
-         list += number.str() + ":  " + flightline + "\n";
-         count++;
-      }
-   }
-   catch(descriptiveexception e){
-      flightlinelistlabel->set_text(list);
-      if(count<1)count = 1;
-      flightlinesaveselect->set_range(0,count-1);
-      on_flightlinesaveselected();
-   }
+   on_flightlinesaveselected();
 }
 
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
@@ -819,14 +831,6 @@ int GUIset(int argc,char *argv[]){
          Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
          refXml->get_widget("openfilemenuitem",openfilemenuitem);
          if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
-         Gtk::MenuItem *savefilemenuitem = NULL;//For selecting to get file-saving menu.
-         refXml->get_widget("savefilemenuitem",savefilemenuitem);
-         if(savefilemenuitem)savefilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_savefilemenuactivated));
-         refXml->get_widget("filesaverdialog",filesaverdialog);
-         if(filesaverdialog)filesaverdialog->signal_response().connect(sigc::ptr_fun(&on_filesaverdialogresponse));
-         refXml->get_widget("flightlinelistlabel",flightlinelistlabel);
-         refXml->get_widget("flightlinesaveselect",flightlinesaveselect);
-         if(flightlinesaveselect)flightlinesaveselect->signal_value_changed().connect(sigc::ptr_fun(&on_flightlinesaveselected));
          refXml->get_widget("filechooserdialog",filechooserdialog);
          if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
          refXml->get_widget("pointskipselect",pointskipselect);
@@ -843,7 +847,20 @@ int GUIset(int argc,char *argv[]){
                cachesizeselect->signal_value_changed().connect(sigc::ptr_fun(&on_cachesize_changed));
             }
          }
+      //For saving files:
+         Gtk::MenuItem *savefilemenuitem = NULL;//For selecting to get file-saving menu.
+         refXml->get_widget("savefilemenuitem",savefilemenuitem);
+         if(savefilemenuitem)savefilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_savefilemenuactivated));
+         refXml->get_widget("filesaverdialog",filesaverdialog);
+         if(filesaverdialog)filesaverdialog->signal_response().connect(sigc::ptr_fun(&on_filesaverdialogresponse));
+         refXml->get_widget("flightlinelistlabel",flightlinelistlabel);
+         refXml->get_widget("flightlinesaveselect",flightlinesaveselect);
+         if(flightlinesaveselect)flightlinesaveselect->signal_value_changed().connect(sigc::ptr_fun(&on_flightlinesaveselected));
       //Viewing options:
+         refXml->get_widget("raiselinecheck",raiselinecheck);
+         if(raiselinecheck)raiselinecheck->signal_toggled().connect(sigc::ptr_fun(&on_raiselinecheck));
+         refXml->get_widget("raiselineselect",raiselineselect);
+         if(raiselineselect)raiselineselect->signal_value_changed().connect(sigc::ptr_fun(&on_raiselineselected));
          refXml->get_widget("showprofilecheck",showprofilecheck);
          if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
          refXml->get_widget("showfencecheck",showfencecheck);
@@ -1104,6 +1121,8 @@ int GUIset(int argc,char *argv[]){
    tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
    tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
    tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   tdo->setraiseline(raiselinecheck->get_active());
+   tdo->setlinetoraise(raiselineselect->get_value_as_int());
    showlegendcheck->set_inconsistent(!colourbyintensitymenu->get_active() && !colourbyheightmenu->get_active() && !colourbyclassificationmenu->get_active() && !colourbyreturnmenu->get_active());//This is to help prevent confusion when the user decides to show the legend and nothing happens because of there being no legend when colouring by flightline or by none.
    Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
    glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
@@ -1140,7 +1159,7 @@ int GUIset(int argc,char *argv[]){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.06.07.1" << endl;
+   cout << "Build number: 2010.06.08.1" << endl;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
