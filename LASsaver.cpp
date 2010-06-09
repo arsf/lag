@@ -8,11 +8,7 @@ LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 {
    this->inputfilename = inputfilename;
    this->outputfilename = outputfilename;
-   ofs.open(outputfilename, std::ios::out | std::ios::binary);
-   if(!ofs.is_open())
-   {
-      throw fileexception("could not open output file");
-   }
+   
 
    ifs.open(inputfilename, std::ios::in | std::ios::binary);
    if(!ifs.is_open())
@@ -23,8 +19,15 @@ LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 
    reader = new liblas::LASReader(ifs);
    newheader = reader->GetHeader();
+   
    delete reader;
+   ifs.close();
 
+   ofs.open(outputfilename, std::ios::out | std::ios::binary);
+   if(!ofs.is_open())
+   {
+      throw fileexception("could not open output file");
+   }
 
    numofreturn = 0;
    numofeachreturn = new int[10];
@@ -47,7 +50,9 @@ LASsaver::~LASsaver()
    newheader.SetPointRecordsByReturnCount(2, numofeachreturn[2]);
    newheader.SetPointRecordsByReturnCount(3, numofeachreturn[3]);
    writer->WriteHeader(newheader);
+   
    delete writer;
+   ofs.close();
    delete[] numofeachreturn;
 
 }
