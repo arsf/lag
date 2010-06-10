@@ -803,7 +803,6 @@ Range</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -1845,9 +1844,6 @@ Christopher Finerty</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <widget class="GtkCheckButton" id="raiselinecheck">
                     <property name="label" translatable="yes">Raise flightline?</property>
                     <property name="visible">True</property>
@@ -1859,6 +1855,9 @@ Christopher Finerty</property>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </widget>
               <packing>

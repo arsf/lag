@@ -13,6 +13,8 @@
 #include <vector>
 #include <boost/bind.hpp>
 #include "Display.h"
+#ifndef PROFILE_H
+#define PROFILE_H
 class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
@@ -157,3 +159,5 @@ protected:
    bool on_fence_end(GdkEventButton* event);
 
 };
+
+#endif

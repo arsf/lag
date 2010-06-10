@@ -9,76 +9,24 @@
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include "quadtree.h"
-#include "LASloader.h"
-#include "LASsaver.h"
-#include "ASCIIloader.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
+#include "AdvancedOptionsWindow.h"
+#include "FileOpener.h"
+#include "FileSaver.h"
 using namespace std;
 
 TwoDeeOverview *tdo = NULL;//The 2d overview.
 Profile *prof = NULL;//The profile.
 string exename = "";//The path of the executable.
 bool drawwhentoggled = true;//This variable prevents the image(s) from being drawn twice as a result of toggling a radio button (or similar), which deactivates (and therefore toggles again) another one in the same group. This variable must start as true, as the methods make it opposite before using it, so that things will de drawn after the second "toggling".
+AdvancedOptionsWindow *aow = NULL;
+FileOpener *fo = NULL;
+FileSaver *fs = NULL;
 
-//Data handling:
-int bucketlimit = 100000;//How many points in each bucket, maximum.
-int cachelimit = 25000000;//How many points to hold in cache. 1 GB ~= 25000000 points.
-bool loadedanyfiles = false;//Whether or not any files have already been loaded in this session.
-//Quadtree:
-quadtree* lidardata = NULL;//The flightlines are stored here.
-   ostringstream *loaderrorstream = NULL;//Stringstream getting error messages from the quadtree.
-   ofstream loaderroroutput;//Stream outputting error messages from the quadtree to a file.
-   string loaderroroutputfile;//Path of file for error message output.
 
 //Gtk objects:
-Gtk::EventBox *eventboxtdo = NULL;//Contains the overview.
-Gtk::EventBox *eventboxprof = NULL;//Contains the profile.
 Gtk::AboutDialog *about = NULL;//Information about LAG.
-//Advanced viewing options:
-Gtk::Dialog *advancedoptionsdialog = NULL;//Dialog window for advanced options.
-   Gtk::SpinButton *classificationselect = NULL;//This determines what to classify points as when selected through the profile.
-   //False elevation:
-      Gtk::CheckButton *classcheckbutton0 = NULL;//Elevate classifications with the respective codes:
-      Gtk::CheckButton *classcheckbutton2 = NULL;//...
-      Gtk::CheckButton *classcheckbutton3 = NULL;//...
-      Gtk::CheckButton *classcheckbutton4 = NULL;//...
-      Gtk::CheckButton *classcheckbutton5 = NULL;//...
-      Gtk::CheckButton *classcheckbutton6 = NULL;//...
-      Gtk::CheckButton *classcheckbutton7 = NULL;//...
-      Gtk::CheckButton *classcheckbutton8 = NULL;//...
-      Gtk::CheckButton *classcheckbutton9 = NULL;//...
-      Gtk::CheckButton *classcheckbutton12 = NULL;//...
-      Gtk::CheckButton *classcheckbuttonA = NULL;//"Anything else" classification elevator.
-   //Colouring and shading:
-      Gtk::SpinButton *heightmaxselect = NULL;//Determines the maximum height for colouring and shading.
-      Gtk::SpinButton *heightminselect = NULL;//Determines the minimum height for colouring and shading.
-      Gtk::HScrollbar *heightscrollbar = NULL;//Used for "stepping through" the height range (absolute minimum to absolute maximum) with a page size defined by the difference between heightmaxselect and heightminselect.
-      Gtk::SpinButton *heightoffsetselect = NULL;//This increases all brightness levels by a fixed amount, if based on height. In analogy to heightfloorselect, this raises both the floor and the ceiling.
-      Gtk::SpinButton *heightfloorselect = NULL;//This increases brightness levels by a varying amount such that the lowest level will be increased by the value and higher levels by by a declining value until the level of 1.0, which will not increase at all. In the analogy, the floor is raised but not the ceiling, and the "space" between them is "squashed".
-      Gtk::SpinButton *intensitymaxselect = NULL;//Equivalent as for height:
-      Gtk::SpinButton *intensityminselect = NULL;//...
-      Gtk::HScrollbar *intensityscrollbar = NULL;//...
-      Gtk::SpinButton *intensityoffsetselect = NULL;//...
-      Gtk::SpinButton *intensityfloorselect = NULL;//...
-      Gtk::Button *drawingresetbutton = NULL;//Resets all other colouring and shading widgets to initial values.
-   //Detail level (i.e. how many points to skip for each point shown, worked out INDIRECTLY; see the profile and overview classes for details):
-      Gtk::SpinButton *maindetailselect = NULL;//Determines how many points are skipped displaying the main overview image.
-      Gtk::SpinButton *maindetailselectprof = NULL;//Determines how many points are skipped displaying the main profile image.
-      Gtk::SpinButton *previewdetailselectprof = NULL;//Determines how many points are skipped displaying the profile preview.
-      Gtk::SpinButton *raiselineselect = NULL;
-      Gtk::CheckButton *raiselinecheck = NULL;
-//File chooser:
-Gtk::FileChooserDialog *filechooserdialog = NULL;//For opening files.
-   Gtk::SpinButton *pointskipselect = NULL;//How many points to skip while loading one.
-   Gtk::CheckButton *fenceusecheck = NULL;//Check button determining whether the (overview) fence is used for loading flightlines.
-   Gtk::Entry *asciicodeentry = NULL;//The type code for opening ASCII files.
-   Gtk::SpinButton *cachesizeselect = NULL;//The maximumum number of points to hold in cache.
-   Gtk::Label *cachesizeGBlabel = NULL;//This displays the cache size in terms of gigabytes, approximately.
-//File saver:
-Gtk::FileChooserDialog *filesaverdialog = NULL;//For opening files.
-   Gtk::Label *flightlinelistlabel = NULL;//This displays the cache size in terms of gigabytes, approximately.
-   Gtk::SpinButton *flightlinesaveselect = NULL;
 //Overview:
    //Menues:
       //View menu:
@@ -131,430 +79,19 @@ Gtk::Window *profilewindow = NULL;
       Gtk::ToggleToolButton *orthogonalprof = NULL;//Determine whether the profile fence is orthogonal or slanted.
       Gtk::ToggleToolButton *slantedprof = NULL;//...
 
-//Signals:
-sigc::connection heightminconn;//These connections are for controlling the interaction of the height and intensity colouring and shading scrollbars and spinbuttons, particularly so that they do not interfere with each other at the wrong moment.
-sigc::connection heightmaxconn;//...
-sigc::connection intensityminconn;//...
-sigc::connection intensitymaxconn;//...
-
 //Show the about dialog when respective menu item activated.
 void on_aboutmenuactivated(){ about->show_all(); }
 //Hide the about dialog when close button activated.
 void on_aboutresponse(int response_id){ about->hide_all(); }
 
-//Opens the advanced options dialog.
-void on_advancedbutton_clicked(){ advancedoptionsdialog->show_all(); }
-//Closes the advanced options dialog.
-void on_advancedoptionsdialog_response(int response_id){ advancedoptionsdialog->hide_all(); }
-//The checkbuttons and their activations:
-void on_classcheckbutton0_toggled(){ tdo->setheightenNonC(classcheckbutton0->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton2_toggled(){ tdo->setheightenGround(classcheckbutton2->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton3_toggled(){ tdo->setheightenLowVeg(classcheckbutton3->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton4_toggled(){ tdo->setheightenMedVeg(classcheckbutton4->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton5_toggled(){ tdo->setheightenHighVeg(classcheckbutton5->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton6_toggled(){ tdo->setheightenBuildings(classcheckbutton6->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton7_toggled(){ tdo->setheightenNoise(classcheckbutton7->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton8_toggled(){ tdo->setheightenMass(classcheckbutton8->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton9_toggled(){ tdo->setheightenWater(classcheckbutton9->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbutton12_toggled(){ tdo->setheightenOverlap(classcheckbutton12->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-void on_classcheckbuttonA_toggled(){ tdo->setheightenUndefined(classcheckbuttonA->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
-//The drawing settings:
-void changecoloursandshades(){
-   //Please note that there is a reason why the profile is updated before the overview: if it is the other way around then the overview's drawing thread would be running so it will be unpredictable which part will execute opengl code first, which can sometimes mean that the overview will be drawn the same size as the profile, which might confuse users:
-   if(prof->is_realized())prof->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(prof->is_realized())prof->drawviewable(1);
-   if(tdo->is_realized())tdo->coloursandshades(heightmaxselect->get_value(),heightminselect->get_value(),intensitymaxselect->get_value_as_int(),intensityminselect->get_value_as_int());
-   if(tdo->is_realized())tdo->drawviewable(1);
-}
-void on_heightmaxselect_changed(){
-   heightminselect->set_range(tdo->getrminz(),heightmaxselect->get_value()-0.01);
-   heightscrollbar->get_adjustment()->set_page_size(heightmaxselect->get_value() - heightminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
-   heightscrollbar->set_increments(1,heightmaxselect->get_value() - heightminselect->get_value());
-   changecoloursandshades();
-}
-void on_heightminselect_changed(){
-   heightmaxselect->set_range(heightminselect->get_value()+0.01,tdo->getrmaxz());
-   heightscrollbar->set_value(heightminselect->get_value());//Value for the scrollbar only changed here as upper value is defined by this value and the page size.
-   heightscrollbar->get_adjustment()->set_page_size(heightmaxselect->get_value() - heightminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
-   heightscrollbar->set_increments(1,heightmaxselect->get_value() - heightminselect->get_value());
-   changecoloursandshades();
-}
-bool on_heightscrollbar_scrolled(Gtk::ScrollType scroll,double new_value){
-   if(new_value + heightscrollbar->get_adjustment()->get_page_size() > heightscrollbar->get_adjustment()->get_upper())new_value = heightscrollbar->get_adjustment()->get_upper() - heightscrollbar->get_adjustment()->get_page_size();//New upper value (new_value plus page size) must not exceed the maximum possible value, otherwise it might mess things up when used to set the ranges, below.
-   if(new_value == heightminselect->get_value())return true;
-   heightmaxconn.block();//Letting these signals continue would complicate things significantly, as they would then try to set this scrollbar's properties.
-   heightminconn.block();//...
-   heightmaxselect->set_range(new_value+0.01,tdo->getrmaxz());//Set the new ranges first so that the old ranges cannot clamp the new values.
-   heightminselect->set_range(tdo->getrminz(),new_value + heightscrollbar->get_adjustment()->get_page_size()-0.01);//...
-   heightmaxselect->set_value(new_value + heightscrollbar->get_adjustment()->get_page_size());
-   heightminselect->set_value(new_value);
-   heightmaxconn.unblock();
-   heightminconn.unblock();
-   changecoloursandshades();
-   return true;
-}
-void on_heightoffsetselect_changed(){
-   tdo->setzoffset(heightoffsetselect->get_value());
-   prof->setzoffset(heightoffsetselect->get_value());
-   changecoloursandshades();
-}
-void on_heightfloorselect_changed(){
-   tdo->setzfloor(heightfloorselect->get_value());
-   prof->setzfloor(heightfloorselect->get_value());
-   changecoloursandshades();
-}
-void on_intensitymaxselect_changed(){
-   intensityminselect->set_range(tdo->getrminintensity(),intensitymaxselect->get_value()-1);
-   intensityscrollbar->get_adjustment()->set_page_size(intensitymaxselect->get_value() - intensityminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
-   intensityscrollbar->set_increments(1,intensitymaxselect->get_value() - intensityminselect->get_value());
-   changecoloursandshades();
-}
-void on_intensityminselect_changed(){
-   intensitymaxselect->set_range(intensityminselect->get_value()+1,tdo->getrmaxintensity());
-   intensityscrollbar->set_value(intensityminselect->get_value());//Value for the scrollbar only changed here as upper value is defined by this value and the page size.
-   intensityscrollbar->get_adjustment()->set_page_size(intensitymaxselect->get_value() - intensityminselect->get_value());//Want the scrollbar's slider length to correlate with the range we define.
-   intensityscrollbar->set_increments(1,intensitymaxselect->get_value() - intensityminselect->get_value());
-   changecoloursandshades();
-}
-bool on_intensityscrollbar_scrolled(Gtk::ScrollType scroll,double new_value){
-   if(new_value + intensityscrollbar->get_adjustment()->get_page_size() > intensityscrollbar->get_adjustment()->get_upper())new_value = intensityscrollbar->get_adjustment()->get_upper() - intensityscrollbar->get_adjustment()->get_page_size();//New upper value (new_value plus page size) must not exceed the maximum possible value, otherwise it might mess things up when used to set the ranges, below.
-   if(new_value == intensityminselect->get_value())return true;
-   intensitymaxconn.block();//Letting these signals continue would complicate things significantly, as they would then try to set this scrollbar's properties.
-   intensityminconn.block();//...
-   intensitymaxselect->set_range(intensityminselect->get_value()+1,tdo->getrmaxintensity());//Set the new ranges first so that the old ranges cannot clamp the new values.
-   intensityminselect->set_range(tdo->getrminintensity(),intensitymaxselect->get_value()-1);//...
-   intensitymaxselect->set_value(new_value + intensityscrollbar->get_adjustment()->get_page_size());
-   intensityminselect->set_value(new_value);
-   intensitymaxconn.unblock();
-   intensityminconn.unblock();
-   changecoloursandshades();
-   return true;
-}
-void on_intensityoffsetselect_changed(){
-   tdo->setintensityoffset(intensityoffsetselect->get_value());
-   prof->setintensityoffset(intensityoffsetselect->get_value());
-   changecoloursandshades();
-}
-void on_intensityfloorselect_changed(){
-   tdo->setintensityfloor(intensityfloorselect->get_value());
-   prof->setintensityfloor(intensityfloorselect->get_value());
-   changecoloursandshades();
-}
-//This resets the advanced colouring and shading options to the values indicated by the drawing objects.
-void on_drawingresetbutton_clicked(){
-   heightmaxselect->set_range(tdo->getrminz()+0.01,tdo->getrmaxz());
-   heightmaxselect->set_value(tdo->getrmaxz());
-   heightminselect->set_range(tdo->getrminz(),tdo->getrmaxz()-0.01);
-   heightminselect->set_value(tdo->getrminz());
-   heightscrollbar->set_range(tdo->getrminz(),tdo->getrmaxz());
-   heightscrollbar->set_value(tdo->getrminz());
-   heightscrollbar->get_adjustment()->set_page_size(tdo->getrmaxz()-tdo->getrminz());
-   heightscrollbar->set_increments(0.01,tdo->getrmaxz()-tdo->getrminz());
-   heightoffsetselect->set_value(0);
-   heightfloorselect->set_value(0);
-   intensitymaxselect->set_range(tdo->getrminintensity()+1,tdo->getrmaxintensity());
-   intensitymaxselect->set_value(tdo->getrmaxintensity());
-   intensityminselect->set_range(tdo->getrminintensity(),tdo->getrmaxintensity()-1);
-   intensityminselect->set_value(tdo->getrminintensity());
-   intensityscrollbar->set_range(tdo->getrminintensity(),tdo->getrmaxintensity());
-   intensityscrollbar->set_value(tdo->getrminintensity());
-   intensityscrollbar->get_adjustment()->set_page_size(tdo->getrmaxintensity()-tdo->getrminintensity());
-   intensityscrollbar->set_increments(1,tdo->getrmaxintensity()-tdo->getrminintensity());
-   intensityoffsetselect->set_value(0);
-   intensityfloorselect->set_value(0);
-   //Draws as a result of the other callbacks, and only does so once because of threading (!!!!), so it may be prudent to change this in the future so that there is only ever one call.
-}
-//This indirectly determines how many points are skipped when viewing the main overview image. I.e. this affects it as well as the number of visible buckets.
-void on_maindetailselected(){
-   tdo->setmaindetail(maindetailselect->get_value());
-   if(tdo->is_realized())tdo->drawviewable(1);
-}
-//Does the same as on_maindetailselected, except for the profile.
-void on_maindetailselectedprof(){
-   prof->setmaindetail(maindetailselectprof->get_value());
-   if(prof->is_realized())prof->drawviewable(1);
-}
-//Does the same as on_maindetailselectedprof, except for the preview of the profile.
-void on_previewdetailselectedprof(){
-   prof->setpreviewdetail(previewdetailselectprof->get_value());
-   if(prof->is_realized())prof->drawviewable(2);
-}
-void on_raiselineselected(){
-   tdo->setlinetoraise(raiselineselect->get_value_as_int());
-   if(tdo->is_realized())if(raiselinecheck->get_active())tdo->drawviewable(1);
-}
-//When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
-void on_raiselinecheck(){
-   tdo->setraiseline(raiselinecheck->get_active());
-   if(tdo->is_realized())tdo->drawviewable(1);
-}
-
-/*Determines whether the input filename(s) are correct and, if so, creates or modifies the quadtree to accomodate the data. First it makes sure that a sufficient number of arguments have been passed to include the executable, point offset and at least one filename. It then extracts the point offset, which is used to skip a certain number of points between each read point, for faster loading. It then starts dealing withthe filenames:
- * Try:
- *    For all the filenames:
- *       If the filename is not empty:
- *          If the filename ends with .las or .LAS:
- *             Create LASLoader;
- *             If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded OR the quadtree is empty:
- *                If using a fence:
- *                   Delete old quadtree (including the original dummy one if the program has just started);
- *                   Get fence coordinates;
- *                   Create new quadtree with data with fence;
- *                Else:
- *                   Delete old quadtree (including the original dummy one if the program has just started);
- *                   Create new quadtree with data without fence;
- *             Else:
- *                If using a fence:
- *                   Get fence coordinates;
- *                   Add data with fence to quadtree;
- *                Else:
- *                   Add data without fence to quadtree;
- *             Write any errors to the error file;
- *          Else if the filename ends with .txt or .TXT:
- *             Get typecode from text box;
- *             Create ASCIIloader useing typecode;
- *             If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded OR the quadtree is empty:
- *                If using a fence:
- *                   Delete old quadtree (including the original dummy one if the program has just started);
- *                   Get fence coordinates;
- *                   Create new quadtree with data with fence;
- *                Else:
- *                   Delete old quadtree (including the original dummy one if the program has just started);
- *                   Create new quadtree with data without fence;
- *             Else:
- *                If using a fence:
- *                   Get fence coordinates;
- *                   Add data with fence to quadtree;
- *                Else:
- *                   Add data without fence to quadtree;
- *             Write any errors to the error file;
- *          Else do nothing;
- * Catch:
- *    Empty the quadtree;
- *
- * Then a pointer to the data is sent to all of the display areas, which are then prepared for displaying and then display.
- *
- *
- * */
-int testfilename(int argc,char *argv[],bool start,bool usearea){
-   cachelimit = cachesizeselect->get_value();
-   try{//Attempt to get real files.
-      string pointoffset,filename;
-      if(argc < 3){
-         cout << "Form is \"lag <point skip number> <first file> [other files]...\"" << endl;
-         return 11;
-      }
-      pointoffset.append(argv[1]);
-      int poffs = atoi(pointoffset.c_str());//This returns the integer translation of the string, or zero if there is none, so...
-      if(poffs == 0 && pointoffset != "0"){//... in the situation where there is a value of zero, check the string to see whether this is because of there being a zero value or because of there not being an integer. If the value in the string is not zero:
-         cout << "The point offset must be an integer greater than or equal to zero. In addition, zero can only be accepted in the form \"0\", not \"00\" etc.." << endl;
-         return 1;
-      }
-      for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
-         filename.assign(argv[count]);
-         if(filename != ""){
-            if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
-               LASloader* loader = new LASloader(argv[count]);
-               if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
-                  if(usearea){//If using the fence:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else{//If not:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     lidardata = new quadtree(loader,bucketlimit,poffs,cachelimit,loaderrorstream);
-                  }
-               }
-               else{//... but for all other situations add to it.
-                  if(usearea){//If using the fence:
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(loader,poffs,fencexs,fenceys,fenceps);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else lidardata->load(loader,poffs);//If not.
-               }
-               cout << filename << endl;
-               if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
-                  loaderroroutput << filename << endl;
-                  loaderroroutput << loaderrorstream->str();
-                  loaderroroutput.flush();
-                  loaderrorstream->str("");
-               }
-               delete loader;
-            }
-            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
-               string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
-               const char* code = code1.c_str();
-               ASCIIloader* aloader = new ASCIIloader(argv[count],code);
-               if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
-                  if(usearea){//If using the fence:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(aloader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else{//If not:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,cachelimit,loaderrorstream);
-                  }
-               }
-               else{//... but for all other situations add to it.
-                  if(usearea){//If using the fence:
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(aloader,poffs,fencexs,fenceys,fenceps);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else lidardata->load(aloader,poffs);//If not.
-               }
-               cout << filename << endl;
-               if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
-                  loaderroroutput << filename << endl;
-                  loaderroroutput << loaderrorstream->str();
-                  loaderroroutput.flush();
-                  loaderrorstream->str("");
-               }
-               delete aloader;
-            }
-            else{//For incorrect file extensions:
-               cout << "Files must have the extensions .las, .LAS, .txt or .TXT." << endl;
-               return 17;
-            }
-         }
-      }
-   }
-   catch(descriptiveexception e){
-      cout << "There has been an exception:" << endl;
-      cout << "What: " << e.what() << endl;
-      cout << "Why: " << e.why() << endl;
-      loaderrorstream->str("");
-      if(lidardata != NULL)delete lidardata;
-      lidardata = NULL;
-      tdo->hide_all();
-      eventboxtdo->remove();
-      prof->hide_all();
-      eventboxprof->remove();
-      loadedanyfiles = false;
-      return 22;
-   }
-   tdo->setlidardata(lidardata,bucketlimit);//Provide the drawing objects access to the quadtree:
-   prof->setlidardata(lidardata,bucketlimit);//...
-   //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This might not work because of the bug that causes the flightline(s) not to be drawn immediately after loading. UPDATE: now it seems to draw just one bucket(!!!) immediately after loading.
-   if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
-      tdo->prepare_image();
-      tdo->drawviewable(1);
-      prof->prepare_image();
-      prof->drawviewable(1);
-   }
-   else{//Otherwise, pack them into the vboxes and then show them, which will do as the above block does.
-      eventboxtdo->add(*tdo);
-      tdo->show_all();
-      eventboxprof->add(*prof);
-      prof->show_all();
-   }
-   on_drawingresetbutton_clicked();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
-   loadedanyfiles = true;
-   string flightline,list="";
-   int count = 0;
-   try{
-      while(true){
-         flightline = lidardata->getfilename(count);
-         ostringstream number;
-         number << count;
-         list += number.str() + ":  " + flightline + "\n";
-         count++;
-      }
-   }
-   catch(descriptiveexception e){
-      flightlinelistlabel->set_text(list);
-      if(count<1)count = 1;
-      flightlinesaveselect->set_range(0,count-1);
-      raiselineselect->set_range(0,count-1);
-   }
-   return 0;
-}
-//If either the add or refresh button is pressed, then this function takes the selected filenames and creates an imitation of a command-line command, which is then sent to testfilename() where the file will be opened.
-void on_filechooserdialogresponse(int response_id){
-   if(response_id == Gtk::RESPONSE_CLOSE)filechooserdialog->hide_all();
-   else if(response_id == 1 || response_id == 2){
-      Glib::SListHandle<Glib::ustring> names = filechooserdialog->get_filenames();
-      int argc = names.size() + 2;//testfilename expects a command-line command in the form: <this program> <point offset <file 1> [file 2]...
-      char** argv = new char*[argc];
-      argv[0] = new char[exename.length()+1];//This program.
-      strcpy(argv[0],exename.c_str());
-      ostringstream pointoffset;
-      pointoffset << pointskipselect->get_value_as_int();
-      string poffs = pointoffset.str();
-      argv[1] = new char[poffs.length()+1];//The point offset.
-      strcpy(argv[1],poffs.c_str());
-      argc=2;
-      for(Glib::SListHandle<Glib::ustring>::iterator itera = names.begin();itera!=names.end();itera++){//Until the last iterator is reached, insert the contents of the iterators into argv.
-         argv[argc] = new char[(*itera).length()+1];
-         strcpy(argv[argc],(*itera).c_str());
-         argc++;
-      }
-      if(response_id == 1)testfilename(argc,argv,false,fenceusecheck->get_active());//For adding, do not create a new quadtree (false).
-      if(response_id == 2)testfilename(argc,argv,true,fenceusecheck->get_active());//For refreshing, do create a new quadtree (true).
-      for(int i = 0;i < argc;i++)delete[] argv[i];
-      delete[] argv;
-   }
-}
-//When the cachesize (in points) is changed, this outputs the value in Gigabytes (NOT Gibibytes) to a label next to it.
-void on_cachesize_changed(){
-   ostringstream GB;
-   GB << ((double)cachesizeselect->get_value()*sizeof(point))/1000000000;
-   string labelstring = "Approximately: " + GB.str() + " GB.";
-   cachesizeGBlabel->set_text(labelstring);
-}
 //When selected from the menu, the file chooser opens.
-void on_openfilemenuactivated(){ filechooserdialog->show_all(); }
-void on_filesaverdialogresponse(int response_id){
-   if(response_id == Gtk::RESPONSE_CLOSE)filechooserdialog->hide_all();
-   else if(response_id == 1){
-      LASsaver *saver = new LASsaver(filesaverdialog->get_filename().c_str(),lidardata->getfilename(flightlinesaveselect->get_value_as_int()).c_str());
-      lidardata->saveflightline(flightlinesaveselect->get_value_as_int(),saver);
-      delete saver;
-   }
-}
-void on_flightlinesaveselected(){
-   filesaverdialog->set_filename(lidardata->getfilename(flightlinesaveselect->get_value_as_int()));
-}
+void on_openfilemenuactivated(){ fo->show(); }//Y'all!
+
 //When selected from the menu, the file saver opens.
 void on_savefilemenuactivated(){
-   if(tdo->is_realized())filesaverdialog->show_all();
+   if(tdo->is_realized())fs->show();
    else return;
-   on_flightlinesaveselected();
+   fs->on_flightlinesaveselected();
 }
 
 //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
@@ -746,7 +283,7 @@ void on_classbutton_clicked(){
    tdo->setpausethread(true);//Nothing else must read the points (or indeed write to them!) while the classifier is writing to them. Also, it uses the getpoint() method.
 //   while(tdo->getthread_running()){usleep(10);}
    tdo->waitforpause();
-   if(prof->is_realized())prof->classify(classificationselect->get_value_as_int());
+   if(prof->is_realized())prof->classify(aow->getclassificationvalue());
    tdo->setpausethread(false);
    tdo->drawviewable(1);
 }
@@ -801,6 +338,9 @@ bool on_prof_key_press(GdkEventKey* event){
    return true;
 }
 
+//Opens the advanced options dialog.
+void on_advancedbutton_clicked(){ aow->show(); }
+
 //Sets up the GUI.
 int GUIset(int argc,char *argv[]){
    Glib::thread_init();
@@ -831,36 +371,11 @@ int GUIset(int argc,char *argv[]){
          Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
          refXml->get_widget("openfilemenuitem",openfilemenuitem);
          if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_openfilemenuactivated));
-         refXml->get_widget("filechooserdialog",filechooserdialog);
-         if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::ptr_fun(&on_filechooserdialogresponse));
-         refXml->get_widget("pointskipselect",pointskipselect);
-         refXml->get_widget("fenceusecheck",fenceusecheck);
-         refXml->get_widget("asciicodeentry",asciicodeentry);
-         refXml->get_widget("cachesizeselect",cachesizeselect);
-         if(cachesizeselect){
-            cachesizeselect->set_range(1000000,1000000000000);//That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 2009-10, so, if the rate of increase is that of quadrupling every five years, then 40 TB will be reached in less than 35 years.
-            cachesizeselect->set_value(25000000);//25000000 points is about 1 GB. On this 4 GB RAM machine, I only want LAG to use a quarter of my resources.
-            cachesizeselect->set_increments(1000000,1000000);
-            refXml->get_widget("cachesizeGBlabel",cachesizeGBlabel);
-            if(cachesizeGBlabel){
-               on_cachesize_changed();
-               cachesizeselect->signal_value_changed().connect(sigc::ptr_fun(&on_cachesize_changed));
-            }
-         }
       //For saving files:
          Gtk::MenuItem *savefilemenuitem = NULL;//For selecting to get file-saving menu.
          refXml->get_widget("savefilemenuitem",savefilemenuitem);
          if(savefilemenuitem)savefilemenuitem->signal_activate().connect(sigc::ptr_fun(&on_savefilemenuactivated));
-         refXml->get_widget("filesaverdialog",filesaverdialog);
-         if(filesaverdialog)filesaverdialog->signal_response().connect(sigc::ptr_fun(&on_filesaverdialogresponse));
-         refXml->get_widget("flightlinelistlabel",flightlinelistlabel);
-         refXml->get_widget("flightlinesaveselect",flightlinesaveselect);
-         if(flightlinesaveselect)flightlinesaveselect->signal_value_changed().connect(sigc::ptr_fun(&on_flightlinesaveselected));
       //Viewing options:
-         refXml->get_widget("raiselinecheck",raiselinecheck);
-         if(raiselinecheck)raiselinecheck->signal_toggled().connect(sigc::ptr_fun(&on_raiselinecheck));
-         refXml->get_widget("raiselineselect",raiselineselect);
-         if(raiselineselect)raiselineselect->signal_value_changed().connect(sigc::ptr_fun(&on_raiselineselected));
          refXml->get_widget("showprofilecheck",showprofilecheck);
          if(showprofilecheck)showprofilecheck->signal_activate().connect(sigc::ptr_fun(&on_showprofilecheck));
          refXml->get_widget("showfencecheck",showfencecheck);
@@ -908,62 +423,6 @@ int GUIset(int argc,char *argv[]){
          Gtk::ToolButton *advancedbutton = NULL;
          refXml->get_widget("advancedbutton",advancedbutton);
          if(advancedbutton)advancedbutton->signal_clicked().connect(sigc::ptr_fun(&on_advancedbutton_clicked));
-         refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
-         if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::ptr_fun(&on_advancedoptionsdialog_response));
-         refXml->get_widget("classificationselect",classificationselect);
-         //False elevation:
-            refXml->get_widget("classcheckbutton0",classcheckbutton0);
-            if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton0_toggled));
-            refXml->get_widget("classcheckbutton2",classcheckbutton2);
-            if(classcheckbutton2)classcheckbutton2->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton2_toggled));
-            refXml->get_widget("classcheckbutton3",classcheckbutton3);
-            if(classcheckbutton3)classcheckbutton3->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton3_toggled));
-            refXml->get_widget("classcheckbutton4",classcheckbutton4);
-            if(classcheckbutton4)classcheckbutton4->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton4_toggled));
-            refXml->get_widget("classcheckbutton5",classcheckbutton5);
-            if(classcheckbutton5)classcheckbutton5->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton5_toggled));
-            refXml->get_widget("classcheckbutton6",classcheckbutton6);
-            if(classcheckbutton6)classcheckbutton6->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton6_toggled));
-            refXml->get_widget("classcheckbutton7",classcheckbutton7);
-            if(classcheckbutton7)classcheckbutton7->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton7_toggled));
-            refXml->get_widget("classcheckbutton8",classcheckbutton8);
-            if(classcheckbutton8)classcheckbutton8->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton8_toggled));
-            refXml->get_widget("classcheckbutton9",classcheckbutton9);
-            if(classcheckbutton9)classcheckbutton9->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton9_toggled));
-            refXml->get_widget("classcheckbutton12",classcheckbutton12);
-            if(classcheckbutton12)classcheckbutton12->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbutton12_toggled));
-            refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
-            if(classcheckbuttonA)classcheckbuttonA->signal_toggled().connect(sigc::ptr_fun(&on_classcheckbuttonA_toggled));
-         //Height and intensity threasholding and brightness modifiers:
-            refXml->get_widget("heightmaxselect",heightmaxselect);
-            if(heightmaxselect)heightmaxconn = heightmaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightmaxselect_changed));
-            refXml->get_widget("heightminselect",heightminselect);
-            if(heightminselect)heightminconn = heightminselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightminselect_changed));
-            refXml->get_widget("heightscrollbar",heightscrollbar);
-            if(heightscrollbar)heightscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_heightscrollbar_scrolled));
-            refXml->get_widget("heightoffsetselect",heightoffsetselect);
-            if(heightoffsetselect)heightoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightoffsetselect_changed));
-            refXml->get_widget("heightfloorselect",heightfloorselect);
-            if(heightfloorselect)heightfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_heightfloorselect_changed));
-            refXml->get_widget("intensitymaxselect",intensitymaxselect);
-            if(intensitymaxselect)intensitymaxconn = intensitymaxselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensitymaxselect_changed));
-            refXml->get_widget("intensityminselect",intensityminselect);
-            if(intensityminselect)intensityminconn = intensityminselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityminselect_changed));
-            refXml->get_widget("intensityscrollbar",intensityscrollbar);
-            if(intensityscrollbar)intensityscrollbar->signal_change_value().connect(sigc::ptr_fun(&on_intensityscrollbar_scrolled));
-            refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
-            if(intensityoffsetselect)intensityoffsetselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityoffsetselect_changed));
-            refXml->get_widget("intensityfloorselect",intensityfloorselect);
-            if(intensityfloorselect)intensityfloorselect->signal_value_changed().connect(sigc::ptr_fun(&on_intensityfloorselect_changed));
-            refXml->get_widget("drawingresetbutton",drawingresetbutton);
-            if(drawingresetbutton)drawingresetbutton->signal_clicked().connect(sigc::ptr_fun(&on_drawingresetbutton_clicked));
-         //Detail (points to skip) level:
-            refXml->get_widget("maindetailselect",maindetailselect);
-            if(maindetailselect){
-               maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-               maindetailselect->set_value(0.00);
-               maindetailselect->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselected));
-            }
       //For overview image viewing attributes:
          refXml->get_widget("pointwidthselect",pointwidthselect);
          if(pointwidthselect){
@@ -991,8 +450,6 @@ int GUIset(int argc,char *argv[]){
             slantwidthselect->signal_value_changed().connect(sigc::ptr_fun(&on_slantwidthselected));
          }
 
-         refXml->get_widget("eventboxtdo",eventboxtdo);
-         eventboxtdo->signal_key_press_event().connect(sigc::ptr_fun(&on_tdo_key_press));
       overviewwindow->show_all();
    }
    else {
@@ -1043,18 +500,6 @@ int GUIset(int argc,char *argv[]){
          pointwidthselectprof->set_value(2);
          pointwidthselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_pointwidthselectedprof));
       }
-      refXml->get_widget("maindetailselectprof",maindetailselectprof);
-      if(maindetailselectprof){
-         maindetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-         maindetailselectprof->set_value(0);
-         maindetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_maindetailselectedprof));
-      }
-      refXml->get_widget("previewdetailselectprof",previewdetailselectprof);
-      if(previewdetailselectprof){
-         previewdetailselectprof->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-         previewdetailselectprof->set_value(0);
-         previewdetailselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_previewdetailselectedprof));
-      }
       refXml->get_widget("pointshowtoggle",pointshowtoggle);
       if(pointshowtoggle)pointshowtoggle->signal_toggled().connect(sigc::ptr_fun(&on_pointshowtoggle));
       refXml->get_widget("lineshowtoggle",lineshowtoggle);
@@ -1085,8 +530,6 @@ int GUIset(int argc,char *argv[]){
          slantwidthselectprof->signal_value_changed().connect(sigc::ptr_fun(&on_slantwidthselectedprof));
       }
 
-      refXml->get_widget("eventboxprof",eventboxprof);
-      eventboxprof->signal_key_press_event().connect(sigc::ptr_fun(&on_prof_key_press));
       profilewindow->show_all();
    }
    Glib::RefPtr<Gdk::GL::Config> glconfig;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
@@ -1098,6 +541,8 @@ int GUIset(int argc,char *argv[]){
          std::exit(1);
       }
    }
+   int bucketlimit = 100000;//How many points in each bucket, maximum.
+   quadtree* lidardata = NULL;//The flightlines are stored here.
    tdo = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);
    tdo->set_size_request(200,200);
    //Initialisations:
@@ -1114,15 +559,12 @@ int GUIset(int argc,char *argv[]){
    tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
    tdo->setheightbrightness(brightnessbyheightmenu->get_active());
    tdo->setpointwidth(pointwidthselect->get_value());
-   tdo->setmaindetail(maindetailselect->get_value());
    tdo->getprofbox()->setslantwidth(slantwidthselect->get_value());
    tdo->getfencebox()->setslantwidth(slantwidthselect->get_value());
    tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
    tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
    tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
    tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->setraiseline(raiselinecheck->get_active());
-   tdo->setlinetoraise(raiselineselect->get_value_as_int());
    showlegendcheck->set_inconsistent(!colourbyintensitymenu->get_active() && !colourbyheightmenu->get_active() && !colourbyclassificationmenu->get_active() && !colourbyreturnmenu->get_active());//This is to help prevent confusion when the user decides to show the legend and nothing happens because of there being no legend when colouring by flightline or by none.
    Glib::RefPtr<Gdk::GL::Config> glconfig2;//Creating separate configs for each window. Is this really necessary? It does not do anything yet, but hopefully will form a nucleus to the solution to the shared viewport problem.
    glconfig2 = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |      Gdk::GL::MODE_DEPTH  |     Gdk::GL::MODE_DOUBLE);
@@ -1145,36 +587,35 @@ int GUIset(int argc,char *argv[]){
    prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
    prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
    prof->setpointwidth(pointwidthselectprof->get_value());
-   prof->setmaindetail(maindetailselectprof->get_value());
-   prof->setpreviewdetail(previewdetailselectprof->get_value());
    prof->setdrawpoints(pointshowtoggle->get_active());
    prof->setdrawmovingaverage(lineshowtoggle->get_active());
    prof->setmavrgrange(movingaveragerangeselect->get_value());
    prof->setslantwidth(slantwidthselectprof->get_value());
    prof->setslantwidth(slantwidthselectprof->get_value());
    prof->setslanted(slantedprof->get_active());
-   testfilename(argc,argv,true,false);//In case of command-line commands.
+   aow = new AdvancedOptionsWindow(tdo,prof,refXml);
+   fs = new FileSaver(tdo,prof,refXml,lidardata);
+   Gtk::EventBox *eventboxtdo = NULL;//Contains the overview.
+   refXml->get_widget("eventboxtdo",eventboxtdo);
+   eventboxtdo->signal_key_press_event().connect(sigc::ptr_fun(&on_tdo_key_press));
+   Gtk::EventBox *eventboxprof = NULL;//Contains the profile.
+   refXml->get_widget("eventboxprof",eventboxprof);
+   eventboxprof->signal_key_press_event().connect(sigc::ptr_fun(&on_prof_key_press));
+   fo = new FileOpener(tdo,prof,refXml,aow,fs,lidardata,bucketlimit,eventboxtdo,eventboxprof);
+   fo->testfilename(argc,argv,true,false);//In case of command-line commands.
    gtkmain.run(*overviewwindow);
+   delete fo;
+   delete fs;
+   delete aow;
+   if(lidardata != NULL)delete lidardata;
    return 0;
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.06.08.1" << endl;
-   time_t starttime = time(NULL);
-   char meh[80];
-   strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
-   ostringstream bleh;
-   bleh << meh;
-   loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
-   loaderroroutput.open(loaderroroutputfile.c_str());
+   cout << "Build number: 2010.06.10.1" << endl;
    exename.append(argv[0]);//Record the program name.
-   loadedanyfiles = false;
-   loaderrorstream = new ostringstream();
    int returnvalue = GUIset(argc, argv);//Make the GUI.
    if(tdo!=NULL)delete tdo;
    if(prof != NULL)delete prof;
-   if(lidardata != NULL)delete lidardata;
-   delete loaderrorstream;
-   loaderroroutput.close();
    return returnvalue;
 }

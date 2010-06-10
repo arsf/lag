@@ -13,6 +13,8 @@
 #include <vector>
 #include "Display.h"
 #include "BoxOverlay.h"
+#ifndef TWODEEOVERVIEW_H
+#define TWODEEOVERVIEW_H
 class TwoDeeOverview : public Display{
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
@@ -231,3 +233,5 @@ protected:
    bool on_ruler(GdkEventMotion* event);
    bool on_ruler_end(GdkEventButton* event);
 };
+
+#endif

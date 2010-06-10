@@ -7,6 +7,8 @@
 #include <iostream>
 #include <gtkmm.h>
 #include <vector>
+#ifndef BOXOVERLAY_H
+#define BOXOVERLAY_H
 class BoxOverlay{
 public:
    BoxOverlay(Gtk::Label *label,double* majorcolour,double* minorcolour);
@@ -47,3 +49,4 @@ protected:
    double* majorcolour;
    double* minorcolour;
 };
+#endif
