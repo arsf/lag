@@ -2,10 +2,10 @@
 #include "quadtreestructs.h"
 #include "cacheminder.h"
 #include <fstream>
-#include <c++/3.4.6/iosfwd>
 #include <limits.h>
 #include <cstdio>
 #include "boost/filesystem.hpp"
+#include "boost/lexical_cast.hpp"
 
 
 using namespace std;
