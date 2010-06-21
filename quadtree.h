@@ -42,10 +42,10 @@ class quadtree{
     quadtreenode* guessbucket;
     // hashtable to hold flight file name/flight number pairs
     flighthash flighttable;
-    cacheminder *MCP;
+    
     string instancedirectory;
 public:
-   
+   cacheminder *MCP;
    /**
      * a constructor that builds a new quad tree from a given lidarpointloader object
      *
@@ -55,7 +55,7 @@ public:
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
      */
-   quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, ostringstream *errorstream = NULL);
    
    /**
      * a constructor that builds a new quadtree from a given lidarpointloader object using a convex polygon defined by a series of points
@@ -69,9 +69,18 @@ public:
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
      */
-   quadtree(lidarpointloader *loader,int cap, int nth, double *Xs, double *Ys, int size, int cachesize, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, ostringstream *errorstream = NULL);
 
 
+   /**
+    * a constructor that builds a new quadtree with user defined dimensions
+    *
+    * @param boundary a boundary struct specifiying the dimensions desired
+    * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
+    * @param cachesize the number of points to hold in ram at any one time
+    * @param errorstream string stream to which error messages will be appended
+    */
+   quadtree(boundary b, int cap, int cachesize, int depth, ostringstream *errorstream = NULL);
 
    /**
     * a constructor that builds a new quadtree with user defined dimensions
@@ -84,7 +93,7 @@ public:
     * @param cachesize the number of points to hold in ram at any one time
     * @param errorstream string stream to which error messages will be appended
     */
-   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *errorstream = NULL);
+   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, ostringstream *errorstream = NULL);
    ~quadtree();
    
 
@@ -208,6 +217,10 @@ public:
    string getfilename(uint8_t flightlinenum);
 
    void saveflightline(uint8_t flightlinenum, lidarpointsaver *saver);
+
+   void increasedepth(int i);
+
+   void increase_to_minimum_depth(int i);
    
 private:
    /**

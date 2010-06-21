@@ -3,15 +3,15 @@
 
 
 #include <stdlib.h>
-#include <iostream>
-#include <cmath>
+
+
 #include <sstream>
-#include <ostream>
+
 #include "cacheminder.h"
 #include "boost/filesystem.hpp"
-#include "boost/lexical_cast.hpp"
+
 #include "time.h"
-#include "unistd.h"
+
 #include "collisiondetection.h"
 
 using namespace std;
@@ -20,7 +20,7 @@ using namespace std;
 // this constructor creates a quadtree using the parameters given. it then loads
 // into the quadtree the lidarpointloader that was passed
 
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, ostringstream *errorstream)
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, ostringstream *errorstream)
 {
    if (errorstream == NULL)
    {
@@ -45,6 +45,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, os
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity, MCP, instancedirectory);
    flightlinenum = 0;
+   root->increasedepth(depth);
    load(loader, nth);
 }
 
@@ -52,7 +53,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, os
 
 // this constructor creates a quadtree using a loader object for a given area of interest
 
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, ostringstream *errorstream)
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, ostringstream *errorstream)
 {
    if (errorstream == NULL)
    {
@@ -73,19 +74,38 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, doubl
    instancedirectory.append(boost::lexical_cast<string > (this));
    boost::filesystem::create_directory(instancedirectory);
 
-   root = NULL;
+   
    flightlinenum = 0;
 
+   // find the simple bounding box of the new fence
+   double maxX, maxY, minX, minY;
+   maxX=Xs[0]; minX=Xs[0]; maxY=Ys[0]; minY=Ys[0];
+   for (int k=1; k<size; k++)
+   {
+      if(Xs[k] > maxX) {maxX=Xs[k];}
+      if(Xs[k] < minX) {minX=Xs[k];}
+      if(Ys[k] > maxY) {maxY=Ys[k];}
+      if(Ys[k] < minY) {minY=Ys[k];}
+   }
+
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory);
+   root->increasedepth(depth);
    // use area of intrest load
    load(loader, nth, Xs, Ys, size);
 
 }
 
+
+quadtree::quadtree(boundary b, int cap, int cachesize, int depth, ostringstream *s)
+{
+   quadtree(b.minX, b.minY, b.maxX, b.maxY, cap, cachesize, depth, s);
+}
+
+
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
 // the points may not fail within the boundry
-
-quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, ostringstream *s)
+quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, ostringstream *s)
 {
    if (s == NULL)
    {
@@ -106,6 +126,7 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
    instancedirectory.append(boost::lexical_cast<string > (this));
    boost::filesystem::create_directory(instancedirectory);
    root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory);
+   root->increasedepth(depth);
 }
 
 
@@ -113,10 +134,7 @@ quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, 
 quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 {
 
-   if(oldnode == NULL)
-   {
-      oldnode = new quadtreenode(nb->minX, nb->minY, nb->maxX, nb->maxY, capacity, MCP, instancedirectory);
-   }
+   
 
    boundary* b = oldnode->getbound();
 
@@ -257,9 +275,24 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // load a new flight line into the quad tree, nth is the nth points to load
 void quadtree::load(lidarpointloader *loader, int nth)
 {
+   // size of each block of points loaded
+   int arraysize = 5000000;
    // add the flightline name flightline num pair to the table
    string tempstring(loader->getfilename());
    flighttable.insert(make_pair(flightlinenum, tempstring));
@@ -268,13 +301,13 @@ void quadtree::load(lidarpointloader *loader, int nth)
    // get new flight boundary
    boundary *nb = loader->getboundary();
    //int hackcounter = 0;
-   // size of each block of points loaded
-   int arraysize = 1000000;
+   
 
    point *temp = new point[arraysize];
 
    // resize the array to accomadate new points 
    root = expandboundary(root, nb);
+   root->increase_to_minimum_depth(5);
 
    delete nb;
    int pointcounter;
@@ -284,6 +317,8 @@ void quadtree::load(lidarpointloader *loader, int nth)
    // and push them into the tree
    do
    {
+
+
       pointcounter = loader->load(arraysize, nth, temp, flightlinenum);
       for (int k = 0; k < pointcounter; k++)
       {
@@ -319,8 +354,6 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
    }   while (pointcounter == arraysize);
    flightlinenum++;
-
-
    delete[] temp;
    delete tempboundary;
 
@@ -328,48 +361,10 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
 
 
+
 // this method loads points from a flightline that fall within an area of intrest
 void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size)
 {
-   /*double a1,a2,a3;
-
-   a1=x1-x2;
-   a2=y1-y2;
-   a3=0;
-
-   double b1,b2,b3;
-
-   b1=0;
-   b2=0;
-   b3=1;
-
-   double ab1,ab2,ab3;
-
-   ab1 = (a2*b3)-(a3*b2);
-   ab2 = (a3*b1)-(a1*b3);
-   ab3 = (a1*b2)-(a2*b1);
-
-   double abmagnitude = sqrt(ab1*ab1+ab2*ab2+ab3*ab3);
-   double unitab1,unitab2,unitab3;
-   unitab1 = ab1/abmagnitude;
-   unitab2 = ab2/abmagnitude;
-   unitab3 = ab3/abmagnitude;
-
-   double *Xs = new double[4];
-   double *Ys = new double[4];
-
-   Xs[0]=x1+(unitab1*width/2);
-   Ys[0]=y1+(unitab2*width/2);
-   Xs[1]=x1-(unitab1*width/2);
-   Ys[1]=y1-(unitab2*width/2);
-   Xs[2]=x2-(unitab1*width/2);
-   Ys[2]=y2-(unitab2*width/2);
-   Xs[3]=x2+(unitab1*width/2);
-   Ys[3]=y2+(unitab2*width/2);
-
-   */
-
-
    // add the flightline name flightline num pair to the table
    string tempstring(loader->getfilename());
    flighttable.insert(make_pair(flightlinenum, tempstring));
@@ -388,7 +383,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, i
 
    delete fb;
 
-   // find the simple bounding box of the new fence (using 4 as size as its a rectangle
+   // find the simple bounding box of the new fence
    double largestX,largestY,smallestX,smallestY;
    largestX=Xs[0];smallestX=Xs[0];largestY=Ys[0];smallestY=Ys[0];
    for (int k=1; k<size; k++)
@@ -404,10 +399,11 @@ void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, i
    nb->minY = smallestY;
    nb->maxY = largestY;
 
-   int arraysize = 1000000;
+   int arraysize = 5000000;
    point *temp = new point[arraysize];
    // expand boundary to cover new points
    root = expandboundary(root, nb);
+   root->increase_to_minimum_depth(5);
    ostream &outs = *(errorstream);
    delete nb;
    boundary *tempboundary = root->getbound();
@@ -470,7 +466,6 @@ void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, i
 
 quadtree::~quadtree()
 {
-   MCP->stopcachethread();
    delete root;
    delete MCP;
    boost::filesystem::remove_all(instancedirectory);
@@ -631,43 +626,6 @@ vector<pointbucket*>* quadtree::advsubset(double *Xs, double *Ys, int size)
    // the subset rectangle
      
    vector<pointbucket*> *buckets = new vector<pointbucket*>;
-/*
-
-   double a1,a2,a3;
-
-   a1=x1-x2;
-   a2=y1-y2;
-   a3=0;
-
-   double b1,b2,b3;
-
-   b1=0;
-   b2=0;
-   b3=1;
-
-   double ab1,ab2,ab3;
-
-   ab1 = (a2*b3)-(a3*b2);
-   ab2 = (a3*b1)-(a1*b3);
-   ab3 = (a1*b2)-(a2*b1);
-
-   double abmagnitude = sqrt(ab1*ab1+ab2*ab2+ab3*ab3);
-   double unitab1,unitab2,unitab3;
-   unitab1 = ab1/abmagnitude;
-   unitab2 = ab2/abmagnitude;
-   unitab3 = ab3/abmagnitude;
-
-   double *Xs = new double[4];
-   double *Ys = new double[4];
-
-   Xs[0]=x1+(unitab1*(width/2));
-   Ys[0]=y1+(unitab2*(width/2));
-   Xs[1]=x1-(unitab1*(width/2));
-   Ys[1]=y1-(unitab2*(width/2));
-   Xs[2]=x2-(unitab1*(width/2));
-   Ys[2]=y2-(unitab2*(width/2));
-   Xs[3]=x2+(unitab1*(width/2));
-   Ys[3]=y2+(unitab2*(width/2));*/
 
    // begin the recursive subsetting of the root node
    root->advsubset(Xs, Ys, size, buckets);
@@ -743,4 +701,16 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
    delete buckets;
    delete b;
    delete[] points;
+}
+
+
+void quadtree::increasedepth(int i)
+{
+   root->increasedepth(i);
+}
+
+
+void quadtree::increase_to_minimum_depth(int i)
+{
+   root->increase_to_minimum_depth(i);
 }

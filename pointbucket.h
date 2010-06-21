@@ -17,6 +17,7 @@
 #include "quadtreestructs.h"
 #include "quadtreeexceptions.h"
 #include <stdint.h>
+#include "lzo/lzo1b.h"
 
 using namespace std;
 
@@ -47,14 +48,23 @@ class pointbucket
     bool incache;
     int cap;
     string filepath;
-    SerializableInnerBucket *innerbucket;
-    boost::recursive_mutex cachemutex;
-    boost::recursive_mutex getmutex;
     string instancedirectory;
-    int innerbucketsize;
+
     bool updated;
 
+    int pointarraysize;
+    int increaseamount;
+    point *points;
+    lzo_uint compresseddatasize;
+    int subset1skip;
+    int subset2skip;
+
 public:
+
+    static unsigned char * workingmemory;
+    static unsigned char * compresseddata;
+    static long o_counter;
+    static long i_counter;
     /**
      *  constructer which initilizes the capacity of the bucket along with the boundary from
      * parameters and the other varibles to defaults
@@ -122,12 +132,12 @@ public:
         //boost::recursive_mutex::scoped_lock mylock(getmutex);
         if (incache)
         {
-            return innerbucket->points[i];
+            return points[i];
         }
         else
         {
             cache(true);
-            return innerbucket->points[i];
+            return points[i];
         }
     }
 
@@ -143,12 +153,12 @@ public:
     {
         if(incache)
         {
-            innerbucket->points[i].classification = classification;
+            points[i].classification = classification;
         }
         else
         {
             cache(true);
-            innerbucket->points[i].classification = classification;
+            points[i].classification = classification;
         }
         updated = true;
     }

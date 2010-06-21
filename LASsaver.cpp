@@ -2,7 +2,7 @@
 
 #include "LASsaver.h"
 #include "quadtreeexceptions.h"
-#include <stdint.h>
+
 
 LASsaver::LASsaver(const char *outputfilename, const char *inputfilename)
 {

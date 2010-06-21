@@ -1,9 +1,9 @@
 
 #include "collisiondetection.h"
-#include <stdlib.h>
+
 #include <math.h>
 #include <vector>
-#include <iostream>
+
 
 using namespace std;
 

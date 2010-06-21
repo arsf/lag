@@ -47,42 +47,7 @@ public:
      */
     void releasecache(int release, pointbucket *pbucket);
 
-    /**
-     * multithreaded cache, ignore
-     */
-    void cachelist(vector<pointbucket*> *bucketlist);
-    /**
-     * multithreaded cache, ignore
-     */
-    void setcachetodo(vector<pointbucket *> *tasks);
-    /**
-     * multithreaded cache, ignore
-     */
-    void pushcachetodo(vector<pointbucket *> *tasks);
-    /**
-     * multithreaded cache, ignore
-     */
-    void popcachetodo();
-    /**
-     * multithreaded cache, ignore
-     */
-    void deletecachetodo(vector<pointbucket *> *tasks);
-    /**
-     * multithreaded cache, ignore
-     */
-    void clearcachetodo();
-    /**
-     * multithreaded cache, ignore
-     */
-    void cachethread();
-    /**
-     * multithreaded cache, ignore
-     */
-    void startcachethread();
-    /**
-     * multithreaded cache, ignore
-     */
-    void stopcachethread();
+    
 
     /**
      * a method that removes all buckets from cache

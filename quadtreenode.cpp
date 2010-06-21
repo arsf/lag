@@ -1,13 +1,11 @@
 #include "quadtreenode.h"
-#include <iostream>
 #include "quadtreestructs.h"
-#include <stdlib.h>
-#include <limits>
 #include "quadtreeexceptions.h"
 #include "collisiondetection.h"
 
 using namespace std;
-
+int quadtreenode::counter;
+int quadtreenode::overflowcounter;
 // basic constructor which initilizes the boundary and capacity from paramters and the other meta data to defaults
 
 quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP, string instancedirectory)
@@ -23,6 +21,8 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
    leaf = true;
    a = b = c = d = NULL;
    numofpoints = 0;
+   this->subset1skip = subset1skip;
+   this->subset2skip = subset2skip;
 }
 
 
@@ -177,8 +177,85 @@ quadtreenode* quadtreenode::pickchild(point newP)
 }
 
 
+void quadtreenode::increasedepth(int i)
+{
+   if(i <= 0) return;
 
+   if(leaf)
+   {
+      splitnode();
+      a->increasedepth(i-1);
+      b->increasedepth(i-1);
+      c->increasedepth(i-1);
+      d->increasedepth(i-1);
+   }
+   else
+   {
+      a->increasedepth(i);
+      b->increasedepth(i);
+      c->increasedepth(i);
+      d->increasedepth(i);
+   }
+   
+   
 
+}
+
+void quadtreenode::increase_to_minimum_depth(int i)
+{
+   if(i <= 0) return;
+   if(leaf)
+   {
+      splitnode();
+   }
+   a->increase_to_minimum_depth(i-1);
+   b->increase_to_minimum_depth(i-1);
+   c->increase_to_minimum_depth(i-1);
+   d->increase_to_minimum_depth(i-1);
+}
+
+void quadtreenode::splitnode()
+{
+   if (a == NULL)
+      a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP, instancedirectory);
+   if (b == NULL)
+      b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP, instancedirectory);
+   if (c == NULL)
+      c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
+   if (d == NULL)
+      d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
+
+   for (int k = 0; k < numofpoints; k++)
+   {
+      point bob = bucket->getpoint(k);
+      // attept to insert each point in turn into the child nodes
+      if (a->insert(bob))
+      {
+         //  cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << a->minX << " " << a->maxX << ")" << endl;
+      }
+      else if (b->insert(bob))
+      {
+         // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << b->minX << " " << b->maxX << ")" << endl;
+      }
+      else if (c->insert(bob))
+      {
+         //cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << c->minX << " " << c->maxX << ")" << endl;
+      }
+      else if (d->insert(bob))
+      {
+         // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << d->minX << " " << d->maxX << ")" << endl;
+      }
+      else
+      {
+         throw outofboundsexception("failed to insert old point into any of the four child nodes, big problem");
+      }
+
+   }
+   // clean up node and turn into non leaf
+   delete bucket;
+   bucket = NULL;
+   leaf = false;
+}
 
 // this method inserts a point into the node. 
 // NOTE: this method does not contain functionality for finding the correct node to insert into
@@ -187,7 +264,7 @@ quadtreenode* quadtreenode::pickchild(point newP)
 
 bool quadtreenode::insert(point newP)
 {
-
+   quadtreenode::counter++;
    // if the point dosen't belong in this subset of the tree return false
    if (newP.x < minX || newP.x > maxX || newP.y < minY || newP.y > maxY)
    {
@@ -198,6 +275,7 @@ bool quadtreenode::insert(point newP)
       // if the node has overflowed and is a leaf
       if ((numofpoints + 1) > capacity && leaf == true)
       {
+         quadtreenode::overflowcounter++;
          // this bucket is full, create four new buckets
          // and populate them.
          // NOTE: because it is possible to create a node with one, any or all of
@@ -205,47 +283,10 @@ bool quadtreenode::insert(point newP)
          // are only created where needed.
          // WARNING: because there is nothing to control the boundary of childs
          // created during construction this may lead to overlapping children
-         if (a == NULL)
-            a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP, instancedirectory);
-         if (b == NULL)
-            b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP, instancedirectory);
-         if (c == NULL)
-            c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
-         if (d == NULL)
-            d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
-
-         for (int k = 0; k < numofpoints; k++)
-         {
-            point bob = bucket->getpoint(k);
-            // attept to insert each point in turn into the child nodes
-            if (a->insert(bob))
-            {
-               //  cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << a->minX << " " << a->maxX << ")" << endl;
-            }
-            else if (b->insert(bob))
-            {
-               // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << b->minX << " " << b->maxX << ")" << endl;
-            }
-            else if (c->insert(bob))
-            {
-               //cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << c->minX << " " << c->maxX << ")" << endl;
-            }
-            else if (d->insert(bob))
-            {
-               // cout << bob.x << "/" << bob.y << " old inserted into bucket " << bucket << "(" << d->minX << " " << d->maxX << ")" << endl;
-            }
-            else
-            {
-               throw outofboundsexception("failed to insert old point into any of the four child nodes, big problem");
-            }
-
-         }
+         splitnode();
 
 
-         // clean up node and turn into non leaf
-         delete bucket;
-         bucket = NULL;
-         leaf = false;
+         
 
          // insert the new point that caused the overflow
          if (a->insert(newP))
@@ -281,7 +322,6 @@ bool quadtreenode::insert(point newP)
             bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP, instancedirectory);
             //cout << "bucket " << bucket << " created " << endl;
          }
-         
          bucket->setpoint(newP);
          
          numofpoints++;
@@ -326,178 +366,6 @@ bool quadtreenode::isEmpty()
 }
 
 
-
-
-//  checks for line line intersection between lines (x1,y1 -> x2,y2) , (x3,y3 -> x4,y4)
-
-bool lineintersect(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
-{
-
-   // if you can rule out lines because both points are to the left, right, top or bottom
-   // do so
-   if (x1 > x3 && x2 > x3 && x1 > x4 && x2 > x4)
-   {
-      return false;
-   }
-   if (x1 < x3 && x2 < x3 && x1 < x4 && x2 < x4)
-   {
-      return false;
-   }
-   if (y1 > y3 && y2 > y3 && y1 > y4 && y2 > y4)
-   {
-      return false;
-   }
-   if (y1 < y3 && y2 < y3 && y1 < y4 && y2 < y4)
-   {
-      return false;
-   }
-
-
-
-
-
-
-   // find the x,y value of the intersect
-   double x = (((x1 * y2)-(y1 * x2))*(x3 - x4) - (x1 - x2)*((x3 * y4)-(y3 * x4))) / (((x1 - x2)*(y3 - y4)) - ((y1 - y2)*(x3 - x4)));
-   double y = (((x1 * y2)-(y1 * x2))*(y3 - y4) - (y1 - y2)*((x3 * y4)-(y3 * x4))) / (((x1 - x2)*(y3 - y4)) - ((y1 - y2)*(x3 - x4)));
-
-   // check if both are segments of the same line
-   if (x != x)
-   {
-      // check if they overlap
-      if (y1 > y3 && y2 > y3 && y1 > y4 && y2 > y4)
-      {
-         return false;
-      }
-      if (y1 < y3 && y2 < y3 && y1 < y4 && y2 < y4)
-      {
-         return false;
-      }
-      return true;
-   }
-   // check if the lines are parallel
-   if (std::numeric_limits<double>::infinity() == x)
-   {
-      return false;
-   }
-
-
-
-   bool flag = false;
-   double err = 0.000001;
-
-   //check if the x value falls within the line segments
-   // if the first line is vertical you have to check the y value
-   if (x1 == x2)
-   {
-      if ((y1 - y2 + err) > 0 && (y - y1 - err) < 0 && (y - y2 + err) > 0)
-      {
-         flag = true;
-      }
-      else if ((y1 - y2 - err) < 0 && (y - y1 + err) > 0 && (y - y2 - err) < 0)
-      {
-         flag = true;
-      }
-   } // if the first line is not vertical just check if the x intersection falls
-      // within both line segments
-   else if ((x1 - x2 + err) > 0 && (x - x1 - err) < 0 && (x - x2 + err) > 0)
-   {
-      flag = true;
-   }
-   else if ((x1 - x2 - err) < 0 && (x - x1 + err) > 0 && (x - x2 - err) < 0)
-   {
-      flag = true;
-   }
-   else
-   {
-      return false;
-   }
-
-
-   // if the second line is vertical you have to check the y value
-   if (x3 == x4)
-   {
-      if ((y3 - y4 + err) > 0 && (y - y3 - err) < 0 && (y - y4 + err) > 0)
-      {
-         if (flag)
-         {
-            return true;
-         }
-      }
-      else if ((y3 - y4 - err) < 0 && (y - y3 + err) > 0 && (y - y4 - err) < 0)
-      {
-         if (flag)
-         {
-            return true;
-         }
-      }
-   } // if the second line is not vertical just check if the x intersection falls
-      // within both line segments
-   else if ((x3 - x4 + err) > 0 && (x - x3 - err) < 0 && (x - x4 + err) > 0)
-   {
-      if (flag)
-      {
-         return true;
-      }
-   }
-   else if ((x3 - x4 - err) < 0 && (x - x3 + err) > 0 && (x - x4 - err) < 0)
-   {
-      if (flag)
-      {
-         return true;
-      }
-   }
-
-
-   return false;
-}
-
-// this method takes the forumula for 4 lines and checks if the x and y arguments are within them
-bool OBBpoint(double m1, double c1, double m2, double c2, double m3, double c3, double m4, double c4, double x, double y)
-{
-   // find the point where an imaginary vertical line through the x value intersects with each line
-   double intersec1 = m1 * x + c1;
-   double intersec2 = m2 * x + c2;
-   double intersec3 = m3 * x + c3;
-   double intersec4 = m4 * x + c4;
-
-   // if the xy point is between the intersections with the oposite sides of the rectangle the
-   // point is within the rectangle (think about it, it works)
-   double err = 0.000001;
-   if (((intersec1 - y + err) > 0 && (intersec3 - y - err) < 0) || ((intersec1 - y - err) < 0 && (intersec3 - y + err) > 0))
-   {
-      if (((intersec2 - y + err) > 0 && (intersec4 - y - err) < 0) || ((intersec2 - y - err) < 0 && (intersec4 - y + err) > 0))
-      {
-         return true;
-      }
-   }
-   return false;
-}
-
-// method to add the bucket or recure into the child nodes
-// NOTE : this has been seperated from the advsubset method to allow a more logical format to that method
-/*
-void quadtreenode::addsubset(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4, vector<pointbucket*> *buckets)
-{
-   if (!leaf)
-   {
-      // call subset recursivly on child nodes
-      a->advsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
-      b->advsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
-      c->advsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
-      d->advsubset(x1, y1, x2, y2, x3, y3, x4, y4, buckets);
-   }
-   else
-   {
-      if (bucket != NULL)
-      {
-         // add bucket to the vector of buckets
-         buckets->push_back(bucket);
-      }
-
-   }
-
-}*/
 
 
 

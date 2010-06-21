@@ -2,11 +2,9 @@
    
 #include "ASCIIloader.h"
 #include <string>
-#include <iostream>
-#include <boost/tokenizer.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <cstring>
-#include <stdio.h>
 #include "quadtreeexceptions.h"
 #include "collisiondetection.h"
 

@@ -1,23 +1,29 @@
 
 #include "quadtreestructs.h"
 #include "cacheminder.h"
-#include <fstream>
-#include <limits.h>
+
+
 #include <cstdio>
 #include "boost/filesystem.hpp"
-#include "boost/lexical_cast.hpp"
+#include <math.h>
+
 
 
 using namespace std;
 
-
+unsigned char *pointbucket::workingmemory = NULL;
+unsigned char *pointbucket::compresseddata = NULL;
+long pointbucket::o_counter = 0;
+long pointbucket::i_counter = 0;
 
 pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory)
 {
    numberofpoints = 0;
    numberofserializedpoints = 0;
    this->cap = cap;
-   innerbucketsize = 25000;
+
+   pointarraysize = cap/8;
+   increaseamount = pointarraysize;
    this->minX = minX;
    this->minY = minY;
    this->maxX = maxX;
@@ -29,7 +35,7 @@ pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double 
    string s = boost::lexical_cast<string > (this);
    filepath = instancedirectory;
    // append the pointbuckets 'this' pointer value to the filename with each pair of digits as a sub folder of the previous
-   for (int k = s.size(); k > 3; k = k - 2)
+   for (int k = s.size(); k > 2; k = k - 2)
    {
       filepath.append("/");
       filepath.append(s, k - 2, 2);
@@ -39,8 +45,26 @@ pointbucket::pointbucket(int cap, double minX, double minY, double maxX, double 
    }
    // append the boundarys to the filename
    filepath.append("/" + boost::lexical_cast<string > (minX) + "-" + boost::lexical_cast<string > (minY) + "_" + boost::lexical_cast<string > (maxY) + "-" + boost::lexical_cast<string > (maxX));
-   innerbucket = NULL;
+
+   
    updated = false;
+
+   
+   points = NULL;
+
+   if(workingmemory == NULL)
+   {
+      workingmemory = (unsigned char*)malloc(LZO1B_MEM_COMPRESS);
+      cout << "uh oh 1" << endl;
+   }
+
+   if(compresseddata == NULL)
+   {
+      // 1.08 increase is worst case scenario for lzo "compression"
+      compresseddata = (unsigned char*)malloc(ceil(sizeof(point)*cap*1.08));
+      cout << "uh oh 2" << endl;
+   }
+
 }
 
 pointbucket::~pointbucket()
@@ -58,8 +82,8 @@ pointbucket::~pointbucket()
    // if the bucket is allocated memory this is freed
    if (incache)
    {
-      MCP->releasecache(cap, this);
-      delete innerbucket;
+      MCP->releasecache(pointarraysize, this);
+      delete[] points;
    }
 }
 
@@ -75,21 +99,29 @@ void pointbucket::uncache()
    // check serial version already exists and if not create it, also if serial version is out of date overwrite it
    if (serialized == false || numberofserializedpoints != numberofpoints || updated == true)
    {
-
-      innerbucket->numpoints = numberofpoints;
-      std::ofstream ofs(filepath.c_str(), ios::out | ios::binary | ios::trunc);
-
-      boost::archive::binary_oarchive binaryouta(ofs);
-      binaryouta << innerbucket;
-      ofs.close();
+      //code to save points array
+      FILE * pFile;
+      pFile = fopen(filepath.c_str(), "wb");
+      if (pFile == NULL)
+      {
+         throw "couldn't open cache file to write";
+      }
+      lzo_init();  
+      lzo1b_1_compress((const unsigned char*)points, sizeof(point)*numberofpoints, compresseddata, &compresseddatasize, workingmemory);
+      o_counter += compresseddatasize;
+      fwrite(compresseddata, 1, compresseddatasize, pFile);
+      fclose(pFile);
+      numberofserializedpoints = numberofpoints;
       serialized = true;
-      innerbucketsize = innerbucket->size;
+      
    }
    //clean up bucket
-   delete innerbucket;
-   innerbucket = NULL;
+   
+
+   delete[] points;
+   points = NULL;
    // free memory only after removal is complete
-   MCP->releasecache(innerbucketsize, this);
+   MCP->releasecache(pointarraysize, this);
    incache = false;
 
 }
@@ -102,7 +134,7 @@ void pointbucket::uncache()
 
 bool pointbucket::cache(bool force)
 {
-   assert(innerbucket == NULL);
+   assert(points == NULL);
    //boost::recursive_mutex::scoped_lock mylock(cachemutex);
    // if already cached just return
    if (incache)
@@ -112,31 +144,38 @@ bool pointbucket::cache(bool force)
    if (serialized == true)
    {
       // aquire memory before using it to ensure memory limit is respected
-      if (MCP->requestcache(innerbucketsize, this, force) == false)
+      if (MCP->requestcache(pointarraysize, this, force) == false)
       {
          return false;
       }
-      innerbucket = new SerializableInnerBucket();
 
-      // load the serial version from the filename assigned into a new bucket instance
-      std::ifstream ifs(filepath.c_str(), ios::out | ios::binary);
+      points = new point[pointarraysize];
+              
+      
+      FILE *pFile;
+      pFile = fopen(filepath.c_str(), "rb");
+      if (pFile == NULL)
+      {
+         throw "couldn't open cache file to read";
+      }
+      fread(compresseddata, sizeof(char), compresseddatasize, pFile);
+      i_counter += compresseddatasize;
+      lzo_uint wasteoftime;
+      lzo_init();
+      lzo1b_decompress(compresseddata, compresseddatasize, (unsigned char *)points, &wasteoftime, NULL);
 
-      boost::archive::binary_iarchive binaryina(ifs);
-      binaryina >> innerbucket;
-      ifs.close();
+      numberofpoints = numberofserializedpoints;
       incache = true;
-
-      numberofserializedpoints = numberofpoints;
       return true;
    }
    else
    {
       // aquire memory before using it to ensure memory limit is respected
-      if (MCP->requestcache(innerbucketsize, this, force) == false)
+      if (MCP->requestcache(pointarraysize, this, force) == false)
       {
          return false;
       }
-      innerbucket = new SerializableInnerBucket(innerbucketsize, 25000);
+      points = new point[pointarraysize];
       incache = true;
       return true;
    }
@@ -159,7 +198,6 @@ void pointbucket::setpoint(point& newP)
    if (!incache)
    {
       cache(true);
-
    }
 
    // update the meta data about all the points held
@@ -189,17 +227,23 @@ void pointbucket::setpoint(point& newP)
 
    // if the ram limit has been reached but not the overall points per bucket limit,
    // request an increase in ram to accomodate new points
-   if (innerbucket->size == innerbucket->numpoints)
+   if (numberofpoints == pointarraysize)
    {
-      if (!increasecache(true, innerbucket->increase))
+      pointarraysize+=increaseamount;
+      if (!increasecache(true, increaseamount))
       {
          throw ramallocationexception("failed to acquire extra ram to allow more points to be inserted");
       }
-      innerbucket->setpoint(newP);
-      innerbucketsize = innerbucket->size;
+
+      point *temp = new point[pointarraysize];
+      copy(points, points+numberofpoints, temp);
+      delete[] points;
+      points = temp;
+      points[numberofpoints] = newP;
+
       numberofpoints++;
    }
-   innerbucket->setpoint(newP);
+   points[numberofpoints] = newP;
    numberofpoints++;
    return;
 }

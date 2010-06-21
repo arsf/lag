@@ -6,9 +6,8 @@
  */
 
 #include "cacheminder.h"
-#include <iostream>
+
 #include <deque>
-#include "boost/date_time/time_duration.hpp"
 #include "quadtreeexceptions.h"
 
 cacheminder::cacheminder(int cachesize)
@@ -21,7 +20,7 @@ cacheminder::cacheminder(int cachesize)
 
 // WANRING!!!: it is imperitive that the requestsize is correct and is always
 // identical to the relasesize given to the releasecache method below
-// if there don't match up things go downhill fast, see releasecache for justification
+// if they don't match up things go downhill fast, see releasecache for justification
 
 void cacheminder::clearcache()
 {
@@ -102,153 +101,11 @@ void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
     // search for the bucket and then remove it from the queue then update the cache counter
 }
 
-void cacheminder::cachelist(vector<pointbucket *> *bucketlist)
-{
-    {
-     //   boost::recursive_mutex::scoped_lock mylock(quemutex);
 
-        // if the cache limit has not been reached yet there is no need to clear the cache or cache new buckets in
-        if(!cacheing)
-        {
-            return;
-        }
-
-        vector<pointbucket *> tobereleased;
-        cout << "start" << endl;
-        
-        for (unsigned int k = 0; k < bucketsincache.size(); k++)
-        {
-            bool found = false;
-            for (unsigned int x = 0; x < bucketlist->size(); x++)
-            {
-                if (bucketsincache.at(k) == bucketlist->at(x))
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (found == false)
-            {
-                tobereleased.push_back(bucketsincache[k]);
-            }
-        }
-        
-        cout << "middle" << endl;
-        for (unsigned int k = 0; k < tobereleased.size(); k++)
-        {
-            tobereleased[k]->uncache();
-        }
-        cout << "stop" << endl;
-        
-    }
-    setcachetodo(bucketlist);
-
-    // clear the cache
-
-    // load as much of the list as possible into the chache
-}
 
 cacheminder::~cacheminder()
 {
     thread1.interrupt();
     thread1.join();
     delete cachetodo;
-}
-
-void cacheminder::setcachetodo(vector<pointbucket *> *tasks)
-{
-    boost::recursive_mutex::scoped_lock mylock(todomutex);
-    delete cachetodo;
-    cachetodo = new deque<pointbucket *>();
-    for (unsigned int k = 0; k < tasks->size(); k++)
-    {
-        cachetodo->push_back(tasks->at(k));
-    }
-    startcachethread();
-}
-
-void cacheminder::pushcachetodo(vector<pointbucket *> *tasks)
-{
-    boost::recursive_mutex::scoped_lock mylock(todomutex);
-    for (unsigned int k = 0; k < tasks->size(); k++)
-    {
-        cachetodo->push_back(tasks->at(k));
-    }
-    startcachethread();
-}
-
-void cacheminder::popcachetodo()
-{
-    boost::recursive_mutex::scoped_lock mylock(todomutex);
-    cachetodo->pop_back();
-}
-
-void cacheminder::deletecachetodo(vector<pointbucket *> *tasks)
-{
-    boost::recursive_mutex::scoped_lock mylock(todomutex);
-    for (unsigned int k = 0; k < tasks->size(); k++)
-    {
-        for (unsigned int x = 0; x < cachetodo->size(); x++)
-        {
-            if (tasks->at(k) == cachetodo->at(x))
-            {
-                cachetodo->erase(cachetodo->begin() + x);
-                break;
-            }
-        }
-    }
-}
-
-void cacheminder::clearcachetodo()
-{
-    boost::recursive_mutex::scoped_lock mylock(todomutex);
-    cachetodo->clear();
-    cout << "thread over" << endl;
-}
-
-void cacheminder::startcachethread()
-{
-    boost::posix_time::time_duration td(0, 0, 0, 0);
-    if (thread1.timed_join(td))
-    {
-        if (cachetodo->size() != 0)
-        {
-            thread1 = boost::thread(&cacheminder::cachethread, this);
-            cout << "NEW THREAD" << endl;
-        }
-    }
-}
-
-void cacheminder::cachethread()
-{
-    while (true)
-    {
-        thread1.yield();
-        boost::this_thread::interruption_point();
-        boost::recursive_mutex::scoped_lock mylock(todomutex);
-        if (cachetodo->size() == 0)
-        {
-            cout << "cache thread: que empty" << endl;
-            break;
-        }
-        if (cachetodo->front()->isincache())
-        {
-            cachetodo->pop_front();
-            continue;
-        }
-        if (cachetodo->front()->cache(false) == false)
-        {
-            cout << "no free memory" << endl;
-            break;
-        }
-        cout << "cache thread :" << cachetodo->front() << endl;
-        cachetodo->pop_front();
-    }
-    clearcachetodo();
-}
-
-void cacheminder::stopcachethread()
-{
-    thread1.interrupt();
-    thread1.join();
 }

@@ -5,6 +5,8 @@
  * Created on April 16, 2010, 3:36 PM
  */
 
+#include "quadtreestructs.h"
+
 #ifndef _LIDARPOINTSAVER_H
 #define	_LIDARPOINTSAVER_H
 
