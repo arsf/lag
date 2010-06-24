@@ -16,12 +16,16 @@
 
 using namespace std;
 
-
-// this constructor creates a quadtree using the parameters given. it then loads
-// into the quadtree the lidarpointloader that was passed
-
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, ostringstream *errorstream)
+void quadtree::initilisevalues(int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream)
 {
+   if(resolutionbase < 1)
+   {
+      throw "invalid resolution base";
+   }
+   if(numresolutionlevels < 1)
+   {
+      throw "invalid number of resolution levels";
+   }
    if (errorstream == NULL)
    {
       // if no stringstream is given it defaults to the error stream
@@ -31,7 +35,10 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, in
    {
       this->errorstream = errorstream;
    }
+
    capacity = cap;
+   this->resolutionbase = resolutionbase;
+   this->numresolutionlevels = numresolutionlevels;
    root = NULL;
    guessbucket = NULL;
    instancedirectory = "/tmp/lag_";
@@ -40,11 +47,19 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, in
    instancedirectory.append(boost::lexical_cast<string > (this));
    boost::filesystem::create_directory(instancedirectory);
    MCP = new cacheminder(cachesize);
+   flightlinenum = 0;
+   prebuilddepth = depth;
+}
+
+// this constructor creates a quadtree using the parameters given. it then loads
+// into the quadtree the lidarpointloader that was passed
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream)
+{
+   initilisevalues(cap, cachesize, depth, resolutionbase, numresolutionlevels, errorstream);
    // get the boundary of the file points
    boundary *b = loader->getboundary();
    // use boundary to create new tree that incompasses all points
-   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity, MCP, instancedirectory);
-   flightlinenum = 0;
+   root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    root->increasedepth(depth);
    load(loader, nth);
 }
@@ -53,29 +68,10 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, in
 
 // this constructor creates a quadtree using a loader object for a given area of interest
 
-quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, ostringstream *errorstream)
+quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream)
 {
-   if (errorstream == NULL)
-   {
-      // if no stringstream is given it defaults to the error stream
-      this->errorstream = &cerr;
-   }
-   else
-   {
-      this->errorstream = errorstream;
-   }
-   capacity = cap;
-   root = NULL;
-   guessbucket = NULL;
-   MCP = new cacheminder(cachesize);
-   instancedirectory = "/tmp/lag_";
-   instancedirectory.append(boost::lexical_cast<string > (time(NULL)));
-   instancedirectory.append(boost::lexical_cast<string > (getpid()));
-   instancedirectory.append(boost::lexical_cast<string > (this));
-   boost::filesystem::create_directory(instancedirectory);
-
-   
-   flightlinenum = 0;
+  initilisevalues(cap, cachesize, depth, resolutionbase, numresolutionlevels, errorstream);
+  
 
    // find the simple bounding box of the new fence
    double maxX, maxY, minX, minY;
@@ -87,8 +83,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, doubl
       if(Ys[k] > maxY) {maxY=Ys[k];}
       if(Ys[k] < minY) {minY=Ys[k];}
    }
-
-   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory);
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    root->increasedepth(depth);
    // use area of intrest load
    load(loader, nth, Xs, Ys, size);
@@ -96,36 +91,19 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, doubl
 }
 
 
-quadtree::quadtree(boundary b, int cap, int cachesize, int depth, ostringstream *s)
+quadtree::quadtree(boundary b, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream)
 {
-   quadtree(b.minX, b.minY, b.maxX, b.maxY, cap, cachesize, depth, s);
+   quadtree(b.minX, b.minY, b.maxX, b.maxY, cap, cachesize, depth, resolutionbase, numresolutionlevels, errorstream);
 }
 
 
 // this constructor creates an empty quadtree to the input specifications
 // NOTE: this could still have data loaded into if using load but
 // the points may not fail within the boundry
-quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, ostringstream *s)
+quadtree::quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream)
 {
-   if (s == NULL)
-   {
-      // if no stringstream is given it defaults to the error stream
-      errorstream = &cerr;
-   }
-   else
-   {
-      errorstream = s;
-   }
-   capacity = cap;
-   flightlinenum = 0;
-   guessbucket = NULL;
-   MCP = new cacheminder(cachesize);
-   instancedirectory = "/tmp/lag_";
-   instancedirectory.append(boost::lexical_cast<string > (time(NULL)));
-   instancedirectory.append(boost::lexical_cast<string > (getpid()));
-   instancedirectory.append(boost::lexical_cast<string > (this));
-   boost::filesystem::create_directory(instancedirectory);
-   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory);
+   initilisevalues(cap, cachesize, depth, resolutionbase, numresolutionlevels, errorstream);
+   root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    root->increasedepth(depth);
 }
 
@@ -184,9 +162,9 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the top left corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->minX, newby2, capacity, MCP, instancedirectory);
-      quadtreenode* tr = new quadtreenode(b->minX, b->maxY, newbx2, newby2, capacity, MCP, instancedirectory);
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->maxY, capacity, MCP, instancedirectory);
+      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->minX, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* tr = new quadtreenode(b->minX, b->maxY, newbx2, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
 
       boundary* subboundary = new boundary;
       subboundary->minX = b->minX;
@@ -201,7 +179,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       delete subboundary;
       delete b;
       // create a new node above the old containing the 3 new child nodes and the expaned old node
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    }
 
    // if the old node is in the bottom left
@@ -209,8 +187,8 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the top right corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->maxX, newby2, capacity, MCP, instancedirectory);
-      quadtreenode* tr = new quadtreenode(b->maxX, b->maxY, newbx2, newby2, capacity, MCP, instancedirectory);
+      quadtreenode* tl = new quadtreenode(newbx1, b->maxY, b->maxX, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* tr = new quadtreenode(b->maxX, b->maxY, newbx2, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
 
       boundary* subboundary = new boundary;
       subboundary->minX = newbx1;
@@ -221,9 +199,9 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       // the old node then needs to be expanded into its new quarter
       quadtreenode* bl = expandboundary(oldnode, subboundary);
       delete subboundary;
-      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->maxY, capacity, MCP, instancedirectory);
+      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    }
 
    // if the old node is in the top right
@@ -231,7 +209,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
    {
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the bottom left corner of the old node
-      quadtreenode* tl = new quadtreenode(newbx1, b->minY, b->minX, newby2, capacity, MCP, instancedirectory);
+      quadtreenode* tl = new quadtreenode(newbx1, b->minY, b->minX, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
 
       boundary* subboundary = new boundary;
       subboundary->minX = b->minX;
@@ -242,10 +220,10 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
       // the old node then needs to be expanded into its new quarter
       quadtreenode* tr = expandboundary(oldnode, subboundary);
       delete subboundary;
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->minY, capacity, MCP, instancedirectory);
-      quadtreenode* br = new quadtreenode(b->minX, newby1, newbx2, b->minY, capacity, MCP, instancedirectory);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->minX, b->minY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* br = new quadtreenode(b->minX, newby1, newbx2, b->minY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    }
 
    // if the old node is in the top left
@@ -263,26 +241,15 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 
       // create nodes that divide up the new boundary with the dividing lines passing through 
       // the bottom right corner of the old node
-      quadtreenode* tr = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity, MCP, instancedirectory);
-      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->maxX, b->minY, capacity, MCP, instancedirectory);
-      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->minY, capacity, MCP, instancedirectory);
+      quadtreenode* tr = new quadtreenode(b->maxX, b->minY, newbx2, newby2, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* bl = new quadtreenode(newbx1, newby1, b->maxX, b->minY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
+      quadtreenode* br = new quadtreenode(b->maxX, newby1, newbx2, b->minY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
       delete b;
-      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory);
+      return new quadtreenode(newbx1, newby1, newbx2, newby2, capacity, tl, tr, bl, br, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    }
 
    return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -682,11 +649,11 @@ void quadtree::saveflightline(uint8_t flightlinenum, lidarpointsaver *saver)
    for(unsigned int k=0; k<buckets->size(); k++)
    {
       current = buckets->at(k);
-      for(int i=0; i<current->getnumberofpoints(); i++)
+      for(int i=0; i<current->getnumberofpoints(0); i++)
       {
-         if(current->getpoint(i).flightline == flightlinenum)
+         if(current->getpoint(i, 0).flightline == flightlinenum)
          {
-            points[counter] = current->getpoint(i);
+            points[counter] = current->getpoint(i, 0);
             counter++;
             if(counter == 1000000)
             {

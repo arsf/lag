@@ -135,7 +135,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
                      int fenceps = 0;
                      if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
+                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit, 3, loaderrorstream);
                      else{
                         cout << "No fence!" << endl;
                         return 222;
@@ -145,7 +145,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     lidardata = new quadtree(loader,bucketlimit,poffs,cachelimit,loaderrorstream);
+                     lidardata = new quadtree(loader,bucketlimit,poffs,cachelimit, 3, loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.
@@ -183,7 +183,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
                      int fenceps = 0;
                      if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(aloader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
+                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(aloader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit, 3, loaderrorstream);
                      else{
                         cout << "No fence!" << endl;
                         return 222;
@@ -193,7 +193,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,cachelimit,loaderrorstream);
+                     lidardata = new quadtree(aloader,bucketlimit,poffs,cachelimit, 3, loaderrorstream);
                   }
                }
                else{//... but for all other situations add to it.

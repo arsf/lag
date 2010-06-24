@@ -8,8 +8,10 @@ int quadtreenode::counter;
 int quadtreenode::overflowcounter;
 // basic constructor which initilizes the boundary and capacity from paramters and the other meta data to defaults
 
-quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP, string instancedirectory)
+quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCP, string instancedirectory, int resolutionbase, int numresolutionlevels)
 {
+   this->resolutionbase = resolutionbase;
+   this->numresolutionlevels = numresolutionlevels;
    this->minX = minX;
    this->minY = minY;
    this->maxX = maxX;
@@ -30,8 +32,10 @@ quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, i
 // constructor which allows both the boundarys, capacity and the child nodes of the
 // quadtree to be defined
 
-quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCP, string instancedirectory)
+quadtreenode::quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCP, string instancedirectory, int resolutionbase, int numresolutionlevels)
 {
+   this->resolutionbase = resolutionbase;
+   this->numresolutionlevels = numresolutionlevels;
    this->minX = minX;
    this->minY = minY;
    this->maxX = maxX;
@@ -101,7 +105,7 @@ void quadtreenode::print()
       {
          for (int k = 0; k < numofpoints; k++)
          {
-            cout << "(" << bucket->getpoint(k).x << " , " << bucket->getpoint(k).y << ")";
+            cout << "(" << bucket->getpoint(k, 0).x << " , " << bucket->getpoint(k, 0).y << ")";
          }
       }
       cout << endl << endl;
@@ -217,17 +221,17 @@ void quadtreenode::increase_to_minimum_depth(int i)
 void quadtreenode::splitnode()
 {
    if (a == NULL)
-      a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP, instancedirectory);
+      a = new quadtreenode(minX, minY + ((maxY - minY) / 2.0), minX + ((maxX - minX) / 2.0), maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    if (b == NULL)
-      b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP, instancedirectory);
+      b = new quadtreenode(minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), maxX, maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    if (c == NULL)
-      c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
+      c = new quadtreenode(minX, minY, minX + ((maxX - minX) / 2.0), minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    if (d == NULL)
-      d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory);
+      d = new quadtreenode(minX + ((maxX - minX) / 2.0), minY, maxX, minY + ((maxY - minY) / 2.0), capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
 
    for (int k = 0; k < numofpoints; k++)
    {
-      point bob = bucket->getpoint(k);
+      point bob = bucket->getpoint(k, 0);
       // attept to insert each point in turn into the child nodes
       if (a->insert(bob))
       {
@@ -319,7 +323,7 @@ bool quadtreenode::insert(point newP)
          // insert new point
          if (bucket == NULL)
          {
-            bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP, instancedirectory);
+            bucket = new pointbucket(capacity, minX, minY, maxX, maxY, MCP, instancedirectory, resolutionbase, numresolutionlevels);
             //cout << "bucket " << bucket << " created " << endl;
          }
          bucket->setpoint(newP);

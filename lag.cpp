@@ -541,7 +541,7 @@ int GUIset(int argc,char *argv[]){
          std::exit(1);
       }
    }
-   int bucketlimit = 100000;//How many points in each bucket, maximum.
+   int bucketlimit = 200000;//How many points in each bucket, maximum.
    quadtree* lidardata = NULL;//The flightlines are stored here.
    tdo = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);
    tdo->set_size_request(200,200);
@@ -611,6 +611,7 @@ int GUIset(int argc,char *argv[]){
    return 0;
 }
 
+/*
 int main(int argc, char** argv) {
    cout << "Build number: 2010.06.10.1" << endl;
    exename.append(argv[0]);//Record the program name.
@@ -619,3 +620,4 @@ int main(int argc, char** argv) {
    if(prof != NULL)delete prof;
    return returnvalue;
 }
+*/

@@ -30,7 +30,7 @@ void cacheminder::clearcache()
     }
 }
 
-bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force)
+bool cacheminder::updatecache(int requestsize, pointbucket *pbucket, bool force)
 {
     //boost::recursive_mutex::scoped_lock mylock(quemutex);
     if (requestsize > totalcache)
@@ -58,14 +58,16 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
         }
     }
     else if ((cacheused + requestsize > totalcache))
-    {
+    {   
         return false;
     }
 
-
+   // cout << "cacheing" << endl;
 
     bucketsincache.push_back(pbucket);
     cacheused = cacheused + requestsize;
+   // cout << cacheused << endl;
+   // cout << bucketsincache.size() << endl;
     return true;
 
 
@@ -84,6 +86,7 @@ bool cacheminder::requestcache(int requestsize, pointbucket *pbucket, bool force
 
 void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
 {
+   
    // boost::recursive_mutex::scoped_lock mylock(quemutex);
     deque<pointbucket*>::iterator ity;
     for (ity = bucketsincache.begin(); ity < bucketsincache.end(); ity++)
@@ -92,8 +95,6 @@ void cacheminder::releasecache(int releasesize, pointbucket *pbucket)
         {
             bucketsincache.erase(ity);
             cacheused = cacheused - releasesize;
-
-
             return;
         }
     }

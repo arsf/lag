@@ -26,38 +26,45 @@ class cacheminder;
 /**
  * this class represents a bucket which holds a colletion of points. it stores
  * metadata about the points it holds and manages the caching and uncaching of the points
+ * <br>
+ * The pointbucket class can hold several subsets of the points that fall within it
+ * depending on arguements when it is constructed. The point bucket always stores a full list
+ * of points but also possibly several progressivly smaller subsets. these are defined by a base number and a
+ * number of levels so that base 10 levels 4 results in 4 subsets
+ * 10^0:every point, the second 10^1:every 10th point, 10^2:every 100th point, 10^3: every 1000th point
+ * points that fall into multiple subsets will be present in all those subsets so the first point always falls into
+ * every subset.<br>
+ * <br>
+ * This is mostly hidden from other classes
+ * except when getting a point or the number of points both of which depend on the resolution desired.
  *
- * while to other classes it appears that this class contains the points it infact dosen't.
- * it has a pointer to a serializableinnerbucket which is a lightweight serilizable class which
- * contains the point array. When the pointbucket caches or uncaches the points it infact remains in memory
- * so that the meta data is always available and it is just the serilizableinnerbucket that is cached and uncached.
+ * @note because the point bucket holds several sets of data of the same type many of its attributes
+ * are stored in arrays with each index holding the value that relates to a different subset.
  */
 class pointbucket
 {
-
-
-    int numberofpoints;
-
-
     unsigned short int minintensity, maxintensity;
     double minZ, maxZ;
     double minX, minY, maxX, maxY;
     cacheminder *MCP;
-    int numberofserializedpoints;
-    bool serialized;
-    bool incache;
-    int cap;
-    string filepath;
+    int splitvalue;
+    int numberofsplitlevels;   
+    int cap;    
     string instancedirectory;
-
-    bool updated;
-
-    int pointarraysize;
+    
+    // arrays containing different values for these attributes for each subset of points
+    int *numberofpoints;
+    string *filepath;
+    bool *updated;
+    int *numberofserializedpoints;
+    bool *serialized;
+    bool *incache;
+    int *pointarraysize;
     int increaseamount;
-    point *points;
-    lzo_uint compresseddatasize;
-    int subset1skip;
-    int subset2skip;
+    point **points;
+    lzo_uint *compresseddatasize;
+    
+    
 
 public:
 
@@ -67,18 +74,20 @@ public:
     static long i_counter;
     /**
      *  constructer which initilizes the capacity of the bucket along with the boundary from
-     * parameters and the other varibles to defaults
+     * parameters and the other varibles to defaults.
+     *
      *
      * @param cap the number of points the bucket can hold
-     * @param
      * @param minX X value of the lower left corner of the boundary
      * @param minY Y value of the lower left corner of the boundary
      * @param maxX X value of the upper right corner of the boundary
      * @param maxY Y value of the upper right corner of the boundary
      * @param MCP the cacheminder for this quadtree instance
      * @param instanceddirectory string containing a path to a directory where temporary files will be saved
+     * @param resolutionbase the base number for subset calculation (see class description for more detail)
+     * @param numresolutionlevels the number of resolution levels (see class description for more detail)
      */
-    pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory);
+    pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory, int resolutionbase, int numresolutionlevels);
    
     /**
      * deconstructor
@@ -86,7 +95,7 @@ public:
     ~pointbucket();
 
     /**
-     * a method which removes the associated SerializableInnerBucket and writes
+     * a method which removes the smallest cached subset and writes
      * it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
      */
     void uncache();
@@ -98,46 +107,36 @@ public:
      * @note this requests space equal to the current size of the serilizableinnerbucket
      *
      * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
+     * @param resolution indicates which subset to cache
      * 
      * @return true=memory assigned use it
      */
-    bool cache(bool force);
+    bool cache(bool force, int resolution);
 
-    /**
-     * a method that requests some space in main memory
-     *
-     * @note this requests space equal to i. because cache is only freed by the uncache method which frees
-     * an amount based on the size of serilizableinnerbucket the increasecache method should only be used
-     * to increase the cache usage to the same level as the serilizableinnerbucket size when the size has increased after it was cached.
-     * (in other words be very very very carefull using this method)
-     *
-     * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
-     *
-     * @return true=memory assigned use it
-     */
-    bool increasecache(bool force, int i);
+    
 
     /**
      * a method that adds a layer between outside classes and the SerializableInnerBucket. this prevents
-     * outside classes from accessing the SerializableInnerBucket without the pointbuckets knowledge. This
-     * is important as the SerializableInnerBucket may not be cached. by providing this method all access to
-     * SerializableInnerBucket prompts the pointbucket to check if its cached and cache if neccessary.
+     * outside classes from accessing the subset array without the pointbuckets knowledge. This
+     * is important as the subset may not be cached. by providing this method all access to
+     * the subset array prompts the pointbucket to check if its cached and cache if neccessary.
      *
      * @param i the index of the point to get
+     * @param resolution index of resolution level to get the point from (0 to (the number of levels-1))
      *
      * @return a reference to the desired point
      */
-    inline point& getpoint(int i)
+    inline point& getpoint(int i, int resolution)
     {
         //boost::recursive_mutex::scoped_lock mylock(getmutex);
-        if (incache)
+        if (incache[resolution])
         {
-            return points[i];
+            return points[resolution][i];
         }
         else
         {
-            cache(true);
-            return points[i];
+            cache(true, resolution);
+            return points[resolution][i];
         }
     }
 
@@ -149,19 +148,8 @@ public:
      * @param i the index of the point to set
      * @param classification the new classification value of the point
      */
-    inline void setclassification(int i, uint8_t classification)
-    {
-        if(incache)
-        {
-            points[i].classification = classification;
-        }
-        else
-        {
-            cache(true);
-            points[i].classification = classification;
-        }
-        updated = true;
-    }
+    void setclassification(int i, uint8_t classification);
+    
 
 
 
@@ -178,9 +166,18 @@ public:
 
 
     // getters
-    inline int getnumberofpoints() const
+    /**
+     * returns the number of points in the specified resolution bucket
+     *
+     * @param resolution the index of the resolution level
+     */
+    inline int getnumberofpoints(int resolution) const
     {
-        return numberofpoints;
+        if (resolution > numberofsplitlevels)
+        {
+            throw "resolution index out of bounds";
+        }
+        return numberofpoints[resolution];
     }
 
     inline double getmaxX() const

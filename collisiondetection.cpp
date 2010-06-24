@@ -75,10 +75,7 @@ bool vectortest(double *Xs, double *Ys, int size, double px, double py)
 
 bool point_NAOrec(double px, double py, double *Xs, double *Ys, int size)
 {
-
-
    return vectortest(Xs, Ys, size, px, py);
-
 }
 
 

@@ -17,7 +17,7 @@
 using namespace std;
 
 /**
- * this class handles the loading of .LAS files.
+ * this class handles the loading of points from .LAS files.
  */
 class LASloader : public lidarpointloader
 {
@@ -27,7 +27,7 @@ class LASloader : public lidarpointloader
    liblas::LASHeader  header;
 public:   
    /**
-    * a constructor.
+    * a constructor
     * @param filename the path of the file to be associated with this loader
     */
    LASloader(const char *filename);
@@ -38,7 +38,7 @@ public:
    ~LASloader();
 
    /**
-    * a method to load points from the file.
+    * a method to load points in a fence from the file.
     * this method takes argurments that cause it to load points seperated by a defined number of points into the provided array that are within a specific area.
     * @note caution, in general this method is called by quadtree and is not used by the user.
     * @param n the number of points to load

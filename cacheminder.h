@@ -25,23 +25,38 @@ using namespace std;
  */
 class cacheminder {
 public:
+    /**
+     * a constructer
+     *
+     * @param cachesize the number of points that can be cache at any one time
+     */
     cacheminder(int cachesize);
+
+    /**
+     * a destructer
+     */
     ~cacheminder();
 
     /**
-     * a method to request some cache space
+     * a method to update the amount of cache being used by a bucket. if the amount of
+     * free cache is insufficant buckets will be uncached untill enough space is free.
      *
-     * @param requestsize the number of points requested
-     * @pbucket a pointer to the bucket asking for the cache (used for uncache calls)
-     * @force true=remove other buckets from cache to make room.
+     * @note updateing the cache used by a bucket to zero does not remove it from the cache list
+     * to remove a bucket from cache completely call release cache.
+     * @param requestsize the number of points to increase (or if negative decrease) the number of cache points by
+     * @param pbucket a pointer to the bucket asking for the cache (used for uncache calls)
+     * @param force true=remove other buckets from cache to make room.
      *
      * @return true=space found and allocated. only possible to return false if force=false
      */
-    bool requestcache(int requestsize, pointbucket *pbucket, bool force);
+    bool updatecache(int requestsize, pointbucket *pbucket, bool force);
 
     /**
-     * a method to release the cache being used by a bucket
+     * a method to release the cache being used by a bucket and remove the bucket from the cached list
      *
+     * @note this can only be called on a bucket that has been cached. Additionally
+     * this method must be called to completely remove a bucket from cache, even if
+     * updatecache has been used to reduce the bucket's cache usage to zero
      * @param release the amount of cache to be realse (MUST match the amount used by the bucket)
      * @param pbucket the bucket whose cache is to be freed
      */

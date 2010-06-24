@@ -39,7 +39,8 @@ private:
     bool leaf;
     cacheminder *MCP;
     string instancedirectory;
-
+    int resolutionbase;
+    int numresolutionlevels;
     int subset1skip;
     int subset2skip;
 
@@ -63,7 +64,7 @@ private:
      * @param MCD the cacheminder for this quadtree instance
      * @param instanceddirectory string containing a path to a directory where temporary files will be saved
      */
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCD, string instancedirectory);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, cacheminder *MCD, string instancedirectory, int resolutionbase, int numresolutionlevels);
 
 
     /**
@@ -84,7 +85,7 @@ private:
      * @param MCD the cacheminder for this quadtree instance
      * @param instanceddirectory string containing a path to a directory where temporary files will be saved
      */
-    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCD, string instancedirectory);
+    quadtreenode(double minX, double minY, double maxX, double maxY, int cap, quadtreenode* a, quadtreenode* b, quadtreenode* c, quadtreenode* d, cacheminder *MCD, string instancedirectory, int resolutionbase, int numresolutionlevels);
     ~quadtreenode();
 
     /**

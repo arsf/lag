@@ -31,7 +31,7 @@ typedef tr1::unordered_map<uint8_t, string> flighthash;
  * quadtreenode which is the root node. it provides functions to build the tree, load points and the access those points.
  *
  * @note the quadtree generates and uses a unique folder in the /tmp area of the machine it is run on
- * to hold temporary data during exicution, if the program containing the quadtree end unexpectantly
+ * to hold temporary data during exicution, if the program containing the quadtree ends unexpectantly
  * preventing the deconstructor from being called these temporary files will not be cleaned up.
  */
 class quadtree{
@@ -42,10 +42,16 @@ class quadtree{
     quadtreenode* guessbucket;
     // hashtable to hold flight file name/flight number pairs
     flighthash flighttable;
-    
+    int prebuilddepth;
     string instancedirectory;
+    int resolutionbase;
+    int numresolutionlevels;
+
+    void initilisevalues(int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream);
 public:
    cacheminder *MCP;
+
+    
    /**
      * a constructor that builds a new quad tree from a given lidarpointloader object
      *
@@ -53,9 +59,11 @@ public:
      * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
      * @param nth the number of points to skip between each loaded point
      * @param cachesize the number of points to hold in ram at any one time
+     * @param resolutionbase see \link pointbucket \endlink for explanation
+     * @param numresolutionlevels see \link pointbucket \endlink for explanation
      * @param errorstream string stream to which error messages will be appended
      */
-   quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
    
    /**
      * a constructor that builds a new quadtree from a given lidarpointloader object using a convex polygon defined by a series of points
@@ -69,7 +77,7 @@ public:
      * @param cachesize the number of points to hold in ram at any one time
      * @param errorstream string stream to which error messages will be appended
      */
-   quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, ostringstream *errorstream = NULL);
+   quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
 
 
    /**
@@ -80,7 +88,7 @@ public:
     * @param cachesize the number of points to hold in ram at any one time
     * @param errorstream string stream to which error messages will be appended
     */
-   quadtree(boundary b, int cap, int cachesize, int depth, ostringstream *errorstream = NULL);
+   quadtree(boundary b, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
 
    /**
     * a constructor that builds a new quadtree with user defined dimensions
@@ -93,7 +101,7 @@ public:
     * @param cachesize the number of points to hold in ram at any one time
     * @param errorstream string stream to which error messages will be appended
     */
-   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, ostringstream *errorstream = NULL);
+   quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
    ~quadtree();
    
 
