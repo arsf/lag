@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>/users/rsg/chrfi/newsvn/lag/ASCIIloader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/AdvancedOptionsWindow.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/BoxOverlay.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/Display.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/FileOpener.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/FileSaver.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/LASloader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/LASsaver.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/MathFuncs.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/Profile.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/TwoDeeOverview.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/cacheminder.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/collisiondetection.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/commonfunctions.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/lidarpointloader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/lidarpointsaver.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/pointbucket.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtree.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtreeexceptions.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtreenode.h</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtreestructs.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>/users/rsg/chrfi/newsvn/lag/ASCIIloader.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/AdvancedOptionsWindow.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/BoxOverlay.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/Display.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/FileOpener.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/FileSaver.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/LASloader.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/LASsaver.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/MathFuncs.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/Profile.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/TwoDeeOverview.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/cacheminder.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/collisiondetection.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/commonfunctions.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/lag.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/main.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/pointbucket.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtree.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtreenode.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/newsvn/lag/quadtreestructs.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>lag-Makefile.mk</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>lag-Makefile.mk</projectmakefile>
+  <confs>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include</pElem>
+          </incDir>
+          <commandLine>-I /users/rsg/chrfi/liblas_x64/include `pkg-config --cflags --libs gtkmm-2.4 libglademm-2.4 cairomm-1.0 gtkglextmm-1.2 gthread-2.0` -g -pg  -Wall   -O4</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerAddLib>
+            <pElem>/users/rsg/chrfi/newsvn/lag/TCMalloc/lib</pElem>
+          </linkerAddLib>
+          <linkerLibItems>
+            <linkerLibLibItem>boost_iostreams-mt</linkerLibLibItem>
+            <linkerLibLibItem>boost_filesystem-mt</linkerLibLibItem>
+            <linkerLibLibItem>las</linkerLibLibItem>
+            <linkerLibLibItem>boost_thread-mt</linkerLibLibItem>
+            <linkerLibLibItem>boost_serialization-mt</linkerLibLibItem>
+            <linkerLibLibItem>lzo2</linkerLibLibItem>
+            <linkerLibFileItem>/users/rsg/chrfi/newsvn/lag/TCMalloc/lib/libtcmalloc.a</linkerLibFileItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>
