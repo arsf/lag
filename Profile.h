@@ -19,12 +19,12 @@ class Profile : public Display{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
-   bool classify(uint8_t classification);
-   void makerulerbox();//Make rectangle showing where the ruler is.
-   void makefencebox();//Make rectangle showing where the fence is.
-   void makeZscale();//This makes a scale.
-   void drawoverlays();//Draw all of the above make methods.
+   bool classify(uint8_t classification);//This classifies the points selected by the profile fence.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
+   void drawoverlays();//Draw all of the make methods indented below.
+      void makerulerbox();//Make line showing where the ruler is.
+      void makefencebox();//Make rectangle showing where the fence is.
+      void makeZscale();//This makes a height scale.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -70,38 +70,38 @@ public:
       fencing=false;
    }
    //Setters:
-   void setdrawpoints(bool drawpoints){this->drawpoints=drawpoints;}
-   void setdrawmovingaverage(bool drawmovingaverage){this->drawmovingaverage=drawmovingaverage;}
-   void setmavrgrange(int mavrgrange){this->mavrgrange=mavrgrange;}
-   void setpreviewdetail(double previewdetailmod){this->previewdetailmod=previewdetailmod;}
-   void setshowheightscale(bool showheightscale){this->showheightscale = showheightscale;}
-   void setslantwidth(double slantwidth){this->slantwidth = slantwidth;}
-   void setslanted(double slanted){this->slanted = slanted;}
+   void setdrawpoints(bool drawpoints){ this->drawpoints=drawpoints; }
+   void setdrawmovingaverage(bool drawmovingaverage){ this->drawmovingaverage=drawmovingaverage; }
+   void setmavrgrange(int mavrgrange){ this->mavrgrange=mavrgrange; }
+   void setpreviewdetail(double previewdetailmod){ this->previewdetailmod=previewdetailmod; }
+   void setshowheightscale(bool showheightscale){ this->showheightscale = showheightscale; }
+   void setslantwidth(double slantwidth){ this->slantwidth = slantwidth; }
+   void setslanted(double slanted){ this->slanted = slanted; }
 protected:
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
    bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
    double samplemaxz,sampleminz;//Store the maximum and minimum heights of the profile sample.
-   double *profxs,*profys;
-   int profps;
+   double *profxs,*profys;//These contain the x and y coordinates, respectively, of the corners of the profile.
+   int profps;//This contains the number of corners the profile has.
    
    //Control:
    bool drawpoints;//Determines whether points are drawn.
    bool drawmovingaverage;//Determines whether the best fit line is drawn.
    bool imageexists;//Determines whether to draw anything, based on the existance or nonexistance of anything to draw.
-   bool slanted;
-   double slantwidth;
+   bool slanted;//Determines whether to draw the fence slanted or not.
+   double slantwidth;//Determines the width of the slanted fence.
    
    //Point data and related stuff:
-   int totnumpoints;
+   int totnumpoints;//This is the total number of points in the profile. This is used to determine how many points to skip, along with the modifiers. The more points there are, the more points will be skipped.
    int mavrgrange;//Defines the range of the moving average, with 0 meaning no averaging.
    double** linez;//This array contains, for each flightline (upper level), the z coordinates for each point after calculation of the moving average.
-   int linezsize;//It is necessary to store th size of linez in class scope because the old version of linez is deleted before the new version is produced, needing a record of the old length that will not fall out of scope.
+   int linezsize;//It is necessary to store the size of linez in class scope because the old version of linez is deleted before the new version is produced, needing a record of the old length that will not fall out of scope.
    double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower means more detail, higher means less.
    vector<int> flightlinestot;//This vector contains all the flightline numbers.
    vector<point>* flightlinepoints;//This is a pointer (array) of vectors of points, representing for each flightline (the elements of the array) the points that it contains (the vectors).
 
    //Position variables:
-   double leftboundx,leftboundy,rightboundx,rightboundy;//The boundary coordinates of the window, translated into world coordinates.
+   double leftboundx,leftboundy,rightboundx,rightboundy;//The boundary coordinates of the window, translated into world coordinates. Please note that the Z axis is "up", not the Y axis. The user cannot see the difference between the X and Y axes.
    double centrex,centrey,centrez;//These give the centre of the viewport in image terms, rather than screen terms.
    double viewerx,viewery,viewerz;//These give the coordinates of the "eye", looking towards the centre.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
@@ -111,13 +111,13 @@ protected:
    double width;//The width of the profile.
  
    //Rulering:
-   double rulerstartx, rulerstarty,rulerstartz;//The start coordinates for the ruler.
-   double rulerendx, rulerendy,rulerendz;//The end coordinates for the ruler.
+   double rulerstartx,rulerstarty,rulerstartz;//The start coordinates for the ruler.
+   double rulerendx,rulerendy,rulerendz;//The end coordinates for the ruler.
    double rulerwidth;//The width of the ruler.
    bool rulering;//Determines whether or not the ruler should be drawn.
    //Fencing:
-   double fencestartx, fencestarty,fencestartz;//The start coordinates for the fence.
-   double fenceendx, fenceendy,fenceendz;//The end coordinates for the fence.
+   double fencestartx,fencestarty,fencestartz;//The start coordinates for the fence.
+   double fenceendx,fenceendy,fenceendz;//The end coordinates for the fence.
    bool fencing;//Determines whether or not the fence should be drawn.
  
    //Signal handlers:

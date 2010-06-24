@@ -15,13 +15,8 @@
 AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml){
    this->tdo = tdo;
    this->prof = prof;
-   refXml->get_widget("raiselinecheck",raiselinecheck);
-   if(raiselinecheck)raiselinecheck->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_raiselinecheck));
-   refXml->get_widget("raiselineselect",raiselineselect);
-   if(raiselineselect)raiselineselect->signal_value_changed().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_raiselineselected));
    refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
    if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_advancedoptionsdialog_response));
-   refXml->get_widget("classificationselect",classificationselect);
    //False elevation:
       refXml->get_widget("classcheckbutton0",classcheckbutton0);
       if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_classcheckbutton0_toggled));
@@ -88,14 +83,11 @@ AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,G
          previewdetailselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_previewdetailselectedprof));
       }
       tdo->setmaindetail(maindetailselect->get_value());
-      tdo->setraiseline(raiselinecheck->get_active());
-      tdo->setlinetoraise(raiselineselect->get_value_as_int());
       prof->setmaindetail(maindetailselectprof->get_value());
       prof->setpreviewdetail(previewdetailselectprof->get_value());
 }
 
 AdvancedOptionsWindow::~AdvancedOptionsWindow(){
-   delete classificationselect;
    delete classcheckbutton0;
    delete classcheckbutton2;
    delete classcheckbutton3;
@@ -121,8 +113,6 @@ AdvancedOptionsWindow::~AdvancedOptionsWindow(){
    delete maindetailselect;
    delete maindetailselectprof;
    delete previewdetailselectprof;
-   delete raiselineselect;
-   delete raiselinecheck;
    delete advancedoptionsdialog;//Have to delete parent after children?
 }
 
@@ -260,13 +250,4 @@ void AdvancedOptionsWindow::on_maindetailselectedprof(){
 void AdvancedOptionsWindow::on_previewdetailselectedprof(){
    prof->setpreviewdetail(previewdetailselectprof->get_value());
    if(prof->is_realized())prof->drawviewable(2);
-}
-void AdvancedOptionsWindow::on_raiselineselected(){
-   tdo->setlinetoraise(raiselineselect->get_value_as_int());
-   if(tdo->is_realized())if(raiselinecheck->get_active())tdo->drawviewable(1);
-}
-//When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
-void AdvancedOptionsWindow::on_raiselinecheck(){
-   tdo->setraiseline(raiselinecheck->get_active());
-   if(tdo->is_realized())tdo->drawviewable(1);
 }

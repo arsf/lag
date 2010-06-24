@@ -82,6 +82,10 @@ protected:
    
    //Methods:
 
+   bool advsubsetproc(vector<pointbucket*>*& pointvector,double *xs,double *ys,int ps);
+   bool clearscreen();
+   void guard_against_interaction_between_GL_areas();
+
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().
    bool on_expose_event(GdkEventExpose* event);//Calls draw on an expose event.

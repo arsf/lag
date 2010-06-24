@@ -18,7 +18,7 @@ class FileSaver{
 public:
    FileSaver(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,quadtree *lidardata);
    ~FileSaver();
-   void show(){ filesaverdialog->show_all(); }
+   void show(){ filesaverdialog->present(); }
    void setlinerange(int first, int second){ flightlinesaveselect->set_range(first,second); }
    void setlabeltext(string text){ flightlinelistlabel->set_text(text); }
    void on_flightlinesaveselected();

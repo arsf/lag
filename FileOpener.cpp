@@ -12,7 +12,7 @@
 #include "Profile.h"
 #include "FileOpener.h"
 
-FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof){
+FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof,TwoDeeOverviewWindow *tdow){
    this->tdo = tdo;
    this->prof = prof;
    this->aow = aow;
@@ -21,6 +21,7 @@ FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Gla
    this->bucketlimit = bucketlimit;
    this->eventboxtdo = eventboxtdo;
    this->eventboxprof = eventboxprof;
+   this->tdow = tdow;
    time_t starttime = time(NULL);
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
@@ -31,6 +32,9 @@ FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Gla
    loaderrorstream = new ostringstream();
    loadedanyfiles = false;
    cachelimit = 25000000;
+   Gtk::MenuItem *openfilemenuitem = NULL;//For selecting to get file-opening menu.
+   refXml->get_widget("openfilemenuitem",openfilemenuitem);
+   if(openfilemenuitem)openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
    refXml->get_widget("filechooserdialog",filechooserdialog);
    if(filechooserdialog)filechooserdialog->signal_response().connect(sigc::mem_fun(*this,&FileOpener::on_filechooserdialogresponse));
    refXml->get_widget("pointskipselect",pointskipselect);
@@ -47,9 +51,12 @@ FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Gla
          cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
       }
    }
+   refXml->get_widget("loadoutputlabel",loadoutputlabel);
+   numlines = 0;
 }
 FileOpener::~FileOpener(){
    loaderroroutput.close();
+   delete loadoutputlabel;
    delete pointskipselect;
    delete fenceusecheck;
    delete asciicodeentry;
@@ -107,8 +114,9 @@ FileOpener::~FileOpener(){
  *
  * */
 int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
+   loadoutputlabel->set_text("");
    cachelimit = cachesizeselect->get_value();
-   int numlines = 0;
+   if(start || !loadedanyfiles || lidardata==NULL)numlines = 0;
    try{//Attempt to get real files.
       string pointoffset,filename;
       if(argc < 3){
@@ -121,115 +129,138 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
          cout << "The point offset must be an integer greater than or equal to zero. In addition, zero can only be accepted in the form \"0\", not \"00\" etc.." << endl;
          return 1;
       }
-      for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
-         numlines++;
-         filename.assign(argv[count]);
-         if(filename != ""){
-            if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
-               LASloader* loader = new LASloader(argv[count]);
-               if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
-                  if(usearea){//If using the fence:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit, 3, loaderrorstream);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
+      if(usearea){
+         for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
+            numlines++;
+            filename.assign(argv[count]);
+            if(filename != ""){
+               double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
+               int fenceps = 0;
+               if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
+               if(fencexs!=NULL&&fenceys!=NULL){
+                  lidarpointloader *loader = NULL;
+                  bool validfile = true;
+                  if(filename.find(".las",filename.length()-4)!=string::npos ||
+                     filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
+                  else if(filename.find(".txt",filename.length()-4)!=string::npos ||
+                          filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
+                     string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
+                     const char* code = code1.c_str();
+                     loader = new ASCIIloader(argv[count],code);
+                  }
+                  else{//For incorrect file extensions:
+                     string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
+                     cout << message << endl;
+                     loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                     validfile = false;
+                  }
+                  if(validfile){
+                     if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
+                        if(lidardata != NULL)delete lidardata;
+                        lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
+                        loaderrorstream->str("");
+                        lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
                      }
+                     else lidardata->load(loader,poffs,fencexs,fenceys,fenceps);
                   }
-                  else{//If not:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     lidardata = new quadtree(loader,bucketlimit,poffs,cachelimit, 3, loaderrorstream);
-                  }
+                  if(loader != NULL)delete loader;
                }
-               else{//... but for all other situations add to it.
-                  if(usearea){//If using the fence:
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(loader,poffs,fencexs,fenceys,fenceps);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else lidardata->load(loader,poffs);//If not.
+               else{
+                  cout << "No fence!" << endl;
+                  loadoutputlabel->set_text(loadoutputlabel->get_text() + "No fence!\n");
+                  return 222;
                }
-               cout << filename << endl;
-               if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
-                  loaderroroutput << filename << endl;
-                  loaderroroutput << loaderrorstream->str();
-                  loaderroroutput.flush();
-                  loaderrorstream->str("");
-               }
-               delete loader;
             }
-            else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
-               string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
-               const char* code = code1.c_str();
-               ASCIIloader* aloader = new ASCIIloader(argv[count],code);
-               if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
-                  if(usearea){//If using the fence:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata = new quadtree(aloader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit, 3, loaderrorstream);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else{//If not:
-                     if(lidardata != NULL)delete lidardata;
-                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
-                     loaderrorstream->str("");
-                     lidardata = new quadtree(aloader,bucketlimit,poffs,cachelimit, 3, loaderrorstream);
-                  }
-               }
-               else{//... but for all other situations add to it.
-                  if(usearea){//If using the fence:
-                     double *fencexs = NULL,*fenceys = NULL;//These are NOT to be deleted here as the arrays they will point to are managed by the TwoDeeOVerview object.
-                     int fenceps = 0;
-                     if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-                     if(fencexs!=NULL&&fenceys!=NULL)lidardata->load(aloader,poffs,fencexs,fenceys,fenceps);
-                     else{
-                        cout << "No fence!" << endl;
-                        return 222;
-                     }
-                  }
-                  else lidardata->load(aloader,poffs);//If not.
-               }
-               cout << filename << endl;
-               if(loaderrorstream->str()!=""){
-                  cout << "There have been errors in loading. Please see the file " + loaderroroutputfile << endl;
-                  loaderroroutput << filename << endl;
-                  loaderroroutput << loaderrorstream->str();
-                  loaderroroutput.flush();
-                  loaderrorstream->str("");
-               }
-               delete aloader;
+            cout << filename << endl;
+            loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
+            if(loaderrorstream->str()!=""){
+               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
+               cout << message << endl;
+               loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+               loaderroroutput << filename << endl;
+               loaderroroutput << loaderrorstream->str();
+               loaderroroutput.flush();
+               loaderrorstream->str("");
             }
-            else{//For incorrect file extensions:
-               cout << "Files must have the extensions .las, .LAS, .txt or .TXT." << endl;
-               return 17;
+         }
+      }
+      else{
+         double minx=0,maxx=0,miny=0,maxy=0;
+         if(start || !loadedanyfiles || lidardata==NULL){
+            for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
+               filename.assign(argv[count]);
+               if(filename != ""){
+                  lidarpointloader *loader = NULL;
+                  if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
+                     loader = new LASloader(argv[count]);
+                  }
+                  else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
+                     string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
+                     const char* code = code1.c_str();
+                     loader = new ASCIIloader(argv[count],code);
+                  }
+                  boundary* lidarboundary = loader->getboundary();
+                  if(lidarboundary->minX < minx || count == 2)minx = lidarboundary->minX;
+                  if(lidarboundary->maxX > maxx || count == 2)maxx = lidarboundary->maxX;
+                  if(lidarboundary->minY < miny || count == 2)miny = lidarboundary->minY;
+                  if(lidarboundary->maxY > maxy || count == 2)maxy = lidarboundary->maxY;
+                  if(lidarboundary != NULL)delete lidarboundary;
+                  if(loader != NULL)delete loader;
+               }
+            }
+         }
+         for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
+            numlines++;
+            filename.assign(argv[count]);
+            if(filename != ""){
+               lidarpointloader *loader = NULL;
+               bool validfile = true;
+               if(filename.find(".las",filename.length()-4)!=string::npos ||
+                  filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
+               else if(filename.find(".txt",filename.length()-4)!=string::npos ||
+                       filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
+                  string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
+                  const char* code = code1.c_str();
+                  loader = new ASCIIloader(argv[count],code);
+               }
+               else{//For incorrect file extensions:
+                  string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
+                  cout << message << endl;
+                  loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                  validfile = false;
+               }
+               if(validfile){
+                  if((count==2 && (start || !loadedanyfiles))||lidardata==NULL){//If refreshing (or from command-line) use first filename to make quadtree...
+                     if(lidardata != NULL)delete lidardata;
+                     lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
+                     loaderrorstream->str("");
+                     lidardata = new quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,loaderrorstream);
+                     lidardata->load(loader,poffs);
+                  }
+                  else lidardata->load(loader,poffs);
+               }
+               if(loader != NULL)delete loader;
+            }
+            cout << filename << endl;
+            loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
+            if(loaderrorstream->str()!=""){
+               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
+               cout << message << endl;
+               loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+               loaderroroutput << filename << endl;
+               loaderroroutput << loaderrorstream->str();
+               loaderroroutput.flush();
+               loaderrorstream->str("");
             }
          }
       }
    }
    catch(descriptiveexception e){
-      cout << "There has been an exception:" << endl;
-      cout << "What: " << e.what() << endl;
-      cout << "Why: " << e.why() << endl;
+      string message = "There has been an exception:\n";
+      message += "What: " + *(e.what());
+      message += "\nWhy: " + *(e.why());
+      cout << message << endl;
+      loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
       loaderrorstream->str("");
       if(lidardata != NULL)delete lidardata;
       lidardata = NULL;
@@ -267,7 +298,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
    fs->setlidardata(lidardata);
    fs->setlabeltext(list);
    fs->setlinerange(0,numlines-1);
-   aow->setraiselinerange(0,numlines-1);
+   tdow->setraiselinerange(0,numlines-1);
    aow->resetcolouringandshading();//(Re)Set the advanced colouring and shading options to the values indicated by the recently loaded flightlines.
    return 0;
 }
@@ -307,3 +338,6 @@ void FileOpener::on_cachesize_changed(){
    string labelstring = "Approximately: " + GB.str() + " GB.";
    cachesizeGBlabel->set_text(labelstring);
 }
+
+//When selected from the menu, the file chooser opens.
+void FileOpener::on_openfilemenuactivated(){ show(); }

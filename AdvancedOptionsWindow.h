@@ -16,16 +16,13 @@ class AdvancedOptionsWindow{
 public:
    AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml);
    ~AdvancedOptionsWindow();
-   void show(){ advancedoptionsdialog->show_all(); }
-   int getclassificationvalue(){ return classificationselect->get_value_as_int(); }
-   void setraiselinerange(int first, int second){ raiselineselect->set_range(first,second); }
+   void show(){ advancedoptionsdialog->present(); }
    void resetcolouringandshading(){ on_drawingresetbutton_clicked(); }
 protected:
    TwoDeeOverview *tdo;
    Profile *prof;
    //Advanced viewing options:
    Gtk::Dialog *advancedoptionsdialog;//Dialog window for advanced options.
-   Gtk::SpinButton *classificationselect;//This determines what to classify points as when selected through the profile.
    //False elevation:
    Gtk::CheckButton *classcheckbutton0;//Elevate classifications with the respective codes:
    Gtk::CheckButton *classcheckbutton2;//...
@@ -54,8 +51,6 @@ protected:
    Gtk::SpinButton *maindetailselect;//Determines how many points are skipped displaying the main overview image.
    Gtk::SpinButton *maindetailselectprof;//Determines how many points are skipped displaying the main profile image.
    Gtk::SpinButton *previewdetailselectprof;//Determines how many points are skipped displaying the profile preview.
-   Gtk::SpinButton *raiselineselect;
-   Gtk::CheckButton *raiselinecheck;
 
    //Signals:
    sigc::connection heightminconn;//These connections are for controlling the interaction of the height and intensity colouring and shading scrollbars and spinbuttons, particularly so that they do not interfere with each other at the wrong moment.
@@ -97,7 +92,6 @@ protected:
    void on_maindetailselectedprof();
    //Does the same as on_maindetailselectedprof, except for the preview of the profile.
    void on_previewdetailselectedprof();
-   void on_raiselineselected();
    //When toggled, the profile box is shown on the 2d overview regardless of whether profiling mode is active.
    void on_raiselinecheck();
 };

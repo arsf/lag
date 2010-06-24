@@ -83,6 +83,13 @@
                         <property name="use_underline">True</property>
                       </widget>
                     </child>
+                    <child>
+                      <widget class="GtkCheckMenuItem" id="raiselinecheckmenu">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Raise selected flightline</property>
+                        <property name="use_underline">True</property>
+                      </widget>
+                    </child>
                   </widget>
                 </child>
               </widget>
@@ -420,6 +427,49 @@ options</property>
                     <property name="expand">False</property>
                   </packing>
                 </child>
+                <child>
+                  <widget class="GtkSeparatorToolItem" id="separatortoolitem11">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkToolItem" id="toolitem5">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox20">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <widget class="GtkSpinButton" id="raiselineselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">0 0 100 1 1 0</property>
+                            <property name="wrap">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="label18">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Raise</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
               </widget>
             </child>
           </widget>
@@ -677,21 +727,35 @@ options</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkToggleToolButton" id="pointshowtoggle">
+                  <widget class="GtkToolItem" id="toolitem2">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Show points</property>
-                    <property name="stock_id">gtk-yes</property>
-                    <property name="active">True</property>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkToggleToolButton" id="lineshowtoggle">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Show lines</property>
-                    <property name="stock_id">gtk-apply</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox8">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <widget class="GtkToggleToolButton" id="pointshowtoggle">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Show points</property>
+                            <property name="stock_id">gtk-yes</property>
+                            <property name="active">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkToggleToolButton" id="lineshowtoggle">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Show lines</property>
+                            <property name="stock_id">gtk-apply</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
@@ -761,6 +825,49 @@ Range</property>
                   </packing>
                 </child>
                 <child>
+                  <widget class="GtkToolItem" id="toolitem4">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox19">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <widget class="GtkSpinButton" id="classificationselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">7 0 255 1 10 0</property>
+                            <property name="wrap">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="label15">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">As (0 - 255):</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSeparatorToolItem" id="separatortoolitem9">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
                   <widget class="GtkToggleToolButton" id="fencetoggleprof">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Fence</property>
@@ -814,23 +921,37 @@ Range</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkToggleToolButton" id="orthogonalprof">
+                  <widget class="GtkToolItem" id="toolitem3">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">toolbutton10</property>
-                    <property name="use_underline">True</property>
-                    <property name="stock_id">gtk-media-stop</property>
-                    <property name="active">True</property>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkToggleToolButton" id="slantedprof">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">toolbutton11</property>
-                    <property name="use_underline">True</property>
-                    <property name="stock_id">gtk-close</property>
+                    <child>
+                      <widget class="GtkVBox" id="vbox9">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <widget class="GtkToggleToolButton" id="orthogonalprof">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Orthogonal</property>
+                            <property name="use_underline">True</property>
+                            <property name="stock_id">gtk-media-stop</property>
+                            <property name="active">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkToggleToolButton" id="slantedprof">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Slanted</property>
+                            <property name="use_underline">True</property>
+                            <property name="stock_id">gtk-close</property>
+                          </widget>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                    </child>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
@@ -1096,6 +1217,29 @@ Otherwise, it is probably better to use point skipping and fences (above).</prop
               </widget>
               <packing>
                 <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hscrollbar_policy">automatic</property>
+                <property name="vscrollbar_policy">automatic</property>
+                <child>
+                  <widget class="GtkViewport" id="viewport1">
+                    <property name="visible">True</property>
+                    <property name="resize_mode">queue</property>
+                    <child>
+                      <widget class="GtkLabel" id="loadoutputlabel">
+                        <property name="visible">True</property>
+                        <property name="selectable">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                </child>
+              </widget>
+              <packing>
+                <property name="position">1</property>
               </packing>
             </child>
           </widget>
@@ -1800,50 +1944,6 @@ Christopher Finerty</property>
                 <property name="n_rows">3</property>
                 <property name="n_columns">2</property>
                 <child>
-                  <widget class="GtkLabel" id="label15">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes"> Classify as (see above):</property>
-                  </widget>
-                </child>
-                <child>
-                  <widget class="GtkSpinButton" id="classificationselect">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">7 0 255 1 10 0</property>
-                    <property name="wrap">True</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label18">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Raise flightline:</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkSpinButton" id="raiselineselect">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="invisible_char">&#x25CF;</property>
-                    <property name="adjustment">0 0 100 1 1 0</property>
-                    <property name="wrap">True</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
-                  </packing>
-                </child>
-                <child>
                   <widget class="GtkCheckButton" id="raiselinecheck">
                     <property name="label" translatable="yes">Raise flightline?</property>
                     <property name="visible">True</property>
@@ -1855,6 +1955,18 @@ Christopher Finerty</property>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
                 <child>
                   <placeholder/>

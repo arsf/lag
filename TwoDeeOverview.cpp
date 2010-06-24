@@ -142,6 +142,7 @@ void TwoDeeOverview::DrawGLToCard(){
    if(threaddebug)cout << "Boo!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
+   guard_against_interaction_between_GL_areas();
    glEnableClientState(GL_VERTEX_ARRAY);//These relate to the enabling of vertex arrays and assigning the arrays to GL.
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
@@ -157,10 +158,6 @@ void TwoDeeOverview::FlushGLToScreen(){
    if(threaddebug)cout << "Lalalalalaaa!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
-   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
-   glPointSize(pointsize);//...
-   glViewport(0, 0, get_width(), get_height());//...
-   resetview();//...
    if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
    else glFlush();
    glwindow->gl_end();
@@ -345,7 +342,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                 case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
                 case 9:red=0;green=0;blue=1;break;//Blue for water.
                 case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=0;blue=0;cout << "Undefined point." << endl;break;//Red for undefined.
+                default:red=1;green=0;blue=0;break;//Red for undefined.
              }
          }
          else if(returncolour){//Colour by return.
@@ -540,24 +537,16 @@ bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
 
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2). When this is called from the expose event (imagetype==3) it draws the main image (drawing speed is not so urgent now that it is threaded).
 bool TwoDeeOverview::drawviewable(int imagetype){
-//   cout << imagetype << endl;
+   guard_against_interaction_between_GL_areas();
    if(thread_running && imagetype == 3 && drawnsinceload){
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
-      get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
-      glPointSize(pointsize);//...
-      glViewport(0, 0, get_width(), get_height());//...
-      resetview();//...
       if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
       else glFlush();
       glwindow->gl_end();
       return true;
    }
    interruptthread = true;//This causes any existing drawing thread to stop.
-   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
-   glPointSize(pointsize);//...
-   glViewport(0, 0, get_width(), get_height());//...
-   resetview();//...
    if(imagetype==1 || (!drawnsinceload && imagetype == 3)){//Draw the main image.
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
          if(threaddebug)cout << "Help! Am stalling!" << endl;
@@ -584,19 +573,14 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       ys[1] = maxy;
       ys[2] = maxy;
       ys[3] = miny;
-      vector<pointbucket*> *pointvector;
-      try{
-         pointvector = lidardata->advsubset(xs,ys,4);//Get data.
-      }catch(descriptiveexception e){
-         cout << "There has been an exception:" << endl;
-         cout << "What: " << e.what() << endl;
-         cout << "Why: " << e.why() << endl;
-         cout << "No points returned." << endl;
-         return false;
-      }
+      vector<pointbucket*> *pointvector = NULL;
+      bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
       delete[]xs;
       delete[]ys;
-      if(pointvector==NULL/*||pointvector->size()==0*/){ return false; }//These sometimes happen.
+      if(!gotdata){
+         if(pointvector!=NULL)delete pointvector;
+         return false;
+      }
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -626,18 +610,14 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       ys[1] = maxy;
       ys[2] = maxy;
       ys[3] = miny;
-      vector<pointbucket*> *pointvector;
-      try{
-         pointvector = lidardata->advsubset(xs,ys,4);//Get data.
-      }catch(descriptiveexception e){
-         cout << "There has been an exception:" << endl;
-         cout << "What: " << e.what() << endl;
-         cout << "Why: " << e.why() << endl;
-         cout << "No points returned." << endl;
-         return false;
-      }
+      vector<pointbucket*> *pointvector = NULL;
+      bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
       delete[]xs;
       delete[]ys;
+      if(!gotdata){
+         if(pointvector!=NULL)delete pointvector;
+         return false;
+      }
       int numbuckets = pointvector->size();
       pointbucket** buckets = new pointbucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
@@ -708,24 +688,14 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    ys[1] = maxy;
    ys[2] = maxy;
    ys[3] = miny;
-   vector<pointbucket*> *pointvector;
-   try{
-      pointvector = lidardata->advsubset(xs,ys,4);//Get data.
-   }catch(descriptiveexception e){
-      cout << "There has been an exception:" << endl;
-      cout << "What: " << e.what() << endl;
-      cout << "Why: " << e.why() << endl;
-      cout << "No points returned." << endl;
-      return false;
-   }
-   if(pointvector==NULL||pointvector->size()==0){ return false; }
-   if(pointvector->size()>0){//If there aren't any points, don't bother.
+   vector<pointbucket*> *pointvector = NULL;
+   bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
+   if(gotdata){//If there aren't any points, don't bother.
       bool anypoint = false;
       int bucketno=0;
       int pointno=0;
       pausethread = true;//Wants exclusive access to pointbucket::getpoint().
       if(threaddebug)cout << 13 << endl;
-//      while(thread_running){usleep(10);}//Will sulk until gets such access.
       waitforpause();//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
@@ -801,7 +771,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain);
       else drawviewable(2);
    }
-   delete pointvector;
+   if(pointvector!=NULL)delete pointvector;
    delete[]xs;//These are here because vetpoints needs to use them as well as advsubset.
    delete[]ys;//...
    get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).

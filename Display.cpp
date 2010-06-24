@@ -160,41 +160,60 @@ double Display::brightness_by(double value,double maxvalue,double minvalue,doubl
   return multiplier;
 }
 
-//This method prepares the image for drawing and sets up OpenGl. It gets data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets up clearing and the initial view.
-void Display::prepare_image(){
-   vector<pointbucket*> *pointvector;
+bool Display::advsubsetproc(vector<pointbucket*>*& pointvector,double *xs,double *ys,int ps){
    try{
-      boundary* lidarboundary = lidardata->getboundary();
-      double *xs = new double[4];
-      xs[0] = lidarboundary->minX;
-      xs[1] = lidarboundary->minX;
-      xs[2] = lidarboundary->maxX;
-      xs[3] = lidarboundary->maxX;
-      double *ys = new double[4];
-      ys[0] = lidarboundary->minY;
-      ys[1] = lidarboundary->maxY;
-      ys[2] = lidarboundary->maxY;
-      ys[3] = lidarboundary->minY;
-      pointvector = lidardata->advsubset(xs,ys,4);//Get ALL data.
-      delete[]xs;
-      delete[]ys;
-      delete lidarboundary;
+      pointvector = lidardata->advsubset(xs,ys,ps);
    }catch(descriptiveexception e){
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
       cout << "Why: " << e.why() << endl;
       cout << "No points returned." << endl;
-      return;
+      return false;
    }
-   if(pointvector==NULL||pointvector->size()==0){//If there is no data, then clear the screen to show no data.
+   if(pointvector==NULL||pointvector->size()==0){ return false; }
+   else return true;
+}
+
+bool Display::clearscreen(){
+   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+   if (!glwindow->gl_begin(get_gl_context()))return false;
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   if (glwindow->is_double_buffered())glwindow->swap_buffers();
+   else glFlush();
+   glwindow->gl_end();
+   return true;
+}
+
+void Display::guard_against_interaction_between_GL_areas(){
+   get_gl_window()->make_current(get_gl_context());//These are done so that graphical artefacts through changes of view to not occur. This is because of being a multiwindow application. NOTE: This line MUST come before the other ones for this purpose as otherwise the others might be applied to the wrong context!
+   glPointSize(pointsize);//...
+   glViewport(0, 0, get_width(), get_height());//...
+   resetview();//...
+}
+
+//This method prepares the image for drawing and sets up OpenGl. It gets data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets up clearing and the initial view.
+void Display::prepare_image(){
+   boundary* lidarboundary = lidardata->getboundary();
+   double *xs = new double[4];
+   xs[0] = lidarboundary->minX;
+   xs[1] = lidarboundary->minX;
+   xs[2] = lidarboundary->maxX;
+   xs[3] = lidarboundary->maxX;
+   double *ys = new double[4];
+   ys[0] = lidarboundary->minY;
+   ys[1] = lidarboundary->maxY;
+   ys[2] = lidarboundary->maxY;
+   ys[3] = lidarboundary->minY;
+   vector<pointbucket*> *pointvector = NULL;
+   bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get ALL data.
+   delete[]xs;
+   delete[]ys;
+   delete lidarboundary;
+   if(!gotdata){//If there is no data, then clear the screen to show no data.
       glClearColor(0.0, 0.0, 0.0, 0.0);
       glClearDepth(1.0);
-      Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-      if (!glwindow->gl_begin(get_gl_context()))return;
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
-      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
-      else glFlush();
-      glwindow->gl_end();
+      clearscreen();
+      if(pointvector!=NULL)delete pointvector;
       return;
    }
    int numbuckets = pointvector->size();
