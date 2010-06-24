@@ -59,8 +59,9 @@ public:
      * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
      * @param nth the number of points to skip between each loaded point
      * @param cachesize the number of points to hold in ram at any one time
-     * @param resolutionbase see \link pointbucket \endlink for explanation
-     * @param numresolutionlevels see \link pointbucket \endlink for explanation
+     * @param depth the number of pregenerated levels of the quadtree to create during construction
+     * @param resolutionbase see \link pointbucket \endlink detailed description for explanation
+     * @param numresolutionlevels see \link pointbucket \endlink detailed description for explanation
      * @param errorstream string stream to which error messages will be appended
      */
    quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
@@ -75,6 +76,9 @@ public:
      * @param Ys pointer to an array of the y values for the polgon point series
      * @param size the number of points in in the polgon therefore the length of Xs Ys arrays
      * @param cachesize the number of points to hold in ram at any one time
+    * @param depth the number of pregenerated levels of the quadtree to create during construction
+     * @param resolutionbase is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
+     * @param numresolutionlevels is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
      * @param errorstream string stream to which error messages will be appended
      */
    quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, double *Ys, int size, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
@@ -83,9 +87,12 @@ public:
    /**
     * a constructor that builds a new quadtree with user defined dimensions
     *
-    * @param boundary a boundary struct specifiying the dimensions desired
+    * @param b a boundary struct specifiying the dimensions desired
     * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
     * @param cachesize the number of points to hold in ram at any one time
+    * @param depth the number of pregenerated levels of the quadtree to create during construction
+     * @param resolutionbase is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
+     * @param numresolutionlevels is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
     * @param errorstream string stream to which error messages will be appended
     */
    quadtree(boundary b, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
@@ -99,6 +106,9 @@ public:
     * @param maxY Y value of the upper right corner of the tree
     * @param cap capacity of each point bucket (the point at which a bucket will overflow and split into 4 smaller buckets
     * @param cachesize the number of points to hold in ram at any one time
+    * @param depth the number of pregenerated levels of the quadtree to create during construction
+     * @param resolutionbase is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
+     * @param numresolutionlevels is passed on to pointbuckets, see \link pointbucket \endlink detailed description for explanation
     * @param errorstream string stream to which error messages will be appended
     */
    quadtree(double minX, double minY, double maxX, double maxY, int cap, int cachesize, int depth, int resolutionbase, int numresolutionlevels, ostringstream *errorstream = NULL);
@@ -129,31 +139,22 @@ public:
     *
     * @param loader lidarpointloader object to be used
     * @param nth the number of points to skipp between each point to be loaded
+    * @param preloadminimumdepth specifies a depth to which all areas of the quadtree will will be at least as deep (most inportantly the new area covering the points about to be loaded)
     */
-   void load(lidarpointloader *loader, int nth);
+   void load(lidarpointloader *loader, int nth, int preloadminimumdepth);
    
-   /**
-    * a method to load points within a rectangular fence from a Las file using the loader object given
-    *
-    * @param loader lidarpointloader object to be used
-    * @param nth the number of points to skipp between each point to be loaded
-    * @param minX X value of the lower left corner of the fence
-    * @param minY Y value of the lower left corner of the fence
-    * @param maxX X value of the upper right corner of the fence
-    * @param maxY Y value of the upper right corner of the fence
-    */
-   void load(lidarpointloader *loader, int nth, double minX, double minY, double maxX, double maxY);
 
   /**
    * a method to load points within a fence defined by a convex polygon from a las file using the loader object given
    *
    * @param loader lidarpointloader object to be used
    * @param nth the number of points to skipp between each point to be loaded
+    * @param preloadminimumdepth specifies a depth to which all areas of the quadtree will will be at least as deep (most inportantly the new area covering the points about to be loaded)
    * @param Xs pointer to an array of the x values for the polgon point series
    * @param Ys pointer to an array of the y values for the polgon point series
    * @param size the number of points in in the polgon therefore the length of Xs Ys arrays
    */
-   void load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size);
+   void load(lidarpointloader *loader, int nth, int preloadminimumdepth, double *Xs, double *Ys, int size);
 
 
    /**
@@ -170,40 +171,27 @@ public:
     */
    vector<pointbucket*>* subset(double minX, double minY, double maxX, double maxY);
 
-   /*
-    * placeholder
-    */
-   vector<pointbucket*>* uncachedsubset(double minX, double minY, double maxX, double maxY);
-   
-   /*
-    * placeholder
-    */
-   point* search(int x,int y,int z);
-   
+      
    /**
     * a method to sort the points into accending order within each bucket (this means that they are not
     * sorted globely)
     *
-    * @param v defines the type of sort required "H" indicates sort by height (Z)
+    * @param v defines the type of sort required "H" indicates sort by height (Z) "T" indicates sort by time
     */
    void sort(char v);
    
    /**
-    * a method for forming a subset of the quadtree based on an area given. This subset is a collection of buckets
-    * that are in some area within the subset, this means that the subset contains points that
-    * are not within the boundary given.
+    * a method for forming a subset of the quadtree based on an area given. The fence for the area
+    * is provided as a convex polgon.
     *
-    * @note this method takes two points which form a line and uses the width value
-    * to work out the actual area defined by the rectangle centered on that line. if it finds the rectangle is axis aligned
-    * it deferes to the subset method which is faster in that case.
     *
-    * @param x1 the X position of the first point
-    * @param y1 the Y position of the first point
-    * @param x2 the X position of the second point
-    * @param y2 the Y position of the second point
-    * @param width the width of the rectangle (width/2 will be added to each side of the line)
+    * @note this returns point buckets which overlap the area of intrest not points that fall within
+    * which means that the pointbuckets may contain points that do not fall within the area.
+    * @param Xs a pointer to an array of x values each corrisponding to a corner on the polygon
+    * @param Ys a pointer to an array of y values each corrisponding to a corner on the polygon
+    * @param size the number of corners on the polygon (the size of the Xs and Ys arrays)
     *
-    * @return a pointer to a vector, which contains pointers to buckets. this must be deleted by the caller of this method
+    * @return a pointer to a vector, which contains pointers to pointbuckets. this vector must be deleted by the caller of this method
     */
    vector<pointbucket*>* advsubset(double *Xs, double *Ys, int size);
    
@@ -219,15 +207,32 @@ public:
     * (the numbers are stored with each point because it takes less memory than the file string)
     *
     * @param flightlinenum the number of the flight line
-    *
-    * @return a string containg the path that was used in the lidarpointloader for this flightline
+    * @return a string containing the path that was used in the lidarpointloader for this flightline
     */
    string getfilename(uint8_t flightlinenum);
 
+   /**
+    * a method to save points into a file, the method of saving and file format are determined
+    * in the lidarpointsaver passed not in this method.
+    *
+    * @param flightlinenum the flight line number of the flight line that needs to be saved
+    * @param saver a lidarpointsaverobject which provides all the functionality to save points into files
+    */
    void saveflightline(uint8_t flightlinenum, lidarpointsaver *saver);
 
+   /**
+    * a method which increases the depth of all areas of the quadtree by the given amount by spliting nodes
+    *
+    * @param i the number of additional levels to add to the quadtree
+    */
    void increasedepth(int i);
 
+   /**
+    * a method to increase all areas of the quadtree to a minimum depth by splitting nodes,
+    * there is no effect on areas allready deeper than this
+    *
+    * @param i the new minimum depth of the quadtree
+    */
    void increase_to_minimum_depth(int i);
    
 private:

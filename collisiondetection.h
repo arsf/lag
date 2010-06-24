@@ -34,7 +34,7 @@ bool AOrec_NAOrec(double minX, double minY, double maxX, double maxY, double *Xs
  * @param px x value of the point
  * @param py y value of the point
  * @param Xs a pointer to an array of x values, each for a corner of the rectangle (must be in consecutive order)
- * @param Xs a pointer to an array of y values, each for a corner of the rectangle (must be in consecutive order)
+ * @param Ys a pointer to an array of y values, each for a corner of the rectangle (must be in consecutive order)
  * @param size the size of the Xs and Ys arrays (should always be 4 in this case)
  *
  * @return true indicates a collision
@@ -46,12 +46,12 @@ bool point_NAOrec(double px, double py, double *Xs, double *Ys, int size);
  *
  * @note the x and y values for the corners of a polygon must be in sequential order
  * (so that drawing a line from 1 to 2 to 3 to 1 forms a polygon)
- * @poly1Xs a pointer to an array of x values each of which is from a corner of the polygon 1
- * @poly1Ys a pointer to an array of y values each of which is from a corner of the polygon 1
- * @poly1size the number of corners on polygon 1 (the length of the poly1Xs and poly1Ys arrays)
- * @poly2Xs a pointer to an array of x values each of which is from a corner of the polygon 2
- * @poly2Ys a pointer to an array of y values each of which is from a corner of the polygon 2
- * @poly2size the number of corners on polygon 2 (the length of the poly2Xs and poly2Ys arrays)
+ * @param poly1Xs a pointer to an array of x values each of which is from a corner of the polygon 1
+ * @param poly1Ys a pointer to an array of y values each of which is from a corner of the polygon 1
+ * @param poly1size the number of corners on polygon 1 (the length of the poly1Xs and poly1Ys arrays)
+ * @param poly2Xs a pointer to an array of x values each of which is from a corner of the polygon 2
+ * @param poly2Ys a pointer to an array of y values each of which is from a corner of the polygon 2
+ * @param poly2size the number of corners on polygon 2 (the length of the poly2Xs and poly2Ys arrays)
  */
 bool axis_sep_test(double *poly1Xs, double *poly1Ys, int poly1size, double *poly2Xs, double *poly2Ys, int poly2size);
 

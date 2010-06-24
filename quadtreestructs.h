@@ -15,8 +15,8 @@
 
 
 
-// this struct contains the data for a single lidar point
 
+// mask values for packedbyte
 #define returnnumber 7
 #define numberofreturn 56
 #define scandirectionflag 64
@@ -24,7 +24,7 @@
 
 
 
-
+// this struct contains the data for a single lidar point
 struct point
 {
     double x;
@@ -34,6 +34,7 @@ struct point
     unsigned short int intensity;
     uint8_t classification;
     uint8_t flightline;
+    // a byte containing returnnumber, numberofreturns, scandirectionflag and scanedgeflag
     uint8_t packedbyte;
     uint8_t scanangle;
     unsigned short int pointsourceid;

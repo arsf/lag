@@ -5,13 +5,20 @@
  * Created on October 6, 2009, 4:21 PM
  */
 
+<<<<<<< HEAD
 #include "quadtree.h"
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include "boost/thread.hpp"
 
+=======
+>>>>>>> clean_code
 
+#include <gtkmm.h>
+#include <libglademm/xml.h>
+#include <gtkglmm.h>
+#include "boost/thread.hpp"
 #include <stdlib.h>
 #include <malloc.h>
 #include <vector>
@@ -81,6 +88,7 @@ void dostuff()
 
 
    bob = new quadtree(0, 0, 1, 1, 100000, 30000000, 5);
+<<<<<<< HEAD
    bob->load(l2, 0);
    cout << " done" << endl;
    cout << "wait a sec" << endl;
@@ -90,6 +98,17 @@ void dostuff()
    cout << "wait a sec" << endl;
    sleep(5);
    bob->load(l3, 0);
+=======
+   bob->load(l2, 0, 0);
+   cout << " done" << endl;
+   cout << "wait a sec" << endl;
+   sleep(5);
+   bob->load(l, 0, 0);
+   cout << " done" << endl;
+   cout << "wait a sec" << endl;
+   sleep(5);
+   bob->load(l3, 0, 0);
+>>>>>>> clean_code
 }
 
 int main(int argc, char** argv)
@@ -211,7 +230,7 @@ ostringstream *outs = new ostringstream();
          quadtreenode::overflowcounter = 0;
 
          stopwatch = time(NULL);
-         bob->load(loader2, 0);
+         bob->load(loader2, 0, 5);
          stopwatch = time(NULL) - stopwatch;
          cout << "2 : " << stopwatch / 490.0 << endl;
          cout << "insert calls : " << quadtreenode::counter / 490.0 << endl;
@@ -220,7 +239,7 @@ ostringstream *outs = new ostringstream();
          quadtreenode::overflowcounter = 0;
 
          stopwatch = time(NULL);
-         bob->load(loader3, 0);
+         bob->load(loader3, 0, 5);
          stopwatch = time(NULL) - stopwatch;
          cout << "3 : " << stopwatch / 534.0 << endl;
          cout << "insert calls : " << quadtreenode::counter / 534.0 << endl;
@@ -229,7 +248,7 @@ ostringstream *outs = new ostringstream();
          quadtreenode::overflowcounter = 0;
 
          stopwatch = time(NULL);
-         bob->load(loader4, 0);
+         bob->load(loader4, 0, 5);
          stopwatch = time(NULL) - stopwatch;
          cout << "4 : " << stopwatch / 555.7 << endl;
          cout << "insert calls : " << quadtreenode::counter / 555.7 << endl;
@@ -239,7 +258,9 @@ ostringstream *outs = new ostringstream();
 
 
 //         stopwatch = time(NULL);
-//         bob->load(loader5, 0);
+
+//         bob->load(loader5, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "5 : " << stopwatch / 593.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 593.0 << endl;
@@ -248,7 +269,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(loader6, 0);
+
+//         bob->load(loader6, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "6 : " << stopwatch / 611.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 611.0 << endl;
@@ -257,7 +280,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(loader7, 0);
+
+//         bob->load(loader7, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "7 : " << stopwatch / 974.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 974.0 << endl;
@@ -266,13 +291,17 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(loader8, 0);
+
+//         bob->load(loader8, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "8 : " << stopwatch / 973.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 973.0 << endl;
 //         cout << "bucket overflows : " << quadtreenode::overflowcounter / 973.0 << endl;
 //         quadtreenode::counter = 0;
 //         quadtreenode::overflowcounter = 0;
+
+
 
 
 
@@ -289,7 +318,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(l2, 0);
+
+//         bob->load(l2, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "2 : " << stopwatch / 119.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 119.0 << endl;
@@ -298,7 +329,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(l3, 0);
+
+//         bob->load(l3, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "3 : " << stopwatch / 89.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 89.0 << endl;
@@ -307,7 +340,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(l4, 0);
+
+//         bob->load(l4, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "4 : " << stopwatch / 107.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 107.0 << endl;
@@ -317,7 +352,9 @@ ostringstream *outs = new ostringstream();
 //
 //
 //         stopwatch = time(NULL);
-//         bob->load(l5, 0);
+
+//         bob->load(l5, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "5 : " << stopwatch / 125.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 125.0 << endl;
@@ -326,7 +363,9 @@ ostringstream *outs = new ostringstream();
 //         quadtreenode::overflowcounter = 0;
 //
 //         stopwatch = time(NULL);
-//         bob->load(l6, 0);
+
+//         bob->load(l6, 0, 5);
+
 //         stopwatch = time(NULL) - stopwatch;
 //         cout << "6 : " << stopwatch / 93.0 << endl;
 //         cout << "insert calls : " << quadtreenode::counter / 93.0 << endl;
@@ -374,6 +413,7 @@ ostringstream *outs = new ostringstream();
    //   {
    //      cout << c << endl;
    //   }
+
 
    
 //       point temp;
@@ -518,6 +558,7 @@ ostringstream *outs = new ostringstream();
 
 
    
+
 
    numberbuckets = wibble->size();
    buckets = new pointbucket*[wibble->size()];

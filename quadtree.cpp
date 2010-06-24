@@ -1,17 +1,10 @@
 
 #include "quadtree.h"
-
-
 #include <stdlib.h>
-
-
 #include <sstream>
-
 #include "cacheminder.h"
 #include "boost/filesystem.hpp"
-
 #include "time.h"
-
 #include "collisiondetection.h"
 
 using namespace std;
@@ -61,7 +54,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, int cachesize, in
    // use boundary to create new tree that incompasses all points
    root = new quadtreenode(b->minX, b->minY, b->maxX, b->maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    root->increasedepth(depth);
-   load(loader, nth);
+   load(loader, nth, 0);
 }
 
 
@@ -86,7 +79,7 @@ quadtree::quadtree(lidarpointloader *loader, int cap, int nth, double *Xs, doubl
    root = new quadtreenode(minX, minY, maxX, maxY, capacity, MCP, instancedirectory, resolutionbase, numresolutionlevels);
    root->increasedepth(depth);
    // use area of intrest load
-   load(loader, nth, Xs, Ys, size);
+   load(loader, nth, 0, Xs, Ys, size);
 
 }
 
@@ -256,7 +249,7 @@ quadtreenode* quadtree::expandboundary(quadtreenode* oldnode, boundary* nb)
 
 
 // load a new flight line into the quad tree, nth is the nth points to load
-void quadtree::load(lidarpointloader *loader, int nth)
+void quadtree::load(lidarpointloader *loader, int nth, int preloaddepth)
 {
    // size of each block of points loaded
    int arraysize = 5000000;
@@ -274,7 +267,7 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
    // resize the array to accomadate new points 
    root = expandboundary(root, nb);
-   root->increase_to_minimum_depth(5);
+   root->increase_to_minimum_depth(preloaddepth);
 
    delete nb;
    int pointcounter;
@@ -330,7 +323,7 @@ void quadtree::load(lidarpointloader *loader, int nth)
 
 
 // this method loads points from a flightline that fall within an area of intrest
-void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, int size)
+void quadtree::load(lidarpointloader *loader, int nth, int preloaddepth, double *Xs, double *Ys, int size)
 {
    // add the flightline name flightline num pair to the table
    string tempstring(loader->getfilename());
@@ -370,7 +363,7 @@ void quadtree::load(lidarpointloader *loader, int nth, double *Xs, double *Ys, i
    point *temp = new point[arraysize];
    // expand boundary to cover new points
    root = expandboundary(root, nb);
-   root->increase_to_minimum_depth(5);
+   root->increase_to_minimum_depth(preloaddepth);
    ostream &outs = *(errorstream);
    delete nb;
    boundary *tempboundary = root->getbound();

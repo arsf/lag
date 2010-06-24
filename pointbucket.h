@@ -25,20 +25,20 @@ class cacheminder;
 
 /**
  * this class represents a bucket which holds a colletion of points. it stores
- * metadata about the points it holds and manages the caching and uncaching of the points
+ * metadata about the points it holds and manages the caching and uncaching of the points.
  * <br>
  * The pointbucket class can hold several subsets of the points that fall within it
- * depending on arguements when it is constructed. The point bucket always stores a full list
+ * depending on the arguements when it is constructed. The pointbucket always stores a full list
  * of points but also possibly several progressivly smaller subsets. these are defined by a base number and a
  * number of levels so that base 10 levels 4 results in 4 subsets
- * 10^0:every point, the second 10^1:every 10th point, 10^2:every 100th point, 10^3: every 1000th point
- * points that fall into multiple subsets will be present in all those subsets so the first point always falls into
+ * 10^0:every point, the second 10^1:every 10th point, 10^2:every 100th point, 10^3: every 1000th point.
+ * Points that fall into multiple subsets will be present in all those subsets so the first point always falls into
  * every subset.<br>
  * <br>
  * This is mostly hidden from other classes
  * except when getting a point or the number of points both of which depend on the resolution desired.
  *
- * @note because the point bucket holds several sets of data of the same type many of its attributes
+ * @note because the pointbucket holds several sets of data of the same type many of its attributes
  * are stored in arrays with each index holding the value that relates to a different subset.
  */
 class pointbucket
@@ -60,10 +60,39 @@ class pointbucket
     bool *serialized;
     bool *incache;
     int *pointarraysize;
-    int increaseamount;
     point **points;
     lzo_uint *compresseddatasize;
-    
+
+    friend class cacheminder;
+    /**
+     * a method which removes the smallest cached subset and writes
+     * it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
+     */
+    void uncache();
+
+    /**
+     * a method that requests some space in main memory and then loads the point data from secondary memory to main memory into it.
+     * this is only done if the pointdata is not already in cache.
+     *
+     * @note this requests cache space equal to the number of points in the resolution
+     *
+     * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
+     * @param resolution indicates which subset to cache
+     *
+     * @return true=memory assigned use it
+     */
+    bool cache(bool force, int resolution);
+
+
+    friend class quadtreenode;
+    /**
+     * a method to add a new point to the serializableinnerbucket.
+     * it also checks the new point and updates the min and max values accordingly
+     *
+     * @param newP the new point to be added
+     */
+    void setpoint(point& newP);
+
     
 
 public:
@@ -83,7 +112,7 @@ public:
      * @param maxX X value of the upper right corner of the boundary
      * @param maxY Y value of the upper right corner of the boundary
      * @param MCP the cacheminder for this quadtree instance
-     * @param instanceddirectory string containing a path to a directory where temporary files will be saved
+     * @param instancedirectory string containing a path to a directory where temporary files will be saved
      * @param resolutionbase the base number for subset calculation (see class description for more detail)
      * @param numresolutionlevels the number of resolution levels (see class description for more detail)
      */
@@ -94,24 +123,6 @@ public:
      */
     ~pointbucket();
 
-    /**
-     * a method which removes the smallest cached subset and writes
-     * it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
-     */
-    void uncache();
-
-    /**
-     * a method that requests some space in main memory and then loads the point data from secondary memory to main memory into it.
-     * this is only done if the pointdata is not already in cache.
-     *
-     * @note this requests space equal to the current size of the serilizableinnerbucket
-     *
-     * @param force this boolean indicates wether other buckets should be forced out of main memory to make space
-     * @param resolution indicates which subset to cache
-     * 
-     * @return true=memory assigned use it
-     */
-    bool cache(bool force, int resolution);
 
     
 
@@ -152,25 +163,14 @@ public:
     
 
 
-
-
-    /**
-     * a method to add a new point to the serializableinnerbucket.
-     * it also checks the new point and updates the min and max values accordingly
-     *
-     * @param newP the new point to be added
-     */
-    void setpoint(point& newP);
-
-
-
-
     // getters
     /**
      * returns the number of points in the specified resolution bucket
      *
      * @param resolution the index of the resolution level
      */
+
+
     inline int getnumberofpoints(int resolution) const
     {
         if (resolution > numberofsplitlevels)
