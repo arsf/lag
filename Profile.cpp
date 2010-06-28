@@ -167,10 +167,10 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    for(int i=0;i<numbuckets;i++){
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
-      for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
+      for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
-            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j).flightline)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
-               flightlinestot.push_back((*pointvector)[i]->getpoint(j).flightline);//...add it.
+            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j,0).flightline)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
+               flightlinestot.push_back((*pointvector)[i]->getpoint(j,0).flightline);//...add it.
             }
          }
       }
@@ -182,13 +182,13 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    sampleminz = rmaxz;
    for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
       for(int j=0;j<numbuckets;j++){//For every bucket:
-         for(int k=0;k<(*pointvector)[j]->getnumberofpoints();k++){//For every point:
+         for(int k=0;k<(*pointvector)[j]->getnumberofpoints(0);k++){//For every point:
             if(correctpointsbuckets[j][k]){//If the point is in the profile...
-               if((*pointvector)[j]->getpoint(k).flightline == flightlinestot[i]){//...and if it is from the right flightline (see above):
-                  flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k));//Add it
+               if((*pointvector)[j]->getpoint(k,0).flightline == flightlinestot[i]){//...and if it is from the right flightline (see above):
+                  flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k,0));//Add it
                   totnumpoints++;//...and add it to the "census".
-                  if(samplemaxz<(*pointvector)[j]->getpoint(k).z)samplemaxz = (*pointvector)[j]->getpoint(k).z;
-                  if(sampleminz>(*pointvector)[j]->getpoint(k).z)sampleminz = (*pointvector)[j]->getpoint(k).z;
+                  if(samplemaxz<(*pointvector)[j]->getpoint(k,0).z)samplemaxz = (*pointvector)[j]->getpoint(k,0).z;
+                  if(sampleminz>(*pointvector)[j]->getpoint(k,0).z)sampleminz = (*pointvector)[j]->getpoint(k,0).z;
                }
             }
          }
@@ -252,16 +252,16 @@ bool Profile::classify(uint8_t classification){
       int lastcorner,currentcorner;//These define the edge being considered.
       point *pnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
       for(int i=0;i<numbuckets;i++){//For all buckets:
-         for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){//For all points:
+         for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){//For all points:
             if(correctpointsbuckets[i][j]){//If in the profile area:
                pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
                lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
                for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
-                  if((zs[currentcorner] < (*pointvector)[i]->getpoint(j).z && zs[lastcorner] >= (*pointvector)[i]->getpoint(j).z) ||
-                     (zs[lastcorner] < (*pointvector)[i]->getpoint(j).z && zs[currentcorner] >= (*pointvector)[i]->getpoint(j).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
-                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getpoint(j).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
-                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getpoint(j).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
-                     if(linecomp((*pointvector)[i]->getpoint(j),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
+                  if((zs[currentcorner] < (*pointvector)[i]->getpoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getpoint(j,0).z) ||
+                     (zs[lastcorner] < (*pointvector)[i]->getpoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getpoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
+                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getpoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
+                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getpoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
+                     if(linecomp((*pointvector)[i]->getpoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
                   }
                   lastcorner = currentcorner;
                }
@@ -282,12 +282,12 @@ bool Profile::classify(uint8_t classification){
       endpnt->x = fenceendx;
       endpnt->y = fenceendy;
       for(int i=0;i<numbuckets;i++){
-         for(int j=0;j<(*pointvector)[i]->getnumberofpoints();j++){
+         for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){
             if(correctpointsbuckets[i][j]){
-               if(((*pointvector)[i]->getpoint(j).z < fencestartz && (*pointvector)[i]->getpoint(j).z > fenceendz) ||
-                  ((*pointvector)[i]->getpoint(j).z > fencestartz && (*pointvector)[i]->getpoint(j).z < fenceendz)){
-                  if((linecomp(*startpnt,(*pointvector)[i]->getpoint(j)) && linecomp((*pointvector)[i]->getpoint(j),*endpnt)) ||
-                     (linecomp((*pointvector)[i]->getpoint(j),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getpoint(j)))){
+               if(((*pointvector)[i]->getpoint(j,0).z < fencestartz && (*pointvector)[i]->getpoint(j,0).z > fenceendz) ||
+                  ((*pointvector)[i]->getpoint(j,0).z > fencestartz && (*pointvector)[i]->getpoint(j,0).z < fenceendz)){
+                  if((linecomp(*startpnt,(*pointvector)[i]->getpoint(j,0)) && linecomp((*pointvector)[i]->getpoint(j,0),*endpnt)) ||
+                     (linecomp((*pointvector)[i]->getpoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getpoint(j,0)))){
                      (*pointvector)[i]->setclassification(j,classification);
                   }
                }

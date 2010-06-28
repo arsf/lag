@@ -114,7 +114,11 @@ FileOpener::~FileOpener(){
  *
  * */
 int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
+   int resolutiondepth = 4;
+   int resolutionbase = 4;
+   int bucketlevels = 0;
    loadoutputlabel->set_text("");
+   Gdk::Window::process_all_updates();
    cachelimit = cachesizeselect->get_value();
    if(start || !loadedanyfiles || lidardata==NULL)numlines = 0;
    try{//Attempt to get real files.
@@ -152,6 +156,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
                      cout << message << endl;
                      loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                     Gdk::Window::process_all_updates();
                      validfile = false;
                   }
                   if(validfile){
@@ -159,24 +164,27 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         if(lidardata != NULL)delete lidardata;
                         lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                         loaderrorstream->str("");
-                        lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,loaderrorstream);
+                        lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
                      }
-                     else lidardata->load(loader,poffs,fencexs,fenceys,fenceps);
+                     else lidardata->load(loader,poffs,bucketlevels,fencexs,fenceys,fenceps);
                   }
                   if(loader != NULL)delete loader;
                }
                else{
                   cout << "No fence!" << endl;
                   loadoutputlabel->set_text(loadoutputlabel->get_text() + "No fence!\n");
+                  Gdk::Window::process_all_updates();
                   return 222;
                }
             }
             cout << filename << endl;
             loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
+            Gdk::Window::process_all_updates();
             if(loaderrorstream->str()!=""){
                string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
                cout << message << endl;
                loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+               Gdk::Window::process_all_updates();
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
                loaderroroutput.flush();
@@ -227,6 +235,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                   string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
                   cout << message << endl;
                   loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                  Gdk::Window::process_all_updates();
                   validfile = false;
                }
                if(validfile){
@@ -234,19 +243,21 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     lidardata = new quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,loaderrorstream);
-                     lidardata->load(loader,poffs);
+                     lidardata = new quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
+                     lidardata->load(loader,poffs,bucketlevels);
                   }
-                  else lidardata->load(loader,poffs);
+                  else lidardata->load(loader,poffs,bucketlevels);
                }
                if(loader != NULL)delete loader;
             }
             cout << filename << endl;
             loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
+            Gdk::Window::process_all_updates();
             if(loaderrorstream->str()!=""){
                string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
                cout << message << endl;
                loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+               Gdk::Window::process_all_updates();
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
                loaderroroutput.flush();
@@ -261,6 +272,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
       message += "\nWhy: " + *(e.why());
       cout << message << endl;
       loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+      Gdk::Window::process_all_updates();
       loaderrorstream->str("");
       if(lidardata != NULL)delete lidardata;
       lidardata = NULL;
@@ -274,6 +286,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
    }
    tdo->setlidardata(lidardata,bucketlimit);//Provide the drawing objects access to the quadtree:
    prof->setlidardata(lidardata,bucketlimit);//...
+   tdo->setresolutionbase(resolutionbase);
+   tdo->setresolutiondepth(resolutiondepth);
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This might not work because of the bug that causes the flightline(s) not to be drawn immediately after loading. UPDATE: now it seems to draw just one bucket(!!!) immediately after loading.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
       tdo->prepare_image();

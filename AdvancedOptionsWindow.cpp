@@ -117,7 +117,7 @@ AdvancedOptionsWindow::~AdvancedOptionsWindow(){
 }
 
 //Closes the advanced options dialog.
-void AdvancedOptionsWindow::on_advancedoptionsdialog_response(int response_id){ advancedoptionsdialog->hide_all(); }
+void AdvancedOptionsWindow::on_advancedoptionsdialog_response(int response_id){ advancedoptionsdialog->hide(); }
 //The checkbuttons and their activations:
 void AdvancedOptionsWindow::on_classcheckbutton0_toggled(){ tdo->setheightenNonC(classcheckbutton0->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
 void AdvancedOptionsWindow::on_classcheckbutton2_toggled(){ tdo->setheightenGround(classcheckbutton2->get_active()); if(tdo->is_realized())tdo->drawviewable(1); }
@@ -238,8 +238,11 @@ void AdvancedOptionsWindow::on_drawingresetbutton_clicked(){
 }
 //This indirectly determines how many points are skipped when viewing the main overview image. I.e. this affects it as well as the number of visible buckets.
 void AdvancedOptionsWindow::on_maindetailselected(){
+   int before = tdo->makeresolutionindex();
    tdo->setmaindetail(maindetailselect->get_value());
-   if(tdo->is_realized())tdo->drawviewable(1);
+   tdo->makedetail();
+   int after = tdo->makeresolutionindex();
+   if(tdo->is_realized() && before != after)tdo->drawviewable(1);
 }
 //Does the same as on_maindetailselected, except for the profile.
 void AdvancedOptionsWindow::on_maindetailselectedprof(){

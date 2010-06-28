@@ -27,6 +27,17 @@ public:
    void makedistancescale();//Make a scale for the LIDAR "map"
    void makecolourlegend();
    void drawoverlays();//Draw all of the above make methods.
+   int makeresolutionindex(){
+      int resolutionindex = 0;
+      for(int i = detail;i > resolutionbase - 1;i /= 4)resolutionindex++;
+      if(resolutionindex > resolutiondepth - 1)resolutionindex = resolutiondepth - 1;
+      return resolutionindex;
+   }
+   void makedetail(){
+      detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
+      detail=(int)(numbuckets*maindetailmod);//...
+      if(detail<1)detail=1;//...
+   }
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -108,6 +119,8 @@ public:
    void setreversez(bool reversez){ this->reversez = reversez; }
    void setraiseline(bool raiseline){ this->raiseline = raiseline; }
    void setlinetoraise(int linetoraise){ this->linetoraise = linetoraise; }
+   void setresolutiondepth(int resolutiondepth){ this->resolutiondepth = resolutiondepth; }
+   void setresolutionbase(int resolutionbase){ this->resolutionbase = resolutionbase; }
    //Classification:
       void setheightenNonC(bool heightenNonC){ this->heightenNonC = heightenNonC;}//These set whether various classifications should be highlighted by making them be drawn above other points:
       void setheightenGround(bool heightenGround){ this->heightenGround = heightenGround; }//...
@@ -121,6 +134,9 @@ public:
       void setheightenOverlap(bool heightenOverlap){ this->heightenOverlap = heightenOverlap; }//...
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
+   int resolutionbase,resolutiondepth;
+   int detail;
+   int numbuckets;
    bool raiseline;
    int linetoraise;
    bool drawnsinceload;
