@@ -8,22 +8,27 @@
 #ifndef _POINTBUCKET_H
 #define	_POINTBUCKET_H
 
-#include <stdint.h>
-#include "boost/archive/binary_iarchive.hpp"
-#include "boost/archive/binary_oarchive.hpp"
-#include "boost/thread.hpp"
-#include <stdio.h>
-#include <string>
 #include "quadtreestructs.h"
 #include "quadtreeexceptions.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string>
 #include <stdint.h>
 #include "lzo/lzo1b.h"
 
+#include "boost/archive/binary_iarchive.hpp"
+#include "boost/archive/binary_oarchive.hpp"
+#include "boost/thread.hpp"
+
 using namespace std;
 
-class cacheminder;
+class CacheMinder;
 
 /**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
  * this class represents a bucket which holds a colletion of points. it stores
  * metadata about the points it holds and manages the caching and uncaching of the points.
  * <br>
@@ -41,29 +46,158 @@ class cacheminder;
  * @note because the pointbucket holds several sets of data of the same type many of its attributes
  * are stored in arrays with each index holding the value that relates to a different subset.
  */
-class pointbucket
+class PointBucket
 {
-    unsigned short int minintensity, maxintensity;
-    double minZ, maxZ;
-    double minX, minY, maxX, maxY;
-    cacheminder *MCP;
-    int splitvalue;
-    int numberofsplitlevels;   
-    int cap;    
-    string instancedirectory;
-    
-    // arrays containing different values for these attributes for each subset of points
-    int *numberofpoints;
-    string *filepath;
-    bool *updated;
-    int *numberofserializedpoints;
-    bool *serialized;
-    bool *incache;
-    int *pointarraysize;
-    point **points;
-    lzo_uint *compresseddatasize;
+public:
+    /**
+     *  constructer which initilizes the capacity of the bucket along with the boundary from
+     * parameters and the other varibles to defaults.
+     *
+     *
+     * @param capacity the number of points the bucket can hold
+     * @param minX X value of the lower left corner of the boundary
+     * @param minY Y value of the lower left corner of the boundary
+     * @param maxX X value of the upper right corner of the boundary
+     * @param maxY Y value of the upper right corner of the boundary
+     * @param MCP the cacheminder for this quadtree instance
+     * @param instanceDirectory string containing a path to a directory where temporary files will be saved
+     * @param resolutionBase the base number for subset calculation (see class description for more detail)
+     * @param numberOfResolutionLevels the number of resolution levels (see class description for more detail)
+     */
+    PointBucket(int capacity, double minX, double minY, double maxX, double maxY, CacheMinder *MCP, string instanceDirectory, int resolutionBase, int numberOfResolutionLevels);
 
-    friend class cacheminder;
+    /**
+     * deconstructor
+     */
+    ~PointBucket();
+
+    /**
+     * a method that adds a layer between outside classes and the SerializableInnerBucket. this prevents
+     * outside classes from accessing the subset array without the pointbuckets knowledge. This
+     * is important as the subset may not be cached. by providing this method all access to
+     * the subset array prompts the pointbucket to check if its cached and cache if neccessary.
+     *
+     * @param i the index of the point to get
+     * @param resolution index of resolution level to get the point from (0 to (the number of levels-1))
+     *
+     * @return a reference to the desired point
+     */
+    inline Point& getPoint(int i, int resolution)
+    {
+        //boost::recursive_mutex::scoped_lock mylock(getmutex);
+        if (incache_[resolution])
+        {
+            return points_[resolution][i];
+        }
+        else
+        {
+            cache(true, resolution);
+            return points_[resolution][i];
+        }
+    }
+
+    /**
+     * a method to allow the classification of a point in this bucket to be set to a desired value,
+     * this method provides an interface between users and the points which insures the points are cached
+     * before they are manipulated
+     *
+     * @param i the index of the point to set
+     * @param classification the new classification value of the point
+     */
+    void setClassification(int i, uint8_t classification);
+
+
+
+    // getters
+
+    /**
+     * returns the number of points in the specified resolution bucket
+     *
+     * @param resolution the index of the resolution level
+     */
+
+
+    inline int getNumberOfPoints(int resolution)
+    {
+        if (resolution > numberOfResolutionLevels_)
+        {
+            throw "resolution index out of bounds";
+        }
+        return numberOfPoints_[resolution];
+    }
+
+    inline double getmaxX() const
+    {
+        return maxX_;
+    }
+
+    inline double getmaxY() const
+    {
+        return maxY_;
+    }
+
+    inline double getmaxZ() const
+    {
+        return maxZ_;
+    }
+
+    inline double getminX() const
+    {
+        return minX_;
+    }
+
+    inline double getminY() const
+    {
+        return minY_;
+    }
+
+    inline double getminZ() const
+    {
+        return minZ_;
+    }
+
+    bool isIncache() const
+    {
+        return incache_;
+    }
+
+    unsigned short int getmaxintensity() const
+    {
+        return maxIntensity_;
+    }
+
+    unsigned short int getminintensity() const
+    {
+        return minIntensity_;
+    }
+
+    
+private:
+
+    unsigned short int minIntensity_, maxIntensity_;
+    double minZ_, maxZ_;
+    double minX_, maxX_;
+    double minY_, maxY_;
+    CacheMinder *MCP_;
+    int resolutionBase_;
+    int numberOfResolutionLevels_;
+    int capacity_;
+    string instanceDirectory_;
+    static unsigned char *workingMemory;
+    static unsigned char *compressedData;
+
+    // arrays containing different values for these attributes for each subset of points
+    int *numberOfPoints_;
+    string *filePath_;
+    bool *updated_;
+    int *numberOfSerializedPoints_;
+    bool *serialized_;
+    bool *incache_;
+    int *pointArraySize_;
+    Point **points_;
+    lzo_uint *compressedDataSize_;
+
+    friend class CacheMinder;
     /**
      * a method which removes the smallest cached subset and writes
      * it to secondary memory if neccessary, it then informs the cacheminder that the memory has been freed
@@ -83,147 +217,18 @@ class pointbucket
      */
     bool cache(bool force, int resolution);
 
-
-    friend class quadtreenode;
+    friend class QuadtreeNode;
     /**
      * a method to add a new point to the serializableinnerbucket.
      * it also checks the new point and updates the min and max values accordingly
      *
      * @param newP the new point to be added
      */
-    void setpoint(point& newP);
-
-    
-
-public:
-
-    static unsigned char * workingmemory;
-    static unsigned char * compresseddata;
-    static long o_counter;
-    static long i_counter;
-    /**
-     *  constructer which initilizes the capacity of the bucket along with the boundary from
-     * parameters and the other varibles to defaults.
-     *
-     *
-     * @param cap the number of points the bucket can hold
-     * @param minX X value of the lower left corner of the boundary
-     * @param minY Y value of the lower left corner of the boundary
-     * @param maxX X value of the upper right corner of the boundary
-     * @param maxY Y value of the upper right corner of the boundary
-     * @param MCP the cacheminder for this quadtree instance
-     * @param instancedirectory string containing a path to a directory where temporary files will be saved
-     * @param resolutionbase the base number for subset calculation (see class description for more detail)
-     * @param numresolutionlevels the number of resolution levels (see class description for more detail)
-     */
-    pointbucket(int cap, double minX, double minY, double maxX, double maxY, cacheminder *MCP, string instancedirectory, int resolutionbase, int numresolutionlevels);
-   
-    /**
-     * deconstructor
-     */
-    ~pointbucket();
+    void setPoint(Point& newP);
 
 
-    
-
-    /**
-     * a method that adds a layer between outside classes and the SerializableInnerBucket. this prevents
-     * outside classes from accessing the subset array without the pointbuckets knowledge. This
-     * is important as the subset may not be cached. by providing this method all access to
-     * the subset array prompts the pointbucket to check if its cached and cache if neccessary.
-     *
-     * @param i the index of the point to get
-     * @param resolution index of resolution level to get the point from (0 to (the number of levels-1))
-     *
-     * @return a reference to the desired point
-     */
-    inline point& getpoint(int i, int resolution)
-    {
-        //boost::recursive_mutex::scoped_lock mylock(getmutex);
-        if (incache[resolution])
-        {
-            return points[resolution][i];
-        }
-        else
-        {
-            cache(true, resolution);
-            return points[resolution][i];
-        }
-    }
-
-    /**
-     * a method to allow the classification of a point in this bucket to be set to a desired value,
-     * this method provides an interface between users and the points which insures the points are cached
-     * before they are manipulated
-     *
-     * @param i the index of the point to set
-     * @param classification the new classification value of the point
-     */
-    void setclassification(int i, uint8_t classification);
-    
 
 
-    // getters
-    /**
-     * returns the number of points in the specified resolution bucket
-     *
-     * @param resolution the index of the resolution level
-     */
-
-
-    inline int getnumberofpoints(int resolution) const
-    {
-        if (resolution > numberofsplitlevels)
-        {
-            throw "resolution index out of bounds";
-        }
-        return numberofpoints[resolution];
-    }
-
-    inline double getmaxX() const
-    {
-        return maxX;
-    }
-
-    inline double getmaxY() const
-    {
-        return maxY;
-    }
-
-    inline double getmaxZ() const
-    {
-        return maxZ;
-    }
-
-    inline double getminX() const
-    {
-        return minX;
-    }
-
-    inline double getminY() const
-    {
-        return minY;
-    }
-
-    inline double getminZ() const
-    {
-        return minZ;
-    }
-
-    bool isincache() const
-    {
-        return incache;
-    }
-
-    unsigned short int getmaxintensity() const
-    {
-        return maxintensity;
-    }
-
-    unsigned short int getminintensity() const
-    {
-        return minintensity;
-    }
 };
 
 

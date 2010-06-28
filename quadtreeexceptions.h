@@ -14,13 +14,22 @@
 
 using namespace std;
 
-class descriptiveexception : public exception
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * an extension of the standard c++ exception class which adds
+ * a why() method so that additional information can be passed. the idea is that the
+ * existing what() method tells you the type of exception and the details attribute (which is
+ * returned by the why() method) can be set when the exception is thrown and should explain why it was thrown.
+ */
+class DescriptiveException : public exception
 {
 private:
     const char *details;
 public:
 
-    descriptiveexception(const char *details)
+    DescriptiveException(const char *details)
     {
         this->details = details;
     }
@@ -32,7 +41,13 @@ public:
 };
 
 
-class ramallocationexception : public descriptiveexception
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * new exception extended from DescriptiveException
+ */
+class RamAllocationException : public DescriptiveException
 {
 public:
 
@@ -41,12 +56,18 @@ public:
         return "an exception has occoured during ram allocation";
     }
 
-    ramallocationexception(const char *details)
-    : descriptiveexception(details) { }
+    RamAllocationException(const char *details)
+    : DescriptiveException(details) { }
 };
 
 
-class fileexception : public descriptiveexception
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * new exception extended from DescriptiveException
+ */
+class FileException : public DescriptiveException
 {
 public:
 
@@ -55,12 +76,18 @@ public:
         return "file io exception";
     }
 
-    fileexception(const char *details)
-    : descriptiveexception(details) { }
+    FileException(const char *details)
+    : DescriptiveException(details) { }
 };
 
 
-class outofboundsexception : public descriptiveexception
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * new exception extended from DescriptiveException
+ */
+class OutOfBoundsException : public DescriptiveException
 {
 public:
 
@@ -69,12 +96,18 @@ public:
         return "a varible has fallen outside all possible boundarys or values";
     }
 
-    outofboundsexception(const char *details)
-    : descriptiveexception(details) { }
+    OutOfBoundsException(const char *details)
+    : DescriptiveException(details) { }
 };
 
 
-class nullpointerexception : public descriptiveexception
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * new exception extended from DescriptiveException
+ */
+class NullPointerException : public DescriptiveException
 {
 public:
 
@@ -83,8 +116,8 @@ public:
         return "a method or attribute of a pointer which is null has been requested";
     }
 
-    nullpointerexception(const char *details)
-    : descriptiveexception(details) { }
+    NullPointerException(const char *details)
+    : DescriptiveException(details) { }
 };
 
 

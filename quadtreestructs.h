@@ -11,11 +11,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-
-
-
-
-
 // mask values for packedbyte
 #define returnnumber 7
 #define numberofreturn 56
@@ -23,28 +18,38 @@
 #define scanedgeflag 128
 
 
-
-// this struct contains the data for a single lidar point
-struct point
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * A data container class representing a single lidar point
+ */
+class Point
 {
+public:
     double x;
     double y;
     double z;
     double time;
     unsigned short int intensity;
     uint8_t classification;
-    uint8_t flightline;
+    uint8_t flightLine;
     // a byte containing returnnumber, numberofreturns, scandirectionflag and scanedgeflag
-    uint8_t packedbyte;
-    uint8_t scanangle;
-    unsigned short int pointsourceid;
+    uint8_t packedByte;
+    uint8_t scanAngle;
+    unsigned short int pointSourceId;
 };
 
 
-// this struct is a simple data transfer struct for the
-// boundary values of a node
-struct boundary
+/**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
+ * a data container class sotring a boundary(min and max XY values
+ */
+class Boundary
 {
+public:
     double minX;
     double minY;
     double maxX;

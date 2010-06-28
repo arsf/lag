@@ -12,11 +12,14 @@
 #include "quadtreestructs.h"
 
 /**
+ * @author Christopher Stanley Finerty
+ * @version 2.0
+ *
  * This interface defines how classes which provide loading logic for lidar points must look
  * the interface allows the quadtree to simply take any subclass and call its methods without understanding how the loading is being done
  * this means that the logic for loading different formats is encapsulated in classes independant of the quadtree
  */
-class lidarpointloader
+class LidarPointLoader
 {
 public:
    /**
@@ -26,13 +29,13 @@ public:
     * @param n the number of points to load
     * @param nth the number of points to skip between loaded points
     * @param points the array to copy the loaded points into (should have n elements)
-    * @param flightlinenum the number assigned to every point loaded as its flight line number
-    * @param Xs an array of doubles each of which is the x componant of a point of the polygon (in sequence)
-    * @param Ys an array of doubles each of which is the x componant of a point of the polygon (in sequence)
-    * @param size of the Xs and Ys arrays (therefore the number of points that define the polygon)
+    * @param flightLineNumber the number assigned to every point loaded as its flight line number
+     * @param horizontalCornerValues an array of doubles each of which is the x componant of a point of the polygon (in sequence)
+     * @param verticalCornerValues an array of doubles each of which is the y componant of a point of the polygon (in sequence)
+     * @param size the number of corners that make up the polygon (the length of the HorizontalCornerValues and VerticalCornerValues arrays)
     * @return the number of points actually loaded (either the same as n or if the end of the file is reached less)
     */
-   virtual int load(int n, int nth, point *points, int flightlinenum, double *Xs, double *Ys, int size) = 0;
+   virtual int load(int n, int nth, Point *points, int flightLineNumber, double *horizontalCornerValues, double *verticalCornerValues, int size) = 0;
 
 
    /**
@@ -42,27 +45,27 @@ public:
     * @param n the number of points to load
     * @param nth the number of points to skip between loaded points
     * @param points the array to copy the loaded points into (should have n elements)
-    * @param flightlinenum the number assigned to every point loaded as its flight line number
+    * @param flightLineNumber the number assigned to every point loaded as its flight line number
     * @return the number of points actually loaded (either the same as n or if the end of the file is reached less)
     */
-   virtual int load(int n, int nth, point *points, int flightlinenum) = 0;
+   virtual int load(int n, int nth, Point *points, int flightLineNumber) = 0;
 
    /**
     * this is a placeholder and should not be used
     */
-   virtual bool compatibleCheck(const char *filename) = 0;
+   virtual bool compatibleCheck(const char *fileName) = 0;
 
    /**
     * a method to get the boundary of the points contained in the file that this loader is associated with
     * @return the boundary of the flight line
     */
-   virtual boundary* getboundary() = 0;
+   virtual Boundary* getBoundary() = 0;
 
    /**
     * a method to get the filename of this loaders associated file
     * @return associated filename
     */
-   virtual const char* getfilename() = 0;
+   virtual const char* getFileName() = 0;
 };
 
 #endif	/* _LIDARPOINTLOADER_H */
