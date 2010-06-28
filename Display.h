@@ -7,15 +7,15 @@
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <vector>
 #ifndef DISPLAY_H
 #define DISPLAY_H
 class Display : public Gtk::GL::DrawingArea{
 public:
-   Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit);
+   Display(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit);
    ~Display();
    virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
    virtual void drawoverlays() = 0;//Draw any relevant overlays.
@@ -32,7 +32,7 @@ public:
    double getintensityoffset(){return intensityoffset;}
    double getintensityfloor(){return intensityfloor;}
    //Setters:
-   void setlidardata(quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
+   void setlidardata(Quadtree* lidardata,int bucketlimit){this->lidardata=lidardata;this->bucketlimit=bucketlimit;}
    void setintensitycolour(bool intensitycolour){this->intensitycolour=intensitycolour;}
    void setheightcolour(bool heightcolour){this->heightcolour=heightcolour;}
    void setlinecolour(bool linecolour){this->linecolour=linecolour;}
@@ -52,7 +52,7 @@ protected:
    int cbmaxintensity,cbminintensity;
 
    //Point data and related stuff:
-   quadtree* lidardata;//The point data is stored here.
+   Quadtree* lidardata;//The point data is stored here.
    int bucketlimit;//This is the maximum number of points a single bucket can contain.
    double maindetailmod;//This modifies the amount of points skipped for each point in the main image, when drawing. Lower is means more detail, higher means less.
    double pointsize;//The diameter of the points in pixels.
@@ -82,7 +82,7 @@ protected:
    
    //Methods:
 
-   bool advsubsetproc(vector<pointbucket*>*& pointvector,double *xs,double *ys,int ps);
+   bool advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps);
    bool clearscreen();
    void guard_against_interaction_between_GL_areas();
 

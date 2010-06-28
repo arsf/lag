@@ -11,16 +11,16 @@
 #include <gtkglmm.h>
 #include <vector>
 #include <iostream>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
 
-TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    detail = 1;
    numbuckets = 0;
    resolutionbase = 1;
@@ -226,7 +226,7 @@ void TwoDeeOverview::extraDraw(){
  *   Allow subsequent threads to act.
  *   (Thread ends).
  * */
-void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
+void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
    if(threaddebug)cout << "Wait?" << endl;
    while(thread_existsthread){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
    if(threaddebug)cout << "***Finished waiting." << endl;
@@ -245,7 +245,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    drawneverything = false;
    initialising_GL_draw = true;//The main thread must not create any new threads like this while also being told to initialise OpenGL for drawing.
    signal_InitGLDraw();//Prepare OpenGL.
-   boundary* lidarboundary = lidardata->getboundary();
+   Boundary* lidarboundary = lidardata->getBoundary();
    drawnsofarminx=lidarboundary->maxX;//Preparing to extract boundaries of drawn area.
    drawnsofarminy=lidarboundary->maxY;//...
    drawnsofarmaxx=lidarboundary->minX;//...
@@ -254,7 +254,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
    int resolutionindex = makeresolutionindex();
    for(int i=0;i<numbuckets;i++){//For every bucket...
       if(threaddebug)cout << i << " " << numbuckets << endl;
-      if(threaddebug)cout << buckets[i]->getnumberofpoints(0) << endl;
+      if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
       if(threaddebug)cout << detail << endl;
       if(threaddebug)cout << "If drawing, pause." << endl;
       while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
@@ -304,12 +304,12 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
       if(buckets[i]->getminY()<drawnsofarminy)drawnsofarminy = buckets[i]->getminY();//...
       if(buckets[i]->getmaxX()>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->getmaxX();//...
       if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
-      for(int j=0;j<buckets[i]->getnumberofpoints(resolutionindex);j++/*=detail*/){//... and for every point, determine point colour and position:
+      for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++/*=detail*/){//... and for every point, determine point colour and position:
          red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-         x = buckets[i]->getpoint(j,resolutionindex).x;
-         y = buckets[i]->getpoint(j,resolutionindex).y;
-         z = buckets[i]->getpoint(j,resolutionindex).z;
-         intensity = buckets[i]->getpoint(j,resolutionindex).intensity;
+         x = buckets[i]->getPoint(j,resolutionindex).x;
+         y = buckets[i]->getPoint(j,resolutionindex).y;
+         z = buckets[i]->getPoint(j,resolutionindex).z;
+         intensity = buckets[i]->getPoint(j,resolutionindex).intensity;
          if(heightcolour){//Colour by elevation.
             red = colourheightarray[3*(int)(10*(z-rminz))];
             green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -321,7 +321,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
          }
          else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-             line = buckets[i]->getpoint(j,resolutionindex).flightline;
+             line = buckets[i]->getPoint(j,resolutionindex).flightLine;
              int index = line % 6;
              switch(index){
                 case 0:red=0;green=1;blue=0;break;//Green
@@ -334,7 +334,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          else if(classcolour){//Colour by classification.
-             classification = buckets[i]->getpoint(j,resolutionindex).classification;
+             classification = buckets[i]->getPoint(j,resolutionindex).classification;
              int index = classification;
              switch(index){
                 case 0:case 1:red=1;green=1;blue=0;break;//Yellow for non-classified.
@@ -351,7 +351,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
              }
          }
          else if(returncolour){//Colour by return.
-             rnumber = buckets[i]->getpoint(j,resolutionindex).packedbyte & returnnumber;
+             rnumber = buckets[i]->getPoint(j,resolutionindex).packedByte & returnnumber;
              int index = rnumber;
              switch(index){
                 case 1:red=0;green=0;blue=1;break;//Blue
@@ -385,7 +385,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
             heightenWater ||
             heightenOverlap ||
             heightenUndefined){
-            classification = buckets[i]->getpoint(j,resolutionindex).classification;
+            classification = buckets[i]->getPoint(j,resolutionindex).classification;
             int index = classification;
             double incrementor = 100+abs(rmaxz-rminz);
             switch(index){
@@ -406,7 +406,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
                if(z>rmaxz+990)z=rmaxz+990;
             }
          }
-         if(raiseline)if(linetoraise == buckets[i]->getpoint(j,resolutionindex).flightline){
+         if(raiseline)if(linetoraise == buckets[i]->getPoint(j,resolutionindex).flightLine){
             z += 100+abs(rmaxz-rminz);
             if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
                z = rmaxz+900+z/1000;
@@ -470,7 +470,7 @@ void TwoDeeOverview::mainimage(pointbucket** buckets,int numbuckets,int detail){
 }
 
 //This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back. The method is orderd so that the top-most things are drawn first. This is because it is thought that having previously-drawn things obscure latterly-drawn things will reduce flicker.
-bool TwoDeeOverview::drawbuckets(pointbucket** buckets,int numbuckets){
+bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glReadBuffer(GL_BACK);//We want to copy from here.
@@ -578,7 +578,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       ys[1] = maxy;
       ys[2] = maxy;
       ys[3] = miny;
-      vector<pointbucket*> *pointvector = NULL;
+      vector<PointBucket*> *pointvector = NULL;
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
       delete[]xs;
       delete[]ys;
@@ -587,7 +587,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          return clearscreen();
       }
       numbuckets = pointvector->size();
-      pointbucket** buckets = new pointbucket*[numbuckets];
+      PointBucket** buckets = new PointBucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
          buckets[i]=(*pointvector)[i];
       }
@@ -613,7 +613,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       ys[1] = maxy;
       ys[2] = maxy;
       ys[3] = miny;
-      vector<pointbucket*> *pointvector = NULL;
+      vector<PointBucket*> *pointvector = NULL;
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
       delete[]xs;
       delete[]ys;
@@ -622,7 +622,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          return false;
       }
       int numbuckets = pointvector->size();
-      pointbucket** buckets = new pointbucket*[numbuckets];
+      PointBucket** buckets = new PointBucket*[numbuckets];
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
          buckets[i]=(*pointvector)[i];
       }
@@ -635,7 +635,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
 
 //Return to initial viewing position.
 bool TwoDeeOverview::returntostart(){
-   boundary* lidarboundary = lidardata->getboundary();
+   Boundary* lidarboundary = lidardata->getBoundary();
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
    double xratio = xdif/get_screen()->get_width();//This ratio defines, along with zoomlevel, the translation from world coordinates to window coordinates.
@@ -691,7 +691,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    ys[1] = maxy;
    ys[2] = maxy;
    ys[3] = miny;
-   vector<pointbucket*> *pointvector = NULL;
+   vector<PointBucket*> *pointvector = NULL;
    bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
    if(gotdata){//If there aren't any points, don't bother.
       bool anypoint = false;
@@ -704,18 +704,18 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
 //         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
-         for(int j=0;j<pointvector->at(i)->getnumberofpoints(0);j++){//For all points...
+         for(int j=0;j<pointvector->at(i)->getNumberOfPoints(0);j++){//For all points...
             if(pointsinarea[j]){//If they are in the right area...
                if(!anypoint){
                   bucketno=i;
                   pointno=j;
                   anypoint = true;
                }
-               if(!reversez && pointvector->at(i)->getpoint(j,0).z >= pointvector->at(bucketno)->getpoint(pointno,0).z){//...and if they are higher than the currently selected point assuming the z values are not being reversed.
+               if(!reversez && pointvector->at(i)->getPoint(j,0).z >= pointvector->at(bucketno)->getPoint(pointno,0).z){//...and if they are higher than the currently selected point assuming the z values are not being reversed.
                   bucketno=i;//Select them.
                   pointno=j;//...
                }
-               else if(reversez && pointvector->at(i)->getpoint(j,0).z <= pointvector->at(bucketno)->getpoint(pointno,0).z){//...or, alternatively, if they are lower than the currently selected point assuming the z values ARE being reversed.
+               else if(reversez && pointvector->at(i)->getPoint(j,0).z <= pointvector->at(bucketno)->getPoint(pointno,0).z){//...or, alternatively, if they are lower than the currently selected point assuming the z values ARE being reversed.
                   bucketno=i;//Select them.
                   pointno=j;//...
                }
@@ -734,29 +734,29 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glDrawBuffer(GL_FRONT);
             glColor3f(1.0,1.0,1.0);
             glBegin(GL_LINE_LOOP);
-               glVertex3d(pointvector->at(bucketno)->getpoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getpoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getpoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getpoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getpoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
             glEnd();
             glDrawBuffer(GL_BACK);
             glFlush();
             glwindow->gl_end();
          }
-         string flightline = lidardata->getfilename(pointvector->at(bucketno)->getpoint(pointno,0).flightline);//Returns the filepath.
+         string flightline = lidardata->getFileName(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);//Returns the filepath.
          unsigned int index = flightline.rfind("/");//Only the filename is desired, not the filepath.
          if(index==string::npos)index=0;//...
          else index++;//...
          flightline = flightline.substr(index);//...
          ostringstream x,y,z,time,intensity,classification,rnumber,flightlinenumber;
-         x << pointvector->at(bucketno)->getpoint(pointno,0).x;
-         y << pointvector->at(bucketno)->getpoint(pointno,0).y;
-         z << pointvector->at(bucketno)->getpoint(pointno,0).z;
-         time << pointvector->at(bucketno)->getpoint(pointno,0).time;
-         intensity << pointvector->at(bucketno)->getpoint(pointno,0).intensity;
-         classification << (int)pointvector->at(bucketno)->getpoint(pointno,0).classification;
-         rnumber << (int)(pointvector->at(bucketno)->getpoint(pointno,0).packedbyte & returnnumber);
-         flightlinenumber << (int)(pointvector->at(bucketno)->getpoint(pointno,0).flightline);
+         x << pointvector->at(bucketno)->getPoint(pointno,0).x;
+         y << pointvector->at(bucketno)->getPoint(pointno,0).y;
+         z << pointvector->at(bucketno)->getPoint(pointno,0).z;
+         time << pointvector->at(bucketno)->getPoint(pointno,0).time;
+         intensity << pointvector->at(bucketno)->getPoint(pointno,0).intensity;
+         classification << (int)pointvector->at(bucketno)->getPoint(pointno,0).classification;
+         rnumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).packedByte & returnnumber);
+         flightlinenumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);
          pausethread = false;//Is bored with pointbucket::getpoint(), now.
          if(threaddebug)cout << 15 << endl;
          string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + " (" + flightlinenumber.str() + "), Return number: " + rnumber.str() + ".";

@@ -7,9 +7,9 @@
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <vector>
 #include <boost/bind.hpp>
 #include "Display.h"
@@ -17,7 +17,7 @@
 #define PROFILE_H
 class Profile : public Display{
 public:
-   Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
+   Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
    bool classify(uint8_t classification);//This classifies the points selected by the profile fence.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
@@ -98,7 +98,7 @@ protected:
    int linezsize;//It is necessary to store the size of linez in class scope because the old version of linez is deleted before the new version is produced, needing a record of the old length that will not fall out of scope.
    double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower means more detail, higher means less.
    vector<int> flightlinestot;//This vector contains all the flightline numbers.
-   vector<point>* flightlinepoints;//This is a pointer (array) of vectors of points, representing for each flightline (the elements of the array) the points that it contains (the vectors).
+   vector<Point>* flightlinepoints;//This is a pointer (array) of vectors of points, representing for each flightline (the elements of the array) the points that it contains (the vectors).
 
    //Position variables:
    double leftboundx,leftboundy,rightboundx,rightboundy;//The boundary coordinates of the window, translated into world coordinates. Please note that the Z axis is "up", not the Y axis. The user cannot see the difference between the X and Y axes.
@@ -138,8 +138,8 @@ protected:
  
    //Drawing:
    bool mainimage(int detail);//Draw the main image
-   int get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last);//This takes a point (usually artificial) and then returns the point whose "distance along the viewing plane" value is the cloeset to it or, more strictly, the one whose value would mean it would be just before it if the given point was already part of the vector.
-   bool linecomp(const point& a,const point& b);//This compares the two points passed to it and returns true if the first point is further from the "start line" of the plane than the second point. It is used both to sort the points along the plane and to search for points along the plane (called from get_closest_element_position).
+   int get_closest_element_position(Point* value,vector<Point>::iterator first,vector<Point>::iterator last);//This takes a point (usually artificial) and then returns the point whose "distance along the viewing plane" value is the cloeset to it or, more strictly, the one whose value would mean it would be just before it if the given point was already part of the vector.
+   bool linecomp(const Point& a,const Point& b);//This compares the two points passed to it and returns true if the first point is further from the "start line" of the plane than the second point. It is used both to sort the points along the plane and to search for points along the plane (called from get_closest_element_position).
  
    //Positioning methods:
    void resetview();//Determines what part of the image is displayed with orthographic projection.

@@ -8,7 +8,7 @@
 #include <iterator>
 #include <cmath>
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 using namespace std;
 #ifndef MATHFUNCS_H
 #define MATHFUNCS_H
@@ -17,9 +17,9 @@ using namespace std;
 double percentilevalue(double* data,int datasize,double percentile,double minval,double maxval);
 
 //Determines whether the points in the sent bucket fit within the profile box.
-bool* vetpoints(pointbucket* points,double startx,double starty,double endx,double endy,double width);
+bool* vetpoints(PointBucket* points,double startx,double starty,double endx,double endy,double width);
 
 //Determines whether the points in the sent bucket fit within the profile area.
-bool* vetpoints(pointbucket* points,double* xs,double* ys,int numberofcorners);
+bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners);
 
 #endif

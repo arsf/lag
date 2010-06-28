@@ -7,9 +7,9 @@
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <vector>
 #include "Display.h"
 #include "BoxOverlay.h"
@@ -17,7 +17,7 @@
 #define TWODEEOVERVIEW_H
 class TwoDeeOverview : public Display{
 public:
-   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
+   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
    ~TwoDeeOverview();
    void waitforpause(){while(thread_running){usleep(10);}}
    void clippy(string picturename);//EASTER EGG. Draws an image of an annoying person with an equally annoying message.  By the way, you look like you are trying to read this code. Would you like any help?
@@ -224,8 +224,8 @@ protected:
    void FlushGLToScreen();//Flush the contents of the framebuffer to the screen.
  
    //Drawing:
-   void mainimage(pointbucket** buckets,int numbuckets,int detail);//Draw the main image. This is used by the drawing thread. Handle with care.
-   bool drawbuckets(pointbucket** buckets,int numbuckets);//Draw the outlines of the buckets and, above them, the contents of the back buffer (which contains the last stuff drawn from scratch).
+   void mainimage(PointBucket** buckets,int numbuckets,int detail);//Draw the main image. This is used by the drawing thread. Handle with care.
+   bool drawbuckets(PointBucket** buckets,int numbuckets);//Draw the outlines of the buckets and, above them, the contents of the back buffer (which contains the last stuff drawn from scratch).
  
    //Positioning methods:
    void resetview();//Determines what part of the image is displayed with orthographic projection.

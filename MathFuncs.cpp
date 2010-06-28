@@ -24,17 +24,17 @@ double percentilevalue(double* data, int datasize, double percentile, double min
 
 //Determines whether the points in the sent bucket fit within the profile area.
 
-bool* vetpoints(pointbucket* points, double* xs, double* ys, int numberofcorners){
-   bool* correctpoints = new bool[points->getnumberofpoints(0)];
+bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners){
+   bool* correctpoints = new bool[points->getNumberOfPoints(0)];
    bool pointinboundary;//Determines whether the point is within the boundary.
    int lastcorner,currentcorner;//These define the edge being considered.
-   for(int i=0;i<points->getnumberofpoints(0);i++){//For every point:
+   for(int i=0;i<points->getNumberOfPoints(0);i++){//For every point:
       pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
       lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
       for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
-         if((ys[currentcorner] < points->getpoint(i,0).y && ys[lastcorner] >= points->getpoint(i,0).y) ||
-            (ys[lastcorner] < points->getpoint(i,0).y && ys[currentcorner] >= points->getpoint(i,0).y)){//This segments the line to the length of the segment that helps define the boundary.
-            if(xs[currentcorner] + ((points->getpoint(i,0).y - ys[currentcorner])/(ys[lastcorner] - ys[currentcorner])) * (xs[lastcorner] - xs[currentcorner]) < points->getpoint(i,0).x){//If the point is to the right of the line defined by the corners (and segmented by the above if statement), i.e. the edge:
+         if((ys[currentcorner] < points->getPoint(i,0).y && ys[lastcorner] >= points->getPoint(i,0).y) ||
+            (ys[lastcorner] < points->getPoint(i,0).y && ys[currentcorner] >= points->getPoint(i,0).y)){//This segments the line to the length of the segment that helps define the boundary.
+            if(xs[currentcorner] + ((points->getPoint(i,0).y - ys[currentcorner])/(ys[lastcorner] - ys[currentcorner])) * (xs[lastcorner] - xs[currentcorner]) < points->getPoint(i,0).x){//If the point is to the right of the line defined by the corners (and segmented by the above if statement), i.e. the edge:
                pointinboundary = !pointinboundary;//If done an odd number of times, the point must be within the shape, otherwise without.
             }
          }
@@ -47,29 +47,29 @@ bool* vetpoints(pointbucket* points, double* xs, double* ys, int numberofcorners
 
 //Determines whether the points in the sent bucket fit within the profile box.
 
-bool* vetpoints(pointbucket* points, double startx, double starty, double endx, double endy, double width){
+bool* vetpoints(PointBucket* points, double startx, double starty, double endx, double endy, double width){
    double width2 = width / 2;
    double error = 0.000001; //Allows points on the line to be counted. May or may not be necessary/desirable.
-   bool* correctpoints = new bool[points->getnumberofpoints(0)]; //This will be returned later.
+   bool* correctpoints = new bool[points->getNumberOfPoints(0)]; //This will be returned later.
    if(startx == endx){//If the profile is parallel to the y axis:
-      for (int i = 0; i < points->getnumberofpoints(0); i++){
+      for (int i = 0; i < points->getNumberOfPoints(0); i++){
          correctpoints[i] = false;
-         if ((starty - points->getpoint(i,0).y + error > 0 && endy - points->getpoint(i,0).y - error < 0) ||
-                 (starty - points->getpoint(i,0).y - error < 0 && endy - points->getpoint(i,0).y + error > 0)){
-            if ((startx + width2 - points->getpoint(i,0).x + error > 0 && startx - width2 - points->getpoint(i,0).x - error < 0) ||
-                    (startx + width2 - points->getpoint(i,0).x - error < 0 && startx - width2 - points->getpoint(i,0).x + error > 0)){
+         if ((starty - points->getPoint(i,0).y + error > 0 && endy - points->getPoint(i,0).y - error < 0) ||
+                 (starty - points->getPoint(i,0).y - error < 0 && endy - points->getPoint(i,0).y + error > 0)){
+            if ((startx + width2 - points->getPoint(i,0).x + error > 0 && startx - width2 - points->getPoint(i,0).x - error < 0) ||
+                    (startx + width2 - points->getPoint(i,0).x - error < 0 && startx - width2 - points->getPoint(i,0).x + error > 0)){
                correctpoints[i] = true;
             }
          }
       }
    }
    else if (starty == endy){//If the profile is parallel to the x axis:
-      for (int i = 0; i < points->getnumberofpoints(0); i++){
+      for (int i = 0; i < points->getNumberOfPoints(0); i++){
          correctpoints[i] = false;
-         if ((startx - points->getpoint(i,0).x + error > 0 && endx - points->getpoint(i,0).x - error < 0) ||
-                 (startx - points->getpoint(i,0).x - error < 0 && endx - points->getpoint(i,0).x + error > 0)){
-            if ((starty + width2 - points->getpoint(i,0).y + error > 0 && starty - width2 - points->getpoint(i,0).y - error < 0) ||
-                    (starty + width2 - points->getpoint(i,0).y - error < 0 && starty - width2 - points->getpoint(i,0).y + error > 0)){
+         if ((startx - points->getPoint(i,0).x + error > 0 && endx - points->getPoint(i,0).x - error < 0) ||
+                 (startx - points->getPoint(i,0).x - error < 0 && endx - points->getPoint(i,0).x + error > 0)){
+            if ((starty + width2 - points->getPoint(i,0).y + error > 0 && starty - width2 - points->getPoint(i,0).y - error < 0) ||
+                    (starty + width2 - points->getPoint(i,0).y - error < 0 && starty - width2 - points->getPoint(i,0).y + error > 0)){
                correctpoints[i] = true;
             }
          }
@@ -89,16 +89,16 @@ bool* vetpoints(pointbucket* points, double startx, double starty, double endx, 
       double lenconsboxright = startyright - (startxright * lengradbox); //...
       //Testing points:
       double interstart, interend, interleft, interright;
-      for (int i = 0; i < points->getnumberofpoints(0); i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
-         interstart = points->getpoint(i,0).x * widgradbox + widconsboxstart;
-         interend = points->getpoint(i,0).x * widgradbox + widconsboxend;
-         interleft = points->getpoint(i,0).x * lengradbox + lenconsboxleft;
-         interright = points->getpoint(i,0).x * lengradbox + lenconsboxright;
+      for (int i = 0; i < points->getNumberOfPoints(0); i++){//Tests whether the the points, if they each have a line parallel to the y axis on them, intersect with all four sides of the box. If so, they fit within the profile and should be drawn
+         interstart = points->getPoint(i,0).x * widgradbox + widconsboxstart;
+         interend = points->getPoint(i,0).x * widgradbox + widconsboxend;
+         interleft = points->getPoint(i,0).x * lengradbox + lenconsboxleft;
+         interright = points->getPoint(i,0).x * lengradbox + lenconsboxright;
          correctpoints[i] = false;
-         if ((interstart - points->getpoint(i,0).y + error > 0 && interend - points->getpoint(i,0).y - error < 0) ||
-                 (interstart - points->getpoint(i,0).y - error < 0 && interend - points->getpoint(i,0).y + error > 0)){
-            if ((interleft - points->getpoint(i,0).y + error > 0 && interright - points->getpoint(i,0).y - error < 0) ||
-                    (interleft - points->getpoint(i,0).y - error < 0 && interright - points->getpoint(i,0).y + error > 0)){
+         if ((interstart - points->getPoint(i,0).y + error > 0 && interend - points->getPoint(i,0).y - error < 0) ||
+                 (interstart - points->getPoint(i,0).y - error < 0 && interend - points->getPoint(i,0).y + error > 0)){
+            if ((interleft - points->getPoint(i,0).y + error > 0 && interright - points->getPoint(i,0).y - error < 0) ||
+                    (interleft - points->getPoint(i,0).y - error < 0 && interright - points->getPoint(i,0).y + error > 0)){
                correctpoints[i] = true;
             }
          }

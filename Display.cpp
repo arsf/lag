@@ -9,9 +9,9 @@
 #include <gtkglmm.h>
 #include <vector>
 #include <iostream>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
@@ -19,7 +19,7 @@
 #include "MathFuncs.h"
 #include "Display.h"
 
-Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit) : Gtk::GL::DrawingArea(config){
+Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit) : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    this->bucketlimit = bucketlimit;
    pointsize=1;
@@ -160,10 +160,10 @@ double Display::brightness_by(double value,double maxvalue,double minvalue,doubl
   return multiplier;
 }
 
-bool Display::advsubsetproc(vector<pointbucket*>*& pointvector,double *xs,double *ys,int ps){
+bool Display::advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps){
    try{
-      pointvector = lidardata->advsubset(xs,ys,ps);
-   }catch(descriptiveexception e){
+      pointvector = lidardata->advSubset(xs,ys,ps);
+   }catch(DescriptiveException e){
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
       cout << "Why: " << e.why() << endl;
@@ -193,7 +193,7 @@ void Display::guard_against_interaction_between_GL_areas(){
 
 //This method prepares the image for drawing and sets up OpenGl. It gets data from the quadtree in order to find the maximum and minimum height and intensity values and calls the coloursandshades() method to prepare the colouring of the points. It also sets up clearing and the initial view.
 void Display::prepare_image(){
-   boundary* lidarboundary = lidardata->getboundary();
+   Boundary* lidarboundary = lidardata->getBoundary();
    double *xs = new double[4];
    xs[0] = lidarboundary->minX;
    xs[1] = lidarboundary->minX;
@@ -204,7 +204,7 @@ void Display::prepare_image(){
    ys[1] = lidarboundary->maxY;
    ys[2] = lidarboundary->maxY;
    ys[3] = lidarboundary->minY;
-   vector<pointbucket*> *pointvector = NULL;
+   vector<PointBucket*> *pointvector = NULL;
    bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get ALL data.
    delete[]xs;
    delete[]ys;
@@ -217,7 +217,7 @@ void Display::prepare_image(){
       return;
    }
    int numbuckets = pointvector->size();
-   pointbucket** buckets = new pointbucket*[numbuckets];
+   PointBucket** buckets = new PointBucket*[numbuckets];
    for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
       buckets[i]=(*pointvector)[i];
    }

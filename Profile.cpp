@@ -9,16 +9,16 @@
 #include <gtkglmm.h>
 #include <vector>
 #include <iostream>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "quadtreestructs.h"
-#include "pointbucket.h"
+#include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include "Profile.h"
 #include "MathFuncs.h"
 
-Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
    //Profile stats:
    samplemaxz = sampleminz = 0;
    profxs=profys=NULL;
@@ -156,7 +156,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
          this->profys[i] = profys[i];///..
       }//...
    //...}
-   vector<pointbucket*> *pointvector = NULL;
+   vector<PointBucket*> *pointvector = NULL;
    imageexists = advsubsetproc(pointvector,profxs,profys,profps);//Get data.
    if(!imageexists){//Drawing from a null vector would be bad, and a zero vector pointless.
       if(pointvector!=NULL)delete pointvector;
@@ -167,28 +167,28 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
    for(int i=0;i<numbuckets;i++){
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
-      for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){
+      for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
-            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getpoint(j,0).flightline)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
-               flightlinestot.push_back((*pointvector)[i]->getpoint(j,0).flightline);//...add it.
+            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
+               flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
             }
          }
       }
    }
    if(flightlinepoints!=NULL)delete[] flightlinepoints;
-   flightlinepoints = new vector<point>[flightlinestot.size()];//This pointer array of vectors will contain all the points in the profile.
+   flightlinepoints = new vector<Point>[flightlinestot.size()];//This pointer array of vectors will contain all the points in the profile.
    totnumpoints = 0;
    samplemaxz = rminz;//These are for the minimum and maximum heights of the points in the profile.
    sampleminz = rmaxz;
    for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
       for(int j=0;j<numbuckets;j++){//For every bucket:
-         for(int k=0;k<(*pointvector)[j]->getnumberofpoints(0);k++){//For every point:
+         for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
             if(correctpointsbuckets[j][k]){//If the point is in the profile...
-               if((*pointvector)[j]->getpoint(k,0).flightline == flightlinestot[i]){//...and if it is from the right flightline (see above):
-                  flightlinepoints[i].push_back((*pointvector)[j]->getpoint(k,0));//Add it
+               if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
+                  flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
                   totnumpoints++;//...and add it to the "census".
-                  if(samplemaxz<(*pointvector)[j]->getpoint(k,0).z)samplemaxz = (*pointvector)[j]->getpoint(k,0).z;
-                  if(sampleminz>(*pointvector)[j]->getpoint(k,0).z)sampleminz = (*pointvector)[j]->getpoint(k,0).z;
+                  if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;
+                  if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;
                }
             }
          }
@@ -213,7 +213,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
 //This takes the points selected by the fence and then classifies them as the type sent.
 bool Profile::classify(uint8_t classification){
    if(!imageexists || fencestartz == fenceendz || (fencestartx == fenceendx && fencestarty == fenceendy))return false;
-   vector<pointbucket*> *pointvector = NULL;
+   vector<PointBucket*> *pointvector = NULL;
    bool gotdata = advsubsetproc(pointvector,profxs,profys,profps);//Get data.
    if(!gotdata){//Obviously if no data is retrieved then nothing more must be attempted.
       if(pointvector!=NULL)delete pointvector;
@@ -250,22 +250,22 @@ bool Profile::classify(uint8_t classification){
       zs[3] = fenceendz + (slantwidth/2)*horizratio;
       bool pointinboundary;//Determines whether the point is within the boundary.
       int lastcorner,currentcorner;//These define the edge being considered.
-      point *pnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      Point *pnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
       for(int i=0;i<numbuckets;i++){//For all buckets:
-         for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){//For all points:
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points:
             if(correctpointsbuckets[i][j]){//If in the profile area:
                pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
                lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
                for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
-                  if((zs[currentcorner] < (*pointvector)[i]->getpoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getpoint(j,0).z) ||
-                     (zs[lastcorner] < (*pointvector)[i]->getpoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getpoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
-                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getpoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
-                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getpoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
-                     if(linecomp((*pointvector)[i]->getpoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
+                  if((zs[currentcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getPoint(j,0).z) ||
+                     (zs[lastcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getPoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
+                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
+                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
+                     if(linecomp((*pointvector)[i]->getPoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
                   }
                   lastcorner = currentcorner;
                }
-               if(pointinboundary)(*pointvector)[i]->setclassification(j,classification);//Finally!
+               if(pointinboundary)(*pointvector)[i]->setClassification(j,classification);//Finally!
             }
          }
       }
@@ -275,20 +275,20 @@ bool Profile::classify(uint8_t classification){
       delete pnt;
    }
    else{
-      point *startpnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      Point *startpnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
       startpnt->x = fencestartx;
       startpnt->y = fencestarty;
-      point *endpnt = new point;//Fake point for sending to linecomp the boundaries of the fence.
+      Point *endpnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
       endpnt->x = fenceendx;
       endpnt->y = fenceendy;
       for(int i=0;i<numbuckets;i++){
-         for(int j=0;j<(*pointvector)[i]->getnumberofpoints(0);j++){
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
             if(correctpointsbuckets[i][j]){
-               if(((*pointvector)[i]->getpoint(j,0).z < fencestartz && (*pointvector)[i]->getpoint(j,0).z > fenceendz) ||
-                  ((*pointvector)[i]->getpoint(j,0).z > fencestartz && (*pointvector)[i]->getpoint(j,0).z < fenceendz)){
-                  if((linecomp(*startpnt,(*pointvector)[i]->getpoint(j,0)) && linecomp((*pointvector)[i]->getpoint(j,0),*endpnt)) ||
-                     (linecomp((*pointvector)[i]->getpoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getpoint(j,0)))){
-                     (*pointvector)[i]->setclassification(j,classification);
+               if(((*pointvector)[i]->getPoint(j,0).z < fencestartz && (*pointvector)[i]->getPoint(j,0).z > fenceendz) ||
+                  ((*pointvector)[i]->getPoint(j,0).z > fencestartz && (*pointvector)[i]->getPoint(j,0).z < fenceendz)){
+                  if((linecomp(*startpnt,(*pointvector)[i]->getPoint(j,0)) && linecomp((*pointvector)[i]->getPoint(j,0),*endpnt)) ||
+                     (linecomp((*pointvector)[i]->getPoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getPoint(j,0)))){
+                     (*pointvector)[i]->setClassification(j,classification);
                   }
                }
             }
@@ -314,7 +314,7 @@ bool Profile::classify(uint8_t classification){
 }
 
 //This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as that "start".
-bool Profile::linecomp(const point &a,const point &b){
+bool Profile::linecomp(const Point &a,const Point &b){
    const double xa = a.x;
    const double xb = b.x;
    const double ya = a.y;
@@ -375,9 +375,9 @@ bool Profile::linecomp(const point &a,const point &b){
 }
 
 //This returns the index (in the vector of points in a flightline) of the nearest point "before" the position along the horizontal line of the viewable plane of the point passed in. It is used for determining which points to draw by passing as a "point" the coordinates of the limits of the viewable plane. It needs to be passed a "point" because the linecomp function, which it uses, only accepts points because it was originally made just for sorting points. Fundamentally, it works similarly to a BINARY SEARCH algorithm.
-int Profile::get_closest_element_position(point* value,vector<point>::iterator first,vector<point>::iterator last){
-   vector<point>::iterator originalFirst = first;
-   vector<point>::iterator middle;
+int Profile::get_closest_element_position(Point* value,vector<Point>::iterator first,vector<Point>::iterator last){
+   vector<Point>::iterator originalFirst = first;
+   vector<Point>::iterator middle;
    while(true){//INFINITE LOOP interrupted by returns.
       middle = first + distance(first,last)/2;
       if(linecomp(*middle,*value))first = middle;//IF the passed point is further along the horizontal plane-line than the "middle" point then make the "first" point equal to the "middle" point.
@@ -658,24 +658,24 @@ bool Profile::mainimage(int detail){
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
-   point *leftpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
+   Point *leftpnt = new Point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
    leftpnt->x = leftboundx + centrex;
    leftpnt->y = leftboundy + centrey;
    leftpnt->z = 0;
    leftpnt->time = flightlinepoints[0][0].time;
    leftpnt->intensity = 0;
    leftpnt->classification = 0;
-   leftpnt->flightline = 0;
-   leftpnt->packedbyte = 0;
-   point *rightpnt = new point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
+   leftpnt->flightLine = 0;
+   leftpnt->packedByte = 0;
+   Point *rightpnt = new Point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
    rightpnt->x = rightboundx + centrex;
    rightpnt->y = rightboundy + centrey;
    rightpnt->z = 0;
    rightpnt->time = flightlinepoints[0][0].time;
    rightpnt->intensity = 0;
    rightpnt->classification = 0;
-   rightpnt->flightline = 0;
-   rightpnt->packedbyte = 0;
+   rightpnt->flightLine = 0;
+   rightpnt->packedByte = 0;
    for(int i=0;i<(int)flightlinestot.size();i++){
       minplanx = startx + leftboundx;//These ensure that the entire screen will be filled, otherwise, because the screen position of startx changes, only part of the point-set will be drawn.
       minplany = starty + leftboundy;//...
@@ -722,7 +722,7 @@ bool Profile::mainimage(int detail){
                blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
             }
             else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-                int index = flightlinepoints[i][j].flightline % 6;
+                int index = flightlinepoints[i][j].flightLine % 6;
                 switch(index){
                    case 0:red=0;green=1;blue=0;break;//Green
                    case 1:red=0;green=0;blue=1;break;//Blue
@@ -749,7 +749,7 @@ bool Profile::mainimage(int detail){
                 }
             }
             else if(returncolour){//Colour by return.
-                switch(flightlinepoints[i][j].packedbyte & returnnumber){
+                switch(flightlinepoints[i][j].packedByte & returnnumber){
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
                    case 3:red=0;green=1;blue=0;break;//Green

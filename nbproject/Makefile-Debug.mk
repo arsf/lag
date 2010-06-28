@@ -31,16 +31,24 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/main.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreenode.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/MathFuncs.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/QuadtreeNode.o \
 	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreestructs.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASloader.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASsaver.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/cacheminder.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/pointbucket.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/collisiondetection.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/ASCIIloader.o \
-	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtree.o
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasSaver.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Quadtree.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AsciiLoader.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/PointBucket.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/commonfunctions.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/BoxOverlay.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CollisionDetection.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Profile.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Display.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileSaver.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasLoader.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CacheMinder.o \
+	${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileOpener.o
 
 # C Compiler Flags
 CFLAGS=
@@ -68,55 +76,95 @@ dist/Debug/GNU-Linux-x86/lag: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lag ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/main.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/main.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/MathFuncs.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/MathFuncs.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/main.o /users/rsg/chrfi/git_repos/lag/main.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/MathFuncs.o /users/rsg/chrfi/git_repos/lag/MathFuncs.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreenode.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/quadtreenode.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/QuadtreeNode.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/QuadtreeNode.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreenode.o /users/rsg/chrfi/git_repos/lag/quadtreenode.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/QuadtreeNode.o /users/rsg/chrfi/git_repos/lag/QuadtreeNode.cpp
 
 ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreestructs.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/quadtreestructs.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
 	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtreestructs.o /users/rsg/chrfi/git_repos/lag/quadtreestructs.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASloader.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/LASloader.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/TwoDeeOverview.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASloader.o /users/rsg/chrfi/git_repos/lag/LASloader.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.o /users/rsg/chrfi/git_repos/lag/TwoDeeOverview.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASsaver.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/LASsaver.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasSaver.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/LasSaver.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LASsaver.o /users/rsg/chrfi/git_repos/lag/LASsaver.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasSaver.o /users/rsg/chrfi/git_repos/lag/LasSaver.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/cacheminder.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/cacheminder.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Quadtree.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/Quadtree.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/cacheminder.o /users/rsg/chrfi/git_repos/lag/cacheminder.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Quadtree.o /users/rsg/chrfi/git_repos/lag/Quadtree.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/pointbucket.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/pointbucket.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AsciiLoader.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/AsciiLoader.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/pointbucket.o /users/rsg/chrfi/git_repos/lag/pointbucket.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AsciiLoader.o /users/rsg/chrfi/git_repos/lag/AsciiLoader.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/collisiondetection.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/collisiondetection.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/PointBucket.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/PointBucket.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/collisiondetection.o /users/rsg/chrfi/git_repos/lag/collisiondetection.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/PointBucket.o /users/rsg/chrfi/git_repos/lag/PointBucket.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/ASCIIloader.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/ASCIIloader.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/commonfunctions.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/commonfunctions.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/ASCIIloader.o /users/rsg/chrfi/git_repos/lag/ASCIIloader.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/commonfunctions.o /users/rsg/chrfi/git_repos/lag/commonfunctions.cpp
 
-${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtree.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/quadtree.cpp 
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.cpp 
 	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
 	${RM} $@.d
-	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/quadtree.o /users/rsg/chrfi/git_repos/lag/quadtree.cpp
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.o /users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/BoxOverlay.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/BoxOverlay.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/BoxOverlay.o /users/rsg/chrfi/git_repos/lag/BoxOverlay.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CollisionDetection.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/CollisionDetection.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CollisionDetection.o /users/rsg/chrfi/git_repos/lag/CollisionDetection.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Profile.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/Profile.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Profile.o /users/rsg/chrfi/git_repos/lag/Profile.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Display.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/Display.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/Display.o /users/rsg/chrfi/git_repos/lag/Display.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileSaver.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/FileSaver.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileSaver.o /users/rsg/chrfi/git_repos/lag/FileSaver.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasLoader.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/LasLoader.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/LasLoader.o /users/rsg/chrfi/git_repos/lag/LasLoader.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CacheMinder.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/CacheMinder.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/CacheMinder.o /users/rsg/chrfi/git_repos/lag/CacheMinder.cpp
+
+${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileOpener.o: nbproject/Makefile-${CND_CONF}.mk /users/rsg/chrfi/git_repos/lag/FileOpener.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag
+	${RM} $@.d
+	$(COMPILE.cc) -g -I/usr/include -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/users/rsg/chrfi/git_repos/lag/FileOpener.o /users/rsg/chrfi/git_repos/lag/FileOpener.cpp
 
 # Subprojects
 .build-subprojects:

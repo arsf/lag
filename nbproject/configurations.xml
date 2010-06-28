@@ -4,16 +4,25 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>/users/rsg/chrfi/git_repos/lag/ASCIIloader.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/LASloader.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/LASsaver.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/cacheminder.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/collisiondetection.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/lidarpointsaver.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/pointbucket.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/quadtree.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/AsciiLoader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/BoxOverlay.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/CacheMinder.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/CollisionDetection.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Display.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/FileOpener.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/FileSaver.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/LasLoader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/LasSaver.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/LidarPointLoader.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/MathFuncs.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/PointBucket.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Profile.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Quadtree.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/QuadtreeNode.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/commonfunctions.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreeexceptions.h</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreenode.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreestructs.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -23,15 +32,23 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>/users/rsg/chrfi/git_repos/lag/ASCIIloader.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/LASloader.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/LASsaver.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/cacheminder.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/collisiondetection.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/main.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/pointbucket.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/quadtree.cpp</itemPath>
-      <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreenode.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/AdvancedOptionsWindow.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/AsciiLoader.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/BoxOverlay.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/CacheMinder.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/CollisionDetection.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Display.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/FileOpener.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/FileSaver.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/LasLoader.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/LasSaver.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/MathFuncs.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/PointBucket.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Profile.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/Quadtree.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/QuadtreeNode.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/commonfunctions.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreestructs.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

@@ -12,7 +12,7 @@
 #include "Profile.h"
 #include "FileSaver.h"
 
-FileSaver::FileSaver(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,quadtree *lidardata){
+FileSaver::FileSaver(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,Quadtree *lidardata){
    this->tdo = tdo;
    this->prof = prof;
    this->lidardata = lidardata;
@@ -33,11 +33,11 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
    else if(response_id == 1){
       if(lidardata==NULL)return;
       try{
-         LASsaver *saver = new LASsaver(filesaverdialog->get_filename().c_str(),lidardata->getfilename(flightlinesaveselect->get_value_as_int()).c_str());
-         lidardata->saveflightline(flightlinesaveselect->get_value_as_int(),saver);
+         LasSaver *saver = new LasSaver(filesaverdialog->get_filename().c_str(),lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str());
+         lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
          delete saver;
       }
-      catch(descriptiveexception e){
+      catch(DescriptiveException e){
          cout << "There has been an exception:" << endl;
          cout << "What: " << e.what() << endl;
          cout << "Why: " << e.why() << endl;
@@ -46,5 +46,5 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
    }
 }
 void FileSaver::on_flightlinesaveselected(){
-   if(lidardata!=NULL)filesaverdialog->set_filename(lidardata->getfilename(flightlinesaveselect->get_value_as_int()));
+   if(lidardata!=NULL)filesaverdialog->set_filename(lidardata->getFileName(flightlinesaveselect->get_value_as_int()));
 }
