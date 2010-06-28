@@ -8,7 +8,7 @@
 #include <gtkmm.h>
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
 #include "TwoDeeOverviewWindow.h"
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
       }
    }
    int bucketlimit = 100000;//How many points in each bucket, maximum.
-   quadtree* lidardata = NULL;//The flightlines are stored here.
+   Quadtree* lidardata = NULL;//The flightlines are stored here.
    Gtk::Label *rulerlabelover = NULL;//Label displaying the distance along the ruler, in all dimensions etc. for the overview. Also other text output about the data and fences, profiles etc. is put here.
    refXml->get_widget("rulerlabelover",rulerlabelover);
    TwoDeeOverview *tdo = new TwoDeeOverview(glconfig,lidardata,bucketlimit,rulerlabelover);//The 2d overview.

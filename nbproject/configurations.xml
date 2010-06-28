@@ -18,9 +18,11 @@
       <itemPath>/users/rsg/chrfi/git_repos/lag/MathFuncs.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/PointBucket.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/Profile.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/ProfileWindow.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/Quadtree.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/QuadtreeNode.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.h</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverviewWindow.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/commonfunctions.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreeexceptions.h</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreestructs.h</itemPath>
@@ -45,10 +47,13 @@
       <itemPath>/users/rsg/chrfi/git_repos/lag/MathFuncs.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/PointBucket.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/Profile.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/ProfileWindow.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/Quadtree.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/QuadtreeNode.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverview.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/TwoDeeOverviewWindow.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/commonfunctions.cpp</itemPath>
+      <itemPath>/users/rsg/chrfi/git_repos/lag/lag.cpp</itemPath>
       <itemPath>/users/rsg/chrfi/git_repos/lag/quadtreestructs.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -83,7 +88,7 @@
             <linkerLibLibItem>boost_thread-mt</linkerLibLibItem>
             <linkerLibLibItem>boost_serialization-mt</linkerLibLibItem>
             <linkerLibLibItem>lzo2</linkerLibLibItem>
-            <linkerLibFileItem>/users/rsg/chrfi/newsvn/lag/TCMalloc/lib/libtcmalloc.a</linkerLibFileItem>
+            <linkerLibFileItem>/users/rsg/chrfi/git_repos/lag/TCMalloc/lib/libtcmalloc.a</linkerLibFileItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

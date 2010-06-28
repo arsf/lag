@@ -12,7 +12,7 @@
 #include "Profile.h"
 #include "FileOpener.h"
 
-FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof,TwoDeeOverviewWindow *tdow){
+FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,Quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof,TwoDeeOverviewWindow *tdow){
    this->tdo = tdo;
    this->prof = prof;
    this->aow = aow;
@@ -142,7 +142,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                int fenceps = 0;
                if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
                if(fencexs!=NULL&&fenceys!=NULL){
-                  lidarpointloader *loader = NULL;
+                  LidarPointLoader *loader = NULL;
                   bool validfile = true;
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
                      filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
@@ -150,7 +150,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                           filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
                      const char* code = code1.c_str();
-                     loader = new ASCIIloader(argv[count],code);
+                     loader = new AsciiLoader(argv[count],code);
                   }
                   else{//For incorrect file extensions:
                      string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
@@ -164,7 +164,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         if(lidardata != NULL)delete lidardata;
                         lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                         loaderrorstream->str("");
-                        lidardata = new quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
+                        lidardata = new Quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
                      }
                      else lidardata->load(loader,poffs,bucketlevels,fencexs,fenceys,fenceps);
                   }
@@ -198,16 +198,16 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
             for(int count = 2;count<argc;count++){//We start after the executable path and the point offset.
                filename.assign(argv[count]);
                if(filename != ""){
-                  lidarpointloader *loader = NULL;
+                  LidarPointLoader *loader = NULL;
                   if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
                      loader = new LASloader(argv[count]);
                   }
                   else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
                      const char* code = code1.c_str();
-                     loader = new ASCIIloader(argv[count],code);
+                     loader = new AsciiLoader(argv[count],code);
                   }
-                  boundary* lidarboundary = loader->getboundary();
+                  Boundary* lidarboundary = loader->getBoundary();
                   if(lidarboundary->minX < minx || count == 2)minx = lidarboundary->minX;
                   if(lidarboundary->maxX > maxx || count == 2)maxx = lidarboundary->maxX;
                   if(lidarboundary->minY < miny || count == 2)miny = lidarboundary->minY;
@@ -221,7 +221,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
             numlines++;
             filename.assign(argv[count]);
             if(filename != ""){
-               lidarpointloader *loader = NULL;
+               LidarPointLoader *loader = NULL;
                bool validfile = true;
                if(filename.find(".las",filename.length()-4)!=string::npos ||
                   filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
@@ -229,7 +229,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                        filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                   string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
                   const char* code = code1.c_str();
-                  loader = new ASCIIloader(argv[count],code);
+                  loader = new AsciiLoader(argv[count],code);
                }
                else{//For incorrect file extensions:
                   string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
@@ -243,7 +243,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      if(lidardata != NULL)delete lidardata;
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
-                     lidardata = new quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
+                     lidardata = new Quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
                      lidardata->load(loader,poffs,bucketlevels);
                   }
                   else lidardata->load(loader,poffs,bucketlevels);
@@ -266,7 +266,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
          }
       }
    }
-   catch(descriptiveexception e){
+   catch(DescriptiveException e){
       string message = "There has been an exception:\n";
       message += "What: " + *(e.what());
       message += "\nWhy: " + *(e.why());
@@ -304,7 +304,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
    loadedanyfiles = true;
    string flightline,list="";
    for(int i = 0;i<numlines;i++){
-      flightline = lidardata->getfilename(i);
+      flightline = lidardata->getFileName(i);
       ostringstream number;
       number << numlines;
       list += number.str() + ":  " + flightline + "\n";
@@ -348,7 +348,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id){
 //When the cachesize (in points) is changed, this outputs the value in Gigabytes (NOT Gibibytes) to a label next to it.
 void FileOpener::on_cachesize_changed(){
    ostringstream GB;
-   GB << ((double)cachesizeselect->get_value()*sizeof(point))/1000000000;
+   GB << ((double)cachesizeselect->get_value()*sizeof(Point))/1000000000;
    string labelstring = "Approximately: " + GB.str() + " GB.";
    cachesizeGBlabel->set_text(labelstring);
 }

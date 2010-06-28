@@ -10,7 +10,7 @@
 #include <vector>
 #include "TwoDeeOverview.h"
 #include "Profile.h"
-#include "quadtree.h"
+#include "Quadtree.h"
 #include "LasLoader.h"
 #include "AsciiLoader.h"
 #include "AdvancedOptionsWindow.h"
@@ -18,7 +18,7 @@
 #include "TwoDeeOverviewWindow.h"
 class FileOpener{
 public:
-   FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof,TwoDeeOverviewWindow *tdow);
+   FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow,FileSaver *fs,Quadtree *lidardata,int bucketlimit,Gtk::EventBox *eventboxtdo,Gtk::EventBox *eventboxprof,TwoDeeOverviewWindow *tdow);
    ~FileOpener();
    int testfilename(int argc,char *argv[],bool start,bool usearea);
    void show(){ filechooserdialog->present();}
@@ -29,7 +29,7 @@ protected:
    TwoDeeOverviewWindow *tdow;
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
-   quadtree *lidardata;
+   Quadtree *lidardata;
    Gtk::FileChooserDialog *filechooserdialog;//For opening files.
    Gtk::SpinButton *pointskipselect;//How many points to skip while loading one.
    Gtk::CheckButton *fenceusecheck;//Check button determining whether the (overview) fence is used for loading flightlines.
