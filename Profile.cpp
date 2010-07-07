@@ -19,6 +19,7 @@
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   totnumpoints = 0;
    //Profile stats:
    samplemaxz = sampleminz = 0;
    profxs=profys=NULL;
@@ -51,7 +52,7 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lid
    slanted = true;
    slantwidth = 5;
    //Events and signals:
-   add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
+   add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON2_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&Profile::on_zoom));
    sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_pan_start));
    sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_pan));
@@ -132,8 +133,31 @@ bool Profile::returntostart(){
    double Z = samplemaxz - sampleminz;//...
    if(ratio<Z/get_height())ratio = Z/get_height();//...
    ratio*=1.1;//This allows for some comfortable white (actually black) space between the edgemost points and the edges themselves.
-   resetview();//Now change the view settings using some the values just changed.
+   resetview();//Now change the view settings using some of the values just changed.
    return drawviewable(1);
+}
+
+bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
+   double breadth = endx - startx;
+   double height = endy - starty;
+   double length = sqrt(breadth*breadth+height*height);//Right triangle.
+   switch(event->keyval){
+      case GDK_W:shiftspeed *= -0.1 * width / length;centrex += shiftspeed * height;centrey -= shiftspeed * breadth;
+                            fencestartx += shiftspeed * height;fencestarty -= shiftspeed * breadth;
+                            fenceendx += shiftspeed * height;fenceendy -= shiftspeed * breadth;break;
+      case GDK_S:shiftspeed *= 0.1 * width / length;centrex += shiftspeed * height;centrey -= shiftspeed * breadth;
+                            fencestartx += shiftspeed * height;fencestarty -= shiftspeed * breadth;
+                            fenceendx += shiftspeed * height;fenceendy -= shiftspeed * breadth;break;
+      case GDK_A:shiftspeed *= 0.1 * width / length;centrex -= shiftspeed * breadth;centrey -= shiftspeed * height;
+                            fencestartx -= shiftspeed * breadth;fencestarty -= shiftspeed * height;
+                            fenceendx -= shiftspeed * breadth;fenceendy -= shiftspeed * height;break;
+      case GDK_D:shiftspeed *= -0.1 * width / length;centrex -= shiftspeed * breadth;centrey -= shiftspeed * height;
+                            fencestartx -= shiftspeed * breadth;fencestarty -= shiftspeed * height;
+                            fenceendx -= shiftspeed * breadth;fenceendy -= shiftspeed * height;break;
+      default:return false;break;
+   }
+   resetview();//Now change the view settings using some of the values just changed.
+   return true;
 }
 
 //This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws. changeview should be true when the profile area has changed and false when it has not, such as when the classification (only) has been changed. If changeview is true then the view is reset and the fence is removed, otherwise not. The fence is removed to prevent accidental classification.
@@ -195,10 +219,14 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
       }
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right. Otherwise when the user elects to draw lines they will get a chaotic scribble.
    }
-   make_moving_average();//Make now the lines to be drawn when the user elects to draw them.
    if(pointvector!=NULL)delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
+   if(totnumpoints < 1){
+      imageexists = false;
+      return false;
+   }
+   make_moving_average();//Make now the lines to be drawn when the user elects to draw them.
    if(is_realized()){
       if(changeview){
          fencestartx = fencestarty = fencestartz = 0;//This is to prevent the situation where a fence is preserved from profile to profile in a warped fashion allowing accidental classification.
@@ -389,57 +417,103 @@ int Profile::get_closest_element_position(Point* value,vector<Point>::iterator f
 
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool Profile::on_pan_start(GdkEventButton* event){
-   if(event->button==1){
+   if(event->button==1 || event->button==2){
       panstartx = event->x;
       panstarty = event->y;
       get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
+      return true;
    }
-   return true;
+   else return false;
 }
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview (with fewer points) to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
 bool Profile::on_pan(GdkEventMotion* event){
-   double breadth = endx - startx;
-   double height = endy - starty;
-   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-panstartx)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
-   centrex -= hypotenuse * breadth / length;
-   centrey -= hypotenuse * height / length;
-   centrez += (event->y-panstarty)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   panstartx=event->x;
-   panstarty=event->y;
-   return drawviewable(2);
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      double hypotenuse = (event->x-panstartx)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+      centrex -= hypotenuse * breadth / length;
+      centrey -= hypotenuse * height / length;
+      centrez += (event->y-panstarty)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      panstartx=event->x;
+      panstarty=event->y;
+      return drawviewable(2);
+   }
+   else return false;
 }
 //At the end of the pan draw the full image.
 bool Profile::on_pan_end(GdkEventButton* event){
-   if(event->button==1)return drawviewable(1);
+   if(event->button==1 || event->button==2)return drawviewable(1);
    else return false;
 }
-
-//Find the starting coordinates of the fence and set the label values to zero.
-bool Profile::on_fence_start(GdkEventButton* event){
+bool Profile::on_pan_key(GdkEventKey *event,double scrollspeed){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
-   fencestartx = fenceendx = centrex + viewerx + hypotenuse * breadth / length;
-   fencestarty = fenceendy = centrey + viewery + hypotenuse * height / length;
-   fencestartz = fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
-   return drawviewable(1);
+   double hypotenuse = scrollspeed*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+   switch(event->keyval){
+      case GDK_w:centrez += hypotenuse;return drawviewable(2);break;
+      case GDK_s:centrez -= hypotenuse;return drawviewable(2);break;
+      case GDK_a:centrex -= hypotenuse*breadth/length;centrey -= hypotenuse*height/length;return drawviewable(2);break;
+      case GDK_d:centrex += hypotenuse*breadth/length;centrey += hypotenuse*height/length;return drawviewable(2);break;
+      case GDK_z:case GDK_Z:return drawviewable(1);
+      default:return false;break;
+   }
+   return false;
+}
+//Find the starting coordinates of the fence and set the label values to zero.
+bool Profile::on_fence_start(GdkEventButton* event){
+   if(event->button==1){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+      fencestartx = fenceendx = centrex + viewerx + hypotenuse * breadth / length;
+      fencestarty = fenceendy = centrey + viewery + hypotenuse * height / length;
+      fencestartz = fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
+      return drawviewable(1);
+   }
+   else if(event->button==2)return on_pan_start(event);
+   else return false;
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the fence.
 bool Profile::on_fence(GdkEventMotion* event){
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+      fenceendx = centrex + viewerx + hypotenuse * breadth / length;
+      fenceendy = centrey + viewery + hypotenuse * height / length;
+      fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      return drawviewable(1);
+   }
+   else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)return on_pan(event);
+   else return false;
+}
+//Draw again. This is for if/when the on_fence() method calls drawviewable(2) rather than drawviewable(1).
+bool Profile::on_fence_end(GdkEventButton* event){
+   if(event->button==1)return drawviewable(1);
+   else if(event->button==2)return on_pan_end(event);
+   else return false;
+}
+bool Profile::on_fence_key(GdkEventKey *event,double scrollspeed){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
-   fenceendx = centrex + viewerx + hypotenuse * breadth / length;
-   fenceendy = centrey + viewery + hypotenuse * height / length;
-   fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   return drawviewable(1);
+   double hypotenuse = scrollspeed*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+   switch(event->keyval){
+      case GDK_W:fencestartz += hypotenuse;fenceendz += hypotenuse;break;
+      case GDK_S:fencestartz -= hypotenuse;fenceendz -= hypotenuse;break;
+      case GDK_A:fencestartx -= hypotenuse*breadth/length;fenceendx -= hypotenuse*breadth/length;
+                 fencestarty -= hypotenuse*height/length;fenceendy -= hypotenuse*height/length;break;
+      case GDK_D:fencestartx += hypotenuse*breadth/length;fenceendx += hypotenuse*breadth/length;
+                 fencestarty += hypotenuse*height/length;fenceendy += hypotenuse*height/length;break;
+      default:return false;break;
+   }
+   return drawviewable(2);
 }
-//Draw again. This is for if/when the on_fence() method calls drawviewable(2) rather than drawviewable(1).
-bool Profile::on_fence_end(GdkEventButton* event){return drawviewable(1);}
 //Make the fence as a thick line.
 void Profile::makefencebox(){
    if(slanted){
@@ -471,47 +545,59 @@ void Profile::makefencebox(){
 }
 //Find the starting coordinates of the ruler and set the label values to zero.
 bool Profile::on_ruler_start(GdkEventButton* event){
-   double breadth = endx - startx;
-   double height = endy - starty;
-   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
-   rulerstartx = rulerendx = centrex + viewerx + hypotenuse * breadth / length;
-   rulerstarty = rulerendy = centrey + viewery + hypotenuse * height / length;
-   rulerstartz = rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   ostringstream zpos;
-   zpos << rulerendz;
-   rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0 Pos: " + zpos.str());
-   get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
-   return drawviewable(1);
+   if(event->button==1){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+      rulerstartx = rulerendx = centrex + viewerx + hypotenuse * breadth / length;
+      rulerstarty = rulerendy = centrey + viewery + hypotenuse * height / length;
+      rulerstartz = rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      ostringstream zpos;
+      zpos << rulerendz;
+      rulerlabel->set_text("Distance: 0\nX: 0\nY: 0\nHoriz: 0\nZ: 0 Pos: " + zpos.str());
+      get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
+      return drawviewable(1);
+   }
+   else if(event->button==2)return on_pan_start(event);
+   else return false;
 }
 //Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the ruler.
 bool Profile::on_ruler(GdkEventMotion* event){
-   double breadth = endx - startx;
-   double height = endy - starty;
-   double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
-   rulerendx = centrex + viewerx + hypotenuse * breadth / length;
-   rulerendy = centrey + viewery + hypotenuse * height / length;
-   rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
-   double d,xd,yd,hd,zd;
-   xd = abs(rulerendx-rulerstartx);
-   yd = abs(rulerendy-rulerstarty);
-   zd = abs(rulerendz-rulerstartz);
-   hd = sqrt(xd*xd+yd*yd);//Combined horizontal distance.
-   d = sqrt(hd*hd+zd*zd);//Combined horizontal and vertical distance.
-   ostringstream dist,xdist,ydist,horizdist,zdist,zpos;
-   dist << d;
-   xdist << xd;
-   ydist << yd;
-   horizdist << hd;
-   zdist << zd;
-   zpos << rulerendz;
-   string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str() + " Pos: " + zpos.str();
-   rulerlabel->set_text(rulerstring);
-   return drawviewable(1);
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
+      rulerendx = centrex + viewerx + hypotenuse * breadth / length;
+      rulerendy = centrey + viewery + hypotenuse * height / length;
+      rulerendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      double d,xd,yd,hd,zd;
+      xd = abs(rulerendx-rulerstartx);
+      yd = abs(rulerendy-rulerstarty);
+      zd = abs(rulerendz-rulerstartz);
+      hd = sqrt(xd*xd+yd*yd);//Combined horizontal distance.
+      d = sqrt(hd*hd+zd*zd);//Combined horizontal and vertical distance.
+      ostringstream dist,xdist,ydist,horizdist,zdist,zpos;
+      dist << d;
+      xdist << xd;
+      ydist << yd;
+      horizdist << hd;
+      zdist << zd;
+      zpos << rulerendz;
+      string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str() + "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str() + "\nZ: " + zdist.str() + " Pos: " + zpos.str();
+      rulerlabel->set_text(rulerstring);
+      return drawviewable(1);
+   }
+   else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)return on_pan(event);
+   else return false;
 }
 //Draw again. This is for if/when the on_ruler() method calls drawviewable(2) rather than drawviewable(1).
-bool Profile::on_ruler_end(GdkEventButton* event){return drawviewable(1);}
+bool Profile::on_ruler_end(GdkEventButton* event){
+   if(event->button==1)return drawviewable(1);
+   else if(event->button==2)return on_pan_end(event);
+   else return false;
+}
 //Make the ruler as a thick line.
 void Profile::makerulerbox(){
    glColor3f(1.0,1.0,1.0);
@@ -600,6 +686,20 @@ bool Profile::on_zoom(GdkEventScroll* event){
    centrez += (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
    get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
+   return drawviewable(1);
+}
+bool Profile::on_zoom_key(GdkEventKey* event){
+   if(zoomlevel>=1){
+      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=pow(zoomlevel,zoompower)/2;
+      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=pow(zoomlevel,zoompower)/2;
+   }
+   else if(zoomlevel>=0.2){
+      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
+      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=0.1;
+   }
+   else if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
+   if(zoomlevel<0.2)zoomlevel=0.2;
+   resetview();
    return drawviewable(1);
 }
 

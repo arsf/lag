@@ -235,6 +235,7 @@
                   <widget class="GtkToolButton" id="returnbutton">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="tooltip" translatable="yes">Return to the starting position.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Return
 to start</property>
@@ -248,6 +249,7 @@ to start</property>
                 <child>
                   <widget class="GtkToolButton" id="advancedbutton">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">Open the advanced options dialog window.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Advanced
 options</property>
@@ -277,6 +279,7 @@ options</property>
                           <widget class="GtkSpinButton" id="pointwidthselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">Determine the width of the points.</property>
                             <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                             <property name="digits">2</property>
                           </widget>
@@ -287,6 +290,7 @@ options</property>
                         <child>
                           <widget class="GtkLabel" id="pointwidthlabel1">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Determine the width of the points.</property>
                             <property name="label" translatable="yes">Point width</property>
                           </widget>
                           <packing>
@@ -311,6 +315,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="rulertoggleover">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">This allows the use of the ruler.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Ruler</property>
                     <property name="stock_id">gtk-justify-fill</property>
@@ -331,6 +336,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="fencetoggle">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">This allows the selection of a fence for the loading of files.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Fence</property>
                     <property name="stock_id">gtk-zoom-fit</property>
@@ -343,6 +349,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="profiletoggle">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">This allows the selection of a profile area.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Profile</property>
                     <property name="stock_id">gtk-remove</property>
@@ -363,6 +370,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="orthogonalrectshapetoggle">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">Make a fence or profile with sides parallel to the sides of the window.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Orthogonal</property>
                     <property name="stock_id">gtk-media-stop</property>
@@ -375,6 +383,7 @@ options</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="slantedrectshapetoggle">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">Make a fence or profile with sides NOT parallel to the sides of the window.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Slanted</property>
                     <property name="stock_id">gtk-close</property>
@@ -404,6 +413,7 @@ options</property>
                           <widget class="GtkSpinButton" id="slantwidthselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">Determines the width the fence or profile when slanted.</property>
                             <property name="adjustment">2.7755575615628914e-17 0 100 0.10000000000000001 10 0</property>
                             <property name="digits">2</property>
                           </widget>
@@ -414,6 +424,7 @@ options</property>
                         <child>
                           <widget class="GtkLabel" id="slantwidthlabel">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Determines the width the fence or profile when slanted.</property>
                             <property name="label" translatable="yes">Slant width</property>
                           </widget>
                           <packing>
@@ -446,6 +457,7 @@ options</property>
                           <widget class="GtkSpinButton" id="raiselineselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">Determines which flightline to raise above the others if raising a flightline.</property>
                             <property name="invisible_char">&#x25CF;</property>
                             <property name="adjustment">0 0 100 1 1 0</property>
                             <property name="wrap">True</property>
@@ -457,6 +469,7 @@ options</property>
                         <child>
                           <widget class="GtkLabel" id="label18">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Determines which flightline to raise above the others if raising a flightline.</property>
                             <property name="label" translatable="yes">Raise</property>
                           </widget>
                           <packing>
@@ -481,6 +494,7 @@ options</property>
         <child>
           <widget class="GtkLabel" id="rulerlabelover">
             <property name="visible">True</property>
+            <property name="tooltip" translatable="yes">Show distance, coordinate and point data.</property>
             <property name="label" translatable="yes">0
 0
 0</property>
@@ -658,22 +672,26 @@ options</property>
                   <widget class="GtkToolButton" id="returnbuttonprof">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="tooltip" translatable="yes">Return to the starting position.</property>
                     <property name="label" translatable="yes">Return to start</property>
                     <property name="stock_id">gtk-jump-to</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
                   <widget class="GtkToolButton" id="showprofilebutton">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">Load a new profile.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Get profile</property>
                     <property name="stock_id">gtk-goto-bottom</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -695,6 +713,7 @@ options</property>
                           <widget class="GtkSpinButton" id="pointwidthselectprof">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">This determines how many pixels wide the points are.</property>
                             <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                             <property name="digits">2</property>
                           </widget>
@@ -705,6 +724,7 @@ options</property>
                         <child>
                           <widget class="GtkLabel" id="pointwidthlabelprof">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">This determines how many pixels wide the points are.</property>
                             <property name="label" translatable="yes">Point width</property>
                           </widget>
                           <packing>
@@ -736,6 +756,7 @@ options</property>
                         <child>
                           <widget class="GtkToggleToolButton" id="pointshowtoggle">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Show data as points.</property>
                             <property name="label" translatable="yes">Show points</property>
                             <property name="stock_id">gtk-yes</property>
                             <property name="active">True</property>
@@ -747,6 +768,7 @@ options</property>
                         <child>
                           <widget class="GtkToggleToolButton" id="lineshowtoggle">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Show data as (smoothed) lines.</property>
                             <property name="label" translatable="yes">Show lines</property>
                             <property name="stock_id">gtk-apply</property>
                           </widget>
@@ -780,6 +802,7 @@ options</property>
                           <widget class="GtkSpinButton" id="movingaveragerangeselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">This determines how smooth the data lines are.</property>
                             <property name="adjustment">2.7755575615628914e-17 0 100 1 10 0</property>
                           </widget>
                           <packing>
@@ -789,6 +812,7 @@ options</property>
                         <child>
                           <widget class="GtkLabel" id="movingaveragerangelabel">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">This determines how smooth the data lines are.</property>
                             <property name="label" translatable="yes">Moving
 Average
 Range</property>
@@ -815,6 +839,7 @@ Range</property>
                 <child>
                   <widget class="GtkToolButton" id="classbutton">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">This classifies the selected points.</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Classify</property>
                     <property name="use_underline">True</property>
@@ -822,6 +847,7 @@ Range</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -835,6 +861,7 @@ Range</property>
                           <widget class="GtkSpinButton" id="classificationselect">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">This determines what to classify points as.</property>
                             <property name="invisible_char">&#x25CF;</property>
                             <property name="adjustment">7 0 255 1 10 0</property>
                             <property name="wrap">True</property>
@@ -846,6 +873,7 @@ Range</property>
                         <child>
                           <widget class="GtkLabel" id="label15">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">This determines what to classify points as.</property>
                             <property name="label" translatable="yes">As (0 - 255):</property>
                           </widget>
                           <packing>
@@ -870,11 +898,13 @@ Range</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="fencetoggleprof">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">This allows the drawing of a fence that can be used to classify points.</property>
                     <property name="label" translatable="yes">Fence</property>
                     <property name="stock_id">gtk-zoom-fit</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -888,6 +918,7 @@ Range</property>
                           <widget class="GtkSpinButton" id="slantwidthselectprof">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip" translatable="yes">This determines the width of a fence when slanted.</property>
                             <property name="invisible_char">&#x25CF;</property>
                             <property name="adjustment">0 0 100 0.10000000000000001 0.10000000000000001 0</property>
                             <property name="digits">2</property>
@@ -899,6 +930,7 @@ Range</property>
                         <child>
                           <widget class="GtkLabel" id="label17">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">This determines the width of a fence when slanted.</property>
                             <property name="label" translatable="yes">Fence width</property>
                           </widget>
                           <packing>
@@ -930,6 +962,7 @@ Range</property>
                         <child>
                           <widget class="GtkToggleToolButton" id="orthogonalprof">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Make a fence with sides parallel to the sides of the window.</property>
                             <property name="label" translatable="yes">Orthogonal</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-media-stop</property>
@@ -942,6 +975,7 @@ Range</property>
                         <child>
                           <widget class="GtkToggleToolButton" id="slantedprof">
                             <property name="visible">True</property>
+                            <property name="tooltip" translatable="yes">Make a fence with sides NOT parallel with the sides of the window.</property>
                             <property name="label" translatable="yes">Slanted</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-close</property>
@@ -969,11 +1003,13 @@ Range</property>
                 <child>
                   <widget class="GtkToggleToolButton" id="rulertoggle">
                     <property name="visible">True</property>
+                    <property name="tooltip" translatable="yes">Activate the ruler.</property>
                     <property name="label" translatable="yes">Ruler</property>
                     <property name="stock_id">gtk-justify-fill</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
@@ -982,6 +1018,7 @@ Range</property>
                     <child>
                       <widget class="GtkLabel" id="rulerlabel">
                         <property name="visible">True</property>
+                        <property name="tooltip" translatable="yes">Distance and coordinate data.</property>
                         <property name="xalign">0</property>
                         <property name="yalign">0</property>
                         <property name="label" translatable="yes">0
@@ -1305,7 +1342,7 @@ Otherwise, it is probably better to use point skipping and fences (above).</prop
     <property name="comments" translatable="yes">Viewer for LIDAR files in the form .las or .txt.
 System requirements: GNU/Linux with GTK+, screen resolution of width greater than or equal to 900 pixels, OpenGL 1.4 or better (possibly 1.2 or better)</property>
     <property name="website">http://www.pml.ac.uk</property>
-    <property name="website_label" translatable="yes">PML Website</property>
+    <property name="website_label" translatable="yes">PML website</property>
     <property name="license" translatable="yes">GPL v3.0</property>
     <property name="authors">Christopher Finerty (data structure and saving and loading)
 Haraldur Tristan Gunnarsson (GUI and data manipulation)
@@ -1942,7 +1979,6 @@ Christopher Finerty</property>
               <widget class="GtkTable" id="table3">
                 <property name="visible">True</property>
                 <property name="n_rows">3</property>
-                <property name="n_columns">2</property>
                 <child>
                   <widget class="GtkCheckButton" id="raiselinecheck">
                     <property name="label" translatable="yes">Raise flightline?</property>
@@ -1957,19 +1993,44 @@ Christopher Finerty</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <widget class="GtkCheckButton" id="fractionalshiftcheck">
+                    <property name="label" translatable="yes">Set as multiple of slant width for profile only using value*0.1</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                  </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
+                  <widget class="GtkHBox" id="hbox2">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkLabel" id="label19">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Move speed (normally in pixels)</property>
+                      </widget>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkSpinButton" id="movespeedselect">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="invisible_char">&#x25CF;</property>
+                        <property name="adjustment">0 0 100 1 10 0</property>
+                        <property name="climb_rate">1</property>
+                        <property name="digits">2</property>
+                      </widget>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </widget>
                 </child>
               </widget>
               <packing>

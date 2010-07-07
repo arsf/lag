@@ -87,7 +87,7 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    heightenOverlap = false;
    heightenUndefined = false;
    //Events and signals:
-   add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON3_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
+   add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON2_MOTION_MASK   |   Gdk::BUTTON3_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
       //Zooming:
       signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
       //Panning:
@@ -450,7 +450,7 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
       if(threaddebug)cout << 12 << endl;
       usleep(10);
    }
-   drawneverything = true;
+   if(numbuckets>0)drawneverything = true;
    thread_running = false;//This thread will not use pointbucket::getpoint() again.
    if(threaddebug)cout << "Ending..." << endl;
    if(threaddebug)cout << "Delete data array." << endl;
@@ -583,12 +583,19 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       delete[]xs;
       delete[]ys;
       if(!gotdata){
-         if(pointvector!=NULL)delete pointvector;
-         return clearscreen();
+         if(pointvector==NULL){
+            drawneverything = false;
+            drawnsofarminx=0;
+            drawnsofarminy=0;
+            drawnsofarmaxx=1;
+            drawnsofarmaxy=1;
+            return clearscreen();
+         }
+         else return drawviewable(2);
       }
       numbuckets = pointvector->size();
       PointBucket** buckets = new PointBucket*[numbuckets];
-      for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points.
+      for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points. ........Probably will not make any difference BUT it does mean that the data can be accessed without doing (*pointvector)[i] every time, as doing pointvector->at(i) may be slower due to checks.
          buckets[i]=(*pointvector)[i];
       }
       makedetail();
@@ -618,8 +625,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       delete[]xs;
       delete[]ys;
       if(!gotdata){
-         if(pointvector!=NULL)delete pointvector;
-         return false;
+         if(pointvector==NULL)return clearscreen();
       }
       int numbuckets = pointvector->size();
       PointBucket** buckets = new PointBucket*[numbuckets];
@@ -649,10 +655,8 @@ bool TwoDeeOverview::returntostart(){
    centrey = lidarboundary->minY+ydif/2;//...
    zoomlevel=1;//Back to the starting zoom, which should cause the entire image to be visible.
    resetview();//Update matrices.
-   profbox->setcentre(centrex,centrey);
-   profbox->setzoomlevel(zoomlevel);
-   fencebox->setcentre(centrex,centrey);
-   fencebox->setzoomlevel(zoomlevel);
+   set_overlay_zoomlevels(zoomlevel);
+   set_overlay_centres(centrex,centrey);
    delete lidarboundary;
    return drawviewable(1);
 }
@@ -891,7 +895,7 @@ void TwoDeeOverview::makecolourlegend(){
 void TwoDeeOverview::makedistancescale(){
    double rheight = get_height()*ratio/zoomlevel;
    double order=1;
-   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculationi, while the former is a result of a series of integer calculations, so the results diverge.
+   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculation, while the former is a result of a series of integer calculations, so the results diverge.
    if(rheight<=5)for(double i=rheight;i<10;i*=10)order/=10;//For when the user zooms really far in.
    int nummarks = (int)(0.9*rheight/order);//Again, it would be tempting to use i here, but this is only one integer calculation while i is the result (probably) of several such calculations, and so has lost more precision.
    while(nummarks>10){//The original order we calculated would give a number of scale widths from 5-50, but anything more than 10 is probably too much, so this loop doubles the order value until nummarks falls below 10.
@@ -921,18 +925,18 @@ void TwoDeeOverview::makedistancescale(){
    Pango::FontDescription font_desc("courier 12");
    Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
    if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
+   glListBase(fontlists);
    for(int i=0;i<=nummarks;i++){
       glRasterPos3d(origx + 85.0*ratio/zoomlevel,origy + padding + i*order,altitude);//Draw numbers by the horizontal lines.
       ostringstream number;
       number << i*order;
-      glListBase(fontlists);
       glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
    }
 }
    
 //On a left click, this prepares for panning by storing the initial position of the cursor.
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
-   if(event->button==1){
+   if(event->button==1 || event->button==2){
       panstartx = event->x;
       panstarty = event->y;
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
@@ -944,11 +948,10 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event){
 
 //As the cursor moves while the left button is depressed, the image is dragged along as a preview to reduce lag. The centre point is modified by the negative of the distance (in image units, hence the ratio/zoomlevel mention) the cursor has moved to make a dragging effect and then the current position of the cursor is taken to be the starting position for the next drag (if there is one). The view is then refreshed and then the image is drawn (as a preview).
 bool TwoDeeOverview::on_pan(GdkEventMotion* event){
-   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK){
       centrex -= (event->x-panstartx)*ratio/zoomlevel;
       centrey += (event->y-panstarty)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
-      profbox->setcentre(centrex,centrey);
-      fencebox->setcentre(centrex,centrey);
+      set_overlay_centres(centrex,centrey);
       panstartx=event->x;
       panstarty=event->y;
       return drawviewable(2);
@@ -958,8 +961,18 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event){
 }
 //At the end of the pan draw the full image.
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
-   if(event->button==1){ return drawviewable(1); }
+   if(event->button==1 || event->button==2){ return drawviewable(1); }
    else return false;
+}
+bool TwoDeeOverview::on_pan_key(GdkEventKey* event,double scrollspeed){
+   switch(event->keyval){
+      case GDK_w:centrey += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
+      case GDK_s:centrey -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
+      case GDK_a:centrex -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
+      case GDK_d:centrex += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
+      case GDK_z:case GDK_Z:return drawviewable(1);break; 
+      default:return false;break;
+   }
 }
 
 //At the beginning of profiling, defines the start point and, for the moment, the end point of the profile, Prepares the profile box for drawing and then calls the drawing method.
@@ -969,6 +982,7 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
+   else if(event->button==2)return on_pan_start(event);
    else if(event->button==3)return pointinfo(event->x,event->y);
    else return false;
 }
@@ -976,14 +990,26 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event){
 bool TwoDeeOverview::on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       profbox->on_(event->x,event->y,get_width(),get_height());
-      profbox->drawinfo();
       return drawviewable(2);
    }
+   else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)return on_pan(event);
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
    else return false;
 }
 //Draw the full image at the end of selecting a profile.
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
+   if(event->button==1){
+      profbox->makeboundaries();
+      return drawviewable(2);
+   }
+   else if(event->button==2)return on_pan_end(event);
+   else return false;
+}
+bool TwoDeeOverview::on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
+   if(fractionalshift)scrollspeed /= 10;
+   else scrollspeed *= ratio/zoomlevel;
+   bool moved = profbox->on_key(event,scrollspeed,fractionalshift);
+   if(!moved)return false;
    profbox->makeboundaries();
    return drawviewable(2);
 }
@@ -995,6 +1021,7 @@ bool TwoDeeOverview::on_fence_start(GdkEventButton* event){
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
+   else if(event->button==2)return on_pan_start(event);
    else if(event->button==3)return pointinfo(event->x,event->y);
    else return false;
 }
@@ -1005,11 +1032,22 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event){
       fencebox->drawinfo();
       return drawviewable(2);
    }
+   else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)return on_pan(event);
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
    else return false;
 }
 //Draws the main image one more.
 bool TwoDeeOverview::on_fence_end(GdkEventButton* event){
+   if(event->button==1){
+      fencebox->makeboundaries();
+      return drawviewable(2);
+   }
+   else if(event->button==2)return on_pan_end(event);
+   else return false;
+}
+bool TwoDeeOverview::on_fence_key(GdkEventKey* event,double scrollspeed){
+   bool moved = fencebox->on_key(event,scrollspeed*ratio/zoomlevel,false);
+   if(!moved)return false;
    fencebox->makeboundaries();
    return drawviewable(2);
 }
@@ -1028,6 +1066,7 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event){
       get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(2);
    }
+   else if(event->button==2)return on_pan_start(event);
    else if(event->button==3)return pointinfo(event->x,event->y);
    else return false;
 }
@@ -1050,11 +1089,16 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event){
       rulerlabel->set_text(rulerstring);
       return drawviewable(2);
    }
+   else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)return on_pan(event);
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)return pointinfo(event->x,event->y);
    else return false;
 }
 //Draw again.
-bool TwoDeeOverview::on_ruler_end(GdkEventButton* event){return drawviewable(2);}
+bool TwoDeeOverview::on_ruler_end(GdkEventButton* event){
+   if(event->button==1)return drawviewable(2);
+   else if(event->button==2)return on_pan_end(event);
+   else return false;
+}
 //Make the ruler as a thick line.
 void TwoDeeOverview::makerulerbox(){
    double altitude = rmaxz+1000;//This makes sure the ruler is drawn on top of the flightlines.
@@ -1085,9 +1129,22 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    centrey += (event->y-get_height()/2)*ratio/zoomlevel;//Y is reversed because gtk has origin at top left and opengl has it at bottom left.
    resetview();
    get_parent()->grab_focus();//This causes the event box containing the overview to grab the focus, and so to allow keyboard control of the overview (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
-   profbox->setcentre(centrex,centrey);
-   profbox->setzoomlevel(zoomlevel);
-   fencebox->setcentre(centrex,centrey);
-   fencebox->setzoomlevel(zoomlevel);
+   set_overlay_centres(centrex,centrey);
+   set_overlay_zoomlevels(zoomlevel);
+   return drawviewable(1);
+}
+bool TwoDeeOverview::on_zoom_key(GdkEventKey* event){
+   if(zoomlevel>=1){
+      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=pow(zoomlevel,zoompower)/2;
+      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=pow(zoomlevel,zoompower)/2;
+   }
+   else if(zoomlevel>=0.2){
+      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
+      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=0.1;
+   }
+   else if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
+   if(zoomlevel<0.2)zoomlevel=0.2;
+   resetview();
+   set_overlay_zoomlevels(zoomlevel);
    return drawviewable(1);
 }

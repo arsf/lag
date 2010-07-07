@@ -30,7 +30,7 @@ string findgladepath(char* programpath){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.06.10.1" << endl;
+   cout << "Build number: 2010.07.06.1" << endl;
    Glib::thread_init();//This allows the creation and running of threads.
    Gtk::Main gtkmain(argc, argv);//This is required for GTK to work. It must be the first GTK object created and may not be global.
    Glib::RefPtr<Gnome::Glade::Xml> refXml;//This will extract widgets from the glade file when directed.
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
    refXml->get_widget("overviewwindow", overviewwindow);
    Gtk::Window *profilewindow = NULL;
    refXml->get_widget("profilewindow", profilewindow);
-   ProfileWindow *profwin = new ProfileWindow(prof,tdo,profilewindow,eventboxprof,refXml);//This contains the widgets of the profile window.
+   ProfileWindow *profwin = new ProfileWindow(prof,tdo,profilewindow,eventboxprof,refXml,aow);//This contains the widgets of the profile window.
    TwoDeeOverviewWindow *tdow = new TwoDeeOverviewWindow(tdo,aow,fs,overviewwindow,profilewindow,refXml,eventboxtdo,profwin);//This contains the widgets of the 2D overview window.
    FileOpener *fo = new FileOpener(tdo,prof,refXml,aow,fs,lidardata,bucketlimit,eventboxtdo,eventboxprof,tdow);//This contains the widgets of the file opener window.
    fo->testfilename(argc,argv,true,false);//In case of command-line commands.

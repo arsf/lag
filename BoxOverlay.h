@@ -17,6 +17,7 @@ public:
    void makebox(double rmaxz);//Make the box.
    void on_start(double x,double y,double width,double height);
    void on_(double x,double y, double width,double height);
+   bool on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);
    void drawinfo();
    //Getters:
    void getboundaries(double*& xs,double*& ys,int& ps){//Get coordinates for boundaries.
@@ -33,6 +34,7 @@ public:
    void setcentre(double centrex,double centrey){this->centrex = centrex; this->centrey = centrey;}
 
 protected:
+   bool directional;
    bool orthogonalshape;//Determines whether or not to draw an orthogonal box.
    bool slantedshape;//Determines whether or not to draw a slanted box.
    double* xs;//Store the boundaries of the profile:

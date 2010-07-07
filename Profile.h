@@ -20,7 +20,11 @@ public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
    bool classify(uint8_t classification);//This classifies the points selected by the profile fence.
+   bool on_pan_key(GdkEventKey *event,double scrollspeed);
+   bool on_fence_key(GdkEventKey *event,double scrollspeed);
+   bool on_zoom_key(GdkEventKey* event);
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
+   bool shift_viewing_parameters(GdkEventKey* event,double shiftspeed);
    void drawoverlays();//Draw all of the make methods indented below.
       void makerulerbox();//Make line showing where the ruler is.
       void makefencebox();//Make rectangle showing where the fence is.

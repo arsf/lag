@@ -25,6 +25,8 @@ BoxOverlay::BoxOverlay(Gtk::Label *label,double* majorcolour,double* minorcolour
    ratio = 1;
    this->majorcolour = majorcolour;
    this->minorcolour = minorcolour;
+   directional = false;
+   for(int i = 0;i < 3;i++)if(majorcolour[i] != minorcolour[i])directional = true;
    startx = starty = endx = endy = centrex = centrey = 0;
 }
 BoxOverlay::~BoxOverlay(){
@@ -44,6 +46,26 @@ void BoxOverlay::on_(double x,double y, double width,double height){
    endx = centrex + (x - width/2)*ratio/zoomlevel;
    endy = centrey - (y - height/2)*ratio/zoomlevel;
    drawinfo();
+}
+bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
+   if(fractionalshift)scrollspeed *= slantwidth;
+   double sameaxis = scrollspeed,diffaxis = 0;
+   if(directional && slantedshape){
+      double breadth = endx - startx;
+      double height = endy - starty;
+      double length = sqrt(breadth*breadth+height*height);//Right triangle.
+      sameaxis = scrollspeed*breadth/length;
+      diffaxis = -scrollspeed*height/length;
+   }
+   switch(event->keyval){
+      case GDK_W:startx += diffaxis;starty += sameaxis;endx += diffaxis;endy += sameaxis;break;
+      case GDK_S:startx -= diffaxis;starty -= sameaxis;endx -= diffaxis;endy -= sameaxis;break;
+      case GDK_A:starty += diffaxis;startx -= sameaxis;endy += diffaxis;endx -= sameaxis;break;
+      case GDK_D:starty -= diffaxis;startx += sameaxis;endy -= diffaxis;endx += sameaxis;break;
+      default:return false;break;
+   }
+   drawinfo();
+   return true;
 }
 //Calculate the boundaries based on whether or not the box is orthogonal or slanted and the start and end points of the user's clicks and drags.
 void BoxOverlay::makeboundaries(){
@@ -66,7 +88,7 @@ void BoxOverlay::makeboundaries(){
       ys[3] = endy+(slantwidth/2)*breadth/length;
    }
    else if(orthogonalshape){
-      if(abs(startx - endx) > abs(starty - endy)){//If the width is greater than the height of the ile:
+      if(abs(startx - endx) > abs(starty - endy)){//If the width is greater than the height:
          xs[0] = startx;//Then place start and end points on the vertical (different in x) sides, so that the view is along the y axis if this is a profile.
          xs[1] = startx;//...
          xs[2] = endx;//...

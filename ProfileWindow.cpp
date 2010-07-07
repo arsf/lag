@@ -10,11 +10,12 @@
 #include <vector>
 #include "ProfileWindow.h"
 
-ProfileWindow::ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml){
+ProfileWindow::ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow){
    this->prof = prof;
    this->tdo = tdo;
    this->profilewindow = profilewindow;
    this->eventboxprof = eventboxprof;
+   this->aow = aow;
    eventboxprof->signal_key_press_event().connect(sigc::mem_fun(*this,&ProfileWindow::on_prof_key_press));
    profilewindow->set_title("LAG Profile");
    refXml->get_widget("showheightscalecheck",showheightscalecheck);
@@ -151,13 +152,11 @@ void ProfileWindow::on_brightnessactivatedprof(){
 //This grabs the profile from the overview.
 void ProfileWindow::on_showprofilebutton_clicked(){
    if(tdo->is_realized())profilewindow->present();
-//   if(tdo->is_realized()&&!profilewindow->get_visible())profilewindow->show_all();
    double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
    int profps = 0;
    if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
    if(profxs!=NULL&&profys!=NULL){
       tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
-//      while(tdo->getthread_running()){usleep(10);}
       tdo->waitforpause();
       prof->showprofile(profxs,profys,profps,true);
       tdo->setpausethread(false);
@@ -191,7 +190,6 @@ void ProfileWindow::on_movingaveragerangeselect(){
 //This classifies the points surrounded by the fence.
 void ProfileWindow::on_classbutton_clicked(){
    tdo->setpausethread(true);//Nothing else must read the points (or indeed write to them!) while the classifier is writing to them. Also, it uses the getpoint() method.
-//   while(tdo->getthread_running()){usleep(10);}
    tdo->waitforpause();
    if(prof->is_realized())prof->classify(classificationselect->get_value_as_int());
    tdo->setpausethread(false);
@@ -240,8 +238,45 @@ void ProfileWindow::on_rulertoggle(){
 
 
 bool ProfileWindow::on_prof_key_press(GdkEventKey* event){
-   if(event->keyval == GDK_P || event->keyval == GDK_p || event->keyval == GDK_space)on_showprofilebutton_clicked();
-   if(event->keyval == GDK_C || event->keyval == GDK_c || event->keyval == GDK_K || event->keyval == GDK_k || event->keyval == GDK_Return)on_classbutton_clicked();
-   return true;
+   switch(event->keyval){
+      case GDK_P:case GDK_p:case GDK_space:on_showprofilebutton_clicked();return true;break;
+      case GDK_C:case GDK_c:case GDK_K:case GDK_k:case GDK_Return:on_classbutton_clicked();return true;break;
+      case GDK_w:case GDK_s:case GDK_a:case GDK_d:return prof->on_pan_key(event,aow->getmovespeed());break;
+      case GDK_W:case GDK_S:case GDK_A:case GDK_D:
+         if(fencetoggleprof->get_active())return prof->on_fence_key(event,aow->getmovespeed());break;
+      case GDK_r:case GDK_v:case GDK_q:case GDK_e:
+         case GDK_R:case GDK_V:case GDK_Q:case GDK_E:return on_profile_shift(event);break;
+      case GDK_i:case GDK_o:case GDK_I:case GDK_O:return prof->on_zoom_key(event);break;
+      case GDK_z:case GDK_Z:return prof->drawviewable(1);break;
+      case GDK_f:case GDK_F:fencetoggleprof->set_active(!fencetoggleprof->get_active());return true;break;
+      case GDK_t:case GDK_T:slantedprof->set_active(!slantedprof->get_active());return true;break;
+      default:return false;break;
+   }
+}
+
+bool ProfileWindow::on_profile_shift(GdkEventKey* event){
+   switch(event->keyval){
+      case GDK_r:case GDK_R:event->keyval = GDK_W;break;
+      case GDK_v:case GDK_V:event->keyval = GDK_S;break;
+      case GDK_q:case GDK_Q:event->keyval = GDK_A;break;
+      case GDK_e:case GDK_E:event->keyval = GDK_D;break;
+      default:return false;break;
+   }
+   bool shifted = tdo->on_prof_key(event,aow->getmovespeed(),true);
+   if(!shifted)return shifted;
+   if(tdo->is_realized())profilewindow->present();
+   double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
+   int profps = 0;
+   if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
+   if(profxs!=NULL&&profys!=NULL){
+      shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());
+      if(!shifted)return shifted;
+      tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
+      tdo->waitforpause();
+      prof->showprofile(profxs,profys,profps,false);
+      tdo->setpausethread(false);
+      return true;
+   }
+   return false;
 }
 

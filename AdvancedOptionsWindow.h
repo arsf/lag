@@ -18,11 +18,15 @@ public:
    ~AdvancedOptionsWindow();
    void show(){ advancedoptionsdialog->present(); }
    void resetcolouringandshading(){ on_drawingresetbutton_clicked(); }
+   bool getfractionalshift(){ return fractionalshiftcheck->get_active(); }
+   double getmovespeed(){ return movespeedselect->get_value(); }
 protected:
    TwoDeeOverview *tdo;
    Profile *prof;
    //Advanced viewing options:
    Gtk::Dialog *advancedoptionsdialog;//Dialog window for advanced options.
+   Gtk::SpinButton *movespeedselect;
+   Gtk::CheckButton *fractionalshiftcheck;
    //False elevation:
    Gtk::CheckButton *classcheckbutton0;//Elevate classifications with the respective codes:
    Gtk::CheckButton *classcheckbutton2;//...

@@ -19,6 +19,10 @@ class TwoDeeOverview : public Display{
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabelover);
    ~TwoDeeOverview();
+   bool on_pan_key(GdkEventKey* event,double scrollspeed);
+   bool on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);
+   bool on_fence_key(GdkEventKey* event,double scrollspeed);
+   bool on_zoom_key(GdkEventKey* event);
    void waitforpause(){while(thread_running){usleep(10);}}
    void clippy(string picturename);//EASTER EGG. Draws an image of an annoying person with an equally annoying message.  By the way, you look like you are trying to read this code. Would you like any help?
    bool returntostart();//Returns to the initial view.
@@ -232,6 +236,8 @@ protected:
    bool on_zoom(GdkEventScroll* event);//Allows the user to zoom with the mouse wheel.
  
    bool pointinfo(double eventx,double eventy);//This returns some information about a selected point. Does not yet work properly.
+   void set_overlay_zoomlevels(double zoomlevel){ profbox->setzoomlevel(zoomlevel);fencebox->setzoomlevel(zoomlevel); }
+   void set_overlay_centres(double centrex,double centrey){ profbox->setcentre(centrex,centrey);fencebox->setcentre(centrex,centrey); }
    //Panning control:   //These allow the user to pan by clicking and dragging.
    bool on_pan_start(GdkEventButton* event);
    bool on_pan(GdkEventMotion* event);

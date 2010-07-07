@@ -10,18 +10,18 @@
 #include <vector>
 #include "TwoDeeOverviewWindow.h"
 
-TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWindow *aow,FileSaver *fs,Gtk::Window *overviewwindow,Gtk::Window *profilewindow,Glib::RefPtr<Gnome::Glade::Xml> refXml,Gtk::EventBox *eventboxtdo,ProfileWindow *profwin){
+TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWindow *aow,FileSaver *fs,Gtk::Window *tdowin,Gtk::Window *profilewindow,Glib::RefPtr<Gnome::Glade::Xml> refXml,Gtk::EventBox *eventboxtdo,ProfileWindow *profwin){
    this->tdo = tdo;
    this->aow = aow;
    this->fs = fs;
-   this->overviewwindow = overviewwindow;
+   this->tdowin = tdowin;
    this->profilewindow = profilewindow;
    this->profwin = profwin;
    this->eventboxtdo = eventboxtdo;
    eventboxtdo->signal_key_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_tdo_key_press));
    drawwhentoggled = true;
-   if(overviewwindow){//The overview window:
-      overviewwindow->set_title("LAG Overview");
+   if(tdowin){//The overview window:
+      tdowin->set_title("LAG Overview");
       //Menues:
       //For saving files:
       Gtk::MenuItem *savefilemenuitem = NULL;//For selecting to get file-saving menu.
@@ -105,7 +105,7 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWi
       refXml->get_widget("raiselineselect",raiselineselect);
       if(raiselineselect)raiselineselect->signal_value_changed().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_raiselineselected));
 
-      overviewwindow->show_all();
+      tdowin->show_all();
       tdo->set_size_request(200,200);
       //Initialisations:
       tdo->setshowprofile(showprofilecheck->get_active());
@@ -294,9 +294,20 @@ void TwoDeeOverviewWindow::on_savefilemenuactivated(){
    fs->on_flightlinesaveselected();
 }
 bool TwoDeeOverviewWindow::on_tdo_key_press(GdkEventKey* event){
-   if(event->keyval == GDK_P || event->keyval == GDK_p || event->keyval == GDK_space)profwin->on_showprofilebutton_clicked();
-   overviewwindow->present();
-   return true;
+   switch(event->keyval){
+      case GDK_P:case GDK_p:case GDK_space:profwin->on_showprofilebutton_clicked();tdowin->present();return true;break;
+      case GDK_w:case GDK_s:case GDK_a:case GDK_d:case GDK_z:case GDK_Z:return tdo->on_pan_key(event,aow->getmovespeed());break;
+      case GDK_W:case GDK_S:case GDK_A:case GDK_D:
+         if(profiletoggle->get_active())return tdo->on_prof_key(event,aow->getmovespeed(),aow->getfractionalshift());
+         else if(fencetoggle->get_active())return tdo->on_fence_key(event,aow->getmovespeed());
+         break;
+      case GDK_i:case GDK_o:case GDK_I:case GDK_O:return tdo->on_zoom_key(event);break;
+      case GDK_f:case GDK_F:fencetoggle->set_active(!fencetoggle->get_active());return true;break;
+      case GDK_x:case GDK_X:profiletoggle->set_active(!profiletoggle->get_active());return true;break;
+      case GDK_t:case GDK_T:slantedrectshapetoggle->set_active(!slantedrectshapetoggle->get_active());return true;break;
+      default:return false;break;
+   }
+   return false;
 }
 void TwoDeeOverviewWindow::on_raiselineselected(){
    tdo->setlinetoraise(raiselineselect->get_value_as_int());

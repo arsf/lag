@@ -17,6 +17,12 @@ AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,G
    this->prof = prof;
    refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
    if(advancedoptionsdialog)advancedoptionsdialog->signal_response().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_advancedoptionsdialog_response));
+   refXml->get_widget("fractionalshiftcheck",fractionalshiftcheck);
+   refXml->get_widget("movespeedselect",movespeedselect);
+   if(movespeedselect){
+      movespeedselect->set_range(0,1000);
+      movespeedselect->set_value(5.00);
+   }
    //False elevation:
       refXml->get_widget("classcheckbutton0",classcheckbutton0);
       if(classcheckbutton0)classcheckbutton0->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_classcheckbutton0_toggled));

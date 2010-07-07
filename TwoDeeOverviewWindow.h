@@ -17,14 +17,14 @@
 
 class TwoDeeOverviewWindow{
 public:
-   TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWindow *aow,FileSaver *fs,Gtk::Window *overviewwindow,Gtk::Window *profilewindow,Glib::RefPtr<Gnome::Glade::Xml> refXml,Gtk::EventBox *eventboxtdo,ProfileWindow *profwin);
+   TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWindow *aow,FileSaver *fs,Gtk::Window *tdowin,Gtk::Window *profilewindow,Glib::RefPtr<Gnome::Glade::Xml> refXml,Gtk::EventBox *eventboxtdo,ProfileWindow *profwin);
    ~TwoDeeOverviewWindow();
    void setraiselinerange(int first, int second){ raiselineselect->set_range(first,second); }
 protected:
    TwoDeeOverview *tdo;
    ProfileWindow *profwin;
    Gtk::EventBox *eventboxtdo;//Contains the overview.
-   Gtk::Window *overviewwindow;
+   Gtk::Window *tdowin;
    Gtk::Window *profilewindow;
    AdvancedOptionsWindow *aow;
    FileSaver *fs;

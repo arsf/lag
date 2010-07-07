@@ -16,13 +16,14 @@
 
 class ProfileWindow{
 public:
-   ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml);
+   ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow);
    ~ProfileWindow();
    //This grabs the profile from the overview.
    void on_showprofilebutton_clicked();
 protected:
    Profile *prof;
    TwoDeeOverview *tdo;
+   AdvancedOptionsWindow *aow;
    Gtk::EventBox *eventboxprof;
    Gtk::Window *profilewindow;
    Gtk::CheckMenuItem *showheightscalecheck;//Check button determining whether the height scale is viewable on the profile.
@@ -72,6 +73,7 @@ protected:
    void on_rulertoggle();
 
    bool on_prof_key_press(GdkEventKey* event);
+   bool on_profile_shift(GdkEventKey* event);
 
 };
 
