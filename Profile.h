@@ -8,7 +8,7 @@
 #include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
-#include "quadtreestructs.h"
+#include "QuadtreeStructs.h"
 #include "PointBucket.h"
 #include <vector>
 #include <boost/bind.hpp>

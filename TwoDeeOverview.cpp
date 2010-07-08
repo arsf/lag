@@ -12,7 +12,7 @@
 #include <vector>
 #include <iostream>
 #include "Quadtree.h"
-#include "quadtreestructs.h"
+#include "QuadtreeStructs.h"
 #include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>

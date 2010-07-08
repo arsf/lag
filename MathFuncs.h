@@ -7,7 +7,7 @@
 #include <vector>
 #include <iterator>
 #include <cmath>
-#include "quadtreestructs.h"
+#include "QuadtreeStructs.h"
 #include "PointBucket.h"
 using namespace std;
 #ifndef MATHFUNCS_H
