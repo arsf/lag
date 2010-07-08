@@ -145,7 +145,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                   LidarPointLoader *loader = NULL;
                   bool validfile = true;
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
-                     filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
+                     filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LasLoader(argv[count]);//For LAS files.
                   else if(filename.find(".txt",filename.length()-4)!=string::npos ||
                           filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
@@ -200,7 +200,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                if(filename != ""){
                   LidarPointLoader *loader = NULL;
                   if(filename.find(".las",filename.length()-4)!=string::npos||filename.find(".LAS",filename.length()-4)!=string::npos){//For las files:
-                     loader = new LASloader(argv[count]);
+                     loader = new LasLoader(argv[count]);
                   }
                   else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
@@ -224,7 +224,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                LidarPointLoader *loader = NULL;
                bool validfile = true;
                if(filename.find(".las",filename.length()-4)!=string::npos ||
-                  filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LASloader(argv[count]);//For LAS files.
+                  filename.find(".LAS",filename.length()-4)!=string::npos)loader = new LasLoader(argv[count]);//For LAS files.
                else if(filename.find(".txt",filename.length()-4)!=string::npos ||
                        filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                   string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
