@@ -243,7 +243,9 @@ bool ProfileWindow::on_prof_key_press(GdkEventKey* event){
       case GDK_C:case GDK_c:case GDK_K:case GDK_k:case GDK_Return:on_classbutton_clicked();return true;break;
       case GDK_w:case GDK_s:case GDK_a:case GDK_d:return prof->on_pan_key(event,aow->getmovespeed());break;
       case GDK_W:case GDK_S:case GDK_A:case GDK_D:
-         if(fencetoggleprof->get_active())return prof->on_fence_key(event,aow->getmovespeed());break;
+         if(fencetoggleprof->get_active())return prof->on_fence_key(event,aow->getmovespeed());
+         else return false;
+         break;
       case GDK_r:case GDK_v:case GDK_q:case GDK_e:
          case GDK_R:case GDK_V:case GDK_Q:case GDK_E:return on_profile_shift(event);break;
       case GDK_i:case GDK_o:case GDK_I:case GDK_O:return prof->on_zoom_key(event);break;

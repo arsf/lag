@@ -189,7 +189,20 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    int numbuckets = pointvector->size();
    flightlinestot.clear();
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
-   for(int i=0;i<numbuckets;i++){
+   bool *queriedbucketsarray = new bool[numbuckets];
+   for(int i = 0;i < numbuckets;i++)queriedbucketsarray[i] = false;
+   for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){
+      queriedbucketsarray[i] = true;
+      correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
+      for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
+         if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
+            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
+               flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
+            }
+         }
+      }
+   }
+   for(int i=0;i<numbuckets;i++)if(!queriedbucketsarray[i]){
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
       for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
          if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
@@ -205,7 +218,21 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    samplemaxz = rminz;//These are for the minimum and maximum heights of the points in the profile.
    sampleminz = rmaxz;
    for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
-      for(int j=0;j<numbuckets;j++){//For every bucket:
+      for(int j = 0;j < numbuckets;j++)queriedbucketsarray[j] = false;
+      for(int j=0;j<numbuckets;j++)if((*pointvector)[j]->getIncacheList()[0]){//For every bucket already cached:
+         queriedbucketsarray[i] = true;
+         for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
+            if(correctpointsbuckets[j][k]){//If the point is in the profile...
+               if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
+                  flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
+                  totnumpoints++;//...and add it to the "census".
+                  if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;
+                  if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;
+               }
+            }
+         }
+      }
+      for(int j=0;j<numbuckets;j++)if(!queriedbucketsarray[j]){//For every bucket not already cached:
          for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
             if(correctpointsbuckets[j][k]){//If the point is in the profile...
                if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
@@ -219,6 +246,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
       }
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right. Otherwise when the user elects to draw lines they will get a chaotic scribble.
    }
+   delete[]queriedbucketsarray;
    if(pointvector!=NULL)delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
@@ -279,7 +307,10 @@ bool Profile::classify(uint8_t classification){
       bool pointinboundary;//Determines whether the point is within the boundary.
       int lastcorner,currentcorner;//These define the edge being considered.
       Point *pnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
-      for(int i=0;i<numbuckets;i++){//For all buckets:
+      bool *classifiedbucketsarray = new bool[numbuckets];
+      for(int i = 0;i < numbuckets;i++)classifiedbucketsarray[i] = false;
+      for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For all buckets already cached:
+         classifiedbucketsarray[i] = true;
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points:
             if(correctpointsbuckets[i][j]){//If in the profile area:
                pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
@@ -297,6 +328,25 @@ bool Profile::classify(uint8_t classification){
             }
          }
       }
+      for(int i=0;i<numbuckets;i++)if(!classifiedbucketsarray[i]){//For all buckets not already cached:
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points:
+            if(correctpointsbuckets[i][j]){//If in the profile area:
+               pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
+               lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
+               for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
+                  if((zs[currentcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getPoint(j,0).z) ||
+                     (zs[lastcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getPoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
+                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
+                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
+                     if(linecomp((*pointvector)[i]->getPoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
+                  }
+                  lastcorner = currentcorner;
+               }
+               if(pointinboundary)(*pointvector)[i]->setClassification(j,classification);//Finally!
+            }
+         }
+      }
+      delete[]classifiedbucketsarray;
       delete xs;
       delete ys;
       delete zs;
@@ -309,7 +359,10 @@ bool Profile::classify(uint8_t classification){
       Point *endpnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
       endpnt->x = fenceendx;
       endpnt->y = fenceendy;
-      for(int i=0;i<numbuckets;i++){
+      bool *classifiedbucketsarray = new bool[numbuckets];
+      for(int i = 0;i < numbuckets;i++)classifiedbucketsarray[i] = false;
+      for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For all buckets already cached:
+         classifiedbucketsarray[i] = true;
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
             if(correctpointsbuckets[i][j]){
                if(((*pointvector)[i]->getPoint(j,0).z < fencestartz && (*pointvector)[i]->getPoint(j,0).z > fenceendz) ||
@@ -322,6 +375,20 @@ bool Profile::classify(uint8_t classification){
             }
          }
       }
+      for(int i=0;i<numbuckets;i++)if(!classifiedbucketsarray[i]){//For all buckets not already cached:
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
+            if(correctpointsbuckets[i][j]){
+               if(((*pointvector)[i]->getPoint(j,0).z < fencestartz && (*pointvector)[i]->getPoint(j,0).z > fenceendz) ||
+                  ((*pointvector)[i]->getPoint(j,0).z > fencestartz && (*pointvector)[i]->getPoint(j,0).z < fenceendz)){
+                  if((linecomp(*startpnt,(*pointvector)[i]->getPoint(j,0)) && linecomp((*pointvector)[i]->getPoint(j,0),*endpnt)) ||
+                     (linecomp((*pointvector)[i]->getPoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getPoint(j,0)))){
+                     (*pointvector)[i]->setClassification(j,classification);
+                  }
+               }
+            }
+         }
+      }
+      delete[]classifiedbucketsarray;
       delete startpnt;
       delete endpnt;
    }

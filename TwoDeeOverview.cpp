@@ -226,7 +226,7 @@ void TwoDeeOverview::extraDraw(){
  *   Allow subsequent threads to act.
  *   (Thread ends).
  * */
-void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
+void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets){
    if(threaddebug)cout << "Wait?" << endl;
    while(thread_existsthread){usleep(100);}//If another thread still exists (i.e. it has not cleared itself up yet) then wait until it is cleared.
    if(threaddebug)cout << "***Finished waiting." << endl;
@@ -234,9 +234,6 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
    thread_running = true;//The thread now reserves the "right" to use the pointbucket::getpoint() method.
    centrexsafe = centrex;//These are "safe" versions of the centre coordinates, as they will not change while this thread is running, while the originals might.
    centreysafe = centrey;//...
-   int line=0,intensity=0,classification=0,rnumber=0;
-   double x=0,y=0,z=0;//Point values
-   double red,green,blue;//Colour values
    if(threaddebug)cout << "First array" << endl;
    vertices = new float[3*bucketlimit];
    if(threaddebug)cout << "Second array" << endl;
@@ -251,211 +248,202 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
    drawnsofarmaxx=lidarboundary->minX;//...
    drawnsofarmaxy=lidarboundary->minY;//...
    delete lidarboundary;
-   int resolutionindex = makeresolutionindex();
-   for(int i=0;i<numbuckets;i++){//For every bucket...
-      if(threaddebug)cout << i << " " << numbuckets << endl;
-      if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
-      if(threaddebug)cout << detail << endl;
-      if(threaddebug)cout << "If drawing, pause." << endl;
-      while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
-         if(threaddebug)cout << 1 << endl;
-         if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false). Is below as well for if drawing_to_GL is already false.
-            thread_running = false;
-            if(threaddebug)cout << 2 << endl;
-            while(pausethread){usleep(10);}
-            if(threaddebug)cout << 3 << endl;
-            thread_running = true;
-         }
-         if(threaddebug)cout << 4 << endl;
-         usleep(10);
-      }
-      if(threaddebug)cout << 5 << endl;
-      if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again.
-         thread_running = false;
-         if(threaddebug)cout << 6 << endl;
-         while(pausethread){usleep(10);}
-         if(threaddebug)cout << 7 << endl;
-         thread_running = true;
-      }
-      if(threaddebug)cout << 8 << endl;
-      if(threaddebug)cout << "Not drawing (anymore)." << endl;
-      if(threaddebug)cout << "Interrupt?" << endl;
-      if(interruptthread){
-         thread_running = false;//This thread will not use pointbucket::getpoint() again.
-         if(threaddebug)cout << "Interrupted." << endl;
-         if(threaddebug)cout << "Delete data array." << endl;
-         delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
-         if(threaddebug)cout << "End drawing" << endl;
-         signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
-         if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
-         if(threaddebug)cout << "Delete vertex array." << endl;
-         delete[] vertices;//These are here, before a new thread like this is allowed to do anything, so that they are deleted before they are newed again.
-         if(threaddebug)cout << "Delete colour array." << endl;
-         delete[] colours;//...
-         if(threaddebug)cout << "Booleans." << endl;
-         interruptthread = false;//New threads like this will now not be interrupted.
-         thread_existsthread = false;//New threads like this will now be allowed to act.
-         if(threaddebug)cout << "*********Finished thread!" << endl;
-         return;
-      }
-      if(threaddebug)cout << "No interrupt." << endl;
-      pointcount=0;//This is needed for putting values in the right indices for the above arrays. j does not suffice because of the detail variable.
-      if(buckets[i]->getminX()<drawnsofarminx)drawnsofarminx = buckets[i]->getminX();//Set the boundary of the buckets selected so far.
-      if(buckets[i]->getminY()<drawnsofarminy)drawnsofarminy = buckets[i]->getminY();//...
-      if(buckets[i]->getmaxX()>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->getmaxX();//...
-      if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
-      for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++/*=detail*/){//... and for every point, determine point colour and position:
-         red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-         x = buckets[i]->getPoint(j,resolutionindex).x;
-         y = buckets[i]->getPoint(j,resolutionindex).y;
-         z = buckets[i]->getPoint(j,resolutionindex).z;
-         intensity = buckets[i]->getPoint(j,resolutionindex).intensity;
-         if(heightcolour){//Colour by elevation.
-            red = colourheightarray[3*(int)(10*(z-rminz))];
-            green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-            blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
-         }
-         else if(intensitycolour){//Colour by intensity.
-            red = colourintensityarray[3*(int)(intensity-rminintensity)];
-            green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
-            blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
-         }
-         else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
-             line = buckets[i]->getPoint(j,resolutionindex).flightLine;
-             int index = line % 6;
-             switch(index){
-                case 0:red=0;green=1;blue=0;break;//Green
-                case 1:red=0;green=0;blue=1;break;//Blue
-                case 2:red=1;green=0;blue=0;break;//Red
-                case 3:red=0;green=1;blue=1;break;//Cyan
-                case 4:red=1;green=1;blue=0;break;//Yellow
-                case 5:red=1;green=0;blue=1;break;//Purple
-                default:red=green=blue=1;break;//White in the event of strangeness.
-             }
-         }
-         else if(classcolour){//Colour by classification.
-             classification = buckets[i]->getPoint(j,resolutionindex).classification;
-             int index = classification;
-             switch(index){
-                case 0:case 1:red=1;green=1;blue=0;break;//Yellow for non-classified.
-                case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
-                case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
-                case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
-                case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
-                case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
-                case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
-                case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
-                case 9:red=0;green=0;blue=1;break;//Blue for water.
-                case 12:red=1;green=1;blue=1;break;//White for overlap points.
-                default:red=1;green=0;blue=0;break;//Red for undefined.
-             }
-         }
-         else if(returncolour){//Colour by return.
-             rnumber = buckets[i]->getPoint(j,resolutionindex).packedByte & returnnumber;
-             int index = rnumber;
-             switch(index){
-                case 1:red=0;green=0;blue=1;break;//Blue
-                case 2:red=0;green=1;blue=1;break;//Cyan
-                case 3:red=0;green=1;blue=0;break;//Green
-                case 4:red=1;green=0;blue=0;break;//Red
-                case 5:red=1;green=0;blue=1;break;//Purple
-                default:red=green=blue=1;break;//White in the event of strangeness.
-             }
-         }
-         if(heightbrightness){//Shade by height.
-            red *= brightnessheightarray[(int)(10*(z-rminz))];
-            green *= brightnessheightarray[(int)(10*(z-rminz))];
-            blue *= brightnessheightarray[(int)(10*(z-rminz))];
-         }
-         else if(intensitybrightness){//Shade by intensity.
-            red *= brightnessintensityarray[(int)(intensity-rminintensity)];
-            green *= brightnessintensityarray[(int)(intensity-rminintensity)];
-            blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
-         }
-         vertices[3*pointcount]=x-centrexsafe;
-         vertices[3*pointcount+1]=y-centreysafe;
-         if(heightenNonC ||
-            heightenGround ||
-            heightenLowVeg ||
-            heightenMedVeg ||
-            heightenHighVeg ||
-            heightenBuildings ||
-            heightenNoise ||
-            heightenMass ||
-            heightenWater ||
-            heightenOverlap ||
-            heightenUndefined){
-            classification = buckets[i]->getPoint(j,resolutionindex).classification;
-            int index = classification;
-            double incrementor = 100+abs(rmaxz-rminz);
-            switch(index){
-               case 0:case 1:if(heightenNonC)z+=incrementor;break;//Heighten non-classified.
-               case 2:if(heightenGround)z+=incrementor;break;//Heighten the ground.
-               case 3:if(heightenLowVeg)z+=incrementor;break;//Heighten low vegetation.
-               case 4:if(heightenMedVeg)z+=incrementor;break;//Heighten medium vegetation.
-               case 5:if(heightenHighVeg)z+=incrementor;break;//Heighten hig vegetation.
-               case 6:if(heightenBuildings)z+=incrementor;break;//Heighten buildings.
-               case 7:if(heightenNoise)z+=incrementor;break;//Heighten noise.
-               case 8:if(heightenMass)z+=incrementor;break;//Heighten mass points.
-               case 9:if(heightenWater)z+=incrementor;break;//Heighten water.
-               case 12:if(heightenOverlap)z+=incrementor;break;//Heighten overlaps.
-               default:if(heightenUndefined)z+=incrementor;break;//Heighten anything else.
-            }
-            if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
-               z = rmaxz+900+z/1000;
-               if(z>rmaxz+990)z=rmaxz+990;
-            }
-         }
-         if(raiseline)if(linetoraise == buckets[i]->getPoint(j,resolutionindex).flightLine){
-            z += 100+abs(rmaxz-rminz);
-            if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
-               z = rmaxz+900+z/1000;
-               if(z>rmaxz+990)z=rmaxz+990;
-            }
-         }
-         if(!reversez)vertices[3*pointcount+2]=z;//If all is normal, the height is z.
-         else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range all they occupy, the values are reversed.
-         colours[3*pointcount]=red;
-         colours[3*pointcount+1]=green;
-         colours[3*pointcount+2]=blue;
-         pointcount++;
-      }
-      if(threaddebug)cout << pointcount << endl;
-      if(threaddebug)cout << vertices[3*pointcount/2] << endl;
-      if(threaddebug)cout << "Draw if not interrupted." << endl;
-      if(!interruptthread){
-         if(threaddebug)cout << "Yes!" << endl;
-         drawing_to_GL = true;//Main thread must not attempt to create a new thread like this while this is waiting for a draw to the framebuffer.
-//         while(drawing_to_GL)vertex_array_condition.wait(vertex_array_mutex);
-         if(threaddebug)cout << "Sending draw signal." << endl;
-         signal_DrawGLToCard();
-         if(threaddebug)cout << "Flush?" << endl;
-         if(i>=(numbuckets-1)||numbuckets>10)if((i+1)%10==0){
-            flushing = true;//Main thread must not attempt to create a new thread like this while flushing has yet to occur.
-            if(threaddebug)cout << "Sending flush signal." << endl;
-            signal_FlushGLToScreen();
-         }
-      }
-      else if(threaddebug)cout << "Draw interrupted." << endl;
+   bool *drawnbucketsarray = new bool[numbuckets];
+   for(int i = 0;i < numbuckets;i++)drawnbucketsarray[i] = false;
+   bool completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,true);
+   if(!completed){
+      if(threaddebug)cout << "Pass of cached interrupted. Stopping!" << endl;
+      delete[]drawnbucketsarray;
+      threadend(buckets);
+      return;
    }
-   while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
-      if(threaddebug)cout << 9 << endl;
-      if(pausethread){//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false). Is below as well for if drawing_to_GL is already false.
-         thread_running = false;
-         if(threaddebug)cout << 10 << endl;
-         while(pausethread){usleep(10);}
-         if(threaddebug)cout << 11 << endl;
-         thread_running = true;
+   else if(threaddebug)cout << "Finished pass of cached." << endl;
+   completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,false);
+   if(!completed){
+      if(threaddebug)cout << "Pass of uncached interrupted. Stopping!" << endl;
+      delete[]drawnbucketsarray;
+      threadend(buckets);
+      return;
+   }
+   else if(threaddebug)cout << "Finished pass of uncached." << endl;
+   if(numbuckets>0)drawneverything = true;
+   if(threaddebug)cout << "Thread completed." << endl;
+   delete[]drawnbucketsarray;
+   threadend(buckets);
+   return;
+}
+bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,bool *drawnbucketsarray,bool cachedonly){
+   int resolutionindex = makeresolutionindex();
+   int line=0,intensity=0,classification=0,rnumber=0;
+   double x=0,y=0,z=0;//Point values
+   double red,green,blue;//Colour values
+   for(int i=0;i<numbuckets;i++){//For every bucket...
+      if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly)){
+         drawnbucketsarray[i] = true;
+         if(threaddebug)cout << i << " " << numbuckets << endl;
+         if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
+         if(threaddebug)cout << "If drawing, pause." << endl;
+         while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
+            if(pausethread)threadpause();//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false). Is below as well for if drawing_to_GL is already false.
+            usleep(10);
+         }
+         if(threaddebug)cout << "Not drawing (anymore)." << endl;
+         if(pausethread)threadpause();//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again.
+         if(threaddebug)cout << "Interrupt?" << endl;
+         if(interruptthread)return false;
+         if(threaddebug)cout << "No interrupt." << endl;
+         pointcount=0;//This is needed for putting values in the right indices for the above arrays and for drawing them properly with OpenGL.
+         if(buckets[i]->getminX()<drawnsofarminx)drawnsofarminx = buckets[i]->getminX();//Set the boundary of the buckets selected so far.
+         if(buckets[i]->getminY()<drawnsofarminy)drawnsofarminy = buckets[i]->getminY();//...
+         if(buckets[i]->getmaxX()>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->getmaxX();//...
+         if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
+         for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){//... and for every point, determine point colour and position:
+            red = 0.0; green = 1.0; blue = 0.0;//Default colour.
+            x = buckets[i]->getPoint(j,resolutionindex).x;
+            y = buckets[i]->getPoint(j,resolutionindex).y;
+            z = buckets[i]->getPoint(j,resolutionindex).z;
+            intensity = buckets[i]->getPoint(j,resolutionindex).intensity;
+            if(heightcolour){//Colour by elevation.
+               red = colourheightarray[3*(int)(10*(z-rminz))];
+               green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
+               blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
+            }
+            else if(intensitycolour){//Colour by intensity.
+               red = colourintensityarray[3*(int)(intensity-rminintensity)];
+               green = colourintensityarray[3*(int)(intensity-rminintensity) + 1];
+               blue = colourintensityarray[3*(int)(intensity-rminintensity) + 2];
+            }
+            else if(linecolour){//Colour by flightline. Repeat 6 distinct colours.
+                line = buckets[i]->getPoint(j,resolutionindex).flightLine;
+                int index = line % 6;
+                switch(index){
+                   case 0:red=0;green=1;blue=0;break;//Green
+                   case 1:red=0;green=0;blue=1;break;//Blue
+                   case 2:red=1;green=0;blue=0;break;//Red
+                   case 3:red=0;green=1;blue=1;break;//Cyan
+                   case 4:red=1;green=1;blue=0;break;//Yellow
+                   case 5:red=1;green=0;blue=1;break;//Purple
+                   default:red=green=blue=1;break;//White in the event of strangeness.
+                }
+            }
+            else if(classcolour){//Colour by classification.
+                classification = buckets[i]->getPoint(j,resolutionindex).classification;
+                int index = classification;
+                switch(index){
+                   case 0:case 1:red=1;green=1;blue=0;break;//Yellow for non-classified.
+                   case 2:red=0.6;green=0.3;blue=0;break;//Brown for ground.
+                   case 3:red=0;green=0.3;blue=0;break;//Dark green for low vegetation.
+                   case 4:red=0;green=0.6;blue=0;break;//Medium green for medium vegetation.
+                   case 5:red=0;green=1;blue=0;break;//Bright green for high vegetation.
+                   case 6:red=0;green=1;blue=0;break;//Cyan for buildings.
+                   case 7:red=1;green=0;blue=1;break;//Purple for low point (noise).
+                   case 8:red=0.5;green=0.5;blue=0.5;break;//Grey for model key-point (mass point).
+                   case 9:red=0;green=0;blue=1;break;//Blue for water.
+                   case 12:red=1;green=1;blue=1;break;//White for overlap points.
+                   default:red=1;green=0;blue=0;break;//Red for undefined.
+                }
+            }
+            else if(returncolour){//Colour by return.
+                rnumber = buckets[i]->getPoint(j,resolutionindex).packedByte & returnnumber;
+                int index = rnumber;
+                switch(index){
+                   case 1:red=0;green=0;blue=1;break;//Blue
+                   case 2:red=0;green=1;blue=1;break;//Cyan
+                   case 3:red=0;green=1;blue=0;break;//Green
+                   case 4:red=1;green=0;blue=0;break;//Red
+                   case 5:red=1;green=0;blue=1;break;//Purple
+                   default:red=green=blue=1;break;//White in the event of strangeness.
+                }
+            }
+            if(heightbrightness){//Shade by height.
+               red *= brightnessheightarray[(int)(10*(z-rminz))];
+               green *= brightnessheightarray[(int)(10*(z-rminz))];
+               blue *= brightnessheightarray[(int)(10*(z-rminz))];
+            }
+            else if(intensitybrightness){//Shade by intensity.
+               red *= brightnessintensityarray[(int)(intensity-rminintensity)];
+               green *= brightnessintensityarray[(int)(intensity-rminintensity)];
+               blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
+            }
+            vertices[3*pointcount]=x-centrexsafe;
+            vertices[3*pointcount+1]=y-centreysafe;
+            if(heightenNonC ||
+               heightenGround ||
+               heightenLowVeg ||
+               heightenMedVeg ||
+               heightenHighVeg ||
+               heightenBuildings ||
+               heightenNoise ||
+               heightenMass ||
+               heightenWater ||
+               heightenOverlap ||
+               heightenUndefined){
+               classification = buckets[i]->getPoint(j,resolutionindex).classification;
+               int index = classification;
+               double incrementor = 100+abs(rmaxz-rminz);
+               switch(index){
+                  case 0:case 1:if(heightenNonC)z+=incrementor;break;//Heighten non-classified.
+                  case 2:if(heightenGround)z+=incrementor;break;//Heighten the ground.
+                  case 3:if(heightenLowVeg)z+=incrementor;break;//Heighten low vegetation.
+                  case 4:if(heightenMedVeg)z+=incrementor;break;//Heighten medium vegetation.
+                  case 5:if(heightenHighVeg)z+=incrementor;break;//Heighten hig vegetation.
+                  case 6:if(heightenBuildings)z+=incrementor;break;//Heighten buildings.
+                  case 7:if(heightenNoise)z+=incrementor;break;//Heighten noise.
+                  case 8:if(heightenMass)z+=incrementor;break;//Heighten mass points.
+                  case 9:if(heightenWater)z+=incrementor;break;//Heighten water.
+                  case 12:if(heightenOverlap)z+=incrementor;break;//Heighten overlaps.
+                  default:if(heightenUndefined)z+=incrementor;break;//Heighten anything else.
+               }
+               if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
+                  z = rmaxz+900+z/1000;
+                  if(z>rmaxz+990)z=rmaxz+990;
+               }
+            }
+            if(raiseline)if(linetoraise == buckets[i]->getPoint(j,resolutionindex).flightLine){
+               z += 100+abs(rmaxz-rminz);
+               if(z>rmaxz+900){//This is to prevent the points ever obscuring the overlays. Note that this can handle well anything up to a height of 90 000 metres (including the increase from above, but it should still be able to handle the Himalayas); above that and the points will be drawn at the same height.
+                  z = rmaxz+900+z/1000;
+                  if(z>rmaxz+990)z=rmaxz+990;
+               }
+            }
+            if(!reversez)vertices[3*pointcount+2]=z;//If all is normal, the height is z.
+            else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range all they occupy, the values are reversed.
+            colours[3*pointcount]=red;
+            colours[3*pointcount+1]=green;
+            colours[3*pointcount+2]=blue;
+            pointcount++;
+         }
+         if(threaddebug)cout << pointcount << endl;
+         if(threaddebug)cout << vertices[3*pointcount/2] << endl;
+         if(threaddebug)cout << "Draw if not interrupted." << endl;
+         if(!interruptthread){
+            if(threaddebug)cout << "Yes!" << endl;
+            drawing_to_GL = true;//Main thread must not attempt to create a new thread like this while this is waiting for a draw to the framebuffer.
+            if(threaddebug)cout << "Sending draw signal." << endl;
+            signal_DrawGLToCard();
+            if(threaddebug)cout << "Flush?" << endl;
+            if(i>=(numbuckets-1)||numbuckets>10)if((i+1)%10==0){
+               flushing = true;//Main thread must not attempt to create a new thread like this while flushing has yet to occur.
+               if(threaddebug)cout << "Sending flush signal." << endl;
+               signal_FlushGLToScreen();
+            }
+         }
+         else if(threaddebug)cout << "Draw interrupted." << endl;
       }
-      if(threaddebug)cout << 12 << endl;
+   }
+   if(threaddebug)cout << "Checking for drawing to make sure there is no deadlock. Might wait." << endl;
+   while(drawing_to_GL){//Under no circumstances may the arrays be modified until their contents have been sent to the framebuffer.
+      if(pausethread)threadpause();//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again. Is here so that if there are multiple calls to pointinfo() in quick succession then there will not be a deadlock (as they would further delay the condition of drawing_to_GL becoming false).
+      if(threaddebug)cout << "Waiting for drawing." << endl;
       usleep(10);
    }
-   if(numbuckets>0)drawneverything = true;
+   return true;
+}
+void TwoDeeOverview::threadend(PointBucket** buckets){
+   if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
    thread_running = false;//This thread will not use pointbucket::getpoint() again.
-   if(threaddebug)cout << "Ending..." << endl;
    if(threaddebug)cout << "Delete data array." << endl;
    delete[] buckets;//This is up here so that buckets is deleted before it is newed again.
-   if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
    if(threaddebug)cout << "End drawing" << endl;
    signal_EndGLDraw();//For the sake of neatness, clear up. This comes before allowing the main thread to create another thread like this to ensure that this signal is processed before, say, a signal to prepare OpenGL for drawing again.
    if(threaddebug)cout << "Delete vertex array." << endl;
@@ -465,8 +453,14 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets,int detail){
    if(threaddebug)cout << "Booleans." << endl;
    interruptthread = false;//New threads like this will now not be interrupted.
    thread_existsthread = false;//New threads like this will now be allowed to act.
-   if(threaddebug)cout << "***Finished thread!" << endl;
-   return;
+   if(threaddebug)cout << "*********Finished thread!" << endl;
+}
+void TwoDeeOverview::threadpause(){
+   thread_running = false;
+   if(threaddebug)cout << "Pausing thread. Allowing the rest of the program access to point data. Waiting until thread is allowed to unpause." << endl;
+   while(pausethread){usleep(10);}
+   if(threaddebug)cout << "Yippee! Can go now! Depriving the rest of the program of resources again!" << endl;
+   thread_running = true;
 }
 
 //This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back. The method is orderd so that the top-most things are drawn first. This is because it is thought that having previously-drawn things obscure latterly-drawn things will reduce flicker.
@@ -602,7 +596,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       interruptthread = false;//New threads should not be immediately interrupted.
       thread_existsmain = true;//No more threads should be made for now.
       Glib::Thread* data_former_thread;
-      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets,detail),false);//This thread will interpret the data before telling the main thread to draw.
+      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets),false);//This thread will interpret the data before telling the main thread to draw.
       delete pointvector;
    }
    else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload)){//Draw the preview.
@@ -706,9 +700,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       waitforpause();//Will sulk until gets such access.
       if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
-//         bool* pointsinarea = vetpoints(pointvector->at(i),minx,midy,maxx,midy,pointsize*ratio/zoomlevel);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
-         for(int j=0;j<pointvector->at(i)->getNumberOfPoints(0);j++){//For all points...
+         for(int j=0;j<pointvector->at(i)->getNumberOfPoints(0);j++){//For all points (no sorting as it seems pointless with a maximum of four buckets possible)...
             if(pointsinarea[j]){//If they are in the right area...
                if(!anypoint){
                   bucketno=i;

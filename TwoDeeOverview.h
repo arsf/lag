@@ -228,7 +228,10 @@ protected:
    void FlushGLToScreen();//Flush the contents of the framebuffer to the screen.
  
    //Drawing:
-   void mainimage(PointBucket** buckets,int numbuckets,int detail);//Draw the main image. This is used by the drawing thread. Handle with care.
+   void mainimage(PointBucket** buckets,int numbuckets);//Draw the main image. This is used by the drawing thread. Handle with care.
+   void threadpause();
+   void threadend(PointBucket** buckets);
+   bool drawpointsfrombuckets(PointBucket** buckets,int numbuckets,bool *drawnbucketsarray,bool cachedonly);
    bool drawbuckets(PointBucket** buckets,int numbuckets);//Draw the outlines of the buckets and, above them, the contents of the back buffer (which contains the last stuff drawn from scratch).
  
    //Positioning methods:
