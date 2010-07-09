@@ -20,6 +20,7 @@ public:
    void resetcolouringandshading(){ on_drawingresetbutton_clicked(); }
    bool getfractionalshift(){ return fractionalshiftcheck->get_active(); }
    double getmovespeed(){ return movespeedselect->get_value(); }
+   void setmaindetailrange(double min,double max){maindetailselect->set_range(min,max);}
 protected:
    TwoDeeOverview *tdo;
    Profile *prof;

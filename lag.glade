@@ -5,6 +5,7 @@
   <widget class="GtkWindow" id="overviewwindow">
     <property name="can_focus">True</property>
     <property name="destroy_with_parent">True</property>
+    <property name="icon">lagicon_small.png</property>
     <child>
       <widget class="GtkVBox" id="vboxtdo">
         <property name="visible">True</property>
@@ -525,6 +526,7 @@ options</property>
   </widget>
   <widget class="GtkWindow" id="profilewindow">
     <property name="destroy_with_parent">True</property>
+    <property name="icon">lagicon_small.png</property>
     <child>
       <widget class="GtkVBox" id="vboxprof">
         <property name="visible">True</property>
@@ -1062,6 +1064,7 @@ Range</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Open a file</property>
     <property name="window_position">center-on-parent</property>
+    <property name="icon">lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <property name="select_multiple">True</property>
@@ -1127,6 +1130,62 @@ Range</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVBox" id="vbox21">
+                            <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <widget class="GtkLabel" id="label20">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">Resolution base</property>
+                              </widget>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkSpinButton" id="resbaseselect">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="invisible_char">&#x25CF;</property>
+                              </widget>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </widget>
+                          <packing>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVBox" id="vbox22">
+                            <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <widget class="GtkLabel" id="label21">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">Res. depth (power+1)</property>
+                              </widget>
+                              <packing>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkSpinButton" id="resdepthselect">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="invisible_char">&#x25CF;</property>
+                              </widget>
+                              <packing>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </widget>
+                          <packing>
+                            <property name="position">3</property>
                           </packing>
                         </child>
                       </widget>
@@ -1334,10 +1393,11 @@ Otherwise, it is probably better to use point skipping and fences (above).</prop
     <property name="title" translatable="yes">About Glade</property>
     <property name="resizable">False</property>
     <property name="window_position">center-on-parent</property>
+    <property name="icon">lagicon_small.png</property>
     <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <property name="program_name">LIDAR Analysis GUI (LAG)</property>
-    <property name="version">0.9</property>
+    <property name="version">0.9.3</property>
     <property name="copyright" translatable="yes">&#xA9;Plymouth Marine Laboratory 2009-2010</property>
     <property name="comments" translatable="yes">Viewer for LIDAR files in the form .las or .txt.
 System requirements: GNU/Linux with GTK+, screen resolution of width greater than or equal to 900 pixels, OpenGL 1.4 or better (possibly 1.2 or better)</property>
@@ -1352,6 +1412,7 @@ Remote Sensing Group (Sea From Space),
 Plymouth Marine Laboratory)</property>
     <property name="documenters">Haraldur Tristan Gunnarsson
 Christopher Finerty</property>
+    <property name="logo">lagicon_small.png</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox2">
         <property name="visible">True</property>
@@ -1378,6 +1439,7 @@ Christopher Finerty</property>
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Advanced viewing options</property>
     <property name="window_position">center-on-parent</property>
+    <property name="icon">lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
@@ -2073,6 +2135,7 @@ Christopher Finerty</property>
   </widget>
   <widget class="GtkFileChooserDialog" id="filesaverdialog">
     <property name="border_width">5</property>
+    <property name="icon">lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
     <property name="action">save</property>

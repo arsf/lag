@@ -39,6 +39,8 @@ protected:
    Gtk::Label *loadoutputlabel;//This displays the errors and so on that occur in loading.
    Gtk::EventBox *eventboxtdo;//Contains the overview.
    Gtk::EventBox *eventboxprof;//Contains the profile.
+   Gtk::SpinButton *resbaseselect;
+   Gtk::SpinButton *resdepthselect;
    string loaderroroutputfile;//Path of file for error message output.
    ofstream loaderroroutput;//Stream outputting error messages from the quadtree to a file.
    ostringstream *loaderrorstream;//Stringstream getting error messages from the quadtree.
@@ -48,6 +50,7 @@ protected:
 
    void on_filechooserdialogresponse(int response_id);
    void on_cachesize_changed();
+   void on_resolutionbase_changed();
    
    //When selected from the menu, the file chooser opens.
    void on_openfilemenuactivated();

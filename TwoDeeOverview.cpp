@@ -21,7 +21,6 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
-   detail = 1;
    numbuckets = 0;
    resolutionbase = 1;
    resolutiondepth = 1;
@@ -273,11 +272,19 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets){
    return;
 }
 bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,bool *drawnbucketsarray,bool cachedonly){
-   int resolutionindex = makeresolutionindex();
    int line=0,intensity=0,classification=0,rnumber=0;
    double x=0,y=0,z=0;//Point values
    double red,green,blue;//Colour values
    for(int i=0;i<numbuckets;i++){//For every bucket...
+      if(threaddebug)cout << "Calculating resolution index." << endl;
+      double bucketscreenwidth = (buckets[i]->getmaxX() - buckets[i]->getminX())*zoomlevel/ratio;
+      double bucketscreenheight = (buckets[i]->getmaxY() - buckets[i]->getminY())*zoomlevel/ratio;
+      double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
+      int bucketpointtopixelratio = (int)((double)buckets[i]->getNumberOfPoints(0)/bucketpixelcount);
+      int resolutionindex = 0;
+      for(int j = bucketpointtopixelratio;j > (int)pow(resolutionbase,maindetailmod) - 1;j /= resolutionbase)resolutionindex++;
+      if(resolutionindex > resolutiondepth - 1)resolutionindex = resolutiondepth - 1;
+      if(threaddebug)cout << "Resolution index is: " << resolutionindex << "." << endl;
       if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly)){
          drawnbucketsarray[i] = true;
          if(threaddebug)cout << i << " " << numbuckets << endl;
@@ -548,9 +555,18 @@ bool TwoDeeOverview::drawviewable(int imagetype){
    interruptthread = true;//This causes any existing drawing thread to stop.
    if(imagetype==1 || (!drawnsinceload && imagetype == 3)){//Draw the main image.
       if(drawing_to_GL||initialising_GL_draw||flushing||thread_existsthread||thread_existsmain){//If any of these conditions are true and a new thread is created now, deadlock is possible.
-         if(threaddebug)cout << "Help! Am stalling!" << endl;
+         if(threaddebug){
+            cout << "Help! Am stalling!";
+            if(drawing_to_GL)cout << " Stalling because drawing to OpenGL.";
+            if(initialising_GL_draw)cout << " Stalling because initialising OpenGL drawing.";
+            if(flushing)cout << " Stalling because flushing.";
+            if(thread_existsthread)cout << " Stalling because drawing thread exists according to drawing thread.";
+            if(thread_existsmain)cout << " Stalling because drawing thread exists according to main thread.";
+            cout << endl;
+         }
          if(!extraDrawing){//If not doing so already, prepare to draw again after the interrupt.
             extraDrawing = true;
+            if(threaddebug)cout << "Trying to draw again." << endl;
             signal_extraDraw();
          }
          return true;
@@ -592,7 +608,6 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points. ........Probably will not make any difference BUT it does mean that the data can be accessed without doing (*pointvector)[i] every time, as doing pointvector->at(i) may be slower due to checks.
          buckets[i]=(*pointvector)[i];
       }
-      makedetail();
       interruptthread = false;//New threads should not be immediately interrupted.
       thread_existsmain = true;//No more threads should be made for now.
       Glib::Thread* data_former_thread;

@@ -52,6 +52,19 @@ FileOpener::FileOpener(TwoDeeOverview *tdo,Profile *prof,Glib::RefPtr<Gnome::Gla
       }
    }
    refXml->get_widget("loadoutputlabel",loadoutputlabel);
+   refXml->get_widget("resbaseselect",resbaseselect);
+   if(resbaseselect){
+      resbaseselect->set_range(2,1000);//What is the probability someone will seriously want resolutions of 1000^(-x)? Note that a value of less than 2 would cause serious problems.
+      resbaseselect->set_value(4);
+      resbaseselect->set_increments(1,1);
+   }
+   refXml->get_widget("resdepthselect",resdepthselect);
+   if(resdepthselect){
+      on_resolutionbase_changed();
+      resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
+      resdepthselect->set_value(4);
+      resdepthselect->set_increments(1,1);
+   }
    numlines = 0;
 }
 FileOpener::~FileOpener(){
@@ -64,6 +77,10 @@ FileOpener::~FileOpener(){
    delete cachesizeGBlabel;
    delete loaderrorstream;
    delete filechooserdialog;//Have to delete parent after children?
+}
+
+void FileOpener::on_resolutionbase_changed(){
+   resdepthselect->set_range(0,log(pow(2,sizeof(int)*8)/100)/log(resbaseselect->get_value_as_int()));//This is absolutely vital to prevent an overflow.
 }
 
 /*Determines whether the input filename(s) are correct and, if so, creates or modifies the quadtree to accomodate the data. First it makes sure that a sufficient number of arguments have been passed to include the executable, point offset and at least one filename. It then extracts the point offset, which is used to skip a certain number of points between each read point, for faster loading. It then starts dealing withthe filenames:
@@ -114,9 +131,10 @@ FileOpener::~FileOpener(){
  *
  * */
 int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
-   int resolutiondepth = 4;
-   int resolutionbase = 4;
+   int resolutiondepth = resdepthselect->get_value_as_int();
+   int resolutionbase = resbaseselect->get_value_as_int();
    int bucketlevels = 0;
+   bool newQuadtree = false;
    loadoutputlabel->set_text("");
    Gdk::Window::process_all_updates();
    cachelimit = cachesizeselect->get_value();
@@ -165,6 +183,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                         loaderrorstream->str("");
                         lidardata = new Quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
+                        newQuadtree = true;
                      }
                      else lidardata->load(loader,poffs,bucketlevels,fencexs,fenceys,fenceps);
                   }
@@ -245,6 +264,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      loaderrorstream->str("");
                      lidardata = new Quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
                      lidardata->load(loader,poffs,bucketlevels);
+                     newQuadtree = true;
                   }
                   else lidardata->load(loader,poffs,bucketlevels);
                }
@@ -282,12 +302,16 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
       eventboxprof->remove();
       loadedanyfiles = false;
       numlines = 0;
+      newQuadtree = false;
       return 22;
    }
    tdo->setlidardata(lidardata,bucketlimit);//Provide the drawing objects access to the quadtree:
    prof->setlidardata(lidardata,bucketlimit);//...
-   tdo->setresolutionbase(resolutionbase);
-   tdo->setresolutiondepth(resolutiondepth);
+   if(newQuadtree){
+      tdo->setresolutionbase(resolutionbase);
+      tdo->setresolutiondepth(resolutiondepth);
+      aow->setmaindetailrange(0,log(pow(2,sizeof(int)*8)/100)/log(resbaseselect->get_value_as_int()));//This is absolutely vital to prevent an overflow in the drawing thread in the overview that then causes an infinite loop.
+   }
    //Possibly: Move two copies of this to the relevant LAS and ASCII parts, above, so that files are drawn as soon as they are loaded and as the other files are loading. This might not work because of the bug that causes the flightline(s) not to be drawn immediately after loading. UPDATE: now it seems to draw just one bucket(!!!) immediately after loading.
    if(loadedanyfiles){//If drawing areas are already visible, prepare the new images and draw them.
       tdo->prepare_image();

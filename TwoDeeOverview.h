@@ -31,17 +31,6 @@ public:
    void makedistancescale();//Make a scale for the LIDAR "map"
    void makecolourlegend();
    void drawoverlays();//Draw all of the above make methods.
-   int makeresolutionindex(){
-      int resolutionindex = 0;
-      for(int i = detail;i > resolutionbase - 1;i /= 4)resolutionindex++;
-      if(resolutionindex > resolutiondepth - 1)resolutionindex = resolutiondepth - 1;
-      return resolutionindex;
-   }
-   void makedetail(){
-      detail=1;//This determines how many points are skipped between reads, to make drawing faster when zoomed out.
-      detail=(int)(numbuckets*maindetailmod);//...
-      if(detail<1)detail=1;//...
-   }
    //Short, status changing methods:
    void setupprofile(){//Blocks pan signals and unblocks profile signals:
       sigpanstart.block();
@@ -139,7 +128,6 @@ public:
       void setheightenUndefined(bool heightenUndefined){ this->heightenUndefined = heightenUndefined; }//...
 protected:
    int resolutionbase,resolutiondepth;
-   int detail;
    int numbuckets;
    bool raiseline;
    int linetoraise;

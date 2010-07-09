@@ -73,7 +73,7 @@ AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,G
       refXml->get_widget("maindetailselect",maindetailselect);
       if(maindetailselect){
          maindetailselect->set_range(0,300);//Essentially arbitrary. Would there be any situation where such a coarse detail level as 300 pixels would be wanted?
-         maindetailselect->set_value(0.00);
+         maindetailselect->set_value(2.00);
          maindetailselect->signal_value_changed().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_maindetailselected));
       }
       refXml->get_widget("maindetailselectprof",maindetailselectprof);
@@ -244,11 +244,8 @@ void AdvancedOptionsWindow::on_drawingresetbutton_clicked(){
 }
 //This indirectly determines how many points are skipped when viewing the main overview image. I.e. this affects it as well as the number of visible buckets.
 void AdvancedOptionsWindow::on_maindetailselected(){
-   int before = tdo->makeresolutionindex();
    tdo->setmaindetail(maindetailselect->get_value());
-   tdo->makedetail();
-   int after = tdo->makeresolutionindex();
-   if(tdo->is_realized() && before != after)tdo->drawviewable(1);
+   tdo->drawviewable(1);
 }
 //Does the same as on_maindetailselected, except for the profile.
 void AdvancedOptionsWindow::on_maindetailselectedprof(){
