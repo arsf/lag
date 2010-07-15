@@ -301,10 +301,12 @@ bool TwoDeeOverviewWindow::on_tdo_key_press(GdkEventKey* event){
          if(profiletoggle->get_active())return tdo->on_prof_key(event,aow->getmovespeed(),aow->getfractionalshift());
          else if(fencetoggle->get_active())return tdo->on_fence_key(event,aow->getmovespeed());
          break;
-      case GDK_i:case GDK_o:case GDK_I:case GDK_O:return tdo->on_zoom_key(event);break;
+      case GDK_i:case GDK_o:case GDK_I:case GDK_O:
+         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return tdo->on_zoom_key(event);break;
       case GDK_f:case GDK_F:fencetoggle->set_active(!fencetoggle->get_active());return true;break;
       case GDK_x:case GDK_X:profiletoggle->set_active(!profiletoggle->get_active());return true;break;
       case GDK_t:case GDK_T:slantedrectshapetoggle->set_active(!slantedrectshapetoggle->get_active());return true;break;
+      case GDK_slash:case GDK_backslash:profilewindow->present();return true;break;
       default:return false;break;
    }
    return false;

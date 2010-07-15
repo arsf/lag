@@ -1142,15 +1142,20 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    return drawviewable(1);
 }
 bool TwoDeeOverview::on_zoom_key(GdkEventKey* event){
-   if(zoomlevel>=1){
-      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=pow(zoomlevel,zoompower)/2;
-      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=pow(zoomlevel,zoompower)/2;
+   if(zoomlevel>=1)switch(event->keyval){
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=pow(zoomlevel,zoompower)/2;break;
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=pow(zoomlevel,zoompower)/2;break;
+         default:return false;break;
    }
-   else if(zoomlevel>=0.2){
-      if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
-      else if(event->keyval==GDK_o || event->keyval==GDK_O)zoomlevel-=0.1;
+   else if(zoomlevel>=0.2)switch(event->keyval){
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=0.1;break;
+         default:return false;break;
    }
-   else if(event->keyval==GDK_i || event->keyval==GDK_I)zoomlevel+=0.1;
+   else switch(event->keyval){
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
+         default:return false;break;
+   }
    if(zoomlevel<0.2)zoomlevel=0.2;
    resetview();
    set_overlay_zoomlevels(zoomlevel);

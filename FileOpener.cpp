@@ -167,8 +167,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                   else if(filename.find(".txt",filename.length()-4)!=string::npos ||
                           filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
-                     const char* code = code1.c_str();
-                     loader = new AsciiLoader(argv[count],code);
+                     loader = new AsciiLoader(argv[count],code1.c_str());
                   }
                   else{//For incorrect file extensions:
                      string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
@@ -223,15 +222,13 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                   }
                   else if(filename.find(".txt",filename.length()-4)!=string::npos||filename.find(".TXT",filename.length()-4)!=string::npos){//For ASCII files (only works through GUI... Must get it to work for command-line at some point:
                      string code1 = asciicodeentry->get_text();//The type code is needed to properly interpret the ASCII file.
-                     const char* code = code1.c_str();
-                     loader = new AsciiLoader(argv[count],code);
+                     loader = new AsciiLoader(argv[count],code1.c_str());
                   }
-                  Boundary* lidarboundary = loader->getBoundary();
-                  if(lidarboundary->minX < minx || count == 2)minx = lidarboundary->minX;
-                  if(lidarboundary->maxX > maxx || count == 2)maxx = lidarboundary->maxX;
-                  if(lidarboundary->minY < miny || count == 2)miny = lidarboundary->minY;
-                  if(lidarboundary->maxY > maxy || count == 2)maxy = lidarboundary->maxY;
-                  if(lidarboundary != NULL)delete lidarboundary;
+                  Boundary lidarboundary = loader->getBoundary();
+                  if(lidarboundary.minX < minx || count == 2)minx = lidarboundary.minX;
+                  if(lidarboundary.maxX > maxx || count == 2)maxx = lidarboundary.maxX;
+                  if(lidarboundary.minY < miny || count == 2)miny = lidarboundary.minY;
+                  if(lidarboundary.maxY > maxy || count == 2)maxy = lidarboundary.maxY;
                   if(loader != NULL)delete loader;
                }
             }
@@ -288,8 +285,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
    }
    catch(DescriptiveException e){
       string message = "There has been an exception:\n";
-      message += "What: " + *(e.what());
-      message += "\nWhy: " + *(e.why());
+      message += "What: " + static_cast<string>(e.what());
+      message += "\nWhy: " + static_cast<string>(e.why());
       cout << message << endl;
       loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
       Gdk::Window::process_all_updates();

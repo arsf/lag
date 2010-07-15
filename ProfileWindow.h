@@ -16,7 +16,7 @@
 
 class ProfileWindow{
 public:
-   ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow);
+   ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::Window *overviewwindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow);
    ~ProfileWindow();
    //This grabs the profile from the overview.
    void on_showprofilebutton_clicked();
@@ -26,6 +26,7 @@ protected:
    AdvancedOptionsWindow *aow;
    Gtk::EventBox *eventboxprof;
    Gtk::Window *profilewindow;
+   Gtk::Window *overviewwindow;
    Gtk::CheckMenuItem *showheightscalecheck;//Check button determining whether the height scale is viewable on the profile.
    Gtk::RadioMenuItem *colourbyintensitymenuprof;//Determines whether the profile is coloured by intensity.
    Gtk::RadioMenuItem *colourbyheightmenuprof;//Determines whether the profile is coloured by height.

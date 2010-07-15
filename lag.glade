@@ -865,7 +865,7 @@ Range</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip" translatable="yes">This determines what to classify points as.</property>
                             <property name="invisible_char">&#x25CF;</property>
-                            <property name="adjustment">7 0 255 1 10 0</property>
+                            <property name="adjustment">7 0 31 1 10 0</property>
                             <property name="wrap">True</property>
                           </widget>
                           <packing>
@@ -876,7 +876,7 @@ Range</property>
                           <widget class="GtkLabel" id="label15">
                             <property name="visible">True</property>
                             <property name="tooltip" translatable="yes">This determines what to classify points as.</property>
-                            <property name="label" translatable="yes">As (0 - 255):</property>
+                            <property name="label" translatable="yes">As (0 - 31):</property>
                           </widget>
                           <packing>
                             <property name="position">1</property>

@@ -10,10 +10,11 @@
 #include <vector>
 #include "ProfileWindow.h"
 
-ProfileWindow::ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow){
+ProfileWindow::ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::Window *overviewwindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow){
    this->prof = prof;
    this->tdo = tdo;
    this->profilewindow = profilewindow;
+   this->overviewwindow = overviewwindow;
    this->eventboxprof = eventboxprof;
    this->aow = aow;
    eventboxprof->signal_key_press_event().connect(sigc::mem_fun(*this,&ProfileWindow::on_prof_key_press));
@@ -248,10 +249,12 @@ bool ProfileWindow::on_prof_key_press(GdkEventKey* event){
          break;
       case GDK_r:case GDK_v:case GDK_q:case GDK_e:
          case GDK_R:case GDK_V:case GDK_Q:case GDK_E:return on_profile_shift(event);break;
-      case GDK_i:case GDK_o:case GDK_I:case GDK_O:return prof->on_zoom_key(event);break;
+      case GDK_i:case GDK_o:case GDK_I:case GDK_O:
+         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return prof->on_zoom_key(event);break;
       case GDK_z:case GDK_Z:return prof->drawviewable(1);break;
       case GDK_f:case GDK_F:fencetoggleprof->set_active(!fencetoggleprof->get_active());return true;break;
       case GDK_t:case GDK_T:slantedprof->set_active(!slantedprof->get_active());return true;break;
+      case GDK_slash:case GDK_backslash:overviewwindow->present();return true;break;
       default:return false;break;
    }
 }
