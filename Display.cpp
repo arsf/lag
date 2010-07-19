@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: Display.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: January - June 2010
+ * Written: January - July 2010
  *
  * */
 #include <gtkmm.h>
@@ -22,6 +38,7 @@
 Display::Display(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit) : Gtk::GL::DrawingArea(config){
    this->lidardata=lidardata;
    this->bucketlimit = bucketlimit;
+   configuring = false;
    pointsize=1;
    ratio = 1;
    cbmaxz=cbminz=0;
@@ -54,14 +71,20 @@ Display::~Display(){
 
 //Draw on expose.
 bool Display::on_expose_event(GdkEventExpose* event){
-   drawviewable(3);
+   if(configuring){
+      drawviewable(1);
+      configuring = false;
+   }
+   else drawviewable(3);
    return true;
 }
 
-//When the window is resized, the viewport is resized accordingly and so are the viewing properties.
+//Please note that the Gtk::GL::DrawingArea::on_realize() method calls this event and is (by necessity) before the prepare_image() method, so it is necessary to be careful about what to put into this method as somethings might crash if done before prepare_image().
+//When the window is resized, the viewport is resized accordingly and so are the viewing properties. Please note that the expose event will be emitted right after the configure event, so the on_expose_event method will be called right after this one.
 bool Display::on_configure_event(GdkEventConfigure* event){
   glViewport(0, 0, get_width(), get_height());
   resetview();
+  configuring = true;
   return true;
 }
 
@@ -107,7 +130,7 @@ void Display::coloursandshades(double maxz,double minz,int maxintensity,int mini
 
 //Prepare the image when the widget is first realised.
 void Display::on_realize(){
-  Gtk::GL::DrawingArea::on_realize();
+  Gtk::GL::DrawingArea::on_realize();//Please note that the this method calls the configure event and is (by necessity) before the prepare_image() method, so it is necessary to be careful about what to put into the on_configure_event method as somethings might crash if done before prepare_image().
   prepare_image();
 }
 

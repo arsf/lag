@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: TwoDeeOverview.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - June 2010
+ * Written: November 2009 - July 2010
  *
  * WARNING! THIS IS A THREADED ENVIRONMENT. CARELESSNESS WILL BE REWARDED WITH EXTREME PREJUDICE (YES, YOU READ THAT CORRECTLY)!
  *
@@ -653,11 +669,12 @@ bool TwoDeeOverview::returntostart(){
    Boundary* lidarboundary = lidardata->getBoundary();
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
-   double xratio = xdif/get_screen()->get_width();//This ratio defines, along with zoomlevel, the translation from world coordinates to window coordinates.
-   double yratio = ydif/get_screen()->get_height();//...
-   yratio*=1.3;//... (This accounts for some amount of "clutter" at the top and bottom of the screen in the form of taskbars etc.).
+   double xratio = xdif/get_parent()->get_width();//This ratio defines, along with zoomlevel, the translation from world coordinates to window coordinates.
+   double yratio = ydif/get_parent()->get_height();//...
+//   yratio*=1.3;//... (This accounts for some amount of "clutter" at the top and bottom of the screen in the form of taskbars etc.).
    if(xratio>yratio)ratio = xratio;//...
    else ratio = yratio;//...
+   ratio *= 1.1;
    profbox->setratio(ratio);
    fencebox->setratio(ratio);
    centrex = lidarboundary->minX+xdif/2;//Image should be centred at its centre.
@@ -711,9 +728,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       int bucketno=0;
       int pointno=0;
       pausethread = true;//Wants exclusive access to pointbucket::getpoint().
-      if(threaddebug)cout << 13 << endl;
       waitforpause();//Will sulk until gets such access.
-      if(threaddebug)cout << 14 << endl;
       for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
          bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
          for(int j=0;j<pointvector->at(i)->getNumberOfPoints(0);j++){//For all points (no sorting as it seems pointless with a maximum of four buckets possible)...
@@ -770,7 +785,6 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          rnumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).packedByte & returnnumber);
          flightlinenumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);
          pausethread = false;//Is bored with pointbucket::getpoint(), now.
-         if(threaddebug)cout << 15 << endl;
          string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + " (" + flightlinenumber.str() + "), Return number: " + rnumber.str() + ".";
          rulerlabel->set_text(pointstring);
       }

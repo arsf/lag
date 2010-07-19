@@ -1,4 +1,20 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: lag.cpp
  * Author: Haraldur Tristan Gunnarsson
  * Written: November 2009 - June 2010
@@ -30,7 +46,7 @@ string findgladepath(char* programpath){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.07.15.1" << endl;
+   cout << "Build number: 2010.07.19.1" << endl;
    Glib::thread_init();//This allows the creation and running of threads.
    Gtk::Main gtkmain(argc, argv);//This is required for GTK to work. It must be the first GTK object created and may not be global.
    Glib::RefPtr<Gnome::Glade::Xml> refXml;//This will extract widgets from the glade file when directed.

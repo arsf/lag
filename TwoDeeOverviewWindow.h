@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: TwoDeeOverviewWindow.h
  * Author: Haraldur Tristan Gunnarsson
- * Written: June 2010
+ * Written: June-July 2010
  *
  * */
 #include <gtkmm.h>
@@ -29,6 +45,7 @@ protected:
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
    bool drawwhentoggled;//This variable prevents the image(s) from being drawn twice as a result of toggling a radio button (or similar), which deactivates (and therefore toggles again) another one in the same group. This variable must start as true, as the methods make it opposite before using it, so that things will de drawn after the second "toggling".
+   Gtk::Dialog *help;//Help for LAG.
    Gtk::AboutDialog *about;//Information about LAG.
    Gtk::CheckMenuItem *showprofilecheck;//Check button determining whether the profile box is viewable on the 2d overview.
    Gtk::CheckMenuItem *showfencecheck;//Check button determining whether the fence box is viewable on the 2d overview.
@@ -85,6 +102,10 @@ protected:
    void on_slantwidthselected();
    //Opens the advanced options dialog.
    void on_advancedbutton_clicked();
+   //Show the help dialog when respective menu item activated.
+   void on_helpmenuactivated();
+   //Hide the help dialog when close button activated.
+   void on_helpresponse(int response_id);
    //Show the about dialog when respective menu item activated.
    void on_aboutmenuactivated();
    //Hide the about dialog when close button activated.

@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: BoxOverlay.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: June 2010
+ * Written: June-July 2010
  *
  * */
 #include <gtkmm.h>
@@ -48,7 +64,10 @@ void BoxOverlay::on_(double x,double y, double width,double height){
    drawinfo();
 }
 bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
-   if(fractionalshift)scrollspeed *= slantwidth;
+   if(fractionalshift){
+      if(slantedshape)scrollspeed *= slantwidth;
+      else scrollspeed *= sqrt((xs[0] - xs[1])*(xs[0] - xs[1]) + (ys[0] - ys[1])*(ys[0] - ys[1]));
+   }
    double sameaxis = scrollspeed,diffaxis = 0;
    if(directional && slantedshape){
       double breadth = endx - startx;

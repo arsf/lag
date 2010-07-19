@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: TwoDeeOverviewWindow.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: June 2010
+ * Written: June-July 2010
  *
  * */
 #include <gtkmm.h>
@@ -61,6 +77,11 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWi
       refXml->get_widget("brightnessbyheightmenu",brightnessbyheightmenu);
       if(brightnessbyheightmenu)brightnessbyheightmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_brightnessactivated));
       //Help menu:
+      Gtk::MenuItem *helpmenu = NULL;
+      refXml->get_widget("helpmenu",helpmenu);
+      if(helpmenu)helpmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_helpmenuactivated));
+      refXml->get_widget("help",help);
+      if(help)help->signal_response().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_helpresponse));
       Gtk::MenuItem *aboutmenu = NULL;
       refXml->get_widget("aboutmenu",aboutmenu);
       if(aboutmenu)aboutmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_aboutmenuactivated));
@@ -135,6 +156,7 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWi
 TwoDeeOverviewWindow::~TwoDeeOverviewWindow(){
    delete raiselineselect;
    delete raiselinecheckmenu;
+   delete help;
    delete about;
    delete showprofilecheck;
    delete showfencecheck;
@@ -282,6 +304,10 @@ void TwoDeeOverviewWindow::on_slantwidthselected(){
 }
 //Opens the advanced options dialog.
 void TwoDeeOverviewWindow::on_advancedbutton_clicked(){ aow->show(); }
+//Show the help dialog when respective menu item activated.
+void TwoDeeOverviewWindow::on_helpmenuactivated(){ help->present(); }
+//Hide the help dialog when close button activated.
+void TwoDeeOverviewWindow::on_helpresponse(int response_id){ help->hide(); }
 //Show the about dialog when respective menu item activated.
 void TwoDeeOverviewWindow::on_aboutmenuactivated(){ about->present(); }
 //Hide the about dialog when close button activated.

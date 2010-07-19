@@ -1,7 +1,23 @@
 /*
+ * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * File: Profile.cpp
  * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - June 2010
+ * Written: December 2009 - July 2010
  *
  * */
 #include <gtkmm.h>
@@ -129,36 +145,34 @@ bool Profile::returntostart(){
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    viewerx = width * height / length;//To the right when looking from start to end.
    viewery = -width * breadth / length;//...
-   ratio = length/get_width();//This makes sure that, at the initial view when zoomlevel==1, all of the profile points are visible.
+   ratio = length/get_parent()->get_width();//This makes sure that, at the initial view when zoomlevel==1, all of the profile points are visible.
    double Z = samplemaxz - sampleminz;//...
-   if(ratio<Z/get_height())ratio = Z/get_height();//...
+   if(ratio<Z/get_parent()->get_height())ratio = Z/get_parent()->get_height();//...
    ratio*=1.1;//This allows for some comfortable white (actually black) space between the edgemost points and the edges themselves.
    resetview();//Now change the view settings using some of the values just changed.
    return drawviewable(1);
 }
 
 bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
+   shiftspeed *= 0.1*width;
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   if(breadth == 0 || height == 0){
-      height = 1;
-      width = 1;
-      length = 1;
-   }
+   double sameaxis = shiftspeed*breadth/length;
+   double diffaxis = -shiftspeed*height/length;
    switch(event->keyval){
-      case GDK_W:shiftspeed *= -0.1 * width / length;centrex += shiftspeed * height;centrey -= shiftspeed * breadth;
-                            fencestartx += shiftspeed * height;fencestarty -= shiftspeed * breadth;
-                            fenceendx += shiftspeed * height;fenceendy -= shiftspeed * breadth;break;
-      case GDK_S:shiftspeed *= 0.1 * width / length;centrex += shiftspeed * height;centrey -= shiftspeed * breadth;
-                            fencestartx += shiftspeed * height;fencestarty -= shiftspeed * breadth;
-                            fenceendx += shiftspeed * height;fenceendy -= shiftspeed * breadth;break;
-      case GDK_A:shiftspeed *= 0.1 * width / length;centrex -= shiftspeed * breadth;centrey -= shiftspeed * height;
-                            fencestartx -= shiftspeed * breadth;fencestarty -= shiftspeed * height;
-                            fenceendx -= shiftspeed * breadth;fenceendy -= shiftspeed * height;break;
-      case GDK_D:shiftspeed *= -0.1 * width / length;centrex -= shiftspeed * breadth;centrey -= shiftspeed * height;
-                            fencestartx -= shiftspeed * breadth;fencestarty -= shiftspeed * height;
-                            fenceendx -= shiftspeed * breadth;fenceendy -= shiftspeed * height;break;
+      case GDK_W:centrex += diffaxis;centrey += sameaxis;
+                 fencestartx += diffaxis;fencestarty += sameaxis;
+                 fenceendx += diffaxis;fenceendy += sameaxis;break;
+      case GDK_S:centrex -= diffaxis;centrey -= sameaxis;
+                 fencestartx -= diffaxis;fencestarty -= sameaxis;
+                 fenceendx -= diffaxis;fenceendy -= sameaxis;break;
+      case GDK_A:centrey += diffaxis;centrex -= sameaxis;
+                 fencestarty += diffaxis;fencestartx -= sameaxis;
+                 fenceendy += diffaxis;fenceendx -= sameaxis;break;
+      case GDK_D:centrey -= diffaxis;centrex += sameaxis;
+                 fencestarty -= diffaxis;fencestartx += sameaxis;
+                 fenceendy -= diffaxis;fenceendx += sameaxis;break;
       default:return false;break;
    }
    resetview();//Now change the view settings using some of the values just changed.
