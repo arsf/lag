@@ -239,7 +239,7 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
    for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
       for(int j = 0;j < numbuckets;j++)queriedbucketsarray[j] = false;
       for(int j=0;j<numbuckets;j++)if((*pointvector)[j]->getIncacheList()[0]){//For every bucket already cached:
-         queriedbucketsarray[i] = true;
+         queriedbucketsarray[j] = true;
          for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
             if(correctpointsbuckets[j][k]){//If the point is in the profile...
                if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
@@ -961,7 +961,7 @@ bool Profile::mainimage(int detail){
             }
             vertices[3*count] = flightlinepoints[i][j].x-centrex;
             vertices[3*count+1] = flightlinepoints[i][j].y-centrey;
-            vertices[3*count+2]=z-centrez;
+            vertices[3*count+2]= z-centrez;
             colours[3*count]=red;
             colours[3*count+1]=green;
             colours[3*count+2]=blue;
