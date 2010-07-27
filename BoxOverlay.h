@@ -30,11 +30,11 @@ public:
    BoxOverlay(Gtk::Label *label,double* majorcolour,double* minorcolour);
    ~BoxOverlay();
    void makeboundaries();//Determine the boundaries from the start and end points of the user's clicks and drags and whether to be orthogonal or slanted.
-   void makebox(double rmaxz);//Make the box.
-   void on_start(double x,double y,double width,double height);
-   void on_(double x,double y, double width,double height);
-   bool on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);
-   void drawinfo();
+   void makebox(double rmaxz);//Make the box with one line possibly in a different colour..
+   void on_start(double x,double y,double areawidth,double areaheight);//Defines the start point and, initially, the end point.
+   void on_(double x,double y, double areawidth,double areaheight);//Defines the end point.
+   bool on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);//Moves the box using keyboard input, with different methods depending on slantedness and directionality.
+   void drawinfo();//Outputs coordinate information to the label.
    //Getters:
    void getboundaries(double*& xs,double*& ys,int& ps){//Get coordinates for boundaries.
       xs = this->xs;
@@ -50,21 +50,22 @@ public:
    void setcentre(double centrex,double centrey){this->centrex = centrex; this->centrey = centrey;}
 
 protected:
-   bool directional;
+   bool directional;//This is true if there is a minor colour and means that keyboard movement will be forward and backwards and so on respective to looking into the box from the line in the minor colour.
    bool orthogonalshape;//Determines whether or not to draw an orthogonal box.
    bool slantedshape;//Determines whether or not to draw a slanted box.
+   Gtk::Label *label;//Label showing the distance, in various dimensions, covered by the ruler.
+   double* majorcolour;//This is the colour of three of the four lines that make up the box.
+   double* minorcolour;//This is the colour of the line that, for a profile, represents the near clipping plane  and indicates where the profile is used from.
+   //These are returned to other objects to define the box.
    double* xs;//Store the boundaries of the profile:
    double* ys;//...
    int ps;//Stores the number of corners for the profile.
-   Gtk::Label *label;//Label showing the distance, in various dimensions, covered by the ruler.
    //Position variables:
    double centrex,centrey;//These give the centre of the viewport in image terms, rather than screen terms.
    double slantwidth;//The width of the slanted box in world units.
    double startx, starty;//The start coordinates in world units.
    double endx, endy;//The end coordinates in world units.
-   double ratio;
-   double zoomlevel;
-   double* majorcolour;
-   double* minorcolour;
+   double ratio;//This stores the ratio for translating to and from screen scale and world scale. It should be set to be the same as in the parent Display area.
+   double zoomlevel;//Like the ratio, it should be the same as in the parent Display area. It modifies the ratio.
 };
 #endif

@@ -34,13 +34,12 @@ class ProfileWindow{
 public:
    ProfileWindow(Profile *prof,TwoDeeOverview *tdo,Gtk::Window *profilewindow,Gtk::Window *overviewwindow,Gtk::EventBox *eventboxprof,Glib::RefPtr<Gnome::Glade::Xml> refXml,AdvancedOptionsWindow *aow);
    ~ProfileWindow();
-   //This grabs the profile from the overview.
-   void on_showprofilebutton_clicked();
+   void on_showprofilebutton_clicked();//This grabs the profile from the overview.
 protected:
    Profile *prof;
    TwoDeeOverview *tdo;
    AdvancedOptionsWindow *aow;
-   Gtk::EventBox *eventboxprof;
+   Gtk::EventBox *eventboxprof;//This contains the profile area and takes keyboard input for it.
    Gtk::Window *profilewindow;
    Gtk::Window *overviewwindow;
    Gtk::CheckMenuItem *showheightscalecheck;//Check button determining whether the height scale is viewable on the profile.
@@ -83,13 +82,18 @@ protected:
    void on_classbutton_clicked();
    //Toggles whether clicking and dragging will select the fence in the profile.
    void on_fencetoggleprof();
+   //Updates the slant width and redraws the fence when the spinbutton has its value changed.
    void on_slantwidthselectedprof();
+   //These update the fence when the shape to draw it is changed.
    void on_orthogonalprof();
+   //...
    void on_slantedprof();
    //When toggled, the profile view goes into rulering mode. When untoggled, rulering mode ends.
    void on_rulertoggle();
 
+   //Interpret keybaord signals from the EventBox.
    bool on_prof_key_press(GdkEventKey* event);
+   //Manage scrolling of the profile with automatic redraw.
    bool on_profile_shift(GdkEventKey* event);
 
 };

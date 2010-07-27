@@ -35,7 +35,7 @@ class TwoDeeOverviewWindow{
 public:
    TwoDeeOverviewWindow(TwoDeeOverview *tdo,AdvancedOptionsWindow *aow,FileSaver *fs,Gtk::Window *tdowin,Gtk::Window *profilewindow,Glib::RefPtr<Gnome::Glade::Xml> refXml,Gtk::EventBox *eventboxtdo,ProfileWindow *profwin);
    ~TwoDeeOverviewWindow();
-   void setraiselinerange(int first, int second){ raiselineselect->set_range(first,second); }
+   void setraiselinerange(int first, int second){ raiselineselect->set_range(first,second); }//Update so that all loaded flightlines can be raised without leaving a lot of uselss options.
 protected:
    TwoDeeOverview *tdo;
    ProfileWindow *profwin;
@@ -52,8 +52,8 @@ protected:
    Gtk::CheckMenuItem *showdistancescalecheck;//Check button determining whether the distance scale is viewable on the 2d overview.
    Gtk::CheckMenuItem *showlegendcheck;//Check button determining whether the distance scale is viewable on the 2d overview.
    Gtk::CheckMenuItem *reverseheightcheck;//Check button determining whether the distance scale is viewable on the 2d overview.
-   Gtk::SpinButton *raiselineselect;
-   Gtk::CheckMenuItem *raiselinecheckmenu;
+   Gtk::SpinButton *raiselineselect;//Determines which flightline is to be raised above the others.
+   Gtk::CheckMenuItem *raiselinecheckmenu;//Determines whether any flightline at all is to be raised.
    Gtk::RadioMenuItem *colourbyintensitymenu;//Determines whether the image is coloured by intensity.
    Gtk::RadioMenuItem *colourbyheightmenu;//Determines whether the image is coloured by height.
    Gtk::RadioMenuItem *colourbyflightlinemenu;//Determines whether the image is coloured by flightline.
@@ -114,9 +114,11 @@ protected:
    //When selected from the menu, the file saver opens.
    void on_savefilemenuactivated();
 
+   //Intreprets keybaord signals from the EventBox.
    bool on_tdo_key_press(GdkEventKey* event);
-
+   //Updates the line to be raised and redraws.
    void on_raiselineselected();
+   //Updates whether any line is to be raised and redraws.
    void on_raiselinecheckmenu();
 
 };

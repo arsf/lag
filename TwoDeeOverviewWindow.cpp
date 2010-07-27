@@ -319,28 +319,34 @@ void TwoDeeOverviewWindow::on_savefilemenuactivated(){
    else return;
    fs->on_flightlinesaveselected();
 }
+
+//Interprets the keybaord signals from the EventBox.
 bool TwoDeeOverviewWindow::on_tdo_key_press(GdkEventKey* event){
+   if(!tdo->is_realized())return false;//If the overview does not exist, prevent segfaults by doing nothing.
    switch(event->keyval){
-      case GDK_P:case GDK_p:case GDK_space:profwin->on_showprofilebutton_clicked();tdowin->present();return true;break;
-      case GDK_w:case GDK_s:case GDK_a:case GDK_d:case GDK_z:case GDK_Z:return tdo->on_pan_key(event,aow->getmovespeed());break;
-      case GDK_W:case GDK_S:case GDK_A:case GDK_D:
+      case GDK_P:case GDK_p:case GDK_space:profwin->on_showprofilebutton_clicked();tdowin->present();return true;break;//Extract a profile.
+      case GDK_w:case GDK_s:case GDK_a:case GDK_d:case GDK_z:case GDK_Z:return tdo->on_pan_key(event,aow->getmovespeed());break;//Move overview view.
+      case GDK_W:case GDK_S:case GDK_A:case GDK_D://Move one or none of the profile or the fence, depending on whether either of them are visible.
          if(profiletoggle->get_active())return tdo->on_prof_key(event,aow->getmovespeed(),aow->getfractionalshift());
          else if(fencetoggle->get_active())return tdo->on_fence_key(event,aow->getmovespeed());
          break;
       case GDK_i:case GDK_o:case GDK_I:case GDK_O:
-         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return tdo->on_zoom_key(event);break;
-      case GDK_f:case GDK_F:fencetoggle->set_active(!fencetoggle->get_active());return true;break;
-      case GDK_x:case GDK_X:profiletoggle->set_active(!profiletoggle->get_active());return true;break;
-      case GDK_t:case GDK_T:slantedrectshapetoggle->set_active(!slantedrectshapetoggle->get_active());return true;break;
-      case GDK_slash:case GDK_backslash:profilewindow->present();return true;break;
+         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return tdo->on_zoom_key(event);break;//Zoom in and out.
+      case GDK_f:case GDK_F:fencetoggle->set_active(!fencetoggle->get_active());return true;break;//Toggle fencing mode.
+      case GDK_x:case GDK_X:profiletoggle->set_active(!profiletoggle->get_active());return true;break;//Toggle profiling mode.
+      case GDK_t:case GDK_T:slantedrectshapetoggle->set_active(!slantedrectshapetoggle->get_active());return true;break;//Toggle whether the profile and fence should be orthogonal or slanted.
+      case GDK_slash:case GDK_backslash:profilewindow->present();return true;break;//Switch to profile window.
       default:return false;break;
    }
    return false;
 }
+
+//Determines which line is to be raised above the rest on the overview.
 void TwoDeeOverviewWindow::on_raiselineselected(){
    tdo->setlinetoraise(raiselineselect->get_value_as_int());
    if(tdo->is_realized())if(raiselinecheckmenu->get_active())tdo->drawviewable(1);
 }
+//Determines whether a line is to be raised.
 void TwoDeeOverviewWindow::on_raiselinecheckmenu(){
    tdo->setraiseline(raiselinecheckmenu->get_active());
    if(tdo->is_realized())tdo->drawviewable(1);

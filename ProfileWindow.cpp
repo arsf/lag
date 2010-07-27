@@ -254,43 +254,46 @@ void ProfileWindow::on_rulertoggle(){
 }
 
 
+//This takes keyboard input from the event box around the profile area and interprets it.
 bool ProfileWindow::on_prof_key_press(GdkEventKey* event){
+   if(!tdo->is_realized())return false;//Do nothing unless the overview and profile are realized, otherwise segfaults may happen.
+   if(!prof->is_realized())return false;//...
    switch(event->keyval){
-      case GDK_P:case GDK_p:case GDK_space:on_showprofilebutton_clicked();return true;break;
-      case GDK_C:case GDK_c:case GDK_K:case GDK_k:case GDK_Return:on_classbutton_clicked();return true;break;
-      case GDK_w:case GDK_s:case GDK_a:case GDK_d:return prof->on_pan_key(event,aow->getmovespeed());break;
-      case GDK_W:case GDK_S:case GDK_A:case GDK_D:
+      case GDK_P:case GDK_p:case GDK_space:on_showprofilebutton_clicked();return true;break;//Grab new profile.
+      case GDK_C:case GDK_c:case GDK_K:case GDK_k:case GDK_Return:on_classbutton_clicked();return true;break;//Classify.
+      case GDK_w:case GDK_s:case GDK_a:case GDK_d:return prof->on_pan_key(event,aow->getmovespeed());break;//Move view.
+      case GDK_W:case GDK_S:case GDK_A:case GDK_D://Move the fence if visible.
          if(fencetoggleprof->get_active())return prof->on_fence_key(event,aow->getmovespeed());
          else return false;
          break;
       case GDK_r:case GDK_v:case GDK_q:case GDK_e:
-         case GDK_R:case GDK_V:case GDK_Q:case GDK_E:return on_profile_shift(event);break;
+         case GDK_R:case GDK_V:case GDK_Q:case GDK_E:return on_profile_shift(event);break;//Scroll the profile while updating automatically.
       case GDK_i:case GDK_o:case GDK_I:case GDK_O:
-         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return prof->on_zoom_key(event);break;
-      case GDK_z:case GDK_Z:return prof->drawviewable(1);break;
-      case GDK_f:case GDK_F:fencetoggleprof->set_active(!fencetoggleprof->get_active());return true;break;
-      case GDK_t:case GDK_T:slantedprof->set_active(!slantedprof->get_active());return true;break;
-      case GDK_slash:case GDK_backslash:overviewwindow->present();return true;break;
+         case GDK_g:case GDK_b:case GDK_G:case GDK_B:return prof->on_zoom_key(event);break;//Zoom in and out.
+      case GDK_z:case GDK_Z:return prof->drawviewable(1);break;//Redraw.
+      case GDK_f:case GDK_F:fencetoggleprof->set_active(!fencetoggleprof->get_active());return true;break;//Toggle fencing mode.
+      case GDK_t:case GDK_T:slantedprof->set_active(!slantedprof->get_active());return true;break;//Toggle orthogonal or slanted fence.
+      case GDK_slash:case GDK_backslash:overviewwindow->present();return true;break;//Switch to overview window.
       default:return false;break;
    }
 }
 
 bool ProfileWindow::on_profile_shift(GdkEventKey* event){
-   switch(event->keyval){
+   switch(event->keyval){//Translate signal to be compatible with called methods.
       case GDK_r:case GDK_R:event->keyval = GDK_W;break;
       case GDK_v:case GDK_V:event->keyval = GDK_S;break;
       case GDK_q:case GDK_Q:event->keyval = GDK_A;break;
       case GDK_e:case GDK_E:event->keyval = GDK_D;break;
       default:return false;break;
    }
-   bool shifted = tdo->on_prof_key(event,aow->getmovespeed(),true);
+   bool shifted = tdo->on_prof_key(event,aow->getmovespeed(),true);//Move profile box on overview, using fractional shift.
    if(!shifted)return shifted;
-   if(tdo->is_realized())profilewindow->present();
+   if(tdo->is_realized())profilewindow->present();//Switch back to profile window (as tdo->on_prof_key switches to the overview window.
    double *profxs = NULL,*profys = NULL;//These are NOT to be deleted here as the arrays they will point to will be managed by the TwoDeeOVerview object.
    int profps = 0;
    if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
    if(profxs!=NULL&&profys!=NULL){
-      shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());
+      shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());//Changed centre x and y values etc. so that points in profile remain within the viewing box (i.e. the clipping planes).
       if(!shifted)return shifted;
       tdo->setpausethread(true);//Showprofile uses the getpoint() method, and that must never be used by more than one thread at once.
       tdo->waitforpause();

@@ -32,7 +32,7 @@
 #include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+#include <GL/glc.h>
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
 
@@ -369,12 +369,15 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             else if(returncolour){//Colour by return.
                 rnumber = buckets[i]->getPoint(j,resolutionindex).packedByte & returnnumber;
                 int index = rnumber;
-                switch(index){
+                switch(index){//FIXME! If there is desire to change system to handle a very large number of returns then this sytem must be changed completely. code: [woolol9999]
+
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
                    case 3:red=0;green=1;blue=0;break;//Green
                    case 4:red=1;green=0;blue=0;break;//Red
                    case 5:red=1;green=0;blue=1;break;//Purple
+                   case 6:red=1;green=1;blue=0;break;//Yellow
+                   case 7:red=1;green=0.5;blue=0.5;break;//Pink
                    default:red=green=blue=1;break;//White in the event of strangeness.
                 }
             }
@@ -771,7 +774,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glwindow->gl_end();
          }
          string flightline = lidardata->getFileName(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);//Returns the filepath.
-         unsigned int index = flightline.rfind("/");//Only the filename is desired, not the filepath.
+         size_t index = flightline.rfind("/");//Only the filename is desired, not the filepath.
          if(index==string::npos)index=0;//...
          else index++;//...
          flightline = flightline.substr(index);//...
@@ -813,6 +816,7 @@ void TwoDeeOverview::makecolourlegend(){
    double altitude = rmaxz+1000;//This makes sure the scale is drawn on top of the flightlines.
    double hoffset = 10;
    double hwidth = 20;
+   double hgap = 5;
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
@@ -822,15 +826,14 @@ void TwoDeeOverview::makecolourlegend(){
    glGetIntegerv(GL_VIEWPORT,viewport);
    gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&cornx,&corny,&cornz);
    glColor3d(1.0,1.0,1.0);//White.
-   GLuint fontlists = glGenLists(128);//ASCII!
-   Pango::FontDescription font_desc("courier 12");
-   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
-   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
-   glListBase(fontlists);
+   GLint ctx = glcGenContext();
+   glcContext(ctx);
+   glcScale(14,14);
+   GLfloat stringboundingbox[8];
+   double stringwidth = 0,stringheight = 0;
    if(heightcolour||intensitycolour){
       double cbmax = cbmaxz,cbmin = cbminz;
       double length = 0.9*rheight/6;
-      int textwidth=0,textheight=0;
       if(intensitycolour){
          cbmax = cbmaxintensity;
          cbmin = cbminintensity;
@@ -838,9 +841,12 @@ void TwoDeeOverview::makecolourlegend(){
       for(int i=0;i<7;i++){
          ostringstream number;
          number << ((6-i)*cbmax + i*cbmin)/6;
-         create_pango_layout(number.str())->get_size(textwidth,textheight);
-         glRasterPos3d(cornx - (hoffset + hwidth + 1.3*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
-         glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+         glcMeasureString(GL_FALSE,number.str().c_str());
+         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
+         stringwidth = stringboundingbox[2] - stringboundingbox[0];
+         stringheight = stringboundingbox[5] - stringboundingbox[3];
+         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap)*ratio/zoomlevel,corny - padding - 0.5*stringheight*ratio/zoomlevel - length*i,altitude);
+         glcRenderString(number.str().c_str());
       }
       glBegin(GL_QUAD_STRIP);
          for(int i=0;i<7;i++){
@@ -856,7 +862,6 @@ void TwoDeeOverview::makecolourlegend(){
       double length = 0.9*rheight/10;
       double red=0,green=0,blue=0;
       string text = "";
-      int textwidth=0,textheight=0;
       for(int i=0;i<11;i++){
          switch(i){
             case 0:red=1;green=1;blue=0;text = "Non-classified";break;//Yellow for non-classified.
@@ -872,9 +877,12 @@ void TwoDeeOverview::makecolourlegend(){
             default:red=1;green=0;blue=0;text = "Undefined";break;//Red for undefined.
          }
          glColor3d(1.0,1.0,1.0);//White.
-         create_pango_layout(text)->get_size(textwidth,textheight);
-         glRasterPos3d(cornx - (hoffset + hwidth + 1.5*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
-         glCallLists(text.length(),GL_UNSIGNED_BYTE,text.c_str());
+         glcMeasureString(GL_FALSE,text.c_str());
+         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
+         stringwidth = stringboundingbox[2] - stringboundingbox[0];
+         stringheight = stringboundingbox[5] - stringboundingbox[3];
+         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap)*ratio/zoomlevel,corny - padding - 0.5*stringheight*ratio/zoomlevel - length*i,altitude);
+         glcRenderString(text.c_str());
          glBegin(GL_QUADS);
             glColor3d(red,green,blue);
             glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
@@ -884,24 +892,29 @@ void TwoDeeOverview::makecolourlegend(){
          glEnd();
       }
    }
-   else if(returncolour){
-      double length = 0.9*rheight/5;
+   else if(returncolour){//FIXME! If there is desire to change system to handle a very large number of returns then this sytem must be changed completely. code: [woolol9999]
+
+      double length = 0.9*rheight/7;
       double red=0,green=0,blue=0;
       string text = "";
-      int textwidth=0,textheight=0;
-      for(int i=0;i<6;i++){
+      for(int i=0;i<8;i++){
          switch(i){
             case 0:red=0;green=0;blue=1;text = "First";break;//Blue
             case 1:red=0;green=1;blue=1;text = "Second";break;//Cyan
             case 2:red=0;green=1;blue=0;text = "Third";break;//Green
             case 3:red=1;green=0;blue=0;text = "Fourth";break;//Red
             case 4:red=1;green=0;blue=1;text = "Fifth";break;//Purple
+            case 5:red=1;green=1;blue=0;text = "Sixth";break;//Yellow
+            case 6:red=1;green=0.5;blue=0.5;text = "Seventh";break;//Pink
             default:red=green=blue=1;text = "Trouble at mill";break;//White in the event of strangeness.
          }
          glColor3d(1.0,1.0,1.0);//White.
-         create_pango_layout(text)->get_size(textwidth,textheight);
-         glRasterPos3d(cornx - (hoffset + hwidth + 1.8*(double)textwidth/Pango::SCALE)*ratio/zoomlevel,corny - padding - ((double)textheight/(2*Pango::SCALE))*ratio/zoomlevel - length*i,altitude);
-         glCallLists(text.length(),GL_UNSIGNED_BYTE,text.c_str());
+         glcMeasureString(GL_FALSE,text.c_str());
+         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
+         stringwidth = stringboundingbox[2] - stringboundingbox[0];
+         stringheight = stringboundingbox[5] - stringboundingbox[3];
+         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap)*ratio/zoomlevel,corny - padding - 0.5*stringheight*ratio/zoomlevel - length*i,altitude);
+         glcRenderString(text.c_str());
          glBegin(GL_QUADS);
             glColor3d(red,green,blue);
             glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,altitude);
@@ -911,6 +924,7 @@ void TwoDeeOverview::makecolourlegend(){
          glEnd();
       }
    }
+   glcDeleteContext(ctx);
 }
 
 //This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
@@ -943,17 +957,21 @@ void TwoDeeOverview::makedistancescale(){
          glVertex3d(origx + 80.0*ratio/zoomlevel,origy + padding + i*order,altitude);
       }
    glEnd();
-   GLuint fontlists = glGenLists(128);//ASCII!
-   Pango::FontDescription font_desc("courier 12");
-   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
-   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
-   glListBase(fontlists);
+   GLint ctx = glcGenContext();
+   glcContext(ctx);
+   glcScale(14,14);
+   GLfloat stringboundingbox[8];
+   double stringheight = 0;
    for(int i=0;i<=nummarks;i++){
-      glRasterPos3d(origx + 85.0*ratio/zoomlevel,origy + padding + i*order,altitude);//Draw numbers by the horizontal lines.
       ostringstream number;
       number << i*order;
-      glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+      glcMeasureString(GL_FALSE,number.str().c_str());
+      glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
+      stringheight = stringboundingbox[5] - stringboundingbox[3];
+      glRasterPos3d(origx + 85.0*ratio/zoomlevel,origy + padding + i*order - 0.5*stringheight*ratio/zoomlevel,altitude);//Draw numbers by the horizontal lines.
+      glcRenderString(number.str().c_str());
    }
+   glcDeleteContext(ctx);
 }
    
 //On a left click, this prepares for panning by storing the initial position of the cursor.
@@ -986,13 +1004,14 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event){
    if(event->button==1 || event->button==2){ return drawviewable(1); }
    else return false;
 }
+//Moves view depending on keyboard commands.
 bool TwoDeeOverview::on_pan_key(GdkEventKey* event,double scrollspeed){
    switch(event->keyval){
-      case GDK_w:centrey += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
-      case GDK_s:centrey -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
-      case GDK_a:centrex -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
-      case GDK_d:centrex += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;
-      case GDK_z:case GDK_Z:return drawviewable(1);break; 
+      case GDK_w:centrey += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;//Up.
+      case GDK_s:centrey -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;//Down.
+      case GDK_a:centrex -= scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;//Left.
+      case GDK_d:centrex += scrollspeed*ratio/zoomlevel;set_overlay_centres(centrex,centrey);return drawviewable(2);break;//Right.
+      case GDK_z:case GDK_Z:return drawviewable(1);break;//Redraw.
       default:return false;break;
    }
 }
@@ -1027,10 +1046,11 @@ bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
    else if(event->button==2)return on_pan_end(event);
    else return false;
 }
+//Moves the profile depending on keyboard commands.
 bool TwoDeeOverview::on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
-   if(fractionalshift)scrollspeed /= 10;
+   if(fractionalshift)scrollspeed /= 10;//5 means 0.5 etc. as fraction.
    else scrollspeed *= ratio/zoomlevel;
-   bool moved = profbox->on_key(event,scrollspeed,fractionalshift);
+   bool moved = profbox->on_key(event,scrollspeed,fractionalshift);//Delegate to profile overlay object.
    if(!moved)return false;
    profbox->makeboundaries();
    return drawviewable(2);
@@ -1067,6 +1087,7 @@ bool TwoDeeOverview::on_fence_end(GdkEventButton* event){
    else if(event->button==2)return on_pan_end(event);
    else return false;
 }
+//Moves the fence depending on keyboard commands.
 bool TwoDeeOverview::on_fence_key(GdkEventKey* event,double scrollspeed){
    bool moved = fencebox->on_key(event,scrollspeed*ratio/zoomlevel,false);
    if(!moved)return false;
@@ -1155,19 +1176,20 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event){
    set_overlay_zoomlevels(zoomlevel);
    return drawviewable(1);
 }
+//Zooms depending on keybaord signals.
 bool TwoDeeOverview::on_zoom_key(GdkEventKey* event){
    if(zoomlevel>=1)switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=pow(zoomlevel,zoompower)/2;break;
-         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=pow(zoomlevel,zoompower)/2;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=pow(zoomlevel,zoompower)/2;break;//In.
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=pow(zoomlevel,zoompower)/2;break;//Out.
          default:return false;break;
    }
    else if(zoomlevel>=0.2)switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
-         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=0.1;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;//In.
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=0.1;break;//Out.
          default:return false;break;
    }
    else switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;//In only.
          default:return false;break;
    }
    if(zoomlevel<0.2)zoomlevel=0.2;

@@ -33,9 +33,9 @@ class Display : public Gtk::GL::DrawingArea{
 public:
    Display(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit);
    ~Display();
-   virtual bool returntostart() = 0;//Subclasses must have this method because this class tries to call it.
+   virtual bool returntostart() = 0;//Sets the intial position and translation ratio from screen to world scale of the data.
    virtual void drawoverlays() = 0;//Draw any relevant overlays.
-   virtual bool drawviewable(int imagetype) = 0;
+   virtual bool drawviewable(int imagetype) = 0;//Draw the viewable part of the data.
    void prepare_image();//Reads from subset of quadtree and prepares variables for colouring etc..
    void coloursandshades(double maxz,double minz,int maxintensity,int minintensity);//Prepare colour and brightness arrays.
    //Getters:
@@ -63,22 +63,23 @@ public:
    void setintensityoffset(double intensityoffset){this->intensityoffset = intensityoffset;}
    void setintensityfloor(double intensityfloor){this->intensityfloor = intensityfloor;}
 protected:
-   bool configuring;
+   //Control:
+   bool configuring;//Indicates that the window (and therefore this display area) is changing shape and/or size.
    double zoompower;//The zoomlevel's change is determined by a pow(a,b) call. This variable stores the power.
-   double cbmaxz,cbminz;
-   int cbmaxintensity,cbminintensity;
 
    //Point data and related stuff:
    Quadtree* lidardata;//The point data is stored here.
    int bucketlimit;//This is the maximum number of points a single bucket can contain.
-   double maindetailmod;//This modifies the amount of points skipped for each point in the main image, when drawing. Lower is means more detail, higher means less.
+   double maindetailmod;//This plays a part in determining which resolution level is drawn for each bucket. A lower value means a lower resolution.
    double pointsize;//The diameter of the points in pixels.
 
    //Position variables:
-   double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%.
+   double zoomlevel;//This is the level of zoom. It starts at 1, i.e. 100%. Together with ratio it determines the translation from screen scale to world scale and vice versa and is set so that when its value is 1 all of the quadtree must be just visible on the window.
    double ratio;//This determines, along with the zoomlevel, the scaling of the image relative to the screen. At zoomlevel 1, the image should just fit within the screen.
  
    //Colouring and shading variables:
+   double cbmaxz,cbminz;//These are the values of height and intensity used for the last determination of colour and shade and used to allow the proper display of a legend.
+   int cbmaxintensity,cbminintensity;//...
    bool heightcolour;//True if want to colour by height.
    bool heightbrightness;//True if want to shade by height.
    double zoffset;//A minimum height brightness value that also scales higher values.
@@ -99,9 +100,10 @@ protected:
    
    //Methods:
 
-   bool advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps);
-   bool clearscreen();
-   void guard_against_interaction_between_GL_areas();
+   //Convenience code:
+   bool advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps);//Convenience method for getting a subset, catching any exception and determining whether there is useful data.
+   bool clearscreen();//Convenience method for clearing the screen
+   void guard_against_interaction_between_GL_areas();//Convenience method for making sure that the different areas using OpenGL do not bleed into each other and cause graphical glitches.
 
    //Drawing:
    void on_realize();//Realises drawing area and calls prepare_image().

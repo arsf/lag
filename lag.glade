@@ -1409,7 +1409,7 @@ Otherwise, it is probably better to use point skipping and fences (above).</prop
     <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <property name="program_name">LIDAR Analysis GUI (LAG)</property>
-    <property name="version">0.9.8</property>
+    <property name="version">1.0.0</property>
     <property name="copyright" translatable="yes">&#xA9;Plymouth Marine Laboratory 2009-2010</property>
     <property name="comments" translatable="yes">Viewer for LIDAR files in the form .las or .txt.
 System requirements: GNU/Linux with GTK+, screen resolution of width greater than or equal to 900 pixels, OpenGL 1.4 or better (possibly 1.2 or better)</property>
@@ -2184,7 +2184,7 @@ Plymouth Marine Laboratory)</property>
                 <child>
                   <widget class="GtkLabel" id="overviewdetailabel">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Overview</property>
+                    <property name="label" translatable="yes">Overview (ascending increase)</property>
                   </widget>
                   <packing>
                     <property name="top_attach">1</property>
@@ -2194,7 +2194,7 @@ Plymouth Marine Laboratory)</property>
                 <child>
                   <widget class="GtkLabel" id="profiledetailabel">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Profile</property>
+                    <property name="label" translatable="yes">Profile (descending increase)</property>
                   </widget>
                   <packing>
                     <property name="top_attach">2</property>
@@ -2395,8 +2395,8 @@ Plymouth Marine Laboratory)</property>
     <property name="icon">lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
-    <property name="do_overwrite_confirmation">True</property>
     <property name="action">save</property>
+    <property name="do_overwrite_confirmation">True</property>
     <child internal-child="vbox">
       <widget class="GtkVBox" id="dialog-vbox5">
         <property name="visible">True</property>

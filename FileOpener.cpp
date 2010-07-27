@@ -198,9 +198,24 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                         loaderrorstream->str("");
                         lidardata = new Quadtree(loader,bucketlimit,poffs,fencexs,fenceys,fenceps,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
+                        int numberofpointsloaded = lidardata->getNumberOfPoints();
+                        if(numberofpointsloaded == 0){
+                           string message = "No points loaded from file, either because of a lack of points or because points lie outside quadtree boundary (possibly because of fence). Please check file.";
+                           cout << message << endl;
+                           loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                           Gdk::Window::process_all_updates();
+                        }
                         newQuadtree = true;
                      }
-                     else lidardata->load(loader,poffs,bucketlevels,fencexs,fenceys,fenceps);
+                     else{
+                        int numberofpointsloaded = lidardata->load(loader,poffs,bucketlevels,fencexs,fenceys,fenceps);
+                        if(numberofpointsloaded == 0){
+                           string message = "No points loaded from file, either because of a lack of points or because points lie outside quadtree boundary (possibly because of fence). Please check file.";
+                           cout << message << endl;
+                           loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                           Gdk::Window::process_all_updates();
+                        }
+                     }
                   }
                   if(loader != NULL)delete loader;
                }
@@ -276,10 +291,24 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                      lidardata = NULL;//This prevents a double free if the creation of the new quadtree fails and throws an exception.
                      loaderrorstream->str("");
                      lidardata = new Quadtree(minx,miny,maxx,maxy,bucketlimit,cachelimit,bucketlevels,resolutionbase,resolutiondepth,loaderrorstream);
-                     lidardata->load(loader,poffs,bucketlevels);
+                     int numberofpointsloaded = lidardata->load(loader,poffs,bucketlevels);
+                     if(numberofpointsloaded == 0){
+                        string message = "No points loaded from file, either because of a lack of points or because points lie outside quadtree boundary (possibly because of fence). Please check file.";
+                        cout << message << endl;
+                        loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                        Gdk::Window::process_all_updates();
+                     }
                      newQuadtree = true;
                   }
-                  else lidardata->load(loader,poffs,bucketlevels);
+                  else{
+                     int numberofpointsloaded = lidardata->load(loader,poffs,bucketlevels);
+                     if(numberofpointsloaded == 0){
+                        string message = "No points loaded from file, either because of a lack of points or because points lie outside quadtree boundary (possibly because of fence). Please check file.";
+                        cout << message << endl;
+                        loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
+                        Gdk::Window::process_all_updates();
+                     }
+                  }
                }
                if(loader != NULL)delete loader;
             }

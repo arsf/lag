@@ -36,11 +36,11 @@ public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel);
    ~Profile();
    bool classify(uint8_t classification);//This classifies the points selected by the profile fence.
-   bool on_pan_key(GdkEventKey *event,double scrollspeed);
-   bool on_fence_key(GdkEventKey *event,double scrollspeed);
-   bool on_zoom_key(GdkEventKey* event);
+   bool on_pan_key(GdkEventKey *event,double scrollspeed);//Moves the view using keyboard input.
+   bool on_fence_key(GdkEventKey *event,double scrollspeed);//Moved the fence using keyboard input.
+   bool on_zoom_key(GdkEventKey* event);//Zooms the view using keyboard input.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
-   bool shift_viewing_parameters(GdkEventKey* event,double shiftspeed);
+   bool shift_viewing_parameters(GdkEventKey* event,double shiftspeed);//Move the centre of the view (specifically its x and y components) and the fence coordinates so that shifted profiles are both visible and have visible and valid fences.
    void drawoverlays();//Draw all of the make methods indented below.
       void makerulerbox();//Make line showing where the ruler is.
       void makefencebox();//Make rectangle showing where the fence is.
@@ -99,8 +99,6 @@ public:
    void setslanted(double slanted){ this->slanted = slanted; }
 protected:
    Gtk::Label *rulerlabel;//Label showing the distance, in various dimensions, covered by the ruler.
-   bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
-   double samplemaxz,sampleminz;//Store the maximum and minimum heights of the profile sample.
    double *profxs,*profys;//These contain the x and y coordinates, respectively, of the corners of the profile.
    int profps;//This contains the number of corners the profile has.
    
@@ -110,6 +108,7 @@ protected:
    bool imageexists;//Determines whether to draw anything, based on the existance or nonexistance of anything to draw.
    bool slanted;//Determines whether to draw the fence slanted or not.
    double slantwidth;//Determines the width of the slanted fence.
+   bool showheightscale;//Determines whether to draw the height(Z) scale on the screen.
    
    //Point data and related stuff:
    int totnumpoints;//This is the total number of points in the profile. This is used to determine how many points to skip, along with the modifiers. The more points there are, the more points will be skipped.
@@ -119,13 +118,14 @@ protected:
    double previewdetailmod;//This modifies the amount of points skipped for each point in the preview, when drawing. Lower means more detail, higher means less.
    vector<int> flightlinestot;//This vector contains all the flightline numbers.
    vector<Point>* flightlinepoints;//This is a pointer (array) of vectors of points, representing for each flightline (the elements of the array) the points that it contains (the vectors).
+   double samplemaxz,sampleminz;//Store the maximum and minimum heights of the profile sample.
 
    //Position variables:
    double leftboundx,leftboundy,rightboundx,rightboundy;//The boundary coordinates of the window, translated into world coordinates. Please note that the Z axis is "up", not the Y axis. The user cannot see the difference between the X and Y axes.
    double centrex,centrey,centrez;//These give the centre of the viewport in image terms, rather than screen terms.
    double viewerx,viewery,viewerz;//These give the coordinates of the "eye", looking towards the centre.
    double panstartx,panstarty;//Coordinates of the start of the pan move.
-   double minplanx,minplany;//These indicate the "minimum" coordinates of the viewable plane.
+   double minplanx,minplany;//These indicate the "minimum" (i.e. left) coordinates of the viewable plane.
    double startx,starty;//The start coordinates of the profile.
    double endx,endy;//The end coordinates of the profile.
    double width;//The width of the profile.
@@ -155,6 +155,7 @@ protected:
    sigc::connection sigfenceend;
  
    //Methods:
+   void classify_bucket(double *xs,double *ys,double *zs,int numcorners,bool *correctpoints,PointBucket* bucket,uint8_t classification);//This determines which points in the bucket (bucket) fit both in the profile (from the correctpoints pointer passed in) and in the fence (the xs,ys,zs pointers and numcorners passed in) and classifies those that do (with the classification passed in).
  
    //Drawing:
    bool mainimage(int detail);//Draw the main image

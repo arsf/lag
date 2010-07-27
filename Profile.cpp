@@ -30,12 +30,11 @@
 #include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+#include <GL/glc.h>
 #include "Profile.h"
 #include "MathFuncs.h"
 
 Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
-   totnumpoints = 0;
    //Profile stats:
    samplemaxz = sampleminz = 0;
    profxs=profys=NULL;
@@ -43,6 +42,7 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lid
    viewerz = 0;
    startx = 0;
    starty = 0;
+   totnumpoints = 0;
    //Initialisation:
    flightlinepoints = NULL;
    linez = NULL;
@@ -70,21 +70,24 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lid
    //Events and signals:
    add_events(Gdk::SCROLL_MASK   |   Gdk::BUTTON1_MOTION_MASK   |   Gdk::BUTTON2_MOTION_MASK   |   Gdk::BUTTON_PRESS_MASK   |   Gdk::BUTTON_RELEASE_MASK);
    signal_scroll_event().connect(sigc::mem_fun(*this,&Profile::on_zoom));
-   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_pan_start));
-   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_pan));
-   sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_pan_end));
-   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_start));
-   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_ruler));
-   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_end));
-   sigrulerstart.block();
-   sigruler.block();
-   sigrulerend.block();
-   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_fence_start));
-   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_fence));
-   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_fence_end));
-   sigfencestart.block();
-   sigfence.block();
-   sigfenceend.block();
+      //Panning:
+      sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_pan_start));
+      sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_pan));
+      sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_pan_end));
+      //Rulering:
+      sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_start));
+      sigruler = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_ruler));
+      sigrulerend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_end));
+      sigrulerstart.block();
+      sigruler.block();
+      sigrulerend.block();
+      //Fencing:
+      sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_fence_start));
+      sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_fence));
+      sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_fence_end));
+      sigfencestart.block();
+      sigfence.block();
+      sigfenceend.block();
 }
 
 Profile::~Profile(){
@@ -118,7 +121,7 @@ void Profile::resetview(){
              0,0,1);//...Also, the Z direction is "up".
 }
 
-//Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen. The passed value should be 1 for the main image, 2 for the preview and 3 for the expose event (which is the same as the preview).
+//Depending on the imagetype requested, this sets the detail level and then calls one of the image methods, which actually draws the data to the screen. The passed value should be 1 for the main image, 2 for the preview and 3 for the expose event (which is the same as the preview). Note that if the imagetype is anything other than 1, 2 or 3 then all points will be drawn.
 bool Profile::drawviewable(int imagetype){
    if(!imageexists){//If there is an attempt to draw with no data, the program will probably crash.
       clearscreen();
@@ -126,15 +129,14 @@ bool Profile::drawviewable(int imagetype){
    }
    guard_against_interaction_between_GL_areas();//This is done to prevent interference from the overview window, which might cause changes in point size, area being drawn or might even cause the profile to be drawn in the wrong window!
    int detail=1;//This determines how many points are skipped between reads.
-   //If there are very few points on the screen, show them all:
+   //If there are very few points on the screen, show them all (note that if the imagetype is anything other than 1, 2 or 3 then all points will be drawn):
    if(imagetype==1)detail=(int)(totnumpoints*maindetailmod/100000);//Main image.  
-   else if(imagetype==2||imagetype==3)detail=(int)(totnumpoints*previewdetailmod/100000);//Preview
-   if(detail<1)detail=1;
+   else if(imagetype==2||imagetype==3)detail=(int)(totnumpoints*previewdetailmod/100000);//Preview.
    mainimage(detail);//The image is now drawn.
    return true;
 }
 
-//This is called by a "reset button". It returns the view to the initial one. It sets the centre of the screen to the centre of the profile and then sets the viewer position and the ratio of world coordinates to window coordinates before resetting the view and then drawing.
+//This is called by a "reset button". It returns the view to the initial one. It sets the centre of the screen to the centre of the profile and then sets the viewer position and the ratio of world coordinates to window coordinates so that all of the porifle is visible before resetting the view and then drawing.
 bool Profile::returntostart(){
    centrex = (startx + endx)/2;//This way, all of the profile should be on-screen.
    centrey = (starty + endy)/2;//...
@@ -153,13 +155,14 @@ bool Profile::returntostart(){
    return drawviewable(1);
 }
 
+//This shifts the centre and fence coordinates so that they stay the same relative to the profile when the profile is moved with the keyboard.
 bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
-   shiftspeed *= 0.1*width;
+   shiftspeed *= 0.1*width;//The 0.1 is in there because the profile itself will also have moded at 1/10th speed.
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double sameaxis = shiftspeed*breadth/length;
-   double diffaxis = -shiftspeed*height/length;
+   double sameaxis = shiftspeed*breadth/length;//Where "up" and "forward" are supposed to be the same, these account for moving a slanted profile.
+   double diffaxis = -shiftspeed*height/length;//...
    switch(event->keyval){
       case GDK_W:centrex += diffaxis;centrey += sameaxis;
                  fencestartx += diffaxis;fencestarty += sameaxis;
@@ -179,7 +182,32 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
    return true;
 }
 
-//This method accepts the parameters of the profile and gets the data from the quadtree. It then determines which points from the returned buckets are actually within the boundaries of the profile at the same time as determining how many and what flightlines there are. It then creates a new pointer to an array of vectors, each vector being for each flightline and containing all the points from that flightline that are also withing the boundaries of the profile. It then sorts these points, in each flightline, so that meaningful moving averages can be made as well as quick searches along the data to show only the needed data on the screen. It then makes a moving average using the settings already existing and then draws. changeview should be true when the profile area has changed and false when it has not, such as when the classification (only) has been changed. If changeview is true then the view is reset and the fence is removed, otherwise not. The fence is removed to prevent accidental classification.
+//This method prepares the profile for drawing and then draws. It first defines the parameters of the new profile and then grabs a subset of the quadtree of which some of the points may be in the profile. After that it determines what flightlines are in the profile and then adds all appropriate points to the profile by flightline before sorting them by flightline so that it can then constuct the moving averages of the flightlines. It then draws the profile. changeview should be true when the profile area has changed and false when it has not, such as when the classification (only) has been changed. If changeview is true then the view is reset and the fence is removed, otherwise not. The fence is removed to prevent accidental classification.
+/*
+ * Define profile parameters.
+ * Get subset.
+ * If subset is empty or NULL, delete subset and make so nothing will be drawn. Return.
+ * For every cached bucket:
+ *    For every point within the profile and within the cached bucket:
+ *       If the flightline is not already recorded, record it.
+ * For every uncached bucket:
+ *    For every point within the profile and within the uncached bucket:
+ *       If the flightlije is not already recorded, record it.
+ * For every recorded flightline:
+ *    For every cached bucket:
+ *       For every point within the profile and the flightline and the cached bucket:
+ *          Add the point to the profile.
+ *          Update the minimum and maximum heights.
+ *    For every uncached bucket:
+ *       For every point within the profile and the flightline and the uncached bucket:
+ *          Add the point to the profile.
+ *          Update the minimum and maximum heights.
+ *    Sort the points in the flightline.
+ * If there are no points in the profile, make so nothing will be drawn. Return.
+ * Make the moving averages.
+ * Draw the profile.
+ *
+ * */
 bool Profile::showprofile(double* profxs,double* profys,int profps,bool changeview){
    //Defining profile parameters (used elsewhere only):{
       startx = (profxs[0]+profxs[1])/2;//Used in many places.
@@ -194,240 +222,220 @@ bool Profile::showprofile(double* profxs,double* profys,int profps,bool changevi
       if(this->profys!=NULL)delete[]this->profys;//...
       this->profxs = new double[this->profps];//...
       this->profys = new double[this->profps];//...
-      for(int i = 0;i < this->profps;i++){//...
+      for(int i = 0;i < this->profps;i++){//...Please note that it is done this way and not simply assigned so that the profile never deletes attributes of the overview.
          this->profxs[i] = profxs[i];//...
          this->profys[i] = profys[i];///..
       }//...
    //...}
    vector<PointBucket*> *pointvector = NULL;
    imageexists = advsubsetproc(pointvector,profxs,profys,profps);//Get data.
-   if(!imageexists){//Drawing from a null vector would be bad, and a zero vector pointless.
+   if(!imageexists){//Drawing from a null vector would be bad, and a zero vector pointless. imageexists being false will prevent drawing.
       if(pointvector!=NULL)delete pointvector;
       return false;
    }
    int numbuckets = pointvector->size();
-   flightlinestot.clear();
    bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
-   bool *queriedbucketsarray = new bool[numbuckets];
+   bool *queriedbucketsarray = new bool[numbuckets];//This stores, for each bucket, whether the bucket has been accessed while already in cache. This is to make loading a profile a little faster.
    for(int i = 0;i < numbuckets;i++)queriedbucketsarray[i] = false;
-   for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){
-      queriedbucketsarray[i] = true;
-      correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
-      for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
-         if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
-            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
-               flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
-            }
-         }
-      }
-   }
-   for(int i=0;i<numbuckets;i++)if(!queriedbucketsarray[i]){
-      correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine wheter the points in this bucket are within the profile.
-      for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
-         if(correctpointsbuckets[i][j]){//This gets from all the points in the profile their flightline numbers and compiles a list of all the flightlines in the profile.
-            if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
-               flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
-            }
-         }
-      }
-   }
-   if(flightlinepoints!=NULL)delete[] flightlinepoints;
-   flightlinepoints = new vector<Point>[flightlinestot.size()];//This pointer array of vectors will contain all the points in the profile.
-   totnumpoints = 0;
-   samplemaxz = rminz;//These are for the minimum and maximum heights of the points in the profile.
-   sampleminz = rmaxz;
-   for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
-      for(int j = 0;j < numbuckets;j++)queriedbucketsarray[j] = false;
-      for(int j=0;j<numbuckets;j++)if((*pointvector)[j]->getIncacheList()[0]){//For every bucket already cached:
-         queriedbucketsarray[j] = true;
-         for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
-            if(correctpointsbuckets[j][k]){//If the point is in the profile...
-               if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
-                  flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
-                  totnumpoints++;//...and add it to the "census".
-                  if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;
-                  if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;
+   //Determine how many and which flightlines are represented in the profile:{
+      flightlinestot.clear();
+      for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For every cached bucket:
+         queriedbucketsarray[i] = true;//Record as cached.
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine whether the points in this bucket are within the profile.
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points in the bucket:
+            if(correctpointsbuckets[i][j]){//If the point is within the profile:
+               if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine) == flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
+                  flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
                }
             }
          }
       }
-      for(int j=0;j<numbuckets;j++)if(!queriedbucketsarray[j]){//For every bucket not already cached:
-         for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
-            if(correctpointsbuckets[j][k]){//If the point is in the profile...
-               if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
-                  flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
-                  totnumpoints++;//...and add it to the "census".
-                  if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;
-                  if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;
+      for(int i=0;i<numbuckets;i++)if(!queriedbucketsarray[i]){//For every bucket not originally cached:
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Determine whether the points in this bucket are within the profile.
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points in the bucket:
+            if(correctpointsbuckets[i][j]){//If the point is within the profile:
+               if(find(flightlinestot.begin(),flightlinestot.end(),(*pointvector)[i]->getPoint(j,0).flightLine)==flightlinestot.end()){//If the flightline number does not already exist in flightlinestot...
+                  flightlinestot.push_back((*pointvector)[i]->getPoint(j,0).flightLine);//...add it.
                }
             }
          }
       }
-      sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right. Otherwise when the user elects to draw lines they will get a chaotic scribble.
-   }
+   //...}
+   //Add appropriate points into the profile by flightline and sort for each flightline:{
+      if(flightlinepoints!=NULL)delete[] flightlinepoints;
+      flightlinepoints = new vector<Point>[flightlinestot.size()];//This pointer array of vectors will contain all the points in the profile.
+      totnumpoints = 0;
+      samplemaxz = rminz;//These are for the minimum and maximum heights of the points in the profile.
+      sampleminz = rmaxz;//...
+      for(int i=0;i<(int)flightlinestot.size();i++){//For every flightline:
+         for(int j = 0;j < numbuckets;j++)queriedbucketsarray[j] = false;//Reset this so it can be properly used again.
+         for(int j=0;j<numbuckets;j++)if((*pointvector)[j]->getIncacheList()[0]){//For every bucket already cached:
+            queriedbucketsarray[j] = true;//Record as cached.
+            for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
+               if(correctpointsbuckets[j][k]){//If the point is in the profile...
+                  if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
+                     flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
+                     totnumpoints++;//...and add it to the "census" and...
+                     if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;//...modify the maximum and minimum heights if appropriate.
+                     if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;//...
+                  }
+               }
+            }
+         }
+         for(int j=0;j<numbuckets;j++)if(!queriedbucketsarray[j]){//For every bucket not already cached:
+            for(int k=0;k<(*pointvector)[j]->getNumberOfPoints(0);k++){//For every point:
+               if(correctpointsbuckets[j][k]){//If the point is in the profile...
+                  if((*pointvector)[j]->getPoint(k,0).flightLine == flightlinestot[i]){//...and if it is from the right flightline (see above):
+                     flightlinepoints[i].push_back((*pointvector)[j]->getPoint(k,0));//Add it
+                     totnumpoints++;//...and add it to the "census" and...
+                     if(samplemaxz<(*pointvector)[j]->getPoint(k,0).z)samplemaxz = (*pointvector)[j]->getPoint(k,0).z;//...modify the maximum and minimum heights if appropriate.
+                     if(sampleminz>(*pointvector)[j]->getPoint(k,0).z)sampleminz = (*pointvector)[j]->getPoint(k,0).z;//...
+                  }
+               }
+            }
+         }
+         sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),boost::bind(&Profile::linecomp,this,_1,_2));//Sort so that lines are intelligible and right. Otherwise when the user elects to draw lines they will get a chaotic scribble.
+      }
+   //...}
    delete[]queriedbucketsarray;
    if(pointvector!=NULL)delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
-   if(totnumpoints < 1){
-      imageexists = false;
+   if(totnumpoints < 1){//If there are no points within the profile area, even if there were in the subset taken, then nothing should be drawn.
+      imageexists = false;//This will ensure that nothing is drawn.
       return false;
    }
    make_moving_average();//Make now the lines to be drawn when the user elects to draw them.
-   if(is_realized()){
-      if(changeview){
-         fencestartx = fencestarty = fencestartz = 0;//This is to prevent the situation where a fence is preserved from profile to profile in a warped fashion allowing accidental classification.
+   if(is_realized()){//If an attempt to draw is made when the widget is not yet attached to the GUI then there will be a segfault.
+      if(changeview){//If the view is to be changed (like for when a totally new profile is made at possibly a different angle):
+         fencestartx = fencestarty = fencestartz = 0;//Reset the fence to prevent the situation where a fence is preserved from profile to profile in a warped fashion allowing accidental classification.
          fenceendx = fenceendy = fenceendz = 0;//...
          return returntostart();
       }
-      else return drawviewable(1);
+      else return drawviewable(1);//Otherwise trust that any changes (like with scrolling) are dealt with or that there are no position or viewpoint changes (like with classification).
    }
    else return false;
 }
 
+//This determines which points in the bucket (bucket) fit both in the profile (from the correctpoints pointer passed in) and in the fence (the xs,ys,zs pointers and numcorners passed in) and classifies those that do (with the classification passed in).
+void Profile::classify_bucket(double *xs,double *ys,double *zs,int numcorners,bool *correctpoints,PointBucket* bucket,uint8_t classification){
+   bool pointinboundary;//Determines whether the point is within the boundary.
+   int lastcorner;//These define the edge being considered.
+   Point *pnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
+   for(int i = 0;i < bucket->getNumberOfPoints(0);i++){//For all points:
+      if(correctpoints[i]){//If in the profile area:
+         pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
+         lastcorner = numcorners - 1;//Initially the last corner is looped back.
+         for(int j = 0;j < numcorners;j++){//For every edge:
+            if((zs[j] < bucket->getPoint(i,0).z && zs[lastcorner] >= bucket->getPoint(i,0).z) ||
+               (zs[lastcorner] < bucket->getPoint(i,0).z && zs[j] >= bucket->getPoint(i,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
+               pnt->x = xs[j] + ((bucket->getPoint(i,0).z - zs[j])/(zs[lastcorner] - zs[j])) * (xs[lastcorner] - xs[j]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
+               pnt->y = ys[j] + ((bucket->getPoint(i,0).z - zs[j])/(zs[lastcorner] - zs[j])) * (ys[lastcorner] - ys[j]);//...
+               if(linecomp(bucket->getPoint(i,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
+            }
+            lastcorner = j;
+         }
+         if(pointinboundary)bucket->setClassification(i,classification);//Finally!
+      }
+   }
+   delete pnt;
+}
 //This takes the points selected by the fence and then classifies them as the type sent.
 bool Profile::classify(uint8_t classification){
-   if(!imageexists || fencestartz == fenceendz || (fencestartx == fenceendx && fencestarty == fenceendy))return false;
+   if(!imageexists || fencestartz == fenceendz || (fencestartx == fenceendx && fencestarty == fenceendy))return false;//If there should not be any points there or if the fence coveres no area/volume, do nothing. Otherwise get a divide by zero error in the latter case.
    vector<PointBucket*> *pointvector = NULL;
-   bool gotdata = advsubsetproc(pointvector,profxs,profys,profps);//Get data.
+   bool gotdata = advsubsetproc(pointvector,profxs,profys,profps);//Get data using profile parameters.
    if(!gotdata){//Obviously if no data is retrieved then nothing more must be attempted.
       if(pointvector!=NULL)delete pointvector;
       return false;
    }
    int numbuckets = pointvector->size();
-   bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should be drawn.
-   for(int i=0;i<numbuckets;i++)correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Store whether the point is inside the boundaries of the profile.
+   bool** correctpointsbuckets = new bool*[numbuckets];//This stores, for each point in each bucket, whether the point is inside the boundaries of the profile and, therefore, whether the point should classified.
+   for(int i=0;i<numbuckets;i++)correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps);//Store whether the points in the buckets are inside the boundaries of the profile.
+   double *xs,*ys,*zs;//These will contain the corner coordinates of the fence.
+   xs = new double[4];
+   ys = new double[4];
+   zs = new double[4];
+   int numcorners = 4;
    if(slanted){
-      double *xs,*ys,*zs;//These will contain the corner coordinates of the fence.
-      xs = new double[4];
-      ys = new double[4];
-      zs = new double[4];
-      int numberofcorners = 4;
       double breadth = fenceendx - fencestartx;
       double height = fenceendy - fencestarty;
       double deltaz = fenceendz - fencestartz;
       double horiz = sqrt(breadth*breadth + height*height);//Right triangle
-      double length = sqrt(breadth*breadth + height*height + deltaz*deltaz);//Right triangle IN 3D! Half a cuboid!
-      double horizratio = horiz/length;//This will be used for the "vertical" Z values because the corners are separated from the start and end points by vectors at right angles to the vector from the start and end point of the fence.
+      double length = sqrt(breadth*breadth + height*height + deltaz*deltaz);//Right triangle in 3D! Half a cuboid!
+      double horizratio = horiz/length;//This will be used for the "vertical" Z values because the corners are separated from the start and end points by vectors at right angles to the vector from the start and end point of the fence. Since the right angle to the Z axis that we are interested in is some combination of X and Y, this is the ratio we use.
       double deltazratio = deltaz/length;//...and analogously for this one.
-      if(length==0)length=1;
-      xs[0] = fencestartx - (slantwidth/2)*deltazratio*breadth/horiz;
-      xs[1] = fencestartx + (slantwidth/2)*deltazratio*breadth/horiz;
-      xs[2] = fenceendx + (slantwidth/2)*deltazratio*breadth/horiz;
-      xs[3] = fenceendx - (slantwidth/2)*deltazratio*breadth/horiz;
-      ys[0] = fencestarty - (slantwidth/2)*deltazratio*height/horiz;
-      ys[1] = fencestarty + (slantwidth/2)*deltazratio*height/horiz;
-      ys[2] = fenceendy + (slantwidth/2)*deltazratio*height/horiz;
-      ys[3] = fenceendy - (slantwidth/2)*deltazratio*height/horiz;
-      zs[0] = fencestartz + (slantwidth/2)*horizratio;
-      zs[1] = fencestartz - (slantwidth/2)*horizratio;
-      zs[2] = fenceendz - (slantwidth/2)*horizratio;
-      zs[3] = fenceendz + (slantwidth/2)*horizratio;
-      bool pointinboundary;//Determines whether the point is within the boundary.
-      int lastcorner,currentcorner;//These define the edge being considered.
-      Point *pnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
-      bool *classifiedbucketsarray = new bool[numbuckets];
-      for(int i = 0;i < numbuckets;i++)classifiedbucketsarray[i] = false;
-      for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For all buckets already cached:
-         classifiedbucketsarray[i] = true;
-         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points:
-            if(correctpointsbuckets[i][j]){//If in the profile area:
-               pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
-               lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
-               for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
-                  if((zs[currentcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getPoint(j,0).z) ||
-                     (zs[lastcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getPoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
-                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
-                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
-                     if(linecomp((*pointvector)[i]->getPoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
-                  }
-                  lastcorner = currentcorner;
-               }
-               if(pointinboundary)(*pointvector)[i]->setClassification(j,classification);//Finally!
-            }
-         }
-      }
-      for(int i=0;i<numbuckets;i++)if(!classifiedbucketsarray[i]){//For all buckets not already cached:
-         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points:
-            if(correctpointsbuckets[i][j]){//If in the profile area:
-               pointinboundary = false;//Zero is an even number, so if the point is to the right of an edge of the boundary zero times, it cannot be within it.
-               lastcorner = numberofcorners - 1;//Initially the last corner is looped back.
-               for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){//For every edge:
-                  if((zs[currentcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[lastcorner] >= (*pointvector)[i]->getPoint(j,0).z) ||
-                     (zs[lastcorner] < (*pointvector)[i]->getPoint(j,0).z && zs[currentcorner] >= (*pointvector)[i]->getPoint(j,0).z)){//This segments the line to the length of the segment that helps define the boundary. That segment is the same in Z as the total Z range of the fence.
-                     pnt->x = xs[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (xs[lastcorner] - xs[currentcorner]);//These make the fake point be on one of the edges of the fence and be the same height (z) as the point it is to be compared against. This allows comparison to see whether the point is wthing the box or not.
-                     pnt->y = ys[currentcorner] + (((*pointvector)[i]->getPoint(j,0).z - zs[currentcorner])/(zs[lastcorner] - zs[currentcorner])) * (ys[lastcorner] - ys[currentcorner]);//...
-                     if(linecomp((*pointvector)[i]->getPoint(j,0),*pnt))pointinboundary = !pointinboundary;//If the point is to the right of (i.e. further along than) the line defined by the corners (and segmented by the above if statement), i.e. the edge, then change the truth value of this boolean. If this is done an odd number of times then the point must be within the shape, otherwise without.
-                  }
-                  lastcorner = currentcorner;
-               }
-               if(pointinboundary)(*pointvector)[i]->setClassification(j,classification);//Finally!
-            }
-         }
-      }
-      delete[]classifiedbucketsarray;
-      delete xs;
-      delete ys;
-      delete zs;
-      delete pnt;
+      /*
+       *                   0
+       *                   /\____ 
+       *                  /      \____ 
+       *                 /p1          \____3
+       *                /slantwidth       / 
+       *              1/                 /
+       *               \____            /p2
+       *                    \____      /slantwidth
+       *                         \____/
+       *                              2
+       *         p1 = fencestart
+       *         p2 = fenceend
+       * */
+      xs[0] = fencestartx - (slantwidth/2)*deltazratio*breadth/horiz;//Please note that we use slantwidth here instead of width as this only affects the fence's cross-sectional area and has NO effect on the thickness of the classified area.
+      xs[1] = fencestartx + (slantwidth/2)*deltazratio*breadth/horiz;//...
+      xs[2] = fenceendx + (slantwidth/2)*deltazratio*breadth/horiz;//...
+      xs[3] = fenceendx - (slantwidth/2)*deltazratio*breadth/horiz;//...
+      ys[0] = fencestarty - (slantwidth/2)*deltazratio*height/horiz;//...
+      ys[1] = fencestarty + (slantwidth/2)*deltazratio*height/horiz;//...
+      ys[2] = fenceendy + (slantwidth/2)*deltazratio*height/horiz;//...
+      ys[3] = fenceendy - (slantwidth/2)*deltazratio*height/horiz;//...
+      zs[0] = fencestartz + (slantwidth/2)*horizratio;//...
+      zs[1] = fencestartz - (slantwidth/2)*horizratio;//...
+      zs[2] = fenceendz - (slantwidth/2)*horizratio;//...
+      zs[3] = fenceendz + (slantwidth/2)*horizratio;//...
    }
    else{
-      Point *startpnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
-      startpnt->x = fencestartx;
-      startpnt->y = fencestarty;
-      Point *endpnt = new Point;//Fake point for sending to linecomp the boundaries of the fence.
-      endpnt->x = fenceendx;
-      endpnt->y = fenceendy;
-      bool *classifiedbucketsarray = new bool[numbuckets];
-      for(int i = 0;i < numbuckets;i++)classifiedbucketsarray[i] = false;
-      for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For all buckets already cached:
-         classifiedbucketsarray[i] = true;
-         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
-            if(correctpointsbuckets[i][j]){
-               if(((*pointvector)[i]->getPoint(j,0).z < fencestartz && (*pointvector)[i]->getPoint(j,0).z > fenceendz) ||
-                  ((*pointvector)[i]->getPoint(j,0).z > fencestartz && (*pointvector)[i]->getPoint(j,0).z < fenceendz)){
-                  if((linecomp(*startpnt,(*pointvector)[i]->getPoint(j,0)) && linecomp((*pointvector)[i]->getPoint(j,0),*endpnt)) ||
-                     (linecomp((*pointvector)[i]->getPoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getPoint(j,0)))){
-                     (*pointvector)[i]->setClassification(j,classification);
-                  }
-               }
-            }
-         }
-      }
-      for(int i=0;i<numbuckets;i++)if(!classifiedbucketsarray[i]){//For all buckets not already cached:
-         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
-            if(correctpointsbuckets[i][j]){
-               if(((*pointvector)[i]->getPoint(j,0).z < fencestartz && (*pointvector)[i]->getPoint(j,0).z > fenceendz) ||
-                  ((*pointvector)[i]->getPoint(j,0).z > fencestartz && (*pointvector)[i]->getPoint(j,0).z < fenceendz)){
-                  if((linecomp(*startpnt,(*pointvector)[i]->getPoint(j,0)) && linecomp((*pointvector)[i]->getPoint(j,0),*endpnt)) ||
-                     (linecomp((*pointvector)[i]->getPoint(j,0),*startpnt) && linecomp(*endpnt,(*pointvector)[i]->getPoint(j,0)))){
-                     (*pointvector)[i]->setClassification(j,classification);
-                  }
-               }
-            }
-         }
-      }
-      delete[]classifiedbucketsarray;
-      delete startpnt;
-      delete endpnt;
+      xs[0] = fencestartx;
+      xs[1] = fencestartx;
+      xs[2] = fenceendx;
+      xs[3] = fenceendx;
+      ys[0] = fencestarty;
+      ys[1] = fencestarty;
+      ys[2] = fenceendy;
+      ys[3] = fenceendy;
+      zs[0] = fencestartz;
+      zs[1] = fenceendz;
+      zs[2] = fenceendz;
+      zs[3] = fencestartz;
    }
+   bool *classifiedbucketsarray = new bool[numbuckets];//This stores, for each bucket, whether the bucket has been accessed while already in cache. This is to make classification a little faster.
+   for(int i = 0;i < numbuckets;i++)classifiedbucketsarray[i] = false;
+   for(int i=0;i<numbuckets;i++)if((*pointvector)[i]->getIncacheList()[0]){//For all buckets already cached:
+      classifiedbucketsarray[i] = true;
+      classify_bucket(xs,ys,zs,numcorners,correctpointsbuckets[i],(*pointvector)[i],classification);
+   }
+   for(int i=0;i<numbuckets;i++)if(!classifiedbucketsarray[i]){//For all buckets not already cached:
+      classify_bucket(xs,ys,zs,numcorners,correctpointsbuckets[i],(*pointvector)[i],classification);
+   }
+   delete[]classifiedbucketsarray;
+   delete zs;
+   delete ys;
+   delete xs;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
-   int tempps = profps;
-   double* tempxs = new double[tempps];
-   double* tempys = new double[tempps];
-   for(int i = 0;i < tempps;i++){
-      tempxs[i] = profxs[i];
-      tempys[i] = profys[i];
-   }
-   showprofile(tempxs,tempys,tempps,false);
+   if(pointvector!=NULL)delete pointvector;
+   int tempps = profps;//Make temporary copies of these to send to showprofile to avoid the situation where shoprofile deletes the arrays it is about to copy!
+   double* tempxs = new double[tempps];//...
+   double* tempys = new double[tempps];//...
+   for(int i = 0;i < tempps;i++){//...
+      tempxs[i] = profxs[i];//...
+      tempys[i] = profys[i];//...
+   }//...
+   showprofile(tempxs,tempys,tempps,false);//Reload the modified points from the quadtree without changing the view or resetting the fence etc..
    delete[]tempxs;
    delete[]tempys;
-   if(pointvector!=NULL)delete pointvector;
    return true;
 }
 
-//This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as that "start".
+//This method is used by sort() and get_closest_element_position(). It projects the points onto a plane defined by the z axis and the other line perpendicular to the viewing direction. It then returns whether the first point is "further along" the plane than the second one, with one of the edges of the plane being defined as the "start" (the left edge as the user sees it). Essentially, if a is to the right of b it returns true, otherwise false.
 bool Profile::linecomp(const Point &a,const Point &b){
    const double xa = a.x;
    const double xb = b.x;
@@ -435,13 +443,13 @@ bool Profile::linecomp(const Point &a,const Point &b){
    const double yb = b.y;
    double alongprofa,alongprofb;
    if(startx==endx){//If the profile is parallel to the y axis:
-      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face, but left or right) of the plane.
       if(starty<endy)mult=1;
       alongprofa = mult * (ya - minplany);
       alongprofb = mult * (yb - minplany);
    }
    else if(starty==endy){//If the profile is parallel to the x axis:
-      double mult=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      double mult=-1;//Used so that points are projecting onto the correct side (NOT face, but left or right) of the plane.
       if(startx<endx)mult=1;
       alongprofa = mult * (xa - minplanx);
       alongprofb = mult * (xb - minplanx);
@@ -449,54 +457,53 @@ bool Profile::linecomp(const Point &a,const Point &b){
    else{//If the profile is skewed:
       double breadth = endx - startx;
       double height = endy - starty;
-      double multx=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      double multx=-1;//Used so that points are projecting onto the correct side (NOT face, but left or right) of the plane.
       if(startx<endx)multx=1;
-      double multy=-1;//Used so that points are projecting onto the correct side (NOT face) of the plane.
+      double multy=-1;//Used so that points are projecting onto the correct side (NOT face, but left or right) of the plane.
       if(starty<endy)multy=1;
       //Gradients of the profile and point-to-profile lines:
-      double lengradbox = multx * multy * height / breadth;//Profile line
-      double widgradbox = -1.0 / lengradbox;//Point-to-profile lines
-      //Constant values (y intercepts) of the formulae for lines from each point to the profile line:
-      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);
-      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);
-      //Identify the points of interecept for each point-to-profile line and the profile line:
-      /*0 (adjusted origin)
-       * \ Profile line       ____/p
-       *  \              ____/ Point line
-       *   \        ____/
-       *    \  ____/
-       *  ___\/P
-       * /    \
-       *       \
-       *        \
-       *                              
-       *  For point p:
-       *     x of P is interxp
-       *     y of P is interyp
-       *     z is ignored (or "swept along")
-       *     alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to find distance along the profile i.e distance from the adjusted origin.
-       *
-       * */
-      double interxa,interxb,interya,interyb;
-      interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point a to the plane.
-      interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point a to the plane.
-      interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point b to the plane.
-      interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point b to the plane.
-      alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
-      alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+      double lengradbox = multx * multy * height / breadth;//Profile line gradient
+      double widgradbox = -1.0 / lengradbox;//Point-to-profile lines gradient
+      double widgradboxa = multy * (ya - minplany) - (multx * (xa - minplanx) * widgradbox);//Constant values (y intercepts) of the formulae for lines from each point to the profile line.
+      double widgradboxb = multy * (yb - minplany) - (multx * (xb - minplanx) * widgradbox);//...
+      //Identify the points of intercept for each point-to-profile line and the profile line and find the distance along the profile line:{
+         /*0 (adjusted origin)
+          * \ Profile line       ____/p
+          *  \              ____/ Point line
+          *   \        ____/
+          *    \  ____/
+          *  ___\/P
+          * /    \
+          *       \
+          *        \
+          *                              
+          *  For point p:
+          *     x of P is interxp
+          *     y of P is interyp
+          *     z is ignored (or "swept along")
+          *     alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to find distance along the profile i.e distance from the adjusted origin.
+          *
+          * */
+         double interxa,interxb,interya,interyb;
+         interxa = widgradboxa / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point a to the plane.
+         interya = interxa * lengradbox;//The y (intercept with plane) value of the line from the point a to the plane.
+         interxb = widgradboxb / (widgradbox - lengradbox);//The x (intercept with plane) value of the line from the point b to the plane.
+         interyb = interxb * lengradbox;//The y (intercept with plane) value of the line from the point b to the plane.
+         alongprofa = sqrt(interxa*interxa+interya*interya);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+         alongprofb = sqrt(interxb*interxb+interyb*interyb);//Use the values of x and y as well as pythagoras to find position along non-z axis of the plane.
+      //...}
    }
    return alongprofa > alongprofb;
 }
-
-//This returns the index (in the vector of points in a flightline) of the nearest point "before" the position along the horizontal line of the viewable plane of the point passed in. It is used for determining which points to draw by passing as a "point" the coordinates of the limits of the viewable plane. It needs to be passed a "point" because the linecomp function, which it uses, only accepts points because it was originally made just for sorting points. Fundamentally, it works similarly to a BINARY SEARCH algorithm.
+//This returns the index (in the vector of points in a flightline) of the nearest point "before" the position along the horizontal line (from the viewable plane) of the point passed in. It is used for determining which points to draw by passing separately as "points" the coordinates of the limits of the viewable plane. It needs to be passed a "point" because the linecomp function, which it uses, only accepts points because it was originally made just for sorting points. Fundamentally, it works similarly to a BINARY SEARCH algorithm.
 int Profile::get_closest_element_position(Point* value,vector<Point>::iterator first,vector<Point>::iterator last){
    vector<Point>::iterator originalFirst = first;
    vector<Point>::iterator middle;
    while(true){//INFINITE LOOP interrupted by returns.
       middle = first + distance(first,last)/2;
-      if(linecomp(*middle,*value))first = middle;//IF the passed point is further along the horizontal plane-line than the "middle" point then make the "first" point equal to the "middle" point.
+      if(linecomp(*middle,*value))first = middle;//IF the "middle" point is further along the horizontal plane-line than the passed-value point then make the "first" point equal to the "middle" point. This is because the vector and the plane are in the "wrong" order.
       else if(linecomp(*value,*middle))last = middle;//ELSE IF the opposite, make the "last" point equal to the "middle" point.
-      else return distance(originalFirst,middle);//ELSE, in the very rare event that the passed point is exactly equal in x and y coordinates (or, more correctly, its "hypotenuse is equal, as that can happen with the coordinates being different) return the position in the vector where that happens.
+      else return distance(originalFirst,middle);//ELSE, in the very rare event that the passed point is exactly equal in x and y coordinates (or, more correctly, its "hypotenuse" is equal, as that can happen with the coordinates being different) return the position in the vector where that happens.
       if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);//IF the "first" and "middle" are now in the same position AND the distance between first and last is now just 1, as will (almost, see above line) inevitably happen because of the properties of integer division (at the beginning of the loop), then return the distane between the original "first" and the current "middle", as this is the point that most closely approximates the position along the vector (and HORIZONTALLY across the plane) of the point passed in.
    }
 }
@@ -532,22 +539,23 @@ bool Profile::on_pan_end(GdkEventButton* event){
    if(event->button==1 || event->button==2)return drawviewable(1);
    else return false;
 }
+//Moves the view depending on the keyboard signals.
 bool Profile::on_pan_key(GdkEventKey *event,double scrollspeed){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double hypotenuse = scrollspeed*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
    switch(event->keyval){
-      case GDK_w:centrez += hypotenuse;return drawviewable(2);break;
-      case GDK_s:centrez -= hypotenuse;return drawviewable(2);break;
-      case GDK_a:centrex -= hypotenuse*breadth/length;centrey -= hypotenuse*height/length;return drawviewable(2);break;
-      case GDK_d:centrex += hypotenuse*breadth/length;centrey += hypotenuse*height/length;return drawviewable(2);break;
-      case GDK_z:case GDK_Z:return drawviewable(1);
+      case GDK_w:centrez += hypotenuse;return drawviewable(2);break;//Up.
+      case GDK_s:centrez -= hypotenuse;return drawviewable(2);break;//Down.
+      case GDK_a:centrex -= hypotenuse*breadth/length;centrey -= hypotenuse*height/length;return drawviewable(2);break;//Left.
+      case GDK_d:centrex += hypotenuse*breadth/length;centrey += hypotenuse*height/length;return drawviewable(2);break;//Right.
+      case GDK_z:case GDK_Z:return drawviewable(1);//Redraw.
       default:return false;break;
    }
    return false;
 }
-//Find the starting coordinates of the fence and set the label values to zero.
+//Find the starting coordinates of the fence and draw.
 bool Profile::on_fence_start(GdkEventButton* event){
    if(event->button==1){
       double breadth = endx - startx;
@@ -556,14 +564,14 @@ bool Profile::on_fence_start(GdkEventButton* event){
       double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
       fencestartx = fenceendx = centrex + viewerx + hypotenuse * breadth / length;
       fencestarty = fenceendy = centrey + viewery + hypotenuse * height / length;
-      fencestartz = fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
+      fencestartz = fenceendz = centrez + viewerz - (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has the origin at top left and opengl has it at bottom left.
       get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that would cause expose events to be called when focus changes, resulting in graphical glitches).
       return drawviewable(1);
    }
    else if(event->button==2)return on_pan_start(event);
    else return false;
 }
-//Find the current cursor coordinates in image terms (as opposed to window/screen terms) and then update the label with the distances. Then draw the fence.
+//Update the fence with new ending coordinates and draw.
 bool Profile::on_fence(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
       double breadth = endx - startx;
@@ -584,43 +592,51 @@ bool Profile::on_fence_end(GdkEventButton* event){
    else if(event->button==2)return on_pan_end(event);
    else return false;
 }
+//Moves the fence depending on keyboard commands.
 bool Profile::on_fence_key(GdkEventKey *event,double scrollspeed){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
    double hypotenuse = scrollspeed*ratio/zoomlevel;//The horizontal distance is a combination of x and y so:
    switch(event->keyval){
-      case GDK_W:fencestartz += hypotenuse;fenceendz += hypotenuse;break;
-      case GDK_S:fencestartz -= hypotenuse;fenceendz -= hypotenuse;break;
-      case GDK_A:fencestartx -= hypotenuse*breadth/length;fenceendx -= hypotenuse*breadth/length;
+      case GDK_W:fencestartz += hypotenuse;fenceendz += hypotenuse;break;//Up.
+      case GDK_S:fencestartz -= hypotenuse;fenceendz -= hypotenuse;break;//Down.
+      case GDK_A:fencestartx -= hypotenuse*breadth/length;fenceendx -= hypotenuse*breadth/length;//Left/
                  fencestarty -= hypotenuse*height/length;fenceendy -= hypotenuse*height/length;break;
-      case GDK_D:fencestartx += hypotenuse*breadth/length;fenceendx += hypotenuse*breadth/length;
+      case GDK_D:fencestartx += hypotenuse*breadth/length;fenceendx += hypotenuse*breadth/length;//Right.
                  fencestarty += hypotenuse*height/length;fenceendy += hypotenuse*height/length;break;
       default:return false;break;
    }
    return drawviewable(2);
 }
-//Make the fence as a thick line.
+//Make the fence.
 void Profile::makefencebox(){
+   glColor3f(0.0,0.0,1.0);
    if(slanted){
       double breadth = fenceendx - fencestartx;
       double height = fenceendy - fencestarty;
       double deltaz = fenceendz - fencestartz;
       double horiz = sqrt(breadth*breadth + height*height);//Right triangle
       double length = sqrt(breadth*breadth + height*height + deltaz*deltaz);//Right triangle IN 3D!
-      double horizratio = horiz/length;
-      double deltazratio = deltaz/length;
+      double horizratio = horiz/length;//This will be used for the "vertical" Z values because the corners are separated from the start and end points by vectors at right angles to the vector from the start and end point of the fence. Since the right angle to the Z axis that we are interested in is some combination of X and Y, this is the ratio we use.
+      double deltazratio = deltaz/length;//...and analogously for this one.
       if(length==0)length=1;
-      glColor3f(0.0,0.0,1.0);
       glBegin(GL_LINE_LOOP);
-         glVertex3d(fencestartx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,fencestarty - (slantwidth/2)*deltazratio*height/horiz - centrey,fencestartz + (slantwidth/2)*horizratio - centrez);
-         glVertex3d(fencestartx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,fencestarty + (slantwidth/2)*deltazratio*height/horiz - centrey,fencestartz - (slantwidth/2)*horizratio - centrez);
-         glVertex3d(fenceendx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,fenceendy + (slantwidth/2)*deltazratio*height/horiz - centrey,fenceendz - (slantwidth/2)*horizratio - centrez);
-         glVertex3d(fenceendx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,fenceendy - (slantwidth/2)*deltazratio*height/horiz - centrey,fenceendz + (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fencestartx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,
+                    fencestarty - (slantwidth/2)*deltazratio*height/horiz - centrey,
+                    fencestartz + (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fencestartx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,
+                    fencestarty + (slantwidth/2)*deltazratio*height/horiz - centrey,
+                    fencestartz - (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fenceendx + (slantwidth/2)*deltazratio*breadth/horiz - centrex,
+                    fenceendy + (slantwidth/2)*deltazratio*height/horiz - centrey,
+                    fenceendz - (slantwidth/2)*horizratio - centrez);
+         glVertex3d(fenceendx - (slantwidth/2)*deltazratio*breadth/horiz - centrex,
+                    fenceendy - (slantwidth/2)*deltazratio*height/horiz - centrey,
+                    fenceendz + (slantwidth/2)*horizratio - centrez);
       glEnd();
    }
    else{
-      glColor3f(0.0,0.0,1.0);
       glBegin(GL_LINE_LOOP);
          glVertex3d(fencestartx-centrex,fencestarty-centrey,fencestartz-centrez);
          glVertex3d(fencestartx-centrex,fencestarty-centrey,fenceendz-centrez);
@@ -694,17 +710,18 @@ void Profile::makerulerbox(){
       glEnd();
    glLineWidth(1);
 }
+//Draw the appropriate overlays when other drawing is already happening (i.e. the flushing or swapping of buffers must be done elsewhere).
 void Profile::drawoverlays(){
    if(rulering)makerulerbox();
    if(fencing)makefencebox();
    if(showheightscale)makeZscale();
 }
 
-//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
+//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too many intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
 void Profile::makeZscale(){
    double rheight = get_height()*ratio/zoomlevel;
    double order=1;
-   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculationi, while the former is a result of a series of integer calculations, so the results diverge.
+   if(rheight>5)for(int i=rheight;i>10;i/=10)if(rheight/(order*10)>5)order*=10;//This finds the order of magnitude (base 10) of rheight with the added proviso that rheight must be at least five times that order so that there are enough intervals to draw a decent scale. This gives a range of nummarks values (below) of 5-50. While it may seem that the i variable could be used instead of rheight/(order*10), this is not the case as the latter is a double calculation, while the former is a result of a series of integer calculations, so the results diverge.
    if(rheight<=5)for(double i=rheight;i<10;i*=10)order/=10;//For when the user zooms really far in.
    int nummarks = (int)(0.9*rheight/order);//Again, it would be tempting to use i here, but this is only one integer calculation while i is the result (probably) of several such calculations, and so has lost more precision.
    while(nummarks>10){//The original order we calculated would give a number of scale widths from 5-50, but anything more than 10 is probably too much, so this loop doubles the order value until nummarks falls below 10.
@@ -733,17 +750,21 @@ void Profile::makeZscale(){
          glVertex3d(origx2,origy2,origz2 + padding + i*order);
       }
    glEnd();
-   GLuint fontlists = glGenLists(128);//ASCII!
-   Pango::FontDescription font_desc("courier 12");
-   Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc,0,128,fontlists);//Make a selection of letters and numbers for use below (though we only use the numbers).
-   if(!font)cerr << "Cannot load font!" << endl;//Trouble at t'mill! One of t'crossbeam's g'nout of skew 'nt'treadle!
+   GLint ctx = glcGenContext();
+   glcContext(ctx);
+   glcScale(14,14);
+   GLfloat stringboundingbox[8];
+   double stringheight = 0;
    for(int i=0;i<=nummarks;i++){
-      glRasterPos3d(origx3,origy3,origz3 + padding + i*order);//Draw numbers by the horizontal lines.
       ostringstream number;
       number << origz3 + centrez + i*order + padding;
-      glListBase(fontlists);
-      glCallLists(number.str().length(),GL_UNSIGNED_BYTE,number.str().c_str());
+      glcMeasureString(GL_FALSE,number.str().c_str());
+      glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
+      stringheight = stringboundingbox[5] - stringboundingbox[3];
+      glRasterPos3d(origx3,origy3,origz3 + padding + i*order - 0.5*stringheight*ratio/zoomlevel);//Draw numbers by the horizontal lines.
+      glcRenderString(number.str().c_str());
    }
+   glcDeleteContext(ctx);
 }
    
 //First, the distance between the centre of the window and the window position of the event is converted to image coordinates and added to the image centre. This is analogous to moving the centre to where the event occured. Then, depending on the direction of the scroll, the zoomlevel is increased or decreased. Then the centre is moved to where the centre of the window will now lie. The image is then drawn.
@@ -751,20 +772,19 @@ bool Profile::on_zoom(GdkEventScroll* event){
    double breadth = endx - startx;
    double height = endy - starty;
    double length = sqrt(breadth*breadth+height*height);//Right triangle.
-   double hypotenuse;
-   hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
+   double hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
    centrex += hypotenuse * breadth / length;
    centrey += hypotenuse * height / length;
    centrez -= (event->y-get_height()/2)*ratio/zoomlevel;//Z is reversed because gtk has origin at top left and opengl has it at bottom left.
    if(zoomlevel>=1){
-      if(event->direction==GDK_SCROLL_UP)zoomlevel+=pow(zoomlevel,zoompower)/2;
-      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=pow(zoomlevel,zoompower)/2;
+      if(event->direction==GDK_SCROLL_UP)zoomlevel+=pow(zoomlevel,zoompower)/2;//Zoom in.
+      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=pow(zoomlevel,zoompower)/2;//Zoom out.
    }
    else if(zoomlevel>=0.2){
-      if(event->direction==GDK_SCROLL_UP)zoomlevel+=0.1;
-      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=0.1;
+      if(event->direction==GDK_SCROLL_UP)zoomlevel+=0.1;//Zoom in.
+      else if(event->direction==GDK_SCROLL_DOWN)zoomlevel-=0.1;//Zoom out.
    }
-   else if(event->direction==GDK_SCROLL_UP)zoomlevel+=0.1;
+   else if(event->direction==GDK_SCROLL_UP)zoomlevel+=0.1;//Zoom in only.
    if(zoomlevel<0.2)zoomlevel=0.2;
    hypotenuse = (event->x-get_width()/2)*ratio/zoomlevel;
    centrex -= hypotenuse * breadth / length;
@@ -774,19 +794,20 @@ bool Profile::on_zoom(GdkEventScroll* event){
    get_parent()->grab_focus();//This causes the event box containing the profile to grab the focus, and so to allow keyboard control of the profile (this is not done directly as that wuld cause expose events to be called when focus changes, resulting in graphical glitches).
    return drawviewable(1);
 }
+//Zooms depending on keyboard commands.
 bool Profile::on_zoom_key(GdkEventKey* event){
    if(zoomlevel>=1)switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=pow(zoomlevel,zoompower)/2;break;
-         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=pow(zoomlevel,zoompower)/2;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=pow(zoomlevel,zoompower)/2;break;//In.
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=pow(zoomlevel,zoompower)/2;break;//Out.
          default:return false;break;
    }
    else if(zoomlevel>=0.2)switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
-         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=0.1;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;//In.
+         case GDK_o:case GDK_O:case GDK_b:case GDK_B:zoomlevel-=0.1;break;//Out.
          default:return false;break;
    }
    else switch(event->keyval){
-         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;
+         case GDK_i:case GDK_I:case GDK_g:case GDK_G:zoomlevel+=0.1;break;//In only.
          default:return false;break;
    }
    if(zoomlevel<0.2)zoomlevel=0.2;
@@ -802,14 +823,14 @@ void Profile::make_moving_average(){
       }
       delete[] linez;
    }
-   linezsize = flightlinestot.size();
+   linezsize = flightlinestot.size();//One (smoothed) line for each flightline.
    linez = new double*[linezsize];
    for(int i=0;i<linezsize;i++){
       int numofpoints = (int)flightlinepoints[i].size();
       linez[i] = new double[numofpoints];
       for(int j=0;j<numofpoints;j++){
          double z=0,zcount=0;
-         for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){//for (up to) the range (depending on how close to the edge the point is) add up the points...
+         for(int k=-mavrgrange;k<=mavrgrange;k++)if(j+k>=0&&j+k<numofpoints){//For (up to) the range (depending on how close to the edge the point is) add up the points...
             z+=flightlinepoints[i][j+k].z;
             zcount++;
          }
@@ -829,11 +850,12 @@ void Profile::make_moving_average(){
  *      draw all points in bucket
  *   end for
  *
- *Then the profiling box is drawn if it exists.
+ *Then the profiling box, fence box and ruler are drawn if they exist.
  *
  *
  * */
 bool Profile::mainimage(int detail){
+   if(detail<1)detail=1;//Values of less than 1 would cause infinite loops (though negative value would eventually stop due to overflow.
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
@@ -850,23 +872,11 @@ bool Profile::mainimage(int detail){
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
    Point *leftpnt = new Point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
-   leftpnt->x = leftboundx + centrex;
-   leftpnt->y = leftboundy + centrey;
-   leftpnt->z = 0;
-   leftpnt->time = flightlinepoints[0][0].time;
-   leftpnt->intensity = 0;
-   leftpnt->classification = 0;
-   leftpnt->flightLine = 0;
-   leftpnt->packedByte = 0;
+   leftpnt->x = leftboundx + centrex;//Assign x and y coordinates. All other fields irrelevant.
+   leftpnt->y = leftboundy + centrey;//...
    Point *rightpnt = new Point;//Fake point for sending to linecomp and get_closest_element_position the boundaries of the screen.
-   rightpnt->x = rightboundx + centrex;
-   rightpnt->y = rightboundy + centrey;
-   rightpnt->z = 0;
-   rightpnt->time = flightlinepoints[0][0].time;
-   rightpnt->intensity = 0;
-   rightpnt->classification = 0;
-   rightpnt->flightLine = 0;
-   rightpnt->packedByte = 0;
+   rightpnt->x = rightboundx + centrex;//Assign x and y coordinates. All other fields irrelevant.
+   rightpnt->y = rightboundy + centrey;//...
    for(int i=0;i<(int)flightlinestot.size();i++){
       minplanx = startx + leftboundx;//These ensure that the entire screen will be filled, otherwise, because the screen position of startx changes, only part of the point-set will be drawn.
       minplany = starty + leftboundy;//...
@@ -876,7 +886,7 @@ bool Profile::mainimage(int detail){
       int count = 0;
       if(drawmovingaverage){
          int index = flightlinestot.at(i) % 6;
-         switch(index){
+         switch(index){//Colour line by flightline, always. Repeat 6 distinct colours.
             case 0:red=0;green=1;blue=0;break;//Green
             case 1:red=0;green=0;blue=1;break;//Blue
             case 2:red=1;green=0;blue=0;break;//Red
@@ -940,12 +950,14 @@ bool Profile::mainimage(int detail){
                 }
             }
             else if(returncolour){//Colour by return.
-                switch(flightlinepoints[i][j].packedByte & returnnumber){
+                switch(flightlinepoints[i][j].packedByte & returnnumber){//FIXME! If there is desire to change system to handle a very large number of returns then this sytem must be changed completely. code: [woolol9999]
                    case 1:red=0;green=0;blue=1;break;//Blue
                    case 2:red=0;green=1;blue=1;break;//Cyan
                    case 3:red=0;green=1;blue=0;break;//Green
                    case 4:red=1;green=0;blue=0;break;//Red
                    case 5:red=1;green=0;blue=1;break;//Purple
+                   case 6:red=1;green=1;blue=0;break;//Yellow
+                   case 7:red=1;green=0.5;blue=0.5;break;//Pink
                    default:red=green=blue=1;break;//White in the event of strangeness.
                 }
             }
