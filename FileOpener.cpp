@@ -204,6 +204,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                            cout << message << endl;
                            loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                            Gdk::Window::process_all_updates();
+                           numlines--;
                         }
                         newQuadtree = true;
                      }
@@ -214,6 +215,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                            cout << message << endl;
                            loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                            Gdk::Window::process_all_updates();
+                           numlines--;
                         }
                      }
                   }
@@ -297,6 +299,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         cout << message << endl;
                         loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                         Gdk::Window::process_all_updates();
+                        numlines--;
                      }
                      newQuadtree = true;
                   }
@@ -307,6 +310,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
                         cout << message << endl;
                         loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                         Gdk::Window::process_all_updates();
+                        numlines--;
                      }
                   }
                }
@@ -372,7 +376,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea){
    for(int i = 0;i<numlines;i++){
       flightline = lidardata->getFileName(i);
       ostringstream number;
-      number << numlines;
+      number << i;
       list += number.str() + ":  " + flightline + "\n";
    }
    fs->setlidardata(lidardata);

@@ -41,10 +41,6 @@ public:
    bool on_zoom_key(GdkEventKey* event);//Zooms the view using keyboard input.
    void make_moving_average();//This creates an array of z values for the points in the profile that are derived from the real z values through a moving average. This results in a smoothed line.
    bool shift_viewing_parameters(GdkEventKey* event,double shiftspeed);//Move the centre of the view (specifically its x and y components) and the fence coordinates so that shifted profiles are both visible and have visible and valid fences.
-   void drawoverlays();//Draw all of the make methods indented below.
-      void makerulerbox();//Make line showing where the ruler is.
-      void makefencebox();//Make rectangle showing where the fence is.
-      void makeZscale();//This makes a height scale.
    bool returntostart();//Return to the initial view of the image.
    bool drawviewable(int imagetype);//Draw the viewable part of the image.
    //Public methods:
@@ -56,7 +52,8 @@ public:
       sigrulerstart.unblock();
       sigruler.unblock();
       sigrulerend.unblock();
-      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      Gdk::Cursor cursor(Gdk::CROSSHAIR);
+      if(is_realized())get_window()->set_cursor(cursor);
       rulering=true;
    }
    void unsetupruler(){//Blocks ruler signals and unblocks pan signals:
@@ -76,7 +73,8 @@ public:
       sigfencestart.unblock();
       sigfence.unblock();
       sigfenceend.unblock();
-      if(is_realized())get_window()->set_cursor(*(new Gdk::Cursor(Gdk::CROSSHAIR)));
+      Gdk::Cursor cursor(Gdk::CROSSHAIR);
+      if(is_realized())get_window()->set_cursor(cursor);
       fencing=true;
    }
    void unsetupfence(){//Blocks fence signals and unblocks pan signals:
@@ -160,6 +158,10 @@ protected:
    //Drawing:
    bool mainimage(int detail);//Draw the main image
    int get_closest_element_position(Point* value,vector<Point>::iterator first,vector<Point>::iterator last);//This takes a point (usually artificial) and then returns the point whose "distance along the viewing plane" value is the cloeset to it or, more strictly, the one whose value would mean it would be just before it if the given point was already part of the vector.
+   void drawoverlays();//Draw all of the make methods indented below.
+      void makerulerbox();//Make line showing where the ruler is.
+      void makefencebox();//Make rectangle showing where the fence is.
+      void makeZscale();//This makes a height scale.
    bool linecomp(const Point& a,const Point& b);//This compares the two points passed to it and returns true if the first point is further from the "start line" of the plane than the second point. It is used both to sort the points along the plane and to search for points along the plane (called from get_closest_element_position).
  
    //Positioning methods:

@@ -46,7 +46,7 @@ string findgladepath(char* programpath){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.07.20.1" << endl;
+   cout << "Build number: 2010.07.29.1" << endl;
    Glib::thread_init();//This allows the creation and running of threads.
    Gtk::Main gtkmain(argc, argv);//This is required for GTK to work. It must be the first GTK object created and may not be global.
    Glib::RefPtr<Gnome::Glade::Xml> refXml;//This will extract widgets from the glade file when directed.

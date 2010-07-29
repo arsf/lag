@@ -37,58 +37,60 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,Quadtree* lidardata,int bucketlimit,Gtk::Label *rulerlabel)  : Display(config,lidardata,bucketlimit){
+   //Control:
+   zoompower = 0.5;
+   maindetailmod = 0.01;
+   raiseline = false;
+   linetoraise = 0;
+   reversez = false;
+      //Threading:
+      threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
+      thread_existsmain = false;
+      thread_existsthread = false;
+      interruptthread = false;
+      drawing_to_GL = false;
+      initialising_GL_draw = false;
+      flushing = false;
+      extraDrawing = false;
+      pausethread = false;
+      thread_running = false;
+   //Drawing:
    numbuckets = 0;
    resolutionbase = 1;
    resolutiondepth = 1;
-   raiseline = false;
-   linetoraise = 0;
    drawnsinceload = false;
    drawneverything = false;
-   reversez = false;
+   pointcount = 0;
+      //Limits of pixel copying for the preview:
+      drawnsofarminx=0;
+      drawnsofarminy=0;
+      drawnsofarmaxx=1;
+      drawnsofarmaxy=1;
+   //Overlays:
    showdistancescale = false;
    showlegend = false;
-   pointcount = 0;
-   threaddebug = false;//Setting this to TRUE will spam you with information about what the threads are doing. When modifying how drawing works here, or indeed anything that directly manipulates the point data, set this to TRUE unless you REALLY know what you are doing.
-   zoompower = 0.5;
-   maindetailmod = 0.01;
-   //Limits of pixel copying for the preview:
-   drawnsofarminx=0;
-   drawnsofarminy=0;
-   drawnsofarmaxx=1;
-   drawnsofarmaxy=1;
-   //Threading:
-   thread_existsmain = false;
-   thread_existsthread = false;
-   interruptthread = false;
-   drawing_to_GL = false;
-   initialising_GL_draw = false;
-   flushing = false;
-   extraDrawing = false;
-   pausethread = false;
-   thread_running = false;
-   //Profiling and fencing:
       //Profiling:
       profiling=false;
       showprofile=false;
+      double* white = new double[3];
+      white[0] = white[1] = white[2] = 1.0;
+      double* red = new double[3];
+      red[0] = 1.0;
+      red[1] = red[2] = 0.0;
+      profbox = new BoxOverlay(rulerlabel,white,red);
+      profbox->setcentre(centrex,centrey);
       //Fencing:
       fencing=false;
       showfence=false;
-   //Rulering:
-   rulering=false;
-   rulerwidth=2;
-   this->rulerlabel = rulerlabel;
-   double* white = new double[3];
-   white[0] = white[1] = white[2] = 1.0;
-   double* red = new double[3];
-   red[0] = 1.0;
-   red[1] = red[2] = 0.0;
-   profbox = new BoxOverlay(rulerlabel,white,red);
-   profbox->setcentre(centrex,centrey);
-   double* blue = new double[3];
-   blue[0] = blue[1] = 0.0;
-   blue[2] = 1.0;
-   fencebox = new BoxOverlay(rulerlabel,blue,blue);
-   fencebox->setcentre(centrex,centrey);
+      double* blue = new double[3];
+      blue[0] = blue[1] = 0.0;
+      blue[2] = 1.0;
+      fencebox = new BoxOverlay(rulerlabel,blue,blue);
+      fencebox->setcentre(centrex,centrey);
+      //Rulering:
+      rulering=false;
+      rulerwidth=2;
+      this->rulerlabel = rulerlabel;
    //Classification heightening:
    heightenNonC = false;
    heightenGround = false;
@@ -139,12 +141,13 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
 }
 TwoDeeOverview::~TwoDeeOverview(){ }
 
+//Prepare the appropriate overlays for flushing to the screen.
 void TwoDeeOverview::drawoverlays(){
    if(profiling||showprofile)profbox->makebox(rmaxz);//Draw the profile box if profile mode is on.
    if(fencing||showfence)fencebox->makebox(rmaxz);//Draw the fence box if fence mode is on.
    if(rulering)makerulerbox();//Draw the ruler if ruler mode is on.
-   if(showdistancescale)makedistancescale();
-   if(showlegend)makecolourlegend();
+   if(showdistancescale)makedistancescale();//Draw the distance scale when indicated.
+   if(showlegend)makecolourlegend();//Draw the appropriate legend when indicated.
 }
 
 //Dispatcher handlers{
@@ -161,12 +164,12 @@ void TwoDeeOverview::DrawGLToCard(){
    if(threaddebug)cout << "Boo!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
-   guard_against_interaction_between_GL_areas();
+   guard_against_interaction_between_GL_areas();//This is extra important as the profile will be operating in a different thread from the drawing thread and so can grab OpenGL in between calls to this method.
    glEnableClientState(GL_VERTEX_ARRAY);//These relate to the enabling of vertex arrays and assigning the arrays to GL.
    glEnableClientState(GL_COLOR_ARRAY);//...
    glVertexPointer(3, GL_FLOAT, 0, vertices);//...
    glColorPointer(3, GL_FLOAT, 0, colours);//...
-   glDrawArrays(GL_POINTS,0,pointcount);
+   glDrawArrays(GL_POINTS,0,pointcount);//Send the arrays to OpenGL for processing (finally!).
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
@@ -182,64 +185,39 @@ void TwoDeeOverview::FlushGLToScreen(){
    glwindow->gl_end();
    flushing = false;//The main thread may now create new drawing threads.
 }
-//This cleans up when a drawing thread is ending/has ended. It flushes once more so that everything is visible on the screen, ends the OpenGL session and then records that new threads may be made.
+//This cleans up when a drawing thread is ending/has ended. It flushes once more so that everything is visible on the screen, draws the overlays, ends the OpenGL session and then records that new threads may be made.
 void TwoDeeOverview::EndGLDraw(){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return;
    if (glwindow->is_double_buffered())glwindow->swap_buffers();
    else glFlush();
    glReadBuffer(GL_BACK);
-   glDrawBuffer(GL_FRONT);
+   glDrawBuffer(GL_FRONT);//Overlays go on top and should not be preserved otherwise you get shadowing.
    drawoverlays();
    glFlush();
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
    thread_existsmain = false;//This tells the main thread that it can now produce a new drawing thread.
 }
-//This tells the main thread to draw the main image again after all its tasks currently in its queue are complete.
-void TwoDeeOverview::extraDraw(){
-   extraDrawing = false;//Now any subsequent calls to drawiewable, including the one immediately below this line, may trigger another extraDraw() if interrupted by the fact that the drawing thread is waiting for this (the main) thread to carry our OpenGL operations.
-   drawviewable(1);
-}
 //...}
 
+//This tells the main thread to draw the main image again after all its tasks currently in its queue are complete.
+void TwoDeeOverview::extraDraw(){
+   extraDrawing = false;//Now any subsequent calls to drawiewable, including the one immediately below this line, may trigger another extraDraw() if interrupted by the fact that the drawing thread is waiting for this (the main) thread to carry out OpenGL operations.
+   drawviewable(1);
+}
+
 //THREADS! BE AFRAID, BE VERY AFRAID.
-/*This method draws the main image. Note that redundancy in telling the main thread what to do is because the main thread's execution of the signals it receives is not deterministic because of the possibility of user interference.
+/*This method draws the main image. Note that redundancy (from this method and drawpointsfrombuckets()) in telling the main thread what to do is because the main thread's execution of the signals it receives is not deterministic because of the possibility of user interference.
  *
- *   Tell the main thread not to create any more threads until this one has finished most of its running.
  *   Wait until all other drawing threads have ended.
  *   Tell any new threads that are created to wait until this one is finished if this one still exists.
  *   Tell the main thread not to create any more threads until the OpenGL has been initialised.
  *   Signal main thread to initialise OpenGL for drawing.
- *   FOR every bucket:
- *      Wait until the main thread has finished drawing to the framebuffer.
- *      IF the thread is being interrupted:
- *         Delete data array.
- *         Signal main thread to clear up the OpenGL settings for drawing.
- *         Tell the main thread that this thread is no longer (significantly) running.
- *         Delete vertices and colours arrays.
- *         Set it so that subsequent threads will not be interrupted immediately.
- *         Allow subsequent threads to act.
- *         End thread (return).
- *      Determine the boundary of the rectangle that just encompasses all the buckets being drawn so far.
- *      FOR every point:
- *         determine colour and brightness of point
- *         IF any classifications are selected for increased prominence, set the z coordinate of the point to be higher than any other points.
- *         place point
- *      IF the thread is not being interrupted:
- *         Tell the main thread not to create any more threads until the current bucket has been drawn to the framebuffer.
- *         Signal the main thread to draw the current bucket to the framebuffer.
- *         Every Nth bucket (currently 10th):
- *            Tell main thread not to create any more threads until the frambuffer has been flushed to the screen.
- *            Signal the main thread to flush the framebuffer to the screen.
- *   Wait until the main thread has finished drawing to the framebuffer.
- *   Delete data array.
- *   Signal main thread to clear up the OpenGL settings fo drawing.
- *   Tell the main thread that this thread is no longer (significantly) running.
- *   Delete vertices and colours arrays.
- *   Set it to that subsequent threads will not be interrupted immediately.
- *   Allow subsequent threads to act.
- *   (Thread ends).
+ *   Prepare for determining the boundary of the rectangle that just encompasses all the buckets being drawn so far.
+ *   Draw the initially cached buckets.
+ *   If this completes without interruption, draw the initially uncached buckets.
+ *   End the thread.
  * */
 void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets){
    if(threaddebug)cout << "Wait?" << endl;
@@ -263,45 +241,65 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets){
    drawnsofarmaxx=lidarboundary->minX;//...
    drawnsofarmaxy=lidarboundary->minY;//...
    delete lidarboundary;
-   bool *drawnbucketsarray = new bool[numbuckets];
+   bool *drawnbucketsarray = new bool[numbuckets];//This records what buckets are drawn as a result of being initially cached which is then used to draw only the initially uncached ones.
    for(int i = 0;i < numbuckets;i++)drawnbucketsarray[i] = false;
-   bool completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,true);
-   if(!completed){
-      if(threaddebug)cout << "Pass of cached interrupted. Stopping!" << endl;
-      delete[]drawnbucketsarray;
-      threadend(buckets);
-      return;
+   bool completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,true);//Draw the points from the initially cached buckets.
+   if(!completed){if(threaddebug)cout << "Pass of cached interrupted. Stopping!" << endl;}//The braces are necessary!
+   else{
+      if(threaddebug)cout << "Finished pass of cached." << endl;
+      completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,false);//Draw the points from the initially uncached buckets.
+      if(!completed){if(threaddebug)cout << "Pass of uncached interrupted. Stopping!" << endl;}//The braces are necessary!
+      else{
+         if(threaddebug)cout << "Finished pass of uncached." << endl;
+         if(numbuckets>0)drawneverything = true;
+         if(threaddebug)cout << "Thread completed." << endl;
+      }
    }
-   else if(threaddebug)cout << "Finished pass of cached." << endl;
-   completed = drawpointsfrombuckets(buckets,numbuckets,drawnbucketsarray,false);
-   if(!completed){
-      if(threaddebug)cout << "Pass of uncached interrupted. Stopping!" << endl;
-      delete[]drawnbucketsarray;
-      threadend(buckets);
-      return;
-   }
-   else if(threaddebug)cout << "Finished pass of uncached." << endl;
-   if(numbuckets>0)drawneverything = true;
-   if(threaddebug)cout << "Thread completed." << endl;
    delete[]drawnbucketsarray;
    threadend(buckets);
    return;
 }
+/*This draws either the initially cached or the initially uncached buckets to the screen. Which to draw is determined by the value of cachedonly.
+ *   FOR every bucket:
+ *      Determine resolutionindex
+ *      IF cachedonly==true && bucket is cached for resolutionindex && bucket is not yet drawn|| cachedonly==false && bucket is not yet drawn:
+ *         Wait until the main thread has finished drawing to the framebuffer.
+ *         IF the thread is being interrupted:
+ *            Delete data array.
+ *            Signal main thread to clear up the OpenGL settings for drawing.
+ *            Tell the main thread that this thread is no longer (significantly) running.
+ *            Delete vertices and colours arrays.
+ *            Set it so that subsequent threads will not be interrupted immediately.
+ *            Allow subsequent threads to act.
+ *            End thread (return).
+ *         Determine the boundary of the rectangle that just encompasses all the buckets being drawn so far.
+ *         FOR every point:
+ *            determine colour and brightness of point
+ *            IF any classifications are selected for increased prominence, set the z coordinate of the point to be higher than any other points.
+ *            place point
+ *         IF the thread is not being interrupted:
+ *            Tell the main thread not to create any more threads until the current bucket has been drawn to the framebuffer.
+ *            Signal the main thread to draw the current bucket to the framebuffer.
+ *            Every Nth bucket (currently 10th):
+ *               Tell main thread not to create any more threads until the framebuffer has been flushed to the screen.
+ *               Signal the main thread to flush the framebuffer to the screen.
+ *   Wait until the main thread has finished drawing to the framebuffer.
+ */
 bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,bool *drawnbucketsarray,bool cachedonly){
    int line=0,intensity=0,classification=0,rnumber=0;
-   double x=0,y=0,z=0;//Point values
+   double z=0;
    double red,green,blue;//Colour values
-   for(int i=0;i<numbuckets;i++){//For every bucket...
+   for(int i=0;i<numbuckets;i++){//For every bucket:
       if(threaddebug)cout << "Calculating resolution index." << endl;
       double bucketscreenwidth = (buckets[i]->getmaxX() - buckets[i]->getminX())*zoomlevel/ratio;
       double bucketscreenheight = (buckets[i]->getmaxY() - buckets[i]->getminY())*zoomlevel/ratio;
       double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
       int bucketpointtopixelratio = (int)((double)buckets[i]->getNumberOfPoints(0)/bucketpixelcount);
-      int resolutionindex = 0;
-      for(int j = bucketpointtopixelratio;j > (int)pow(resolutionbase,maindetailmod) - 1;j /= resolutionbase)resolutionindex++;
-      if(resolutionindex > resolutiondepth - 1)resolutionindex = resolutiondepth - 1;
+      int resolutionindex = 0;//This determines what resolution level of the bucket to grab from the quadtree.
+      for(int j = bucketpointtopixelratio;j > (int)pow(resolutionbase,maindetailmod) - 1;j /= resolutionbase)resolutionindex++;//If maindetailmod is 2 then the resolutionindex is determined to be the one that has resolutionbase^2 points per pixel on average, with the resolutionindex rounded up to be an integer. The user can change maindetailmod at will to modify the frequency of "holes" appearing in the visible data.
+      if(resolutionindex > resolutiondepth - 1)resolutionindex = resolutiondepth - 1;//Obviously cannot call an index that is less detailed than any that exist.
       if(threaddebug)cout << "Resolution index is: " << resolutionindex << "." << endl;
-      if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly)){
+      if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly)){//If cachedonly is true, then will proceed if the bucket has not been loaded before (which at this point should be all of them) and if the bucket is cached. If cachedonly is false, then will proceed if the bucket has not been loaded before without any extra condition because user interference could cause previously uncached buckets to become cached (like using pointinfo() or loading a preview in the middle of drawing).
          drawnbucketsarray[i] = true;
          if(threaddebug)cout << i << " " << numbuckets << endl;
          if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
@@ -313,19 +311,17 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
          if(threaddebug)cout << "Not drawing (anymore)." << endl;
          if(pausethread)threadpause();//If paused, the thread releases pointbucket::getpoint(), waits and then grabs it again.
          if(threaddebug)cout << "Interrupt?" << endl;
-         if(interruptthread)return false;
+         if(interruptthread)return false;//Do not pass go, do not collect 200 dollars. The parent method will handle the fallout, just STOP!
          if(threaddebug)cout << "No interrupt." << endl;
-         pointcount=0;//This is needed for putting values in the right indices for the above arrays and for drawing them properly with OpenGL.
+         pointcount=0;//This is needed for putting values in the right indices for the vertices and colours arrays and for drawing them properly with OpenGL.
          if(buckets[i]->getminX()<drawnsofarminx)drawnsofarminx = buckets[i]->getminX();//Set the boundary of the buckets selected so far.
          if(buckets[i]->getminY()<drawnsofarminy)drawnsofarminy = buckets[i]->getminY();//...
          if(buckets[i]->getmaxX()>drawnsofarmaxx)drawnsofarmaxx = buckets[i]->getmaxX();//...
          if(buckets[i]->getmaxY()>drawnsofarmaxy)drawnsofarmaxy = buckets[i]->getmaxY();//...
-         for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){//... and for every point, determine point colour and position:
+         for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){//For every point, determine point colour and position:
             red = 0.0; green = 1.0; blue = 0.0;//Default colour.
-            x = buckets[i]->getPoint(j,resolutionindex).x;
-            y = buckets[i]->getPoint(j,resolutionindex).y;
-            z = buckets[i]->getPoint(j,resolutionindex).z;
-            intensity = buckets[i]->getPoint(j,resolutionindex).intensity;
+            z = buckets[i]->getPoint(j,resolutionindex).z;//This is here because it is used in calculations.
+            intensity = buckets[i]->getPoint(j,resolutionindex).intensity;//This is here because it is used in calculations.
             if(heightcolour){//Colour by elevation.
                red = colourheightarray[3*(int)(10*(z-rminz))];
                green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
@@ -391,8 +387,8 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                green *= brightnessintensityarray[(int)(intensity-rminintensity)];
                blue *= brightnessintensityarray[(int)(intensity-rminintensity)];
             }
-            vertices[3*pointcount]=x-centrexsafe;
-            vertices[3*pointcount+1]=y-centreysafe;
+            vertices[3*pointcount]=buckets[i]->getPoint(j,resolutionindex).x-centrexsafe;
+            vertices[3*pointcount+1]=buckets[i]->getPoint(j,resolutionindex).y-centreysafe;
             if(heightenNonC ||
                heightenGround ||
                heightenLowVeg ||
@@ -433,7 +429,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                }
             }
             if(!reversez)vertices[3*pointcount+2]=z;//If all is normal, the height is z.
-            else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range all they occupy, the values are reversed.
+            else vertices[3*pointcount+2]= rmaxz + rminz - z;//If the z values are to be reversed, the height is made so that, within the range they all occupy, the values are reversed.
             colours[3*pointcount]=red;
             colours[3*pointcount+1]=green;
             colours[3*pointcount+2]=blue;
@@ -465,6 +461,14 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
    }
    return true;
 }
+/*This clears up after and ends a drawing thread. It works like this:   
+ *   Tell the main thread that this thread is no longer (significantly) running.
+ *   Delete data array.
+ *   Signal main thread to clear up the OpenGL settings fo drawing.
+ *   Delete vertices and colours arrays.
+ *   Set it so that subsequent threads will not be interrupted immediately.
+ *   Allow subsequent threads to act.
+ */
 void TwoDeeOverview::threadend(PointBucket** buckets){
    if(threaddebug)cout << "Allowing main thread to start new thread... DANGER!" << endl;
    thread_running = false;//This thread will not use pointbucket::getpoint() again.
@@ -481,6 +485,7 @@ void TwoDeeOverview::threadend(PointBucket** buckets){
    thread_existsthread = false;//New threads like this will now be allowed to act.
    if(threaddebug)cout << "*********Finished thread!" << endl;
 }
+//Pauses the thread and waits for the unpause signal to resume.
 void TwoDeeOverview::threadpause(){
    thread_running = false;
    if(threaddebug)cout << "Pausing thread. Allowing the rest of the program access to point data. Waiting until thread is allowed to unpause." << endl;
@@ -489,7 +494,7 @@ void TwoDeeOverview::threadpause(){
    thread_running = true;
 }
 
-//This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. After that it draws the outline of every bucket in the subset, in order to give the user a skeletal idea of position. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back. The method is orderd so that the top-most things are drawn first. This is because it is thought that having previously-drawn things obscure latterly-drawn things will reduce flicker.
+//This method draws a preview version of the image for any situations where it must be drawn quickly. It does this by first electing to draw directly to the front buffer and to flush it, rather than using double buffering and the swap_buffers() command. It then clears the front buffer using glClear() and then builds the profile box, the ruler or the fence box in the event that one of them is active. The method then copies from the back buffer to the front buffer a region of pixels that corresponds with a rectangle that just covers all of the buckets drawn before. This way, if the entire image is loaded then the user sees it all moving, perfectly. If some of the image is "off the edge of the screen" then when it moves the uncovered areas will show the "skeleton" of the buckets. The user will also see the "skeleton" of the buckets if they elect to do something that will cause a preview to be drawn before the main image is complete, as only the complete portions will be drawn. The drawing buffer is then set back to the back. The method is ordered so that the top-most things are drawn first. This is because it is thought that having previously-drawn things obscure latterly-drawn things will reduce flicker.
 bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
@@ -498,40 +503,42 @@ bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets){
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//Need to clear screen because of gaps.
    drawoverlays();
    double altitude = rminz-1000;//This makes sure the preview grid and the framebuffer are drawn under the profile, ruler etc..
-   double xpos = drawnsofarminx-centrex;//The position of the bottom left corner of where the region is to be copied TO. In world coordinates.
-   double ypos = drawnsofarminy-centrey;//...
-   double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
-   double yoffset = 0;//...
-   GLint viewport[4];
-   GLdouble modelview[16];
-   GLdouble projection[16];
-   glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
-   glGetDoublev(GL_PROJECTION_MATRIX,projection);
-   glGetIntegerv(GL_VIEWPORT,viewport);
-   GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
-   gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
-   if(xpos < origx){
-      xoffset = (origx-xpos)*zoomlevel/ratio;//Converts the difference between the 'old' xpos and the edge of the screen into pixel values for modification of the region copied from.
-      xpos = origx;
-   }
-   if(ypos < origy){
-      yoffset = (origy-ypos)*zoomlevel/ratio;//Converts the difference between the 'old' ypos and the edge of the screen into pixel values for modification of the region copied from.
-      ypos = origy;
-   }
-   glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
-   double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2 + xoffset;//These define the boundaries of the region to be copied FROM.
-   double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2 + yoffset;//...The offsets are here so that if the destination position should be too far left or down then these account for it. Otherwise the skeleton and copy part ways.
-   double bucketmaxx = (drawnsofarmaxx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2;//...
-   double bucketmaxy = (drawnsofarmaxy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2;//...
-   if(bucketmaxx > get_width())bucketmaxx = get_width();//I think that having ANYTHING going beyond the boundaries of the screen will cause NOTHING to be drawn. Apparently bottom left corner does not matter here, though, only the top right (???).
-   if(bucketmaxy > get_height())bucketmaxy = get_height();//...
-   if(bucketminx > bucketmaxx)bucketminx = bucketmaxx;//...Oh, and the bottom left corner must be further left and down than the top right corner.
-   if(bucketminy > bucketmaxy)bucketminy = bucketmaxy;//...
-   glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
+   //Copy pixels from back buffer:{
+      double xpos = drawnsofarminx-centrex;//The position of the bottom left corner of where the region is to be copied TO. In world coordinates.
+      double ypos = drawnsofarminy-centrey;//...
+      double xoffset = 0;//These offsets are used for when the position of the bottom left corner of the destination region would go off the screen to the left or bottom (which would cause NOTHING to be drawn). In pixels.
+      double yoffset = 0;//...
+      GLint viewport[4];
+      GLdouble modelview[16];
+      GLdouble projection[16];
+      glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
+      glGetDoublev(GL_PROJECTION_MATRIX,projection);
+      glGetIntegerv(GL_VIEWPORT,viewport);
+      GLdouble origx,origy,origz;//The world coordinates of the origin for the screen coordinates.
+      gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
+      if(xpos < origx){
+         xoffset = (origx-xpos)*zoomlevel/ratio;//Converts the difference between the 'old' xpos and the edge of the screen into pixel values for modification of the region copied from.
+         xpos = origx;
+      }
+      if(ypos < origy){
+         yoffset = (origy-ypos)*zoomlevel/ratio;//Converts the difference between the 'old' ypos and the edge of the screen into pixel values for modification of the region copied from.
+         ypos = origy;
+      }
+      glRasterPos3f(xpos,ypos,altitude+1);//Finally set the position of the bottom left corner of the destination region. This takes world coordinates and converts them into pixels. glWindowPos does the same thing directly with pixels, but it requires OpenGL 1.4.
+      double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2 + xoffset;//These define the boundaries of the region to be copied FROM.
+      double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2 + yoffset;//...The offsets are here so that if the destination position should be too far left or down then these account for it. Otherwise the skeleton and copy part ways.
+      double bucketmaxx = (drawnsofarmaxx-centrexsafe)*zoomlevel/ratio + (double)(get_width())/2;//...
+      double bucketmaxy = (drawnsofarmaxy-centreysafe)*zoomlevel/ratio + (double)(get_height())/2;//...
+      if(bucketmaxx > get_width())bucketmaxx = get_width();//I think that having ANYTHING going beyond the boundaries of the screen will cause NOTHING to be drawn. Apparently bottom left corner does not matter here, though, only the top right (???).
+      if(bucketmaxy > get_height())bucketmaxy = get_height();//...
+      if(bucketminx > bucketmaxx)bucketminx = bucketmaxx;//...Oh, and the bottom left corner must be further left and down than the top right corner.
+      if(bucketminy > bucketmaxy)bucketminy = bucketmaxy;//...
+      glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,bucketmaxy-bucketminy,GL_COLOR);//The business end, at last. Copies from the region defined to the current raster position.
+      //...}
    GLdouble endx,endy,endz;//The world coordinates of the origin for the screen coordinates.
    gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&endx,&endy,&endz);
    if(!drawneverything||(((drawnsofarmaxx-centrexsafe>endx&&centrex-centrexsafe>0)||(drawnsofarminx-centrexsafe<origx&&centrex-centrexsafe<0)||(drawnsofarmaxy-centreysafe>endy&&centrey-centreysafe>0)||(drawnsofarminy-centreysafe<origy&&centrey-centreysafe<0)))){//If not all the buckets have been drawn OR the boundaries of the drawn region extend beyond the screen AND the image has been moved in the opposite direction to that extension. i.e. if part of the image is/should be uncovered.
-      float* vertices = new float[15];//Needed for the glDrawArrays() call further down.
+      float* vertices = new float[12];//Needed for the glDrawArrays() call further down.
       glEnableClientState(GL_VERTEX_ARRAY);//...
       glVertexPointer(3, GL_FLOAT, 0, vertices);//...
       glColor3f(1.0,1.0,1.0);
@@ -563,10 +570,10 @@ bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets){
 //Gets the limits of the viewable area and passes them to the subsetting method of the quadtree to get the relevant data. It then converts from a vector to a pointer array to make data extraction faster. Then, depending on the imagetype requested, it either sets the detail level and then creates a thread for drawing the main image (imagetype==1) or calls drawbuckets in order to give a preview of the data when panning etc. (imagetype==2). When this is called from the expose event (imagetype==3) it draws the main image (drawing speed is not so urgent now that it is threaded).
 bool TwoDeeOverview::drawviewable(int imagetype){
    guard_against_interaction_between_GL_areas();
-   if(thread_running && imagetype == 3 && drawnsinceload){
+   if(thread_running && imagetype == 3 && drawnsinceload){//If there is an expose event while the image is already being drawn from scratch and the image has been drawn from scratch at least once then refresh the screen without interfering with the drawing from scratch:
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))return false;
-      if (glwindow->is_double_buffered())glwindow->swap_buffers();//Draw to screen every (few) bucket(s) to show user stuff is happening.
+      if (glwindow->is_double_buffered())glwindow->swap_buffers();
       else glFlush();
       glwindow->gl_end();
       return true;
@@ -592,7 +599,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
       }
       if(threaddebug)cout << "Am fluid" << endl;
       if(threaddebug)cout << "Changed offsets." << endl;
-      if(imagetype == 3)drawnsinceload = true;
+      if(imagetype == 3)drawnsinceload = true;//Expose events draw the image from scratch at least once so that the image will be shown immediately after loading a file for the first time.
       double minx = centrex-(get_width()/2)*ratio/zoomlevel;//Limits of viewable area:
       double maxx = centrex+(get_width()/2)*ratio/zoomlevel;//...
       double miny = centrey+(get_height()/2)*ratio/zoomlevel;//...
@@ -623,7 +630,7 @@ bool TwoDeeOverview::drawviewable(int imagetype){
          else return drawviewable(2);
       }
       numbuckets = pointvector->size();
-      PointBucket** buckets = new PointBucket*[numbuckets];
+      PointBucket** buckets = new PointBucket*[numbuckets];//This is not deleted here but in the drawing thread.
       for(int i=0;i<numbuckets;i++){//Convert to pointer for faster access in for loops in image methods. Why? Expect >100000 points. ........Probably will not make any difference BUT it does mean that the data can be accessed without doing (*pointvector)[i] every time, as doing pointvector->at(i) may be slower due to checks.
          buckets[i]=(*pointvector)[i];
       }
@@ -674,10 +681,9 @@ bool TwoDeeOverview::returntostart(){
    double ydif = lidarboundary->maxY-lidarboundary->minY;
    double xratio = xdif/get_parent()->get_width();//This ratio defines, along with zoomlevel, the translation from world coordinates to window coordinates.
    double yratio = ydif/get_parent()->get_height();//...
-//   yratio*=1.3;//... (This accounts for some amount of "clutter" at the top and bottom of the screen in the form of taskbars etc.).
    if(xratio>yratio)ratio = xratio;//...
    else ratio = yratio;//...
-   ratio *= 1.1;
+   ratio *= 1.1;//The image should appear slightly smaller so that its edges do not touch the edge of the drawing area.
    profbox->setratio(ratio);
    fencebox->setratio(ratio);
    centrex = lidarboundary->minX+xdif/2;//Image should be centred at its centre.
@@ -692,8 +698,8 @@ bool TwoDeeOverview::returntostart(){
 
 //This determines what part of the image is displayed with orthographic projection. It sets the active matrix to that of projection and makes it the identity matrix, and then defines the limits of the viewing area from the dimensions of the window. *ratio/zoomlevel is there to convert window coordinates to world coordinates.
 void TwoDeeOverview::resetview(){
-   double altitude = rmaxz+5000;
-   double depth = rminz-5000;
+   double altitude = rmaxz+5000;//Extra space to work with is good.
+   double depth = rminz-5000;//...
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    glOrtho(-(get_width()/2)*ratio/zoomlevel,
@@ -705,7 +711,7 @@ void TwoDeeOverview::resetview(){
    glLoadIdentity();//...
 }
 
-//This method causes the label below the toolbar to display information about a point that has been selected (using the right mouse button). It starts by setting the label to 0 0 0. It then determines the world coordinates selected from the window coordinates and calls a subset for that. However, assuming that any points are returned at all, an entire bucket's worth of points will be returned. These points are then narrowed down to one point firstly by calling the vetpoints() function to only get the points that lie in or overlap (I think) the square defined by the point's position and the pointsize and zoom position (i.e. the size of the point on the screen). After that, all remaining points are compared and the one on top, the one with the largest z, which would likely be the one the user sees or sees mostly, is selected as THE point. Data about the point is extracted from it, with a reference to the quadtree to get the filename. The information displayed is the following: X, Y and Z values; the time; the intensity; the classification; the filename of the file the point is from and the return number.
+//This method causes the label below the toolbar to display information about a point that has been selected (using the right mouse button). It starts by setting the label to 0 0 0. It then determines the world coordinates selected from the window coordinates and calls a subset for that. However, assuming that any points are returned at all, an entire bucket's worth of points will be returned. These points are then narrowed down to one point firstly by calling the vetpoints() function to only get the points that lie in or overlap the square defined by the point's position and the pointsize and zoom position (i.e. the size of the point on the screen). After that, all remaining points are compared and the one on top, the one with the largest z, which would likely be the one the user sees or sees mostly, is selected as THE point. Data about the point is extracted from it, with a referral to the quadtree to get the filename. The information displayed is the following: X, Y and Z values; the time; the intensity; the classification; the filename of the file the point is from and the return number.
 bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    string meh = "0\n0\n0";
    double pointeroffx = eventx - get_width()/2;//This offset exists because, in world coordinates, 0 is the centre.
@@ -727,25 +733,25 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    vector<PointBucket*> *pointvector = NULL;
    bool gotdata = advsubsetproc(pointvector,xs,ys,4);//Get data.
    if(gotdata){//If there aren't any points, don't bother.
-      bool anypoint = false;
+      bool anypoint = false;//Determines whether there are any points that the user could reasonably have meant to select.
       int bucketno=0;
       int pointno=0;
       pausethread = true;//Wants exclusive access to pointbucket::getpoint().
       waitforpause();//Will sulk until gets such access.
-      for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon (unlikely?) instances where more than one bucket is returned.
-         bool* pointsinarea = vetpoints(pointvector->at(i),xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
-         for(int j=0;j<pointvector->at(i)->getNumberOfPoints(0);j++){//For all points (no sorting as it seems pointless with a maximum of four buckets possible)...
+      for(unsigned int i=0;i<pointvector->size();i++){//For every bucket, in case of the uncommon instances where more than one bucket is returned.
+         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4);//This returns an array of booleans saying whether or not each point (indicated by indices that are shared with pointvector) is in the area prescribed.
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){//For all points (no sorting as it seems pointless with a maximum of four buckets possible)...
             if(pointsinarea[j]){//If they are in the right area...
                if(!anypoint){
                   bucketno=i;
                   pointno=j;
                   anypoint = true;
                }
-               if(!reversez && pointvector->at(i)->getPoint(j,0).z >= pointvector->at(bucketno)->getPoint(pointno,0).z){//...and if they are higher than the currently selected point assuming the z values are not being reversed.
+               if(!reversez && (*pointvector)[i]->getPoint(j,0).z >= (*pointvector)[bucketno]->getPoint(pointno,0).z){//...and if they are higher than the currently selected point assuming the z values are not being reversed.
                   bucketno=i;//Select them.
                   pointno=j;//...
                }
-               else if(reversez && pointvector->at(i)->getPoint(j,0).z <= pointvector->at(bucketno)->getPoint(pointno,0).z){//...or, alternatively, if they are lower than the currently selected point assuming the z values ARE being reversed.
+               else if(reversez && (*pointvector)[i]->getPoint(j,0).z <= (*pointvector)[bucketno]->getPoint(pointno,0).z){//...or, alternatively, if they are lower than the currently selected point assuming the z values ARE being reversed.
                   bucketno=i;//Select them.
                   pointno=j;//...
                }
@@ -764,29 +770,29 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glDrawBuffer(GL_FRONT);
             glColor3f(1.0,1.0,1.0);
             glBegin(GL_LINE_LOOP);
-               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
-               glVertex3d(pointvector->at(bucketno)->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,pointvector->at(bucketno)->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d((*pointvector)[bucketno]->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,(*pointvector)[bucketno]->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d((*pointvector)[bucketno]->getPoint(pointno,0).x-centrex-0.5*pointsize*ratio/zoomlevel,(*pointvector)[bucketno]->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d((*pointvector)[bucketno]->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,(*pointvector)[bucketno]->getPoint(pointno,0).y-centrey+0.5*pointsize*ratio/zoomlevel,altitude);
+               glVertex3d((*pointvector)[bucketno]->getPoint(pointno,0).x-centrex+0.5*pointsize*ratio/zoomlevel,(*pointvector)[bucketno]->getPoint(pointno,0).y-centrey-0.5*pointsize*ratio/zoomlevel,altitude);
             glEnd();
             glDrawBuffer(GL_BACK);
             glFlush();
             glwindow->gl_end();
          }
-         string flightline = lidardata->getFileName(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);//Returns the filepath.
+         string flightline = lidardata->getFileName((*pointvector)[bucketno]->getPoint(pointno,0).flightLine);//Returns the filepath.
          size_t index = flightline.rfind("/");//Only the filename is desired, not the filepath.
          if(index==string::npos)index=0;//...
          else index++;//...
          flightline = flightline.substr(index);//...
          ostringstream x,y,z,time,intensity,classification,rnumber,flightlinenumber;
-         x << pointvector->at(bucketno)->getPoint(pointno,0).x;
-         y << pointvector->at(bucketno)->getPoint(pointno,0).y;
-         z << pointvector->at(bucketno)->getPoint(pointno,0).z;
-         time << pointvector->at(bucketno)->getPoint(pointno,0).time;
-         intensity << pointvector->at(bucketno)->getPoint(pointno,0).intensity;
-         classification << (int)pointvector->at(bucketno)->getPoint(pointno,0).classification;
-         rnumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).packedByte & returnnumber);
-         flightlinenumber << (int)(pointvector->at(bucketno)->getPoint(pointno,0).flightLine);
+         x << (*pointvector)[bucketno]->getPoint(pointno,0).x;
+         y << (*pointvector)[bucketno]->getPoint(pointno,0).y;
+         z << (*pointvector)[bucketno]->getPoint(pointno,0).z;
+         time << (*pointvector)[bucketno]->getPoint(pointno,0).time;
+         intensity << (*pointvector)[bucketno]->getPoint(pointno,0).intensity;
+         classification << (int)(*pointvector)[bucketno]->getPoint(pointno,0).classification;
+         rnumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).packedByte & returnnumber);
+         flightlinenumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).flightLine);
          pausethread = false;//Is bored with pointbucket::getpoint(), now.
          string pointstring = "X: " + x.str() + ", Y: " + y.str() + ", Z:" + z.str() + ", Time: " + time.str() + ",\n" + "Intensity: " + intensity.str() + ", Classification: " + classification.str() + ",\n" + "Flightline: " + flightline + " (" + flightlinenumber.str() + "), Return number: " + rnumber.str() + ".";
          rulerlabel->set_text(pointstring);
