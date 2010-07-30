@@ -142,6 +142,34 @@ void FileOpener::on_resolutionbase_changed(){
  * Catch:
  *    Empty the quadtree;
  *
+ * Try:
+ *    For all the filenames:
+ *       If using a fence:
+ *          If the filename is not empty:
+ *                Create LASLoader or ASCIILoader depending on file type;
+ *                If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded OR the quadtree is empty:
+ *                      Delete old quadtree (including the original dummy one if the program has just started);
+ *                      Get fence coordinates;
+ *                      Create new quadtree with data with fence;
+ *                Else:
+ *                      Get fence coordinates;
+ *                      Add data with fence to quadtree;
+ *                Write any errors to the error file;
+ *          Else do nothing;
+ *       Else:
+ *          Determine boundary of quadtree from all lines to be loaded (not necessary for fence as fence is a boundary);
+ *          If the filename is not empty:
+ *                Create LASLoader or ASCIILoader depending on file type;
+ *                If this is the first filename AND either the user has pressed the refresh button or no files have yet loaded OR the quadtree is empty:
+ *                      Delete old quadtree (including the original dummy one if the program has just started);
+ *                      Create new quadtree with data;
+ *                Else:
+ *                      Add data to quadtree;
+ *                Write any errors to the error file;
+ *          Else do nothing;
+ * Catch:
+ *    Empty the quadtree;
+ *
  * Then a pointer to the data is sent to all of the display areas, which are then prepared for displaying and then display.
  *
  *

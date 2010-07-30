@@ -816,13 +816,14 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    return true;
 }
 
+//This draws a legend on the screen that explains what the colours represent. It draws different legends depending on the colouring mode except that it draws nothing when the colouring mode is by none or by flightline (the latter because flightline numbering is arbitrary, discrete and of potentially unlimited number). This method might be made to slow LAG down less if some of its many OpenGL function calls were replaced by the vertex array method of sending instructions to the graphics card.
 void TwoDeeOverview::makecolourlegend(){
-   double rheight = get_height()*ratio/zoomlevel;
+   double rheight = get_height()*ratio/zoomlevel;//The height of the area in world coordinates.
    double padding = 0.05*rheight;
    double altitude = rmaxz+1000;//This makes sure the scale is drawn on top of the flightlines.
-   double hoffset = 10;
-   double hwidth = 20;
-   double hgap = 5;
+   double hoffset = 10;//This is the gap between the legend and the right edge of the screen.
+   double hwidth = 20;//This is the width of the coloured "key" part.
+   double hgap = 5;//This is the distance between the end of the text and the beginning of the key.
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
@@ -830,17 +831,17 @@ void TwoDeeOverview::makecolourlegend(){
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
-   gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&cornx,&corny,&cornz);
+   gluUnProject(get_width(),get_height(),0,modelview,projection,viewport,&cornx,&corny,&cornz);//Get the world coordinates of the top-right corner.
    glColor3d(1.0,1.0,1.0);//White.
-   GLint ctx = glcGenContext();
-   glcContext(ctx);
-   glcScale(14,14);
+   GLint ctx = glcGenContext();//Text context.
+   glcContext(ctx);//Attach text context.
+   glcScale(14,14);//Determine font size.
    GLfloat stringboundingbox[8];
    double stringwidth = 0,stringheight = 0;
    if(heightcolour||intensitycolour){
-      double cbmax = cbmaxz,cbmin = cbminz;
       double length = 0.9*rheight/6;
-      if(intensitycolour){
+      double cbmax = cbmaxz,cbmin = cbminz;//Getting the maxima and minima as far as the colouring is concerned.
+      if(intensitycolour){//...
          cbmax = cbmaxintensity;
          cbmin = cbminintensity;
       }
@@ -854,7 +855,7 @@ void TwoDeeOverview::makecolourlegend(){
          glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap)*ratio/zoomlevel,corny - padding - 0.5*stringheight*ratio/zoomlevel - length*i,altitude);
          glcRenderString(number.str().c_str());
       }
-      glBegin(GL_QUAD_STRIP);
+      glBegin(GL_QUAD_STRIP);//Draws a strip of quads with smooth colour transitions to give a spectrum-like effect (though the colours are in a different order from the real spectrum).
          for(int i=0;i<7;i++){
             double red,green,blue;
             colour_by(((6-i)*cbmax + i*cbmin)/6,cbmax,cbmin,red,green,blue);
@@ -933,7 +934,7 @@ void TwoDeeOverview::makecolourlegend(){
    glcDeleteContext(ctx);
 }
 
-//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too mant intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
+//This draws a scale. It works out what order of magnitude to use for the scale and the number of intervals to have in it and then modifies these if there would be too few or too many intervals. It then draws the vertical line and the small horizontal markers before setting up the font settings and then drawing the numbers by the markers.
 void TwoDeeOverview::makedistancescale(){
    double rheight = get_height()*ratio/zoomlevel;
    double order=1;

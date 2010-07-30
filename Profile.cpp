@@ -192,7 +192,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
  *       If the flightline is not already recorded, record it.
  * For every uncached bucket:
  *    For every point within the profile and within the uncached bucket:
- *       If the flightlije is not already recorded, record it.
+ *       If the flightline is not already recorded, record it.
  * For every recorded flightline:
  *    For every cached bucket:
  *       For every point within the profile and the flightline and the cached bucket:
@@ -504,7 +504,7 @@ int Profile::get_closest_element_position(Point* value,vector<Point>::iterator f
       if(linecomp(*middle,*value))first = middle;//IF the "middle" point is further along the horizontal plane-line than the passed-value point then make the "first" point equal to the "middle" point. This is because the vector and the plane are in the "wrong" order.
       else if(linecomp(*value,*middle))last = middle;//ELSE IF the opposite, make the "last" point equal to the "middle" point.
       else return distance(originalFirst,middle);//ELSE, in the very rare event that the passed point is exactly equal in x and y coordinates (or, more correctly, its "hypotenuse" is equal, as that can happen with the coordinates being different) return the position in the vector where that happens.
-      if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);//IF the "first" and "middle" are now in the same position AND the distance between first and last is now just 1, as will (almost, see above line) inevitably happen because of the properties of integer division (at the beginning of the loop), then return the distane between the original "first" and the current "middle", as this is the point that most closely approximates the position along the vector (and HORIZONTALLY across the plane) of the point passed in.
+      if(distance(first,last)<2 && distance(first,middle)<1)return distance(originalFirst,middle);//IF the "first" and "middle" are now in the same position AND the distance between first and last is now just 1, as will (almost, see above line) inevitably happen because of the properties of integer division (at the beginning of the loop), then return the distance between the original "first" and the current "middle", as this is the point that most closely approximates the position along the vector (and HORIZONTALLY across the plane) of the point passed in.
    }
 }
 
