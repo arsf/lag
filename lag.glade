@@ -1668,6 +1668,7 @@ The GNU General Public License does not permit incorporating your program into p
 Remote Sensing Group (Sea From Space),
 Plymouth Marine Laboratory)</property>
     <property name="documenters">Haraldur Tristan Gunnarsson</property>
+    <property name="artists">Haraldur Tristan Gunnarsson</property>
     <property name="logo">lagicon_small.png</property>
     <property name="wrap_license">True</property>
     <child internal-child="vbox">
