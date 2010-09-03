@@ -1,0 +1,8 @@
+2007-07-15  Mike Grant <mggr@pml.ac.uk>
+   * gtviewer.c: many changes to support multiple files and overlaying
+   * load_arsf_geotiff.c: loader for 16bit ARSF geotiffs
+2006-12-20  Jonathan duSaint  <jon@rockgeeks.net>
+   * gtviewer.c: Changed seconds macro as per Tom Cumming's fix.
+2006-03-29  Jonathan duSaint  <jon@rockgeeks.net>
+   * gtviewer.c: Coding, except for printing and help browser invocation,
+   which require Gnome, is complete.
