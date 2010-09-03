@@ -1,7 +1,7 @@
 This codebase uses the GNU packaging tools.  To get things to a sane state after checkout, do:
 autoheader && aclocal && automake --add-missing && autoconf
 
-Please note you will need a compiled version of liblidarquadtree.so on your machine, and may need to modify Makefile.am to point to this library.
+Please note you will need a compiled version of liblidarquadtree.so on your machine, and may need to modify Makefile.am to point to this library.  By default it should point to ./quadtreelink
  
 Then you can do the normal:
  ./configure
