@@ -1744,7 +1744,7 @@ on_pan_key(GdkEventKey* event,double scrollspeed){
          centrey += scrollspeed*ratio/zoomlevel;
          set_overlay_centres(centrex,centrey);
          return drawviewable(2);
-         break;.
+         break;
       case GDK_s: // Down
          centrey -= scrollspeed*ratio/zoomlevel;
          set_overlay_centres(centrex,centrey);
