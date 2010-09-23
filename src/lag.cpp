@@ -86,6 +86,7 @@ the lag executable." << endl;
       }
    }
 
+   printf("%s\n", argv[0]);
    //How many points in each bucket, maximum.
    int bucketlimit = 100000;
    //The flightlines are stored here.
@@ -96,7 +97,7 @@ the lag executable." << endl;
    Gtk::Label *rulerlabelover = NULL;
    builder->get_widget("rulerlabelover",rulerlabelover);
    //The 2d overview.
-   TwoDeeOverview *tdo = new TwoDeeOverview(glconfig, lidardata, 
+   TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, lidardata, 
                                             bucketlimit, rulerlabelover);
    // Label displaying the distance along the ruler, in all dimensions 
    // etc. for the profile.
@@ -104,7 +105,7 @@ the lag executable." << endl;
    builder->get_widget("rulerlabel",rulerlabel);
 
    //The profile.
-   Profile *prof = new Profile(glconfig, lidardata, 
+   Profile *prof = new Profile(argv[0], glconfig, lidardata, 
                                bucketlimit,rulerlabel);
    //This contains the widgets of the advanced options window.
    AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo,prof,builder);

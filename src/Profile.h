@@ -33,7 +33,7 @@
 #include "LagDisplay.h"
 class Profile : public LagDisplay{
 public:
-   Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,
+   Profile(string, const Glib::RefPtr<const Gdk::GL::Config>& config,
            Quadtree* lidardata,
            int bucketlimit,
            Gtk::Label *rulerlabel);

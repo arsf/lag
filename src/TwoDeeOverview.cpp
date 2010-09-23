@@ -35,11 +35,11 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::
-TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
+TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
                Quadtree* lidardata,
                int bucketlimit,
                Gtk::Label *rulerlabel) 
-               :LagDisplay(config,lidardata,bucketlimit){
+               :LagDisplay(fontpath, config,lidardata,bucketlimit){
 
    //Control:
    zoompower = 0.5;

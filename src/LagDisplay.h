@@ -37,7 +37,7 @@ const unsigned int FONT_CHAR_HEIGHT = 12;
 
 class LagDisplay : public Gtk::GL::DrawingArea{
 public:
-   LagDisplay(const Glib::RefPtr<const Gdk::GL::Config>& config,
+   LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
            Quadtree* lidardata,int bucketlimit);
    ~LagDisplay();
    // Sets the intial position and translation ratio from screen to world 

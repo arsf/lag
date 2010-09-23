@@ -35,7 +35,7 @@
 #include "LagDisplay.h"
 
 LagDisplay::
-LagDisplay(const Glib::RefPtr<const Gdk::GL::Config>& config, 
+LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, 
         Quadtree* lidardata,
         int bucketlimit ) : Gtk::GL::DrawingArea(config) {
 
@@ -47,7 +47,8 @@ LagDisplay(const Glib::RefPtr<const Gdk::GL::Config>& config,
    pointsize = 1;
 
    // Fonts
-   theFont = new FTGLBitmapFont("lagfonts/DejaVuSansMono.ttf");
+   fontpath += "fonts/DejaVuSansMono.ttf";
+   theFont = new FTGLBitmapFont(fontpath.c_str());
    theFont->FaceSize(12);
 
    ratio = 1.0;

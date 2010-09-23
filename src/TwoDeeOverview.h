@@ -33,7 +33,7 @@
 #include "BoxOverlay.h"
 class TwoDeeOverview : public LagDisplay{
 public:
-   TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
+   TwoDeeOverview(string, const Glib::RefPtr<const Gdk::GL::Config>& config,
                   Quadtree* lidardata,
                   int bucketlimit,
                   Gtk::Label *rulerlabelover);

@@ -32,10 +32,10 @@
 #include "MathFuncs.h"
 
 Profile::
-Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,
+Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
         Quadtree* lidardata,
         int bucketlimit,
-        Gtk::Label *rulerlabel) : LagDisplay(config,lidardata,bucketlimit){
+        Gtk::Label *rulerlabel) : LagDisplay(fontpath, config,lidardata,bucketlimit){
    //Profile stats:
    samplemaxz = sampleminz = 0;
    profps=0;
