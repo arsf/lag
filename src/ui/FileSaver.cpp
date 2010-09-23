@@ -21,28 +21,27 @@
  *
  * */
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
 #include "FileSaver.h"
 
 FileSaver::
 FileSaver(TwoDeeOverview *tdo,
           Profile *prof,
-          Glib::RefPtr<Gnome::Glade::Xml> refXml,
+          Glib::RefPtr<Gtk::Builder> builder,
           Quadtree *lidardata){
    this->tdo = tdo;
    this->prof = prof;
    this->lidardata = lidardata;
-   refXml->get_widget("filesaverdialog",filesaverdialog);
+   builder->get_widget("filesaverdialog",filesaverdialog);
    if(filesaverdialog)
       filesaverdialog->signal_response().
          connect(sigc::mem_fun(*this,&FileSaver::
                  on_filesaverdialogresponse));
-   refXml->get_widget("flightlinelistlabel",flightlinelistlabel);
-   refXml->get_widget("flightlinesaveselect",flightlinesaveselect);
+   builder->get_widget("flightlinelistlabel",flightlinelistlabel);
+   builder->get_widget("flightlinesaveselect",flightlinesaveselect);
 
    if(flightlinesaveselect)
       flightlinesaveselect->signal_value_changed().

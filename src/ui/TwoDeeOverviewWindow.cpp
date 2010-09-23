@@ -21,7 +21,6 @@
  *
  * */
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
 #include "TwoDeeOverviewWindow.h"
@@ -32,7 +31,7 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
                      FileSaver *fs,
                      Gtk::Window *tdowin,
                      Gtk::Window *profilewindow,
-                     Glib::RefPtr<Gnome::Glade::Xml> refXml,
+                     Glib::RefPtr<Gtk::Builder> builder,
                      Gtk::EventBox *eventboxtdo,
                      ProfileWindow *profwin){
    this->tdo = tdo;
@@ -48,46 +47,59 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
    drawwhentoggled = true;
    if(tdowin){//The overview window:
       tdowin->set_title("LAG Overview");
+
       //Menues:
+      //File menu
       //For saving files:
       //For selecting to get file-saving menu.
       Gtk::MenuItem *savefilemenuitem = NULL;
-      refXml->get_widget("savefilemenuitem",
+      builder->get_widget("savefilemenuitem",
                          savefilemenuitem);
       if(savefilemenuitem)
          savefilemenuitem->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_savefilemenuactivated));
+
+     
+      // Quit
+      Gtk::MenuItem *quitfilemenuitem = NULL;
+      builder->get_widget("quitfilemenuitem",
+                          quitfilemenuitem);
+      if(quitfilemenuitem)
+         quitfilemenuitem->signal_activate().
+            connect(sigc::ptr_fun(gtk_main_quit));
+
+      
       //Viewing options:
-      refXml->get_widget("showprofilecheck",
+      builder->get_widget("showprofilecheck",
                          showprofilecheck);
       if(showprofilecheck)
          showprofilecheck->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_showprofilecheck));
 
-      refXml->get_widget("showfencecheck",
+      builder->get_widget("showfencecheck",
                          showfencecheck);
       if(showfencecheck)
          showfencecheck->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_showfencecheck));
 
-      refXml->get_widget("showdistancescalecheck",
+      builder->get_widget("showdistancescalecheck",
                          showdistancescalecheck);
       if(showdistancescalecheck)
          showdistancescalecheck->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_showdistancescalecheck));
 
-      refXml->get_widget("showlegendcheck",
+      builder->get_widget("showlegendcheck",
                          showlegendcheck);
       if(showlegendcheck)
          showlegendcheck->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_showlegendcheck));
 
-      refXml->get_widget("reverseheightcheck",
+      builder->get_widget("reverseheightcheck",
                          reverseheightcheck);
       if(reverseheightcheck)
          reverseheightcheck->signal_activate().
@@ -96,42 +108,42 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
 
       //For determining how to colour the overview:
       Gtk::RadioMenuItem *colourbynonemenu = NULL;
-      refXml->get_widget("colourbynonemenu",
+      builder->get_widget("colourbynonemenu",
                          colourbynonemenu);
       if(colourbynonemenu)
          colourbynonemenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_colouractivated));
 
-      refXml->get_widget("colourbyintensitymenu",
+      builder->get_widget("colourbyintensitymenu",
                          colourbyintensitymenu);
       if(colourbyintensitymenu)
          colourbyintensitymenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_colouractivated));
 
-      refXml->get_widget("colourbyheightmenu",
+      builder->get_widget("colourbyheightmenu",
                          colourbyheightmenu);
       if(colourbyheightmenu)
          colourbyheightmenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_colouractivated));
 
-      refXml->get_widget("colourbyflightlinemenu",
+      builder->get_widget("colourbyflightlinemenu",
                          colourbyflightlinemenu);
       if(colourbyflightlinemenu)
          colourbyflightlinemenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_colouractivated));
 
-      refXml->get_widget("colourbyclassificationmenu",
+      builder->get_widget("colourbyclassificationmenu",
                          colourbyclassificationmenu);
       if(colourbyclassificationmenu)
          colourbyclassificationmenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_colouractivated));
 
-      refXml->get_widget("colourbyreturnmenu",
+      builder->get_widget("colourbyreturnmenu",
                          colourbyreturnmenu);
       if(colourbyreturnmenu)
          colourbyreturnmenu->signal_activate().
@@ -140,21 +152,21 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
 
       //For determining how to shade the overview:
       Gtk::RadioMenuItem *brightnessbynonemenu = NULL;
-      refXml->get_widget("brightnessbynonemenu",
+      builder->get_widget("brightnessbynonemenu",
                          brightnessbynonemenu);
       if(brightnessbynonemenu)
          brightnessbynonemenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_brightnessactivated));
 
-      refXml->get_widget("brightnessbyintensitymenu",
+      builder->get_widget("brightnessbyintensitymenu",
                          brightnessbyintensitymenu);
       if(brightnessbyintensitymenu)
          brightnessbyintensitymenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_brightnessactivated));
 
-      refXml->get_widget("brightnessbyheightmenu",
+      builder->get_widget("brightnessbyheightmenu",
                          brightnessbyheightmenu);
       if(brightnessbyheightmenu)
          brightnessbyheightmenu->signal_activate().
@@ -162,14 +174,14 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
                     on_brightnessactivated));
       //Help menu:
       Gtk::MenuItem *helpmenu = NULL;
-      refXml->get_widget("helpmenu",
+      builder->get_widget("helpmenu",
                          helpmenu);
       if(helpmenu)
          helpmenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_helpmenuactivated));
 
-      refXml->get_widget("help",
+      builder->get_widget("help",
                          help);
       if(help)
          help->signal_response().
@@ -177,14 +189,14 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
                     on_helpresponse));
 
       Gtk::MenuItem *aboutmenu = NULL;
-      refXml->get_widget("aboutmenu",
+      builder->get_widget("aboutmenu",
                          aboutmenu);
       if(aboutmenu)
          aboutmenu->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_aboutmenuactivated));
 
-      refXml->get_widget("about",
+      builder->get_widget("about",
                          about);
       if(about)
          about->signal_response().
@@ -195,7 +207,7 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
       // This returns the viewpoint to the initial one for that file or 
       // selection of files.
       Gtk::ToolButton *returnbutton = NULL;
-      refXml->get_widget("returnbutton",
+      builder->get_widget("returnbutton",
                          returnbutton);
       if(returnbutton)
          returnbutton->signal_clicked().
@@ -204,7 +216,7 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
 
       // Advanced viewing options:
       Gtk::ToolButton *advancedbutton = NULL;
-      refXml->get_widget("advancedbutton",
+      builder->get_widget("advancedbutton",
                          advancedbutton);
       if(advancedbutton)
          advancedbutton->signal_clicked().
@@ -212,19 +224,16 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
                     on_advancedbutton_clicked));
 
       //For overview image viewing attributes:
-      refXml->get_widget("pointwidthselect",
+      builder->get_widget("pointwidthselect",
                          pointwidthselect);
       if(pointwidthselect){
-         // Essentially arbitrary. Would there be any situation where a width 
-         // greater than 300 pixels would be wanted? Very far future?
-         pointwidthselect->set_range(1,300);
          pointwidthselect->set_value(1);
          pointwidthselect->signal_value_changed().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_pointwidthselected));
       }
       //The ruler:
-      refXml->get_widget("rulertoggleover",
+      builder->get_widget("rulertoggleover",
                          rulertoggleover);
       if(rulertoggleover)
          rulertoggleover->signal_toggled().
@@ -232,72 +241,73 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
                     on_rulertoggleover));
 
       //Fence and profile toggles and attribute selectors:
-      refXml->get_widget("fencetoggle",
+      builder->get_widget("fencetoggle",
                          fencetoggle);
       if(fencetoggle)
          fencetoggle->signal_toggled().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_fencetoggle));
 
-      refXml->get_widget("profiletoggle",
+      builder->get_widget("profiletoggle",
                          profiletoggle);
       if(profiletoggle)
          profiletoggle->signal_toggled().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_profiletoggle));
 
-      refXml->get_widget("orthogonalrectshapetoggle",
+      builder->get_widget("orthogonalrectshapetoggle",
                          orthogonalrectshapetoggle);
       if(orthogonalrectshapetoggle)
          orthogonalrectshapetoggle->signal_toggled().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_orthogonalrectshapetoggle));
 
-      refXml->get_widget("slantedrectshapetoggle",
+      builder->get_widget("slantedrectshapetoggle",
                          slantedrectshapetoggle);
       if(slantedrectshapetoggle)
          slantedrectshapetoggle->signal_toggled().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_slantedrectshapetoggle));
 
-      refXml->get_widget("slantwidthselect",
+      builder->get_widget("slantwidthselect",
                          slantwidthselect);
       if(slantwidthselect){
          // Essentially arbitrary. Would there be any situation where a width 
          // greater than 30 km would be wanted?
-         slantwidthselect->set_range(0,30000);
+         //slantwidthselect->set_range(0,30000);
          slantwidthselect->set_value(5);
          slantwidthselect->signal_value_changed().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_slantwidthselected));
       }
-      refXml->get_widget("raiselinecheckmenu",raiselinecheckmenu);
+      builder->get_widget("raiselinecheckmenu",raiselinecheckmenu);
       if(raiselinecheckmenu)
          raiselinecheckmenu->signal_toggled().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_raiselinecheckmenu));
 
-      refXml->get_widget("raiselineselect",raiselineselect);
+      builder->get_widget("raiselineselect",raiselineselect);
       if(raiselineselect)
          raiselineselect->signal_value_changed().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_raiselineselected));
 
       tdowin->show_all();
-      tdo->set_size_request(200,200);
+      //tdo->set_size_request(200,200);
       //Initialisations:
       tdo->setshowprofile(showprofilecheck->get_active());
       tdo->setshowfence(showfencecheck->get_active());
       tdo->setshowdistancescale(showdistancescalecheck->get_active());
       tdo->setshowlegend(showlegendcheck->get_active());
       tdo->setreversez(reverseheightcheck->get_active());
-      tdo->setintensitycolour(colourbyintensitymenu->get_active());
-      tdo->setheightcolour(colourbyheightmenu->get_active());
-      tdo->setlinecolour(colourbyflightlinemenu->get_active());
-      tdo->setclasscolour(colourbyclassificationmenu->get_active());
-      tdo->setreturncolour(colourbyreturnmenu->get_active());
-      tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
-      tdo->setheightbrightness(brightnessbyheightmenu->get_active());
+  
+      //tdo->setintensitycolour(colourbyintensitymenu->get_active());
+      //tdo->setheightcolour(colourbyheightmenu->get_active());
+      //tdo->setlinecolour(colourbyflightlinemenu->get_active());
+      //tdo->setclasscolour(colourbyclassificationmenu->get_active());
+      //tdo->setreturncolour(colourbyreturnmenu->get_active());
+      //tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
+      //tdo->setheightbrightness(brightnessbyheightmenu->get_active());
       tdo->setpointwidth(pointwidthselect->get_value());
       tdo->getprofbox()->
             setslantwidth(slantwidthselect->get_value());
@@ -321,6 +331,8 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
          !colourbyheightmenu->get_active() && 
          !colourbyclassificationmenu->get_active() && 
          !colourbyreturnmenu->get_active());
+
+      
    }
 }
 TwoDeeOverviewWindow::
@@ -397,11 +409,24 @@ on_reverseheightcheck(){
 // in the overview to the values of the corresponding radio menu items.
 void TwoDeeOverviewWindow::
 on_colouractivated(){
-   tdo->setintensitycolour(colourbyintensitymenu->get_active());
-   tdo->setheightcolour(colourbyheightmenu->get_active());
-   tdo->setlinecolour(colourbyflightlinemenu->get_active());
-   tdo->setclasscolour(colourbyclassificationmenu->get_active());
-   tdo->setreturncolour(colourbyreturnmenu->get_active());
+   if (colourbyintensitymenu->get_active())
+      tdo->setColourBy(tdo->colourByIntensity);
+   else if (colourbyheightmenu->get_active())
+      tdo->setColourBy(tdo->colourByHeight);
+   else if (colourbyflightlinemenu->get_active())
+      tdo->setColourBy(tdo->colourByFlightline);
+   else if (colourbyclassificationmenu->get_active())
+      tdo->setColourBy(tdo->colourByClassification);
+   else if (colourbyreturnmenu->get_active())
+      tdo->setColourBy(tdo->colourByReturn);
+   else
+      tdo->setColourBy(tdo->colourByNone);
+ 
+//   tdo->setintensitycolour(colourbyintensitymenu->get_active());
+//   tdo->setheightcolour(colourbyheightmenu->get_active());
+//   tdo->setlinecolour(colourbyflightlinemenu->get_active());
+//   tdo->setclasscolour(colourbyclassificationmenu->get_active());
+//   tdo->setreturncolour(colourbyreturnmenu->get_active());
 
    // This is to help prevent confusion when the user decides to show the 
    // legend and nothing happens because of there being no legend when 
@@ -425,8 +450,16 @@ on_colouractivated(){
 // menu items.
 void TwoDeeOverviewWindow::
 on_brightnessactivated(){
-   tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
-   tdo->setheightbrightness(brightnessbyheightmenu->get_active());
+
+   if (brightnessbyintensitymenu->get_active())
+      tdo->setBrightnessBy(tdo->brightnessByIntensity);
+   else if (brightnessbyheightmenu->get_active())
+      tdo->setBrightnessBy(tdo->brightnessByHeight);
+   else
+      tdo->setBrightnessBy(tdo->brightnessByNone);
+
+//   tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
+//   tdo->setheightbrightness(brightnessbyheightmenu->get_active());
 
    // As the signal handler is called twice (each time a radio button is 
    // toggle or untoggled, and toggling one automatically untoggles another), 

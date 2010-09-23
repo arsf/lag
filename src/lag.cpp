@@ -22,14 +22,13 @@
  * */
 #include <iostream>
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
-#include "TwoDeeOverviewWindow.h"
-#include "ProfileWindow.h"
-#include "FileOpener.h"
+#include "ui/TwoDeeOverviewWindow.h"
+#include "ui/ProfileWindow.h"
+#include "ui/FileOpener.h"
 using namespace std;
 
 // Takes the path the executable was called with and uses it to find the 
@@ -48,31 +47,31 @@ string findgladepath(char* programpath){
    else 
       index++;
    string gladename = exename;
-   gladename.replace(index,9,"lag.glade");
+   gladename.replace(index,9,"lag.ui");
    cout << exename << endl;
    cout << gladename << endl;
    return gladename;
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.07.29.1" << endl;
+   cout << "Build number: 2010.09.13.1" << endl;
    //This allows the creation and running of threads.
    Glib::thread_init();
    // This is required for GTK to work. It must be the first GTK object 
    // created and may not be global.
    Gtk::Main gtkmain(argc, argv);
    //This will extract widgets from the glade file when directed.
-   Glib::RefPtr<Gnome::Glade::Xml> refXml;
-   try{
+   Glib::RefPtr<Gtk::Builder> builder;
+   //try{
       //Assign the glade file used to build the GUI.
-      refXml = Gnome::Glade::Xml::create(findgladepath(argv[0]));
-   }
-   catch(const Gnome::Glade::XmlError& ex){ 
-      cerr << ex.what() << std::endl;
-      cerr << "The file lag.glade must be located in the same directory as \
-               the lag executable." << endl;
-      return 1;
-   }
+      builder = Gtk::Builder::create_from_file(findgladepath(argv[0]));
+   //}
+   //catch(const Gnome::Glade::XmlError& ex){ 
+   //   cerr << ex.what() << std::endl;
+   //   cerr << "The file lag.glade must be located in the same directory as \
+the lag executable." << endl;
+   //   return 1;
+   //}
    Gtk::GL::init(argc, argv);
    Glib::RefPtr<Gdk::GL::Config> glconfig;
    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB |
@@ -95,51 +94,53 @@ int main(int argc, char** argv) {
    // for the overview. Also other text output about the data and fences,
    // profiles etc. is put here.
    Gtk::Label *rulerlabelover = NULL;
-   refXml->get_widget("rulerlabelover",rulerlabelover);
+   builder->get_widget("rulerlabelover",rulerlabelover);
    //The 2d overview.
    TwoDeeOverview *tdo = new TwoDeeOverview(glconfig, lidardata, 
                                             bucketlimit, rulerlabelover);
    // Label displaying the distance along the ruler, in all dimensions 
    // etc. for the profile.
    Gtk::Label *rulerlabel = NULL;
-   refXml->get_widget("rulerlabel",rulerlabel);
+   builder->get_widget("rulerlabel",rulerlabel);
 
    //The profile.
    Profile *prof = new Profile(glconfig, lidardata, 
                                bucketlimit,rulerlabel);
    //This contains the widgets of the advanced options window.
-   AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo,prof,refXml);
+   AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo,prof,builder);
    //This contains the widgets of the file saver window.
-   FileSaver *fs = new FileSaver(tdo,prof,refXml,lidardata);
+   FileSaver *fs = new FileSaver(tdo,prof,builder,lidardata);
    // Contains the overview. It is used to simulate the 2d overview getting 
    // focus without causing it to be redrawn every time.
    Gtk::EventBox *eventboxtdo = NULL;
-   refXml->get_widget("eventboxtdo",eventboxtdo);
+   builder->get_widget("eventboxtdo",eventboxtdo);
    // Contains the profile. It is used to simulate the profile getting focus 
    // without causing it to be redrawn every time.
    Gtk::EventBox *eventboxprof = NULL;
-   refXml->get_widget("eventboxprof",eventboxprof);
+   builder->get_widget("eventboxprof",eventboxprof);
    Gtk::Window *overviewwindow = NULL;
-   refXml->get_widget("overviewwindow", overviewwindow);
+   builder->get_widget("overviewwindow", overviewwindow);
    Gtk::Window *profilewindow = NULL;
-   refXml->get_widget("profilewindow", profilewindow);
+   builder->get_widget("profilewindow", profilewindow);
    //This contains the widgets of the profile window.
    ProfileWindow *profwin = new ProfileWindow(prof, tdo, profilewindow, 
                                               overviewwindow, eventboxprof,
-                                              refXml, aow);
+                                              builder, aow);
 
    //This contains the widgets of the 2D overview window.
    TwoDeeOverviewWindow *tdow = new TwoDeeOverviewWindow(tdo, aow, fs, 
                                                          overviewwindow,
-                                                         profilewindow, refXml, 
+                                                         profilewindow, builder, 
                                                          eventboxtdo,profwin);
    //This contains the widgets of the file opener window.
-   FileOpener *fo = new FileOpener(tdo, prof, refXml, aow, fs, lidardata, 
+   FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, lidardata, 
                                    bucketlimit,eventboxtdo,eventboxprof,tdow);
    
    //In case of command-line commands 
    fo->testfilename(argc,argv,true,false);
+   gdk_threads_enter();
    gtkmain.run(*overviewwindow);
+   gdk_threads_leave();
    delete tdow;
    delete profwin;
    delete fo;

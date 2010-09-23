@@ -20,18 +20,18 @@
  * Written: December 2009 - July 2010
  *
  * */
+#ifndef PROFILE_H
+#define PROFILE_H
+
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
-#include "QuadtreeStructs.h"
+#include "SelectionBox.h"
 #include "PointBucket.h"
 #include <vector>
 #include <boost/bind.hpp>
-#include "Display.h"
-#ifndef PROFILE_H
-#define PROFILE_H
-class Profile : public Display{
+#include "LagDisplay.h"
+class Profile : public LagDisplay{
 public:
    Profile(const Glib::RefPtr<const Gdk::GL::Config>& config,
            Quadtree* lidardata,
@@ -184,7 +184,7 @@ protected:
    // This is a pointer (array) of vectors of points, representing for each 
    // flightline (the elements of the array) the points that it contains (the 
    // vectors).
-   vector<Point>* flightlinepoints;
+   vector<LidarPoint>* flightlinepoints;
    //Store the maximum and minimum heights of the profile sample.
    double samplemaxz,sampleminz;
 
@@ -195,35 +195,43 @@ protected:
    double leftboundx,leftboundy,rightboundx,rightboundy;
    // These give the centre of the viewport in image terms, rather than 
    // screen terms.
-   double centrex,centrey,centrez;
+   //double centrex,centrey,centrez;
    //These give the coordinates of the "eye", looking towards the centre.
-   double viewerx,viewery,viewerz;
+//   double viewerx,viewery,viewerz;
+   Point viewer;
    //Coordinates of the start of the pan move.
-   double panstartx,panstarty;
+   //double panstartx,panstarty;
    // These indicate the "minimum" (i.e. left) coordinates of the 
    // viewable plane.
-   double minplanx,minplany;
+   Point minPlan;
+//   double minplanx,minplany;
    //The start coordinates of the profile.
-   double startx,starty;
+//   double startx,starty;
+   Point start;
    //The end coordinates of the profile.
-   double endx,endy;
+//   double endx,endy;
+   Point end;
    //The width of the profile.
    double width;
  
    //Rulering:
    //The start coordinates for the ruler.
-   double rulerstartx,rulerstarty,rulerstartz;
+//   double rulerstartx,rulerstarty,rulerstartz;
+   Point rulerStart;
    //The end coordinates for the ruler.
-   double rulerendx,rulerendy,rulerendz;
+//   double rulerendx,rulerendy,rulerendz;
+   Point rulerEnd;
    //The width of the ruler.
    double rulerwidth;
    //Determines whether or not the ruler should be drawn.
    bool rulering;
    //Fencing:
    //The start coordinates for the fence.
-   double fencestartx,fencestarty,fencestartz;
+//   double fencestartx,fencestarty,fencestartz;
+   Point fenceStart;
    //The end coordinates for the fence.
-   double fenceendx,fenceendy,fenceendz;
+//   double fenceendx,fenceendy,fenceendz;
+   Point fenceEnd;
    //Determines whether or not the fence should be drawn.
    bool fencing;
  
@@ -257,9 +265,9 @@ protected:
    // "distance along the viewing plane" value is the cloeset to it or, more 
    // strictly, the one whose value would mean it would be just before it if 
    // the given point was already part of the vector.
-   int get_closest_element_position(Point* value,
-                                    vector<Point>::iterator first,
-                                    vector<Point>::iterator last);
+   int get_closest_element_position(LidarPoint value,
+                                    vector<LidarPoint>::iterator first,
+                                    vector<LidarPoint>::iterator last);
    //Draw all of the make methods indented below.
    void drawoverlays();
    //Make line showing where the ruler is.
@@ -272,7 +280,7 @@ protected:
    // point is further from the "start line" of the plane than the second point.
    // It is used both to sort the points along the plane and to search for 
    // points along the plane (called from get_closest_element_position).
-   bool linecomp(const Point& a,const Point& b);
+   bool linecomp(LidarPoint a, LidarPoint b);
  
    //Positioning methods:
    // Determines what part of the image is displayed with orthographic 

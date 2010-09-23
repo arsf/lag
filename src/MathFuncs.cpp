@@ -70,17 +70,17 @@ bool* vetpoints(PointBucket* points, double* xs, double* ys,
       for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){
          // This segments the line to the length of the segment that 
          // helps define the boundary.
-         if((ys[currentcorner] < points->getPoint(i,0).y && 
-             ys[lastcorner] >= points->getPoint(i,0).y) ||
-            (ys[lastcorner] < points->getPoint(i,0).y && 
-             ys[currentcorner] >= points->getPoint(i,0).y)){
+         if((ys[currentcorner] < points->getPoint(i,0).getY() && 
+             ys[lastcorner] >= points->getPoint(i,0).getY()) ||
+            (ys[lastcorner] < points->getPoint(i,0).getY() && 
+             ys[currentcorner] >= points->getPoint(i,0).getY())){
             // If the point is to the right of the line defined by the corners 
             // (and segmented by the above if statement), i.e. the edge:
             if(xs[currentcorner] + 
-               ((points->getPoint(i,0).y - ys[currentcorner]) /
+               ((points->getPoint(i,0).getY() - ys[currentcorner]) /
                (ys[lastcorner] - ys[currentcorner])) * 
                (xs[lastcorner] - xs[currentcorner]) < 
-               points->getPoint(i,0).x) {
+               points->getPoint(i,0).getX()) {
                // If done an odd number of times, the point must be within the 
                // shape, otherwise without.
                pointinboundary = !pointinboundary;

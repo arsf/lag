@@ -20,14 +20,19 @@
  * Written: June-July 2010
  *
  * */
-#include <iostream>
-#include <gtkmm.h>
-#include <vector>
 #ifndef BOXOVERLAY_H
 #define BOXOVERLAY_H
+#include <iostream>
+
+#include <gtkmm.h>
+#include <vector>
+#include "Colour.h"
+#include "Point.h"
+#include "SelectionBox.h"
+
 class BoxOverlay{
 public:
-   BoxOverlay(Gtk::Label *label,double* majorcolour,double* minorcolour);
+   BoxOverlay(Gtk::Label *label,Colour majorcolour,Colour minorcolour);
    ~BoxOverlay();
    // Determine the boundaries from the start and end points of the user's 
    // clicks and drags and whether to be orthogonal or slanted.
@@ -35,21 +40,20 @@ public:
    //Make the box with one line possibly in a different colour..
    void makebox(double rmaxz);
    //Defines the start point and, initially, the end point.
-   void on_start(double x,double y,double areawidth,double areaheight);
+   void on_start(Point,double areawidth,double areaheight);
    //Defines the end point.
-   void on_(double x,double y, double areawidth,double areaheight);
+   void on_(Point, double areawidth,double areaheight);
    // Moves the box using keyboard input, with different methods depending 
    // on slantedness and directionality.
    bool on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);
    //Outputs coordinate information to the label.
    void drawinfo();
    //Getters:
-  //Get coordinates for boundaries.
-   void getboundaries(double*& xs,double*& ys,int& ps){
-      xs = this->xs;
-      ys = this->ys;
-      ps = this->ps;
+   
+   SelectionBox getSelectionBox() {
+      return _theBox;
    }
+
    //Setters:
    //Set width of the slanted box.
    void setslantwidth(double slantwidth){ 
@@ -72,9 +76,8 @@ public:
       this->zoomlevel = zoomlevel;
    }
 
-   void setcentre(double centrex,double centrey){
-      this->centrex = centrex; 
-      this->centrey = centrey;
+   void setcentre(Point centre){
+      _centre = centre;
 }
 
 protected:
@@ -90,26 +93,24 @@ protected:
    //the ruler.
    Gtk::Label *label;
    //This is the colour of three of the four lines that make up the box.
-   double* majorcolour;
+   Colour _majorcolour;
    // This is the colour of the line that, for a profile, represents the 
    // near clipping plane  and indicates where the profile is used from.
-   double* minorcolour;
+   Colour _minorcolour;
    //These are returned to other objects to define the box.
    //Store the boundaries of the profile:
-   double* xs;
-   double* ys;
-   //Stores the number of corners for the profile.
-   int ps;
+   SelectionBox _theBox;
+   // Stores the number of corners for the profile.
    // Position variables:
    // These give the centre of the viewport in image terms, rather than 
    // screen terms.
-   double centrex,centrey;
+   Point _centre;
    //The width of the slanted box in world units.
    double slantwidth;
    //The start coordinates in world units.
-   double startx, starty;
+   Point _start;
    //The end coordinates in world units.
-   double endx, endy;
+   Point _end;
    // This stores the ratio for translating to and from screen scale and 
    // world scale. It should be set to be the same as in the parent Display 
    // area.

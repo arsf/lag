@@ -20,25 +20,26 @@
  * Written: June-July 2010
  *
  * */
-#include <gtkmm.h>
-#include <libglademm/xml.h>
-#include <gtkglmm.h>
-#include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
-#include "AdvancedOptionsWindow.h"
+
 #ifndef PROFILEWINDOW_H
 #define PROFILEWINDOW_H
 
+#include <gtkmm.h>
+#include <gtkglmm.h>
+#include <vector>
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
+#include "AdvancedOptionsWindow.h"
+
 class ProfileWindow{
 public:
-   ProfileWindow(Profile *prof,
-                 TwoDeeOverview *tdo,
-                 Gtk::Window *profilewindow,
-                 Gtk::Window *overviewwindow,
-                 Gtk::EventBox *eventboxprof,
-                 Glib::RefPtr<Gnome::Glade::Xml> refXml,
-                 AdvancedOptionsWindow *aow);
+   ProfileWindow(Profile*,
+                 TwoDeeOverview*,
+                 Gtk::Window*,
+                 Gtk::Window*,
+                 Gtk::EventBox*,
+                 Glib::RefPtr<Gtk::Builder>,
+                 AdvancedOptionsWindow*);
    ~ProfileWindow();
    //This grabs the profile from the overview.
    void on_showprofilebutton_clicked();

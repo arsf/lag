@@ -20,18 +20,18 @@
  * Written: November 2009 - July 2010
  *
  * */
-#include <gtkmm.h>
-#include <libglademm/xml.h>
-#include <gtkglmm.h>
-#include "Quadtree.h"
-#include "QuadtreeStructs.h"
-#include "PointBucket.h"
-#include <vector>
-#include "Display.h"
-#include "BoxOverlay.h"
 #ifndef TWODEEOVERVIEW_H
 #define TWODEEOVERVIEW_H
-class TwoDeeOverview : public Display{
+
+#include <gtkmm.h>
+#include <gtkglmm.h>
+#include "Quadtree.h"
+#include "PointBucket.h"
+#include <vector>
+#include "LagDisplay.h"
+#include "SelectionBox.h"
+#include "BoxOverlay.h"
+class TwoDeeOverview : public LagDisplay{
 public:
    TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
                   Quadtree* lidardata,
@@ -130,12 +130,31 @@ public:
       rulering=false;
    }
    //Getters:
-   void getprofile(double*& profxs,double*& profys,int& profps){
-      profbox->getboundaries(profxs,profys,profps);
+   SelectionBox getProfile() {
+      return profbox->getSelectionBox();
    }
-   void getfence(double*& fencexs,double*& fenceys,int&fenceps){
-      fencebox->getboundaries(fencexs,fenceys,fenceps);
+
+   SelectionBox getFence() {
+      return fencebox->getSelectionBox();
    }
+
+   void getprofile(double*& profxs, double*& profys, int& profps){
+      //profbox->getboundaries(corners, profps);
+      profxs = profbox->getSelectionBox().getXs();
+      profys = profbox->getSelectionBox().getYs();
+      profps = 4;
+   }
+
+//   void getfence(double*& profxs, double*& profys, int& profps) {
+//      profxs = fencebox->getSelectionBox().getXs();
+//      profys = fencebox->getSelectionBox().getYs();
+//      profps = 4;
+//   }
+
+//   void getfence(Point* corners,int&fenceps){
+//      fencebox->getboundaries(corners, fenceps);
+//   }
+
    bool getpausethread(){ 
       return pausethread; 
    }
@@ -331,45 +350,53 @@ protected:
    //Position variables:
    // These give the centre of the viewport in image terms, rather than screen 
    // terms.
-   double centrex,centrey;
+//   Point centre;
+   Point centreSafe;
+//   Point panStart;
+//   double centrex,centrey;
    // These are "safe" stores of the coordinates of the centre of the screen. 
    // Safe in that they will not change (we hope) while the drawing thread is 
    // running. These are in object-wide scope, despite being used in multiple 
    // threads, because they are needed to draw the buckets properly when 
    // doing preview.
-   double centrexsafe,centreysafe;
+//   double centrexsafe,centreysafe;
    //Coordinates of the start of the pan move.
-   double panstartx,panstarty;
+//   double panstartx,panstarty;
  
    //Overlays:
    // Label showing the distance, in various dimensions, covered by the ruler 
    // and also the coordinates of fences and profiles.
    Gtk::Label *rulerlabel;
-      //Profiling:
-      //Determines whether or not the profile should be drawn.
-      bool profiling;
-      //Whether to display the profile box when not modifying it. 
-      bool showprofile;
-      //This represents the profile.
-      BoxOverlay* profbox;
-      //Fencing:
-      //Determines whether or not the fence should be drawn.
-      bool fencing;
-      //Whether to display the fence when not modifying it.
-      bool showfence;
-      //This represents the fence.
-      BoxOverlay* fencebox;
-      //Rulering:
-      //The start coordinates of the ruler in pixels.
-      double rulereventstartx,rulereventstarty;
-      //The start coordinates for the ruler in world units. 
-      double rulerstartx,rulerstarty;
-      //The end coordinates for the ruler in world units
-      double rulerendx,rulerendy;
-      //The width of the ruler in pixels.
-      double rulerwidth;
-      //Determines whether or not the ruler should be drawn.
-      bool rulering;
+   //Profiling:
+   //Determines whether or not the profile should be drawn.
+   bool profiling;
+   //Whether to display the profile box when not modifying it. 
+   bool showprofile;
+   //This represents the profile.
+   //SelectionBox profileSelectionBox;
+   BoxOverlay* profbox;
+   //Fencing:
+   //Determines whether or not the fence should be drawn.
+   bool fencing;
+   //Whether to display the fence when not modifying it.
+   bool showfence;
+   //This represents the fence.
+   //SelectionBox fenceSelectionBox;
+   BoxOverlay* fencebox;
+   //Rulering:
+   //The start coordinates of the ruler in pixels.
+//   double rulereventstartx,rulereventstarty;
+   Point rulerEventStart;
+   //The start coordinates for the ruler in world units. 
+//   double rulerstartx,rulerstarty;
+   Point rulerStart;
+   //The end coordinates for the ruler in world units
+//   double rulerendx,rulerendy;
+   Point rulerEnd;
+   //The width of the ruler in pixels.
+   double rulerwidth;
+   //Determines whether or not the ruler should be drawn.
+   bool rulering;
  
    //Classification heightening:
    bool heightenNonC;
@@ -458,9 +485,9 @@ protected:
    }
 
    //Set centres of the overlays.
-   void set_overlay_centres(double centrex,double centrey){ 
-      profbox->setcentre(centrex,centrey);
-      fencebox->setcentre(centrex,centrey); 
+   void set_overlay_centres(Point centre){ 
+      profbox->setcentre(centre);
+      fencebox->setcentre(centre); 
    }
 
    //Panning control:   

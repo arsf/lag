@@ -20,22 +20,23 @@
  * Written: June-July 2010
  *
  * */
+
+#ifndef FILESAVER_H
+#define FILESAVER_H
+
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
 #include "Quadtree.h"
-#include "TwoDeeOverview.h"
-#include "Profile.h"
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
 #include "LasSaver.h"
-#ifndef FILESAVER_H
-#define FILESAVER_H
 class FileSaver{
 public:
-   FileSaver(TwoDeeOverview *tdo,
-             Profile *prof,
-             Glib::RefPtr<Gnome::Glade::Xml> refXml,
-             Quadtree *lidardata);
+   FileSaver(TwoDeeOverview*,
+             Profile*,
+             Glib::RefPtr<Gtk::Builder>,
+             Quadtree*);
 
    ~FileSaver();
 

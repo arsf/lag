@@ -21,17 +21,17 @@
  *
  * */
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
+#include "../SelectionBox.h"
 #include "FileOpener.h"
 
 FileOpener::
 FileOpener(TwoDeeOverview *tdo,
            Profile *prof,
-           Glib::RefPtr<Gnome::Glade::Xml> refXml,
+           Glib::RefPtr<Gtk::Builder> builder,
            AdvancedOptionsWindow *aow,
            FileSaver *fs,
            Quadtree *lidardata,
@@ -61,22 +61,22 @@ FileOpener(TwoDeeOverview *tdo,
    //For selecting to get file-opening menu.
    Gtk::MenuItem *openfilemenuitem = NULL;
 
-   refXml->get_widget("openfilemenuitem",openfilemenuitem);
+   builder->get_widget("openfilemenuitem",openfilemenuitem);
    if(openfilemenuitem)
       openfilemenuitem->signal_activate().
          connect(sigc::mem_fun(*this,&FileOpener::
                  on_openfilemenuactivated));
 
-   refXml->get_widget("filechooserdialog",filechooserdialog);
+   builder->get_widget("filechooserdialog",filechooserdialog);
    if(filechooserdialog)
       filechooserdialog->signal_response().
          connect(sigc::mem_fun(*this,&FileOpener::
                  on_filechooserdialogresponse));
 
-   refXml->get_widget("pointskipselect",pointskipselect);
-   refXml->get_widget("fenceusecheck",fenceusecheck);
-   refXml->get_widget("asciicodeentry",asciicodeentry);
-   refXml->get_widget("cachesizeselect",cachesizeselect);
+   builder->get_widget("pointskipselect",pointskipselect);
+   builder->get_widget("fenceusecheck",fenceusecheck);
+   builder->get_widget("asciicodeentry",asciicodeentry);
+   builder->get_widget("cachesizeselect",cachesizeselect);
    if(cachesizeselect){
       // That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 
       // 2009-10, so, if the rate of increase is that of quadrupling every 
@@ -86,7 +86,7 @@ FileOpener(TwoDeeOverview *tdo,
       // LAG to use a quarter of my resources.
       cachesizeselect->set_value(25000000);
       cachesizeselect->set_increments(1000000,1000000);
-      refXml->get_widget("cachesizeGBlabel",cachesizeGBlabel);
+      builder->get_widget("cachesizeGBlabel",cachesizeGBlabel);
       if(cachesizeGBlabel){
          on_cachesize_changed();
          cachesizeselect->signal_value_changed().
@@ -94,8 +94,8 @@ FileOpener(TwoDeeOverview *tdo,
                     on_cachesize_changed));
       }
    }
-   refXml->get_widget("loadoutputlabel",loadoutputlabel);
-   refXml->get_widget("resbaseselect",resbaseselect);
+   builder->get_widget("loadoutputlabel",loadoutputlabel);
+   builder->get_widget("resbaseselect",resbaseselect);
    if(resbaseselect){
       // What is the probability someone will seriously want resolutions of 
       // 1000^(-x)? Note that a value of less than 2 would cause serious 
@@ -104,7 +104,7 @@ FileOpener(TwoDeeOverview *tdo,
       resbaseselect->set_value(4);
       resbaseselect->set_increments(1,1);
    }
-   refXml->get_widget("resdepthselect",resdepthselect);
+   builder->get_widget("resdepthselect",resdepthselect);
    if(resdepthselect){
       on_resolutionbase_changed();
       resbaseselect->signal_value_changed().
@@ -270,10 +270,12 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
             if(filename != ""){
                //These are NOT to be deleted here as the arrays they will point 
                //to are managed by the TwoDeeOVerview object.
-               double *fencexs = NULL,*fenceys = NULL;
-               int fenceps = 0;
-               if(tdo->is_realized())tdo->getfence(fencexs,fenceys,fenceps);
-               if(fencexs!=NULL&&fenceys!=NULL){
+               SelectionBox fence;
+                 //int numberOfFenceCorners = 0;
+               if(tdo->is_realized())
+                  fence = tdo->getFence();
+                  if (true) {
+//               if(fence != NULL){
                   LidarPointLoader *loader = NULL;
                   bool validfile = true;
 
@@ -314,7 +316,7 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                         lidardata = NULL;
                         loaderrorstream->str("");
                         lidardata = new Quadtree(loader,bucketlimit,poffs,
-                                           fencexs,fenceys,fenceps,cachelimit,
+                                           fence.getXs(), fence.getYs(), 4, cachelimit,
                                            bucketlevels,resolutionbase,
                                            resolutiondepth,loaderrorstream);
                         int numberofpointsloaded =lidardata->getNumberOfPoints();
@@ -335,7 +337,9 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                      }
                      else{
                         int numberofpointsloaded = lidardata->load(loader,
-                                    poffs,bucketlevels,fencexs,fenceys,fenceps);
+                                    poffs,bucketlevels,
+                                    fence.getXs(), fence.getYs(), 4);
+
                         if(numberofpointsloaded == 0){
                            string message ="No points loaded from file, either \
                                             because of a lack of points or \

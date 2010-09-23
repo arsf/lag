@@ -20,14 +20,17 @@
  * Written: December 2009 - July 2010
  *
  * */
+#ifndef MATHFUNCS_H
+#define MATHFUNCS_H
+
 #include <vector>
 #include <iterator>
 #include <cmath>
-#include "QuadtreeStructs.h"
+//#include "QuadtreeStructs.h"
+
 #include "PointBucket.h"
+//#include "LidarPoint.h"
 using namespace std;
-#ifndef MATHFUNCS_H
-#define MATHFUNCS_H
 
 // Returns the value of the given percentile of a dataset. Makes a histogram 
 // of the dataset and goes along it until it gets a total count corresponding 

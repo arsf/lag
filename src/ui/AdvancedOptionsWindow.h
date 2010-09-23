@@ -20,19 +20,19 @@
  * Written: June-July 2010
  *
  * */
-#include <gtkmm.h>
-#include <libglademm/xml.h>
-#include <gtkglmm.h>
-#include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
 #ifndef ADVANCEDOPTIONSWINDOW_H
 #define ADVANCEDOPTIONSWINDOW_H
+
+#include <gtkmm.h>
+#include <gtkglmm.h>
+#include <vector>
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
 class AdvancedOptionsWindow{
 public:
-   AdvancedOptionsWindow(TwoDeeOverview *tdo,
-                         Profile *prof,
-                         Glib::RefPtr<Gnome::Glade::Xml> refXml);
+   AdvancedOptionsWindow(TwoDeeOverview*,
+                         Profile*,
+                         Glib::RefPtr<Gtk::Builder>);
 
    ~AdvancedOptionsWindow();
 

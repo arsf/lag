@@ -20,12 +20,15 @@
  * Written: June-July 2010
  *
  * */
+
+#ifndef _FILEOPENER_H_
+#define _FILEOPENER_H_
+
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
 #include "Quadtree.h"
 #include "LasLoader.h"
 #include "AsciiLoader.h"
@@ -34,15 +37,16 @@
 #include "TwoDeeOverviewWindow.h"
 class FileOpener{
 public:
-   FileOpener(TwoDeeOverview *tdo,
-              Profile *prof,Glib::RefPtr<Gnome::Glade::Xml> refXml,
-              AdvancedOptionsWindow *aow,
-              FileSaver *fs,
-              Quadtree *lidardata,
-              int bucketlimit,
-              Gtk::EventBox *eventboxtdo,
-              Gtk::EventBox *eventboxprof,
-              TwoDeeOverviewWindow *tdow);
+   FileOpener(TwoDeeOverview*,
+              Profile*,
+              Glib::RefPtr<Gtk::Builder>,
+              AdvancedOptionsWindow*,
+              FileSaver*,
+              Quadtree*,
+              int,
+              Gtk::EventBox*,
+              Gtk::EventBox*,
+              TwoDeeOverviewWindow*);
 
    ~FileOpener();
 
@@ -102,3 +106,5 @@ protected:
    void on_openfilemenuactivated();
 
 };
+
+#endif

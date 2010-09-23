@@ -24,16 +24,13 @@
  *
  * */
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
 #include <iostream>
 #include "Quadtree.h"
-#include "QuadtreeStructs.h"
 #include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glc.h>
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
 
@@ -42,7 +39,7 @@ TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
                Quadtree* lidardata,
                int bucketlimit,
                Gtk::Label *rulerlabel) 
-               :Display(config,lidardata,bucketlimit){
+               :LagDisplay(config,lidardata,bucketlimit){
 
    //Control:
    zoompower = 0.5;
@@ -88,22 +85,17 @@ TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
    //Profiling:
    profiling=false;
    showprofile=false;
-   double* white = new double[3];
-   white[0] = white[1] = white[2] = 1.0;
-   double* red = new double[3];
-   red[0] = 1.0;
-   red[1] = red[2] = 0.0;
+   Colour red = Colour("red");
+   Colour white = Colour("white");
    profbox = new BoxOverlay(rulerlabel,white,red);
-   profbox->setcentre(centrex,centrey);
+   profbox->setcentre(centre);
 
    //Fencing:
    fencing=false;
    showfence=false;
-   double* blue = new double[3];
-   blue[0] = blue[1] = 0.0;
-   blue[2] = 1.0;
+   Colour blue = Colour("blue");
    fencebox = new BoxOverlay(rulerlabel,blue,blue);
-   fencebox->setcentre(centrex,centrey);
+   fencebox->setcentre(centre);
 
    //Rulering:
    rulering=false;
@@ -326,6 +318,10 @@ EndGLDraw(){
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
+
+// EXPERIMENTAL
+//   glDisable(GL_DEPTH_TEST);
+//   drawoverlays();
    if (glwindow->is_double_buffered())
       glwindow->swap_buffers();
    else 
@@ -386,8 +382,7 @@ mainimage(PointBucket** buckets,int numbuckets){
    thread_running = true;
    // These are "safe" versions of the centre coordinates, as they will not 
    // change while this thread is running, while the originals might.
-   centrexsafe = centrex;
-   centreysafe = centrey;
+   centreSafe.move(centre.getX(), centre.getY(), 0);
    if(threaddebug)cout << "First array" << endl;
    vertices = new float[3*bucketlimit];
    if(threaddebug)cout << "Second array" << endl;
@@ -475,15 +470,15 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                       bool *drawnbucketsarray,bool cachedonly) {
    int line=0,intensity=0,classification=0,rnumber=0;
    double z=0;
-   //Colour values
-   double red,green,blue;
+   //Colour
+   Colour tempColour;
    //For every bucket:
    for(int i=0;i<numbuckets;i++){
       if(threaddebug)cout << "Calculating resolution index." << endl;
-      double bucketscreenwidth = (buckets[i]->getmaxX() - 
-                                  buckets[i]->getminX())*zoomlevel/ratio;
-      double bucketscreenheight = (buckets[i]->getmaxY() - 
-                                   buckets[i]->getminY())*zoomlevel/ratio;
+      double bucketscreenwidth = imageUnitsToPixels(buckets[i]->getmaxX() - 
+                                                    buckets[i]->getminX());
+      double bucketscreenheight = imageUnitsToPixels(buckets[i]->getmaxY() - 
+                                                     buckets[i]->getminY());
       double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
       int bucketpointtopixelratio = (int)((double)buckets[i] ->
                                     getNumberOfPoints(0)/bucketpixelcount);
@@ -562,107 +557,56 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             drawnsofarmaxy = buckets[i]->getmaxY();
          //For every point, determine point colour and position:
          for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){
-            //Default colour.
-            red = 0.0; green = 1.0; blue = 0.0;
             //This is here because it is used in calculations.
-            z = buckets[i]->getPoint(j,resolutionindex).z;
+            z = buckets[i]->getPoint(j,resolutionindex).getZ();
             //This is here because it is used in calculations.
-            intensity = buckets[i]->getPoint(j,resolutionindex).intensity;
-            //Colour by elevation.
-            if(heightcolour){
-               red = colourheightarray[3*(int)(10*(z-rminz))];
-               green = colourheightarray[3*(int)(10*(z-rminz)) + 1];
-               blue = colourheightarray[3*(int)(10*(z-rminz)) + 2];
+            intensity = buckets[i]->getPoint(j,resolutionindex).getIntensity();
+            // Select colour depending on colourBy value
+            switch (colourBy) {
+               case colourByHeight:
+                  tempColour = getColourByHeight(z); 
+                  break;
+               case colourByIntensity:
+                  tempColour = getColourByIntensity(intensity); 
+                  break;
+               case colourByFlightline:
+                  line = buckets[i]->getPoint(j,resolutionindex).getFlightline();
+                  tempColour = getColourByFlightline(line);
+                  break;
+               case colourByClassification:
+                  classification = buckets[i]->
+                                   getPoint(j,resolutionindex).getClassification();
+                  tempColour = getColourByClassification(classification);
+                  break;
+               case colourByReturn:
+                  rnumber = buckets[i]->
+                            getPoint(j,resolutionindex).getReturn();
+                  tempColour = getColourByReturn(rnumber);
+                  break;
+               // ColourByNone
+               default:
+                  tempColour.setRGB(0, 1, 0);
+                  break;
             }
-            //Colour by intensity.
-            else if(intensitycolour){
-               red = colourintensityarray[3*(int)(intensity-rminintensity)];
-               green = colourintensityarray[3*(int)(intensity-rminintensity)
-                                                                         + 1];
-               blue = colourintensityarray[3*(int)(intensity-rminintensity) 
-                                                                         + 2];
-            }
-            //Colour by flightline. Repeat 6 distinct colours.
-            else if(linecolour){
-                line = buckets[i]->getPoint(j,resolutionindex).flightLine;
-                int index = line % 6;
-                switch(index){
-                   case 0:red=0;green=1;blue=0;break;//Green
-                   case 1:red=0;green=0;blue=1;break;//Blue
-                   case 2:red=1;green=0;blue=0;break;//Red
-                   case 3:red=0;green=1;blue=1;break;//Cyan
-                   case 4:red=1;green=1;blue=0;break;//Yellow
-                   case 5:red=1;green=0;blue=1;break;//Purple
-                   default:red=green=blue=1;break;//White
-                }
-            }
-            //Colour by classification.
-            else if(classcolour){
-                classification = buckets[i]->
-                                 getPoint(j,resolutionindex).classification;
-                int index = classification;
-                switch(index){
-                   //Yellow for non-classified.
-                   case 0:case 1:red=1;green=1;blue=0;break;
-                   //Brown for ground.
-                   case 2:red=0.6;green=0.3;blue=0;break;
-                   //Dark green for low vegetation.
-                   case 3:red=0;green=0.3;blue=0;break;
-                   //Medium green for medium vegetation.
-                   case 4:red=0;green=0.6;blue=0;break;
-                   //Bright green for high vegetation.
-                   case 5:red=0;green=1;blue=0;break;
-                   //Cyan for buildings.
-                   case 6:red=0;green=1;blue=0;break;
-                   //Purple for low point (noise).
-                   case 7:red=1;green=0;blue=1;break;
-                   //Grey for model key-point (mass point).
-                   case 8:red=0.5;green=0.5;blue=0.5;break;
-                   //Blue for water.
-                   case 9:red=0;green=0;blue=1;break;
-                   //White for overlap points.
-                   case 12:red=1;green=1;blue=1;break;
-                   //Red for undefined.
-                   default:red=1;green=0;blue=0;break;
-                }
-            }
-            //Colour by return.
-            else if(returncolour){
-                rnumber = buckets[i]->
-                          getPoint(j,resolutionindex).packedByte & returnnumber;
-                int index = rnumber;
-                // FIXME! If there is desire to change system to handle a very 
-                // large number of returns then this sytem must be changed 
-                // completely. code: [woolol9999]
-                switch(index){
 
-                   case 1:red=0;green=0;blue=1;break;//Blue
-                   case 2:red=0;green=1;blue=1;break;//Cyan
-                   case 3:red=0;green=1;blue=0;break;//Green
-                   case 4:red=1;green=0;blue=0;break;//Red
-                   case 5:red=1;green=0;blue=1;break;//Purple
-                   case 6:red=1;green=1;blue=0;break;//Yellow
-                   case 7:red=1;green=0.5;blue=0.5;break;//Pink
-                   default:red=green=blue=1;break;//White
-                }
+            // Select brightness depending on brightness setting
+            switch (brightnessBy) {
+               case brightnessByIntensity:
+                  tempColour.multiply(
+                             brightnessintensityarray[(int)(intensity-rminintensity)]);
+                  break;
+               case brightnessByHeight:
+                  tempColour.multiply(brightnessheightarray[int(10*(z-rminz))]);
+                  break;
+               // brightnessByNone
+               default:
+                  break;
             }
-            if(heightbrightness){//Shade by height.
-               red *= brightnessheightarray[(int)(10*(z-rminz))];
-               green *= brightnessheightarray[(int)(10*(z-rminz))];
-               blue *= brightnessheightarray[(int)(10*(z-rminz))];
-            }
-            else if(intensitybrightness){//Shade by intensity.
-               red *= brightnessintensityarray[(int)(intensity-
-                                                     rminintensity)];
-               green *= brightnessintensityarray[(int)(intensity-
-                                                       rminintensity)];
-               blue *= brightnessintensityarray[(int)(intensity-
-                                                      rminintensity)];
-            }
+              
             vertices[3*pointcount]=buckets[i]->
-                                   getPoint(j,resolutionindex).x-centrexsafe;
+                                   getPoint(j,resolutionindex).getX()-centreSafe.getX();
             vertices[3*pointcount+1]=buckets[i]->
-                                     getPoint(j,resolutionindex).y-centreysafe;
+                                     getPoint(j,resolutionindex).getY()-centreSafe.getY();
             if(heightenNonC ||
                heightenGround ||
                heightenLowVeg ||
@@ -675,10 +619,9 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                heightenOverlap ||
                heightenUndefined){
                classification = buckets[i]->
-                                getPoint(j,resolutionindex).classification;
-               int index = classification;
+                                getPoint(j,resolutionindex).getClassification();
                double incrementor = 100+abs(rmaxz-rminz);
-               switch(index){
+               switch(classification){
                   //Heighten non-classified.
                   case 0:case 1:if(heightenNonC)z+=incrementor;break;
                   //Heighten the ground.
@@ -714,7 +657,7 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             }
             if(raiseline)
                if(linetoraise == buckets[i]->
-                                 getPoint(j,resolutionindex).flightLine){
+                                 getPoint(j,resolutionindex).getFlightline()){
                z += 100+abs(rmaxz-rminz);
                // This is to prevent the points ever obscuring the overlays. 
                // Note that this can handle well anything up to a height of 
@@ -735,9 +678,9 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                // reversed.
                vertices[3*pointcount+2]= rmaxz + rminz - z;
 
-            colours[3*pointcount]=red;
-            colours[3*pointcount+1]=green;
-            colours[3*pointcount+2]=blue;
+            colours[3*pointcount]=tempColour.getR();//red;
+            colours[3*pointcount+1]=tempColour.getG();//green;
+            colours[3*pointcount+2]=tempColour.getB();//blue;
             pointcount++;
          }
          if(threaddebug)cout << pointcount << endl;
@@ -870,8 +813,8 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    //Copy pixels from back buffer
    // The position of the bottom left corner of where the region is to be copied 
    // TO. In world coordinates.
-   double xpos = drawnsofarminx-centrex;
-   double ypos = drawnsofarminy-centrey;
+   double xpos = drawnsofarminx-centre.getX();
+   double ypos = drawnsofarminy-centre.getY();
    // These offsets are used for when the position of the bottom left corner of 
    // the destination region would go off the screen to the left or bottom 
    // (which would cause NOTHING to be drawn). In pixels.
@@ -889,13 +832,13 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    if(xpos < origx){
       // Converts the difference between the 'old' xpos and the edge of the 
       // screen into pixel values for modification of the region copied from.
-      xoffset = (origx-xpos)*zoomlevel/ratio;
+      xoffset = imageUnitsToPixels(origx-xpos);
       xpos = origx;
    }
    if(ypos < origy){
       // Converts the difference between the 'old' ypos and the edge of the 
       // screen into pixel values for modification of the region copied from.
-      yoffset = (origy-ypos)*zoomlevel/ratio;
+      yoffset = imageUnitsToPixels(origy-ypos);
       ypos = origy;
    }
    // Finally set the position of the bottom left corner of the destination 
@@ -907,13 +850,13 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    // ...The offsets are here so that if the destination position should be 
    // too far left or down then these account for it. Otherwise the skeleton 
    // and copy part ways.
-   double bucketminx = (drawnsofarminx-centrexsafe)*zoomlevel/ratio + 
+   double bucketminx = imageUnitsToPixels(drawnsofarminx-centreSafe.getX()) + 
                        (double)(get_width())/2 + xoffset;
-   double bucketminy = (drawnsofarminy-centreysafe)*zoomlevel/ratio + 
+   double bucketminy = imageUnitsToPixels(drawnsofarminy-centreSafe.getY()) + 
                        (double)(get_height())/2 + yoffset;
-   double bucketmaxx = (drawnsofarmaxx-centrexsafe)*zoomlevel/ratio + 
+   double bucketmaxx = imageUnitsToPixels(drawnsofarmaxx-centreSafe.getX()) + 
                        (double)(get_width())/2;
-   double bucketmaxy = (drawnsofarmaxy-centreysafe)*zoomlevel/ratio + 
+   double bucketmaxy = imageUnitsToPixels(drawnsofarmaxy-centreSafe.getY()) + 
                        (double)(get_height())/2;
    // I think that having ANYTHING going beyond the boundaries of the screen 
    // will cause NOTHING to be drawn. Apparently bottom left corner does not 
@@ -944,10 +887,10 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    // opposite direction to that extension. i.e. if part of the image 
    // is/should be uncovered.
    if(!drawneverything ||
-      (((drawnsofarmaxx-centrexsafe > endx && centrex-centrexsafe>0) ||
-      (drawnsofarminx-centrexsafe < origx && centrex-centrexsafe<0) ||
-      (drawnsofarmaxy-centreysafe > endy && centrey-centreysafe>0) ||
-      (drawnsofarminy-centreysafe < origy && centrey-centreysafe<0)))){
+      (((drawnsofarmaxx-centreSafe.getX() > endx && centre.getX()-centreSafe.getX()>0) ||
+      (drawnsofarminx-centreSafe.getX() < origx && centre.getX()-centreSafe.getX()<0) ||
+      (drawnsofarmaxy-centreSafe.getY() > endy && centre.getY()-centreSafe.getY()>0) ||
+      (drawnsofarminy-centreSafe.getY() < origy && centre.getY()-centreSafe.getY()<0)))){
       //Needed for the glDrawArrays() call further down.
       float* vertices = new float[12];
       glEnableClientState(GL_VERTEX_ARRAY);
@@ -956,17 +899,17 @@ drawbuckets(PointBucket** buckets,int numbuckets){
 
       //For every bucket...
       for(int i=0;i<numbuckets;i++){
-         vertices[0]=buckets[i]->getminX()-centrex;
-         vertices[1]=buckets[i]->getminY()-centrey;
+         vertices[0]=buckets[i]->getminX()-centre.getX();
+         vertices[1]=buckets[i]->getminY()-centre.getY();
          vertices[2]=altitude;
-         vertices[3]=buckets[i]->getminX()-centrex;
-         vertices[4]=buckets[i]->getmaxY()-centrey;
+         vertices[3]=buckets[i]->getminX()-centre.getX();
+         vertices[4]=buckets[i]->getmaxY()-centre.getY();
          vertices[5]=altitude;
-         vertices[6]=buckets[i]->getmaxX()-centrex;
-         vertices[7]=buckets[i]->getmaxY()-centrey;
+         vertices[6]=buckets[i]->getmaxX()-centre.getX();
+         vertices[7]=buckets[i]->getmaxY()-centre.getY();
          vertices[8]=altitude;
-         vertices[9]=buckets[i]->getmaxX()-centrex;
-         vertices[10]=buckets[i]->getminY()-centrey;
+         vertices[9]=buckets[i]->getmaxX()-centre.getX();
+         vertices[10]=buckets[i]->getminY()-centre.getY();
          vertices[11]=altitude;
          glDrawArrays(GL_LINE_LOOP,0,4);
       }
@@ -1048,10 +991,11 @@ drawviewable(int imagetype){
       // time.
       if(imagetype == 3)drawnsinceload = true;
       //Limits of viewable area:
-      double minx = centrex-(get_width()/2)*ratio/zoomlevel;
-      double maxx = centrex+(get_width()/2)*ratio/zoomlevel;
-      double miny = centrey+(get_height()/2)*ratio/zoomlevel;
-      double maxy = centrey-(get_height()/2)*ratio/zoomlevel;
+      double minx = centre.getX()-pixelsToImageUnits(get_width()/2);
+      double maxx = centre.getX()+pixelsToImageUnits(get_width()/2);
+      double miny = centre.getY()+pixelsToImageUnits(get_height()/2);
+      double maxy = centre.getY()-pixelsToImageUnits(get_height()/2);
+
       double *xs = new double[4];
       xs[0] = minx;
       xs[1] = minx;
@@ -1104,10 +1048,10 @@ drawviewable(int imagetype){
    //Draw the preview.
    else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload)){
       //Limits of viewable area:
-      double minx = centrex-(get_width()/2)*ratio/zoomlevel;
-      double maxx = centrex+(get_width()/2)*ratio/zoomlevel;
-      double miny = centrey+(get_height()/2)*ratio/zoomlevel;
-      double maxy = centrey-(get_height()/2)*ratio/zoomlevel;
+      double minx = centre.getX()-pixelsToImageUnits(get_width()/2);
+      double maxx = centre.getX()+pixelsToImageUnits(get_width()/2);
+      double miny = centre.getY()+pixelsToImageUnits(get_height()/2);
+      double maxy = centre.getY()-pixelsToImageUnits(get_height()/2);
       double *xs = new double[4];
       xs[0] = minx;
       xs[1] = minx;
@@ -1137,6 +1081,13 @@ drawviewable(int imagetype){
       delete pointvector;
       delete[] buckets;
    }
+   glReadBuffer(GL_BACK);
+   //Overlays go on top and should not be preserved otherwise you get shadowing.
+   glDrawBuffer(GL_FRONT);
+   drawoverlays();
+   glFlush();
+   glDrawBuffer(GL_BACK);
+
    return true;
 }
 
@@ -1158,15 +1109,14 @@ returntostart(){
    profbox->setratio(ratio);
    fencebox->setratio(ratio);
    //Image should be centred at its centre.
-   centrex = lidarboundary->minX+xdif/2;
-   centrey = lidarboundary->minY+ydif/2;
+   centre.move(lidarboundary->minX+xdif/2, lidarboundary->minY+ydif/2, 0);
    // Back to the starting zoom, which should cause the entire image to be 
    // visible.
    zoomlevel=1;
    //Update matrices.
    resetview();
    set_overlay_zoomlevels(zoomlevel);
-   set_overlay_centres(centrex,centrey);
+   set_overlay_centres(centre);
    delete lidarboundary;
    return drawviewable(1);
 }
@@ -1183,10 +1133,10 @@ resetview(){
    double depth = rminz-5000;
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(-(get_width()/2)*ratio/zoomlevel,
-           +(get_width()/2)*ratio/zoomlevel,
-           -(get_height()/2)*ratio/zoomlevel,
-           +(get_height()/2)*ratio/zoomlevel,
+   glOrtho(-pixelsToImageUnits(get_width()/2),
+           +pixelsToImageUnits(get_width()/2),
+           -pixelsToImageUnits(get_height()/2),
+           +pixelsToImageUnits(get_height()/2),
            -5*altitude,-5*depth);
    //Missing this causes nothing to be visible (???).
    glMatrixMode(GL_MODELVIEW);
@@ -1216,10 +1166,10 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    //...and the same for this one.
    double pointeroffy = eventy - get_height()/2;
    //Define an area of equal size to that of the points on the screen.
-   double minx = centrex + (pointeroffx - pointsize/2)*ratio/zoomlevel;
-   double maxx = centrex + (pointeroffx + pointsize/2)*ratio/zoomlevel;
-   double miny = centrey - (pointeroffy + pointsize/2)*ratio/zoomlevel;
-   double maxy = centrey - (pointeroffy - pointsize/2)*ratio/zoomlevel;
+   double minx = centre.getX() + pixelsToImageUnits(pointeroffx - pointsize/2);
+   double maxx = centre.getX() + pixelsToImageUnits(pointeroffx + pointsize/2);
+   double miny = centre.getY() - pixelsToImageUnits(pointeroffy + pointsize/2);
+   double maxy = centre.getY() - pixelsToImageUnits(pointeroffy - pointsize/2);
    double *xs = new double[4];
    xs[0] = minx;
    xs[1] = minx;
@@ -1263,16 +1213,16 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
                }
                //...and if they are higher than the currently selected point 
                // assuming the z values are not being reversed.
-               if(!reversez && (*pointvector)[i]->getPoint(j,0).z >= 
-                  (*pointvector)[bucketno]->getPoint(pointno,0).z){
+               if(!reversez && (*pointvector)[i]->getPoint(j,0).getZ() >= 
+                  (*pointvector)[bucketno]->getPoint(pointno,0).getZ()){
                   //Select them.
                   bucketno=i;
                   pointno=j;
                }
                //...or, alternatively, if they are lower than the currently 
                // selected point assuming the z values ARE being reversed.
-               else if(reversez && (*pointvector)[i]->getPoint(j,0).z <= 
-               (*pointvector)[bucketno]->getPoint(pointno,0).z){
+               else if(reversez && (*pointvector)[i]->getPoint(j,0).getZ() <= 
+               (*pointvector)[bucketno]->getPoint(pointno,0).getZ()){
                   //Select them.
                   bucketno=i;
                   pointno=j;
@@ -1300,29 +1250,33 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glColor3f(1.0,1.0,1.0);
             glBegin(GL_LINE_LOOP);
                glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).x-centrex-0.5*
-                           pointsize*ratio/zoomlevel,
+                           getPoint(pointno,0).getX()-centre.getX() -
+                           0.5*pixelsToImageUnits(pointsize),
                            (*pointvector)[bucketno]->
-                           getPoint(pointno,0).y-centrey-0.5*
-                           pointsize*ratio/zoomlevel,altitude);
+                           getPoint(pointno,0).getY()-centre.getY() -
+                           0.5*pixelsToImageUnits(pointsize),
+                           altitude);
                glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).x-centrex-0.5*
-                           pointsize*ratio/zoomlevel,
+                           getPoint(pointno,0).getX()-centre.getX() -
+                           0.5*pixelsToImageUnits(pointsize),
                            (*pointvector)[bucketno]->
-                           getPoint(pointno,0).y-centrey+0.5*
-                           pointsize*ratio/zoomlevel,altitude);
+                           getPoint(pointno,0).getY()-centre.getY() +
+                           0.5*pixelsToImageUnits(pointsize),
+                           altitude);
                glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).x-centrex+0.5*
-                           pointsize*ratio/zoomlevel,
+                           getPoint(pointno,0).getX()-centre.getX() +
+                           0.5*pixelsToImageUnits(pointsize),
                            (*pointvector)[bucketno]->
-                           getPoint(pointno,0).y-centrey+0.5*
-                           pointsize*ratio/zoomlevel,altitude);
+                           getPoint(pointno,0).getY()-centre.getY() +
+                           0.5*pixelsToImageUnits(pointsize),
+                           altitude);
                glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).x-centrex+0.5*
-                           pointsize*ratio/zoomlevel,
+                           getPoint(pointno,0).getX()-centre.getX() +
+                           0.5*pixelsToImageUnits(pointsize),
                            (*pointvector)[bucketno]->
-                           getPoint(pointno,0).y-centrey-0.5*
-                           pointsize*ratio/zoomlevel,altitude);
+                           getPoint(pointno,0).getY()-centre.getY() - 
+                           0.5*pixelsToImageUnits(pointsize),
+                           altitude);
             glEnd();
             glDrawBuffer(GL_BACK);
             glFlush();
@@ -1330,7 +1284,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          }
          //Returns the filepath.
          string flightline = lidardata->getFileName((*pointvector)[bucketno]->
-                                        getPoint(pointno,0).flightLine);
+                                        getPoint(pointno,0).getFlightline());
 
          //Only the filename is desired, not the filepath.
          size_t index = flightline.rfind("/");
@@ -1342,19 +1296,19 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 
          ostringstream x,y,z,time,intensity,classification,
                        rnumber,flightlinenumber;
-         x << (*pointvector)[bucketno]->getPoint(pointno,0).x;
-         y << (*pointvector)[bucketno]->getPoint(pointno,0).y;
-         z << (*pointvector)[bucketno]->getPoint(pointno,0).z;
+         x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
+         y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
+         z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
          time << (*pointvector)[bucketno]->
-                 getPoint(pointno,0).time;
+                 getPoint(pointno,0).getTime();
          intensity << (*pointvector)[bucketno]->
-                      getPoint(pointno,0).intensity;
+                      getPoint(pointno,0).getIntensity();
          classification << (int)(*pointvector)[bucketno]->
-                           getPoint(pointno,0).classification;
+                           getPoint(pointno,0).getClassification();
          rnumber << (int)((*pointvector)[bucketno]->
-                    getPoint(pointno,0).packedByte & returnnumber);
+                    getPoint(pointno,0).getReturn());
          flightlinenumber << (int)((*pointvector)[bucketno]->
-                             getPoint(pointno,0).flightLine);
+                             getPoint(pointno,0).getFlightline());
          //Is bored with pointbucket::getpoint(), now.
          pausethread = false;
          string pointstring = "X: " + x.str() + 
@@ -1406,13 +1360,11 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 // It draws different legends depending on the colouring mode except that it 
 // draws nothing when the colouring mode is by none or by flightline (the 
 // latter because flightline numbering is arbitrary, discrete and of 
-// potentially unlimited number). This method might be made to slow LAG down 
-// less if some of its many OpenGL function calls were replaced by the vertex 
-// array method of sending instructions to the graphics card.
+// potentially unlimited number). 
 void TwoDeeOverview::
 makecolourlegend(){
    //The height of the area in world coordinates.
-   double rheight = get_height()*ratio/zoomlevel;
+   double rheight = pixelsToImageUnits(get_height());
    double padding = 0.05*rheight;
    //This makes sure the scale is drawn on top of the flightlines.
    double altitude = rmaxz+1000;
@@ -1435,160 +1387,156 @@ makecolourlegend(){
    gluUnProject(get_width(), get_height() ,0 ,
                 modelview, projection, viewport,
                 &cornx, &corny, &cornz);
-   //White.
+   //White text and lines.
    glColor3d(1.0,1.0,1.0);
-   //Text context.
-   GLint ctx = glcGenContext();
-   //Attach text context.
-   glcContext(ctx);
-   //Determine font size.
-   glcScale(14,14);
-   GLfloat stringboundingbox[8];
-   double stringwidth = 0,stringheight = 0;
-   if(heightcolour||intensitycolour){
-      double length = 0.9*rheight/6;
-      //Getting the maxima and minima as far as the colouring is concerned.
-      double cbmax = cbmaxz,cbmin = cbminz;
-      if(intensitycolour){
-         cbmax = cbmaxintensity;
-         cbmin = cbminintensity;
-      }
-      for(int i=0;i<7;i++){
-         ostringstream number;
-         number << ((6-i)*cbmax + i*cbmin)/6;
-         glcMeasureString(GL_FALSE,number.str().c_str());
-         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
-         stringwidth = stringboundingbox[2] - stringboundingbox[0];
-         stringheight = stringboundingbox[5] - stringboundingbox[3];
-         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap) *
-                       ratio/zoomlevel,
-                       corny - padding - 0.5*stringheight*
-                       ratio/zoomlevel - length*i,
-                       altitude);
-         glcRenderString(number.str().c_str());
-      }
-      // Draws a strip of quads with smooth colour transitions to give a 
-      // spectrum-like effect (though the colours are in a different order 
-      // from the real spectrum).
-      glBegin(GL_QUAD_STRIP);
+   double stringwidth = 0;
+   double cbmax, cbmin, length;
+   Colour colour;
+   string text;
+   char number[30];
+   switch (colourBy) {
+      case colourByHeight:
+         length = 0.9*rheight/6;
+         //Getting the maxima and minima as far as the colouring is concerned.
+         cbmax = cbmaxz;
+         cbmin = cbminz;
          for(int i=0;i<7;i++){
-            double red,green,blue;
-            colour_by(((6-i)*cbmax + i*cbmin)/6,cbmax,cbmin,red,green,blue);
-            glColor3d(red,green,blue);
-            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,
-                       corny-padding-i*length,
-                       altitude);
-            glVertex3d(cornx-hoffset*ratio/zoomlevel,
-                       corny-padding-i*length,
-                       altitude);
+            sprintf(number, "%.2lf", ((6-i)*cbmax + i*cbmin)/6);
+            stringwidth = FONT_CHAR_WIDTH * strlen(number); 
+            printString(number,
+                        cornx - pixelsToImageUnits(hoffset+hwidth+stringwidth+hgap),
+                        corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
+                        altitude);
          }
-      glEnd();
-   }
-   else if(classcolour){
-      double length = 0.9*rheight/10;
-      double red=0,green=0,blue=0;
-      string text = "";
-      for(int i=0;i<11;i++){
-         switch(i){
-            //Yellow for non-classified.
-            case 0:red=1;green=1;blue=0;text = "Non-classified";break;
-            //Brown for ground.
-            case 1:red=0.6;green=0.3;blue=0;text = "Ground";break;
-            //Dark green for low vegetation.
-            case 2:red=0;green=0.3;blue=0;text = "Low vegetation";break;
-            //Medium green for medium vegetation.
-            case 3:red=0;green=0.6;blue=0;text = "Medium vegetation";break;
-            //Bright green for high vegetation.
-            case 4:red=0;green=1;blue=0;;text = "High vegetation";break;
-            //Cyan for buildings.
-            case 5:red=0;green=1;blue=0;text = "Buildings";break;
-            //Purple for low point (noise).
-            case 6:red=1;green=0;blue=1;text = "Noise (low points)";break;
-            //Grey for model key-point (mass point).
-            case 7:red=0.5;green=0.5;blue=0.5;text = "Model key-point \
-                                                      mass point)";break;
-            //Blue for water.
-            case 8:red=0;green=0;blue=1;text = "Water";break;
-            //White for overlap points.
-            case 9:red=1;green=1;blue=1;text = "Overlap";break;
-            //Red for undefined.
-            default:red=1;green=0;blue=0;text = "Undefined";break;
-         }
-         glColor3d(1.0,1.0,1.0);//White.
-         glcMeasureString(GL_FALSE,text.c_str());
-         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
-         stringwidth = stringboundingbox[2] - stringboundingbox[0];
-         stringheight = stringboundingbox[5] - stringboundingbox[3];
-         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap) *
-                       ratio/zoomlevel,
-                       corny - padding - 0.5 * stringheight *
-                       ratio/zoomlevel - length * i,
-                       altitude);
-         glcRenderString(text.c_str());
-         glBegin(GL_QUADS);
-            glColor3d(red,green,blue);
-            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,
-                       corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-hoffset*ratio/zoomlevel,
-                       corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-hoffset*ratio/zoomlevel,
-                       corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,
-                       corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,
-                       altitude);
+         // Draws a strip of quads with smooth colour transitions to give a 
+         // spectrum-like effect (though the colours are in a different order 
+         // from the real spectrum).
+         glBegin(GL_QUAD_STRIP);
+            for(int i=0;i<7;i++){
+               Colour colour;
+               colour_by(((6-i)*cbmax + i*cbmin)/6,cbmax,cbmin,colour);
+               glColor3fv(colour.getRGB());
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-i*length,
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-i*length,
+                          altitude);
+            }
          glEnd();
-      }
-   }
-   // FIXME! If there is desire to change system to handle a very large number 
-   // of returns then this sytem must be changed completely. code: [woolol9999]
-   else if(returncolour){
-
-      double length = 0.9*rheight/7;
-      double red=0,green=0,blue=0;
-      string text = "";
-      for(int i=0;i<8;i++){
-         switch(i){
-            case 0:red=0;green=0;blue=1;text = "First";break;//Blue
-            case 1:red=0;green=1;blue=1;text = "Second";break;//Cyan
-            case 2:red=0;green=1;blue=0;text = "Third";break;//Green
-            case 3:red=1;green=0;blue=0;text = "Fourth";break;//Red
-            case 4:red=1;green=0;blue=1;text = "Fifth";break;//Purple
-            case 5:red=1;green=1;blue=0;text = "Sixth";break;//Yellow
-            case 6:red=1;green=0.5;blue=0.5;text = "Seventh";break;//Pink
-            default:red=green=blue=1;text = "Trouble at mill";break;//White
+         break;
+      case colourByIntensity:
+         length = 0.9*rheight/6;
+         
+         for(int i=0;i<10;i++){
+            sprintf(number, "%.1lf", (double((6-i)*cbmaxintensity + 
+                                                 i*cbminintensity))/6);
+            stringwidth = FONT_CHAR_WIDTH * strlen(number); 
+            glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
+                          corny - padding - pixelsToImageUnits(0.5* FONT_CHAR_HEIGHT) - length*i,
+                          altitude);
+            printString(number);
          }
-         glColor3d(1.0,1.0,1.0);//White.
-         glcMeasureString(GL_FALSE,text.c_str());
-         glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
-         stringwidth = stringboundingbox[2] - stringboundingbox[0];
-         stringheight = stringboundingbox[5] - stringboundingbox[3];
-         glRasterPos3d(cornx - (hoffset + hwidth + stringwidth + hgap)*
-                       ratio/zoomlevel,
-                       corny - padding - 0.5*stringheight*
-                       ratio/zoomlevel - length*i,
-                       altitude);
-         glcRenderString(text.c_str());
-         glBegin(GL_QUADS);
-            glColor3d(red,green,blue);
-            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,
-                       corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-hoffset*ratio/zoomlevel,
-                       corny-padding-i*length+(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-hoffset*ratio/zoomlevel,
-                       corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,
-                       altitude);
-            glVertex3d(cornx-(hoffset+hwidth)*ratio/zoomlevel,
-                       corny-padding-i*length-(hwidth/2)*ratio/zoomlevel,
-                       altitude);
+         // Draws a strip of quads with smooth colour transitions to give a 
+         // spectrum-like effect (though the colours are in a different order 
+         // from the real spectrum).
+         glBegin(GL_QUAD_STRIP);
+               glColor3d(1, 1, 1);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-0*length,
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-0*length,
+                          altitude);
+               glColor3d(0, 0, 0);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-6*length,
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-6*length,
+                          altitude);
          glEnd();
-      }
+         break;
+      case colourByClassification:
+         length = 0.9*rheight/10;
+         for(int i=0;i<11;i++){
+            colour = getColourByClassification(i);
+            switch(i){
+               case 0:  text = "Non-classified";break;
+               case 1:  text = "Ground";break;
+               case 2:  text = "Low vegetation";break;
+               case 3:  text = "Medium vegetation";break;
+               case 4:  text = "High vegetation";break;
+               case 5:  text = "Buildings";break;
+               case 6:  text = "Noise";break;
+               case 7:  text = "Model key-point";break;
+               case 8:  text = "Water";break;
+               case 9:  text = "Overlap";break;
+               default: text = "Undefined";break;
+            }
+            glColor3d(1.0,1.0,1.0);//White.
+            stringwidth = FONT_CHAR_WIDTH*text.length();
+            glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
+                          corny - padding - pixelsToImageUnits(0.5 * FONT_CHAR_HEIGHT)- length * i,
+                          altitude);
+            printString(text.c_str());
+            glBegin(GL_QUADS);
+               glColor3fv(colour.getRGB());
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-i*length+pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-i*length+pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-i*length-pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-i*length-pixelsToImageUnits(hwidth/2),
+                          altitude);
+            glEnd();
+         }
+         break;
+      case colourByReturn:
+         length = 0.9*rheight/7;
+         for(int i=0;i<8;i++){
+            colour = getColourByReturn(i);
+            switch(i){
+               case 0: text = "First";break;
+               case 1: text = "Second";break;
+               case 2: text = "Third";break;
+               case 3: text = "Fourth";break;
+               case 4: text = "Fifth";break;
+               case 5: text = "Sixth";break;
+               case 6: text = "Seventh";break;
+               default:text = "Trouble at mill";break;
+            }
+           glColor3d(1.0,1.0,1.0);//White.
+            stringwidth = FONT_CHAR_WIDTH*text.length();
+            glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
+                          corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
+                          altitude);
+            printString(text.c_str());
+            glBegin(GL_QUADS);
+               glColor3fv(colour.getRGB());
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-i*length+pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-i*length+pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset),
+                          corny-padding-i*length-pixelsToImageUnits(hwidth/2),
+                          altitude);
+               glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
+                          corny-padding-i*length-pixelsToImageUnits(hwidth/2),
+                          altitude);
+            glEnd();
+         }
+         break;
+      default:
+         break;
    }
-   glcDeleteContext(ctx);
 }
 
 // This draws a scale. It works out what order of magnitude to use for the 
@@ -1598,7 +1546,7 @@ makecolourlegend(){
 // settings and then drawing the numbers by the markers.
 void TwoDeeOverview::
 makedistancescale(){
-   double rheight = get_height()*ratio/zoomlevel;
+   double rheight = pixelsToImageUnits(get_height());
    double order=1;
    // This finds the order of magnitude (base 10) of rheight with the added 
    // proviso that rheight must be at least five times that order so that 
@@ -1634,8 +1582,8 @@ makedistancescale(){
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
-   //The world coordinates of the origin for the screen coordinates.
    GLdouble origx,origy,origz;
+   origx = origy = origz = 0.0;
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
@@ -1645,42 +1593,30 @@ makedistancescale(){
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINES);
       //Vertical line.
-      glVertex3d(origx + 50.0*ratio/zoomlevel,
+      glVertex3d(origx + pixelsToImageUnits(50.0),
                  origy + padding,
                  altitude);
-      glVertex3d(origx + 50.0*ratio/zoomlevel,
+      glVertex3d(origx + pixelsToImageUnits(50.0),
                  origy + padding + nummarks*order,
                  altitude);
       //Horizontal lines.
       for(int i=0;i<=nummarks;i++){
-         glVertex3d(origx + 50.0*ratio/zoomlevel,
+         glVertex3d(origx + pixelsToImageUnits(50.0),
                     origy + padding + i*order,
                     altitude);
-         glVertex3d(origx + 80.0*ratio/zoomlevel,
+         glVertex3d(origx + pixelsToImageUnits(80.0),
                     origy + padding + i*order,
                     altitude);
       }
    glEnd();
-   GLint ctx = glcGenContext();
-   glcContext(ctx);
-   glcScale(14,14);
-   GLfloat stringboundingbox[8];
-   double stringheight = 0;
    for(int i=0;i<=nummarks;i++){
-      ostringstream number;
-      number << i*order;
-      glcMeasureString(GL_FALSE,number.str().c_str());
-      glcGetStringMetric(GLC_BOUNDS,stringboundingbox);
-      stringheight = stringboundingbox[5] - stringboundingbox[3];
-
-      //Draw numbers by the horizontal lines.
-      glRasterPos3d(origx + 85.0*ratio/zoomlevel,
-                    origy + padding + i*order - 0.5*stringheight*
-                    ratio/zoomlevel,
+      char number[30];
+      sprintf(number, "%.1lf", i*order);
+      glRasterPos3d(origx + pixelsToImageUnits(85.0),
+                    origy + padding + i*order - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT),
                     altitude);
-      glcRenderString(number.str().c_str());
+      printString(number);
    }
-   glcDeleteContext(ctx);
 }
    
 // On a left click, this prepares for panning by storing the initial i
@@ -1688,8 +1624,7 @@ makedistancescale(){
 bool TwoDeeOverview::
 on_pan_start(GdkEventButton* event){
    if(event->button==1 || event->button==2){
-      panstartx = event->x;
-      panstarty = event->y;
+      panStart.move(event->x, event->y, 0);
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that wuld cause expose events to be called when focus 
@@ -1703,8 +1638,8 @@ on_pan_start(GdkEventButton* event){
 
 // As the cursor moves while the left button is depressed, the image is 
 // dragged along as a preview to reduce lag. The centre point is modified 
-// by the negative of the distance (in image units, hence the ratio/zoomlevel 
-// mention) the cursor has moved to make a dragging effect and then the 
+// by the negative of the distance  
+// the cursor has moved to make a dragging effect and then the 
 // current position of the cursor is taken to be the starting position for 
 // the next drag (if there is one). The view is then refreshed and then the 
 // image is drawn (as a preview).
@@ -1712,13 +1647,13 @@ bool TwoDeeOverview::
 on_pan(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || 
       (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK){
-      centrex -= (event->x-panstartx)*ratio/zoomlevel;
-      // Y is reversed because gtk has origin at top left and opengl has 
-      // it at bottom left.
-      centrey += (event->y-panstarty)*ratio/zoomlevel;
-      set_overlay_centres(centrex,centrey);
-      panstartx=event->x;
-      panstarty=event->y;
+
+      centre.translate(-pixelsToImageUnits(event->x-panStart.getX()),
+                       pixelsToImageUnits(event->y-panStart.getY()),
+                       0);
+  
+      set_overlay_centres(centre);
+      panStart.move(event->x, event->y, 0);
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON3_MASK) == Gdk::BUTTON3_MASK)
@@ -1741,23 +1676,23 @@ bool TwoDeeOverview::
 on_pan_key(GdkEventKey* event,double scrollspeed){
    switch(event->keyval){
       case GDK_w: // Up
-         centrey += scrollspeed*ratio/zoomlevel;
-         set_overlay_centres(centrex,centrey);
+         centre.translate(0, pixelsToImageUnits(scrollspeed), 0);
+         set_overlay_centres(centre);
          return drawviewable(2);
          break;
       case GDK_s: // Down
-         centrey -= scrollspeed*ratio/zoomlevel;
-         set_overlay_centres(centrex,centrey);
+         centre.translate(0, -pixelsToImageUnits(scrollspeed), 0);
+         set_overlay_centres(centre);
          return drawviewable(2);
          break;
       case GDK_a: // Left
-         centrex -= scrollspeed*ratio/zoomlevel;
-         set_overlay_centres(centrex,centrey);
+         centre.translate(-pixelsToImageUnits(scrollspeed), 0, 0);
+         set_overlay_centres(centre);
          return drawviewable(2);
          break;
       case GDK_d: // Right
-         centrex += scrollspeed*ratio/zoomlevel;
-         set_overlay_centres(centrex,centrey);
+         centre.translate(pixelsToImageUnits(scrollspeed), 0, 0);
+         set_overlay_centres(centre);
          return drawviewable(2);
          break;
       case GDK_z: // Redraw
@@ -1776,7 +1711,7 @@ on_pan_key(GdkEventKey* event,double scrollspeed){
 bool TwoDeeOverview::
 on_prof_start(GdkEventButton* event){
    if(event->button==1){
-      profbox->on_start(event->x,event->y,get_width(),get_height());
+      profbox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that wuld cause expose events to be called when focus 
@@ -1798,7 +1733,7 @@ on_prof_start(GdkEventButton* event){
 bool TwoDeeOverview::
 on_prof(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-      profbox->on_(event->x,event->y,get_width(),get_height());
+      profbox->on_(Point(event->x, event->y),get_width(),get_height());
       return drawviewable(2);
    }
    else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)
@@ -1839,7 +1774,7 @@ on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
 bool TwoDeeOverview::
 on_fence_start(GdkEventButton* event){
    if(event->button==1){
-      fencebox->on_start(event->x,event->y,get_width(),get_height());
+      fencebox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that wuld cause expose events to be called when focus 
@@ -1859,7 +1794,7 @@ on_fence_start(GdkEventButton* event){
 bool TwoDeeOverview::
 on_fence(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-      fencebox->on_(event->x,event->y,get_width(),get_height());
+      fencebox->on_(Point(event->x, event->y) ,get_width(),get_height());
       fencebox->drawinfo();
       return drawviewable(2);
    }
@@ -1886,7 +1821,7 @@ on_fence_end(GdkEventButton* event){
 //Moves the fence depending on keyboard commands.
 bool TwoDeeOverview::
 on_fence_key(GdkEventKey* event,double scrollspeed){
-   bool moved = fencebox->on_key(event,scrollspeed*ratio/zoomlevel,false);
+   bool moved = fencebox->on_key(event,pixelsToImageUnits(scrollspeed),false);
    if(!moved)
       return false;
 
@@ -1898,17 +1833,17 @@ on_fence_key(GdkEventKey* event,double scrollspeed){
 bool TwoDeeOverview::
 on_ruler_start(GdkEventButton* event){
    if(event->button==1){
-      rulerstartx = rulerendx = centrex + (event->x-get_width()/2) *
-                                          ratio/zoomlevel;
-      rulerstarty = rulerendy = centrey - (event->y-get_height()/2) *
-                                          ratio/zoomlevel;
+      rulerEnd.move(centre.getX() + pixelsToImageUnits(event->x-get_width()/2),
+                    centre.getY() - pixelsToImageUnits(event->y-get_height()/2), 
+                    0);
+      rulerStart = rulerEnd;
       ostringstream xpos,ypos;
-      xpos << rulerendx;
-      ypos << rulerendy;
+      xpos << rulerEnd.getX();
+      ypos << rulerEnd.getY();
       rulerlabel->set_text("Distance: 0\nX: 0 Pos: "+ xpos.str() + 
                                       "\nY: 0 Pos: " + ypos.str());
-      rulereventstartx = event->x;
-      rulereventstarty = event->y;
+
+      rulerEventStart = Point(event->x, event->y);
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that wuld cause expose events to be called when focus 
@@ -1929,18 +1864,20 @@ on_ruler_start(GdkEventButton* event){
 bool TwoDeeOverview::
 on_ruler(GdkEventMotion* event){
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-      rulerendx = centrex + (event->x-get_width()/2)*ratio/zoomlevel;
-      rulerendy = centrey - (event->y-get_height()/2)*ratio/zoomlevel;
+
+      rulerEnd.move(centre.getX() + pixelsToImageUnits(event->x-get_width()/2),
+                    centre.getY() - pixelsToImageUnits(event->y-get_height()/2), 
+                    0);
       double d,xd,yd;
-      xd = abs(rulerendx-rulerstartx);
-      yd = abs(rulerendy-rulerstarty);
-      d = sqrt(xd*xd+yd*yd);
+      xd = abs(rulerEnd.getX()-rulerStart.getX());
+      yd = abs(rulerEnd.getY()-rulerStart.getY());
+      d = rulerStart.distanceTo(rulerEnd); //sqrt(xd*xd+yd*yd);
       ostringstream dist,xdist,ydist,xpos,ypos;
       dist << d;
       xdist << xd;
       ydist << yd;
-      xpos << rulerendx;
-      ypos << rulerendy;
+      xpos << rulerEnd.getX();
+      ypos << rulerEnd.getY();
       string rulerstring = "Distance: " + dist.str() +
                                 "\nX: " + xdist.str() + 
                                " Pos: " + xpos.str() + 
@@ -1976,8 +1913,8 @@ makerulerbox(){
    glColor3f(1.0,1.0,1.0);
    glLineWidth(3);
    glBegin(GL_LINES);
-      glVertex3d(rulerstartx-centrex,rulerstarty-centrey,altitude);
-      glVertex3d(rulerendx-centrex,rulerendy-centrey,altitude);
+      glVertex3d(rulerStart.getX()-centre.getX(),rulerStart.getY()-centre.getY(),altitude);
+      glVertex3d(rulerEnd.getX()-centre.getX(),rulerEnd.getY()-centre.getY(),altitude);
    glEnd();
    glLineWidth(1);
 }
@@ -1991,10 +1928,10 @@ makerulerbox(){
 // the centre of the window will now lie. The image is then drawn.
 bool TwoDeeOverview::
 on_zoom(GdkEventScroll* event){
-   centrex += (event->x-get_width()/2)*ratio/zoomlevel;
-   // Y is reversed because gtk has origin at top left and opengl has 
-   // it at bottom left.
-   centrey -= (event->y-get_height()/2)*ratio/zoomlevel;
+
+   centre.translate(pixelsToImageUnits(event->x-get_width()/2),
+                    -pixelsToImageUnits(event->y-get_height()/2), 
+                    0);
    if(zoomlevel>=1){
       if(event->direction==GDK_SCROLL_UP)
          zoomlevel+=pow(zoomlevel,zoompower)/2;
@@ -2011,17 +1948,17 @@ on_zoom(GdkEventScroll* event){
       zoomlevel+=0.1;
    if(zoomlevel<0.2)
       zoomlevel=0.2;
-   centrex -= (event->x-get_width()/2)*ratio/zoomlevel;
-   // Y is reversed because gtk has origin at top left and opengl 
-   // has it at bottom left.
-   centrey += (event->y-get_height()/2)*ratio/zoomlevel;
+
+   centre.translate(-pixelsToImageUnits(event->x-get_width()/2),
+                    pixelsToImageUnits(event->y-get_height()/2), 
+                    0);
    resetview();
    // This causes the event box containing the overview to grab the focus, 
    // and so to allow keyboard control of the overview (this is not done 
    // directly as that wuld cause expose events to be called when focus 
    // changes, resulting in graphical glitches).
    get_parent()->grab_focus();
-   set_overlay_centres(centrex,centrey);
+   set_overlay_centres(centre);
    set_overlay_zoomlevels(zoomlevel);
    return drawviewable(1);
 }

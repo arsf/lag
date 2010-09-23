@@ -22,94 +22,93 @@
  */
 
 #include <gtkmm.h>
-#include <libglademm/xml.h>
 #include <gtkglmm.h>
 #include <vector>
-#include "TwoDeeOverview.h"
-#include "Profile.h"
+#include "../TwoDeeOverview.h"
+#include "../Profile.h"
 #include "AdvancedOptionsWindow.h"
 
 AdvancedOptionsWindow::
 AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,
-                      Glib::RefPtr<Gnome::Glade::Xml> refXml) {
+                      Glib::RefPtr<Gtk::Builder> builder) {
    this->tdo = tdo;
    this->prof = prof;
-   refXml->get_widget("advancedoptionsdialog",advancedoptionsdialog);
+   builder->get_widget("advancedoptionsdialog",advancedoptionsdialog);
    if(advancedoptionsdialog)
       advancedoptionsdialog->signal_response().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_advancedoptionsdialog_response));
    
-   refXml->get_widget("fractionalshiftcheck",fractionalshiftcheck);
-   refXml->get_widget("movespeedselect",movespeedselect);
+   builder->get_widget("fractionalshiftcheck",fractionalshiftcheck);
+   builder->get_widget("movespeedselect",movespeedselect);
 
    if(movespeedselect){
-      movespeedselect->set_range(0,1000);
+//      movespeedselect->set_range(0,1000);
       movespeedselect->set_value(5.00);
    }
 
    //False elevation:
-   refXml->get_widget("classcheckbutton0",classcheckbutton0);
+   builder->get_widget("classcheckbutton0",classcheckbutton0);
    if(classcheckbutton0)
       classcheckbutton0->signal_toggled().
             connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                     on_classcheckbutton0_toggled));
 
-   refXml->get_widget("classcheckbutton2",classcheckbutton2);
+   builder->get_widget("classcheckbutton2",classcheckbutton2);
    if(classcheckbutton2)
       classcheckbutton2->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton2_toggled));
 
-   refXml->get_widget("classcheckbutton3",classcheckbutton3);
+   builder->get_widget("classcheckbutton3",classcheckbutton3);
    if(classcheckbutton3)
       classcheckbutton3->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton3_toggled));
 
-   refXml->get_widget("classcheckbutton4",classcheckbutton4);
+   builder->get_widget("classcheckbutton4",classcheckbutton4);
    if(classcheckbutton4)
       classcheckbutton4->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton4_toggled));
 
-   refXml->get_widget("classcheckbutton5",classcheckbutton5);
+   builder->get_widget("classcheckbutton5",classcheckbutton5);
    if(classcheckbutton5)
       classcheckbutton5->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                   on_classcheckbutton5_toggled));
  
-   refXml->get_widget("classcheckbutton6",classcheckbutton6);
+   builder->get_widget("classcheckbutton6",classcheckbutton6);
    if(classcheckbutton6)
       classcheckbutton6->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton6_toggled));
 
-   refXml->get_widget("classcheckbutton7",classcheckbutton7);
+   builder->get_widget("classcheckbutton7",classcheckbutton7);
    if(classcheckbutton7)
       classcheckbutton7->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton7_toggled));
 
-   refXml->get_widget("classcheckbutton8",classcheckbutton8);
+   builder->get_widget("classcheckbutton8",classcheckbutton8);
    if(classcheckbutton8)
       classcheckbutton8->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton8_toggled));
 
-   refXml->get_widget("classcheckbutton9",classcheckbutton9);
+   builder->get_widget("classcheckbutton9",classcheckbutton9);
    if(classcheckbutton9)
       classcheckbutton9->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton9_toggled));
 
-   refXml->get_widget("classcheckbutton12",classcheckbutton12);
+   builder->get_widget("classcheckbutton12",classcheckbutton12);
    if(classcheckbutton12)
       classcheckbutton12->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_classcheckbutton12_toggled));
 
-   refXml->get_widget("classcheckbuttonA",classcheckbuttonA);
+   builder->get_widget("classcheckbuttonA",classcheckbuttonA);
    if(classcheckbuttonA)
       classcheckbuttonA->signal_toggled().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
@@ -117,96 +116,96 @@ AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,
 
    // height and intensity threasholding and brightness modifiers:
 
-   refXml->get_widget("heightmaxselect",heightmaxselect);
+   builder->get_widget("heightmaxselect",heightmaxselect);
    if(heightmaxselect)
       heightmaxconn = heightmaxselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_heightmaxselect_changed));
 
-   refXml->get_widget("heightminselect",heightminselect);
+   builder->get_widget("heightminselect",heightminselect);
    if(heightminselect)
       heightminconn = heightminselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_heightminselect_changed));
 
-   refXml->get_widget("heightscrollbar",heightscrollbar);
+   builder->get_widget("heightscrollbar",heightscrollbar);
    if(heightscrollbar)
       heightscrollbar->signal_change_value().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_heightscrollbar_scrolled));
 
-   refXml->get_widget("heightoffsetselect",heightoffsetselect);
+   builder->get_widget("heightoffsetselect",heightoffsetselect);
    if(heightoffsetselect)
       heightoffsetselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_heightoffsetselect_changed));
 
-   refXml->get_widget("heightfloorselect",heightfloorselect);
+   builder->get_widget("heightfloorselect",heightfloorselect);
    if(heightfloorselect)
       heightfloorselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_heightfloorselect_changed));
 
-   refXml->get_widget("intensitymaxselect",intensitymaxselect);
+   builder->get_widget("intensitymaxselect",intensitymaxselect);
    if(intensitymaxselect)
       intensitymaxconn = intensitymaxselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_intensitymaxselect_changed));
 
-   refXml->get_widget("intensityminselect",intensityminselect);
+   builder->get_widget("intensityminselect",intensityminselect);
    if(intensityminselect)
       intensityminconn = intensityminselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_intensityminselect_changed));
 
-   refXml->get_widget("intensityscrollbar",intensityscrollbar);
+   builder->get_widget("intensityscrollbar",intensityscrollbar);
    if(intensityscrollbar)intensityscrollbar->signal_change_value().
       connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
               on_intensityscrollbar_scrolled));
 
-   refXml->get_widget("intensityoffsetselect",intensityoffsetselect);
+   builder->get_widget("intensityoffsetselect",intensityoffsetselect);
    if(intensityoffsetselect)
       intensityoffsetselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_intensityoffsetselect_changed));
 
-   refXml->get_widget("intensityfloorselect",intensityfloorselect);
+   builder->get_widget("intensityfloorselect",intensityfloorselect);
    if(intensityfloorselect)
       intensityfloorselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_intensityfloorselect_changed));
 
-   refXml->get_widget("drawingresetbutton",drawingresetbutton);
+   builder->get_widget("drawingresetbutton",drawingresetbutton);
    if(drawingresetbutton)
       drawingresetbutton->signal_clicked().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_drawingresetbutton_clicked));
 
    // Detail (points to skip) level:
-   refXml->get_widget("maindetailselect",maindetailselect);
+   builder->get_widget("maindetailselect",maindetailselect);
    if(maindetailselect){
       // Arbitrary/sensible values
-      maindetailselect->set_range(0,300);
+//      maindetailselect->set_range(0,300);
       maindetailselect->set_value(2.00);
 
       maindetailselect->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_maindetailselected));
    }
-   refXml->get_widget("maindetailselectprof",maindetailselectprof);
+   builder->get_widget("maindetailselectprof",maindetailselectprof);
 
    if(maindetailselectprof){
-      maindetailselectprof->set_range(0,300);
-      maindetailselectprof->set_value(0);
+//      maindetailselectprof->set_range(0,300);
+//      maindetailselectprof->set_value(0);
 
       maindetailselectprof->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
                  on_maindetailselectedprof));
    }
-   refXml->get_widget("previewdetailselectprof",previewdetailselectprof);
+   builder->get_widget("previewdetailselectprof",previewdetailselectprof);
    if(previewdetailselectprof){
-      previewdetailselectprof->set_range(0,300);
-      previewdetailselectprof->set_value(0);
+//      previewdetailselectprof->set_range(0,300);
+//      previewdetailselectprof->set_value(0);
 
       previewdetailselectprof->signal_value_changed().
          connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::

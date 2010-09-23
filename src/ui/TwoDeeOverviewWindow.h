@@ -20,27 +20,29 @@
  * Written: June-July 2010
  *
  * */
-#include <gtkmm.h>
-#include <libglademm/xml.h>
-#include <gtkglmm.h>
-#include <vector>
-#include "TwoDeeOverview.h"
-#include "AdvancedOptionsWindow.h"
-#include "FileSaver.h"
-#include "ProfileWindow.h"
+
+
 #ifndef TWODEEOVERVIEWWINDOW_H
 #define TWODEEOVERVIEWWINDOW_H
 
+#include <gtkmm.h>
+#include <gtkglmm.h>
+#include <vector>
+#include "../TwoDeeOverview.h"
+#include "AdvancedOptionsWindow.h"
+#include "FileSaver.h"
+#include "ProfileWindow.h"
+
 class TwoDeeOverviewWindow{
 public:
-   TwoDeeOverviewWindow(TwoDeeOverview *tdo,
-                        AdvancedOptionsWindow *aow,
-                        FileSaver *fs,
-                        Gtk::Window *tdowin,
-                        Gtk::Window *profilewindow,
-                        Glib::RefPtr<Gnome::Glade::Xml> refXml,
-                        Gtk::EventBox *eventboxtdo,
-                        ProfileWindow *profwin);
+   TwoDeeOverviewWindow(TwoDeeOverview*,
+                        AdvancedOptionsWindow*,
+                        FileSaver*,
+                        Gtk::Window*,
+                        Gtk::Window*,
+                        Glib::RefPtr<Gtk::Builder>,
+                        Gtk::EventBox*,
+                        ProfileWindow*);
 
    ~TwoDeeOverviewWindow();
 
