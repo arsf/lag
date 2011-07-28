@@ -59,6 +59,8 @@ public:
    bool returntostart();
    //Draw the viewable part of the image.
    bool drawviewable(int imagetype);
+
+   void toggleNoise(); 
    //Short, status changing methods:
    //Blocks pan signals and unblocks profile signals:
    void setupprofile(){
@@ -347,6 +349,8 @@ protected:
    // variables affecting the main (GTK) thread would likely be very messy.
    Glib::Dispatcher signal_extraDraw;
 
+
+   bool tdoDisplayNoise;
    //Position variables:
    // These give the centre of the viewport in image terms, rather than screen 
    // terms.
@@ -433,7 +437,6 @@ protected:
    // This returns some information about a selected point. Does not yet
    // work properly.
    bool pointinfo(double eventx,double eventy);
- 
    //Drawing:
    // Draw the outlines of the buckets and, above them, the contents of the 
    // back buffer (which contains the last stuff drawn from scratch).

@@ -78,6 +78,8 @@ protected:
    Gtk::CheckButton *classcheckbutton12;
    //"Anything else" classification elevator.
    Gtk::CheckButton *classcheckbuttonA;
+   Gtk::CheckButton *profdisplaynoise;
+   Gtk::CheckButton *tdodisplaynoise;
    //Colouring and shading:
    //Determines the maximum height for colouring and shading.
    Gtk::SpinButton *heightmaxselect;
@@ -137,6 +139,10 @@ protected:
    void on_classcheckbutton9_toggled();
    void on_classcheckbutton12_toggled();
    void on_classcheckbuttonA_toggled();
+
+   // To hide noisey points in profile
+   void on_profile_noise_toggle();
+   void on_tdo_noise_toggle();
    //The drawing settings:
    void changecoloursandshades();
    void on_heightmaxselect_changed();

@@ -51,7 +51,7 @@ public:
    //Getters:
    
    SelectionBox getSelectionBox() {
-      return _theBox;
+      return theBox;
    }
 
    //Setters:
@@ -76,8 +76,8 @@ public:
       this->zoomlevel = zoomlevel;
    }
 
-   void setcentre(Point centre){
-      _centre = centre;
+   void setcentre(Point c){
+      centre = c;
 }
 
 protected:
@@ -93,24 +93,24 @@ protected:
    //the ruler.
    Gtk::Label *label;
    //This is the colour of three of the four lines that make up the box.
-   Colour _majorcolour;
+   Colour majorcolour;
    // This is the colour of the line that, for a profile, represents the 
    // near clipping plane  and indicates where the profile is used from.
-   Colour _minorcolour;
+   Colour minorcolour;
    //These are returned to other objects to define the box.
    //Store the boundaries of the profile:
-   SelectionBox _theBox;
+   SelectionBox theBox;
    // Stores the number of corners for the profile.
    // Position variables:
    // These give the centre of the viewport in image terms, rather than 
    // screen terms.
-   Point _centre;
+   Point centre;
    //The width of the slanted box in world units.
    double slantwidth;
    //The start coordinates in world units.
-   Point _start;
+   Point start;
    //The end coordinates in world units.
-   Point _end;
+   Point end;
    // This stores the ratio for translating to and from screen scale and 
    // world scale. It should be set to be the same as in the parent Display 
    // area.

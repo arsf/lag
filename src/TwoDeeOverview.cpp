@@ -72,6 +72,8 @@ TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& confi
    drawneverything = false;
    pointcount = 0;
 
+   tdoDisplayNoise = true;
+
    //Limits of pixel copying for the preview:
    drawnsofarminx=0;
    drawnsofarminy=0;
@@ -328,6 +330,7 @@ EndGLDraw(){
       glFlush();
    glReadBuffer(GL_BACK);
    //Overlays go on top and should not be preserved otherwise you get shadowing.
+   //
    glDrawBuffer(GL_FRONT);
    drawoverlays();
    glFlush();
@@ -427,6 +430,7 @@ mainimage(PointBucket** buckets,int numbuckets){
    }
    delete[]drawnbucketsarray;
    threadend(buckets);
+
    return;
 }
 // This draws either the initially cached or the initially uncached buckets to 
@@ -557,131 +561,134 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             drawnsofarmaxy = buckets[i]->getmaxY();
          //For every point, determine point colour and position:
          for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){
-            //This is here because it is used in calculations.
-            z = buckets[i]->getPoint(j,resolutionindex).getZ();
-            //This is here because it is used in calculations.
-            intensity = buckets[i]->getPoint(j,resolutionindex).getIntensity();
-            // Select colour depending on colourBy value
-            switch (colourBy) {
-               case colourByHeight:
-                  tempColour = getColourByHeight(z); 
-                  break;
-               case colourByIntensity:
-                  tempColour = getColourByIntensity(intensity); 
-                  break;
-               case colourByFlightline:
-                  line = buckets[i]->getPoint(j,resolutionindex).getFlightline();
-                  tempColour = getColourByFlightline(line);
-                  break;
-               case colourByClassification:
+            if (tdoDisplayNoise || (!tdoDisplayNoise && buckets[i]->getPoint(j,resolutionindex).getClassification() != 7))
+            {
+               //This is here because it is used in calculations.
+               z = buckets[i]->getPoint(j,resolutionindex).getZ();
+               //This is here because it is used in calculations.
+               intensity = buckets[i]->getPoint(j,resolutionindex).getIntensity();
+               // Select colour depending on colourBy value
+               switch (colourBy) {
+                  case colourByHeight:
+                     tempColour = getColourByHeight(z); 
+                     break;
+                  case colourByIntensity:
+                     tempColour = getColourByIntensity(intensity); 
+                     break;
+                  case colourByFlightline:
+                     line = buckets[i]->getPoint(j,resolutionindex).getFlightline();
+                     tempColour = getColourByFlightline(line);
+                     break;
+                  case colourByClassification:
+                     classification = buckets[i]->
+                                      getPoint(j,resolutionindex).getClassification();
+                     tempColour = getColourByClassification(classification);
+                     break;
+                  case colourByReturn:
+                     rnumber = buckets[i]->
+                               getPoint(j,resolutionindex).getReturn();
+                     tempColour = getColourByReturn(rnumber);
+                     break;
+                  // ColourByNone
+                  default:
+                     tempColour.setRGB(0, 1, 0);
+                     break;
+               }
+
+               // Select brightness depending on brightness setting
+               switch (brightnessBy) {
+                  case brightnessByIntensity:
+                     tempColour.multiply(
+                                brightnessintensityarray[(int)(intensity-rminintensity)]);
+                     break;
+                  case brightnessByHeight:
+                     tempColour.multiply(brightnessheightarray[int(10*(z-rminz))]);
+                     break;
+                  // brightnessByNone
+                  default:
+                     break;
+               }
+                 
+               vertices[3*pointcount]=buckets[i]->
+                                      getPoint(j,resolutionindex).getX()-centreSafe.getX();
+               vertices[3*pointcount+1]=buckets[i]->
+                                        getPoint(j,resolutionindex).getY()-centreSafe.getY();
+               if(heightenNonC ||
+                  heightenGround ||
+                  heightenLowVeg ||
+                  heightenMedVeg ||
+                  heightenHighVeg ||
+                  heightenBuildings ||
+                  heightenNoise ||
+                  heightenMass ||
+                  heightenWater ||
+                  heightenOverlap ||
+                  heightenUndefined){
                   classification = buckets[i]->
                                    getPoint(j,resolutionindex).getClassification();
-                  tempColour = getColourByClassification(classification);
-                  break;
-               case colourByReturn:
-                  rnumber = buckets[i]->
-                            getPoint(j,resolutionindex).getReturn();
-                  tempColour = getColourByReturn(rnumber);
-                  break;
-               // ColourByNone
-               default:
-                  tempColour.setRGB(0, 1, 0);
-                  break;
-            }
+                  double incrementor = 100+abs(rmaxz-rminz);
+                  switch(classification){
+                     //Heighten non-classified.
+                     case 0:case 1:if(heightenNonC)z+=incrementor;break;
+                     //Heighten the ground.
+                     case 2:if(heightenGround)z+=incrementor;break;
+                     //Heighten low vegetation.
+                     case 3:if(heightenLowVeg)z+=incrementor;break;
+                     //Heighten medium vegetation.
+                     case 4:if(heightenMedVeg)z+=incrementor;break;
+                     //Heighten hig vegetation.
+                     case 5:if(heightenHighVeg)z+=incrementor;break;
+                     //Heighten buildings.
+                     case 6:if(heightenBuildings)z+=incrementor;break;
+                     //Heighten noise.
+                     case 7:if(heightenNoise)z+=incrementor;break;
+                     //Heighten mass points.
+                     case 8:if(heightenMass)z+=incrementor;break;
+                     //Heighten water.
+                     case 9:if(heightenWater)z+=incrementor;break;
+                     //Heighten overlaps.
+                     case 12:if(heightenOverlap)z+=incrementor;break;
+                     //Heighten anything else.
+                     default:if(heightenUndefined)z+=incrementor;break;
+                  }
+                  // This is to prevent the points ever obscuring the overlays. 
+                  // Note that this can handle well anything up to a height of 
+                  // 90 000 metres (including the increase from above, but it 
+                  // should still be able to handle the Himalayas); above that 
+                  // and the points will be drawn at the same height.
+                  if(z>rmaxz+900){
+                     z = rmaxz+900+z/1000;
+                     if(z>rmaxz+990)z=rmaxz+990;
+                  }
+               }
+               if(raiseline)
+                  if(linetoraise == buckets[i]->
+                                    getPoint(j,resolutionindex).getFlightline()){
+                  z += 100+abs(rmaxz-rminz);
+                  // This is to prevent the points ever obscuring the overlays. 
+                  // Note that this can handle well anything up to a height of 
+                  // 90 000 metres (including the increase from above, but it 
+                  // should still be able to handle the Himalayas); above that 
+                  // and the points will be drawn at the same height.
+                  if(z>rmaxz+900){
+                     z = rmaxz+900+z/1000;
+                     if(z>rmaxz+990)z=rmaxz+990;
+                  }
+               }
+               //If all is normal, the height is z.
+               if(!reversez)
+                  vertices[3*pointcount+2]=z;
+               else 
+                  // If the z values are to be reversed, the height is made so 
+                  // that, within the range they all occupy, the values are 
+                  // reversed.
+                  vertices[3*pointcount+2]= rmaxz + rminz - z;
 
-            // Select brightness depending on brightness setting
-            switch (brightnessBy) {
-               case brightnessByIntensity:
-                  tempColour.multiply(
-                             brightnessintensityarray[(int)(intensity-rminintensity)]);
-                  break;
-               case brightnessByHeight:
-                  tempColour.multiply(brightnessheightarray[int(10*(z-rminz))]);
-                  break;
-               // brightnessByNone
-               default:
-                  break;
+               colours[3*pointcount]=tempColour.getR();//red;
+               colours[3*pointcount+1]=tempColour.getG();//green;
+               colours[3*pointcount+2]=tempColour.getB();//blue;
+               pointcount++;
             }
-              
-            vertices[3*pointcount]=buckets[i]->
-                                   getPoint(j,resolutionindex).getX()-centreSafe.getX();
-            vertices[3*pointcount+1]=buckets[i]->
-                                     getPoint(j,resolutionindex).getY()-centreSafe.getY();
-            if(heightenNonC ||
-               heightenGround ||
-               heightenLowVeg ||
-               heightenMedVeg ||
-               heightenHighVeg ||
-               heightenBuildings ||
-               heightenNoise ||
-               heightenMass ||
-               heightenWater ||
-               heightenOverlap ||
-               heightenUndefined){
-               classification = buckets[i]->
-                                getPoint(j,resolutionindex).getClassification();
-               double incrementor = 100+abs(rmaxz-rminz);
-               switch(classification){
-                  //Heighten non-classified.
-                  case 0:case 1:if(heightenNonC)z+=incrementor;break;
-                  //Heighten the ground.
-                  case 2:if(heightenGround)z+=incrementor;break;
-                  //Heighten low vegetation.
-                  case 3:if(heightenLowVeg)z+=incrementor;break;
-                  //Heighten medium vegetation.
-                  case 4:if(heightenMedVeg)z+=incrementor;break;
-                  //Heighten hig vegetation.
-                  case 5:if(heightenHighVeg)z+=incrementor;break;
-                  //Heighten buildings.
-                  case 6:if(heightenBuildings)z+=incrementor;break;
-                  //Heighten noise.
-                  case 7:if(heightenNoise)z+=incrementor;break;
-                  //Heighten mass points.
-                  case 8:if(heightenMass)z+=incrementor;break;
-                  //Heighten water.
-                  case 9:if(heightenWater)z+=incrementor;break;
-                  //Heighten overlaps.
-                  case 12:if(heightenOverlap)z+=incrementor;break;
-                  //Heighten anything else.
-                  default:if(heightenUndefined)z+=incrementor;break;
-               }
-               // This is to prevent the points ever obscuring the overlays. 
-               // Note that this can handle well anything up to a height of 
-               // 90 000 metres (including the increase from above, but it 
-               // should still be able to handle the Himalayas); above that 
-               // and the points will be drawn at the same height.
-               if(z>rmaxz+900){
-                  z = rmaxz+900+z/1000;
-                  if(z>rmaxz+990)z=rmaxz+990;
-               }
-            }
-            if(raiseline)
-               if(linetoraise == buckets[i]->
-                                 getPoint(j,resolutionindex).getFlightline()){
-               z += 100+abs(rmaxz-rminz);
-               // This is to prevent the points ever obscuring the overlays. 
-               // Note that this can handle well anything up to a height of 
-               // 90 000 metres (including the increase from above, but it 
-               // should still be able to handle the Himalayas); above that 
-               // and the points will be drawn at the same height.
-               if(z>rmaxz+900){
-                  z = rmaxz+900+z/1000;
-                  if(z>rmaxz+990)z=rmaxz+990;
-               }
-            }
-            //If all is normal, the height is z.
-            if(!reversez)
-               vertices[3*pointcount+2]=z;
-            else 
-               // If the z values are to be reversed, the height is made so 
-               // that, within the range they all occupy, the values are 
-               // reversed.
-               vertices[3*pointcount+2]= rmaxz + rminz - z;
-
-            colours[3*pointcount]=tempColour.getR();//red;
-            colours[3*pointcount+1]=tempColour.getG();//green;
-            colours[3*pointcount+2]=tempColour.getB();//blue;
-            pointcount++;
          }
          if(threaddebug)cout << pointcount << endl;
          if(threaddebug)cout << vertices[3*pointcount/2] << endl;
@@ -1200,7 +1207,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          // This returns an array of booleans saying whether or not each point 
          // (indicated by indices that are shared with pointvector) is in the 
          // area prescribed.
-         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4);
+         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false);
          // For all points (no sorting as it seems pointless with a maximum of 
          // four buckets possible)...
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
@@ -2019,4 +2026,10 @@ on_zoom_key(GdkEventKey* event){
    resetview();
    set_overlay_zoomlevels(zoomlevel);
    return drawviewable(1);
+}
+
+void TwoDeeOverview::toggleNoise()
+{
+   tdoDisplayNoise = !tdoDisplayNoise;
+   drawviewable(1);
 }

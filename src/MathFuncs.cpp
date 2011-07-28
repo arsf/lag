@@ -52,8 +52,11 @@ double percentilevalue(double* data, int datasize, double percentile,
 }
 
 //Determines whether the points in the sent bucket fit within the profile area.
+//
+//If "hide noise points in profile" is ticket in advanced options, these are not sent to the
+//profile
 bool* vetpoints(PointBucket* points, double* xs, double* ys, 
-                int numberofcorners){
+                int numberofcorners, bool hideNoise){
    bool* correctpoints = new bool[points->getNumberOfPoints(0)];
    //Determines whether the point is within the boundary.
    bool pointinboundary;
@@ -87,8 +90,10 @@ bool* vetpoints(PointBucket* points, double* xs, double* ys,
             }
          }
          lastcorner = currentcorner;
-      }
-      correctpoints[i] = pointinboundary;
+     }
+     if (hideNoise == true && points->getPoint(i, 0).getClassification() == 7)
+        pointinboundary = false;
+     correctpoints[i] = pointinboundary;
    }
    return correctpoints;
 }

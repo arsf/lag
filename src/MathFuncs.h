@@ -42,6 +42,6 @@ double percentilevalue(double* data,
                        double maxval);
 
 //Determines whether the points in the sent bucket fit within the profile area.
-bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners);
+bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners, bool profileNoisePoints);
 
 #endif

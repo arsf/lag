@@ -198,9 +198,9 @@ Colour LagDisplay::getColourByFlightline(int flightline)
       case 0:
          return Colour(0, 1, 0); // Green
       case 1:
-         return Colour(1, 1, 0); // Yellow
+         return Colour(1, 0, 0); // Yellow
       case 2:
-         return Colour(1, 0, 0); // Red
+         return Colour(1, 1, 0); // Red
       case 3:
          return Colour(0, 1, 1); // Cyan
       case 4:
@@ -475,8 +475,6 @@ prepare_image(){
       // the top above the things on the bottom!
       glEnable(GL_DEPTH_TEST);
       glViewport(0, 0, get_width(), get_height());
-//      if (!glIsList(fontBase))
-//         initFont(); 
       glwindow->gl_end();
       resetview();
    delete pointvector;

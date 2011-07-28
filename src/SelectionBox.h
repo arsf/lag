@@ -37,7 +37,7 @@ public:
 
 private:
    static const int NUMBER_OF_POINTS = 4;
-   Point _points[4];
+   Point points[4];
 };
 
 #endif

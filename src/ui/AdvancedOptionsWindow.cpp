@@ -212,6 +212,22 @@ AdvancedOptionsWindow(TwoDeeOverview *tdo,Profile *prof,
                  on_previewdetailselectedprof));
    }
 
+   builder->get_widget("profdisplaynoise", profdisplaynoise);
+   if (profdisplaynoise) {
+      profdisplaynoise->signal_toggled().
+         connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
+                 on_profile_noise_toggle));
+   }
+
+   builder->get_widget("tdodisplaynoise", tdodisplaynoise);
+   if (tdodisplaynoise) {
+      tdodisplaynoise->signal_toggled().
+         connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::
+                 on_tdo_noise_toggle));
+   }
+
+
+
    tdo->setmaindetail(maindetailselect->get_value());
    prof->setmaindetail(maindetailselectprof->get_value());
    prof->setpreviewdetail(previewdetailselectprof->get_value());
@@ -329,6 +345,18 @@ on_classcheckbuttonA_toggled() {
    tdo->setheightenUndefined(classcheckbuttonA->get_active()); 
    if(tdo->is_realized())
       tdo->drawviewable(1); 
+}
+
+void AdvancedOptionsWindow::
+on_profile_noise_toggle()
+{
+   prof->toggleNoise();
+}
+
+void AdvancedOptionsWindow::
+on_tdo_noise_toggle()
+{
+   tdo->toggleNoise();
 }
 
 //The drawing settings:

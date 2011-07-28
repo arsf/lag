@@ -36,13 +36,13 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkImageMenuItem" id="savefilemenuitem">
+                      <object class="GtkImageMenuItem" id="saveasfilemenuitem">
                         <property name="label">gtk-save-as</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <property name="always_show_image">True</property>
-                        <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <accelerator key="s" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -1081,6 +1081,8 @@ Range</property>
     <property name="icon">lagicons/lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">False</property>
+    <property name="create_folders">False</property>
+    <property name="preview_widget_active">False</property>
     <property name="select_multiple">True</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
@@ -2314,20 +2316,7 @@ Plymouth Marine Laboratory)</property>
             <child>
               <object class="GtkTable" id="table3">
                 <property name="visible">True</property>
-                <property name="n_rows">3</property>
-                <child>
-                  <object class="GtkCheckButton" id="raiselinecheck">
-                    <property name="label" translatable="yes">Raise flightline?</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
-                  </packing>
-                </child>
+                <property name="n_rows">4</property>
                 <child>
                   <object class="GtkCheckButton" id="fractionalshiftcheck">
                     <property name="label" translatable="yes">Set as multiple of slant width for profile only using value*0.1</property>
@@ -2367,6 +2356,32 @@ Plymouth Marine Laboratory)</property>
                       </packing>
                     </child>
                   </object>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="profdisplaynoise">
+                    <property name="label" translatable="yes">Hide noise points in profile</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="tdodisplaynoise">
+                    <property name="label" translatable="yes">Hide noise in overview</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                  </packing>
                 </child>
               </object>
               <packing>

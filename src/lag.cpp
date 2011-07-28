@@ -54,7 +54,7 @@ string findgladepath(char* programpath){
 }
 
 int main(int argc, char** argv) {
-   cout << "Build number: 2010.09.13.1" << endl;
+   cout << "Build number: 2011.7.28.1" << endl;
    //This allows the creation and running of threads.
    Glib::thread_init();
    // This is required for GTK to work. It must be the first GTK object 
@@ -152,8 +152,8 @@ the lag executable." << endl;
    delete rulerlabelover;
    delete overviewwindow;
    delete profilewindow;
-   if(lidardata != NULL)delete lidardata;
    if(tdo!=NULL)delete tdo;
    if(prof != NULL)delete prof;
+   if(lidardata != NULL)delete lidardata;
    return 0;
 }

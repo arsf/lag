@@ -40,12 +40,16 @@ Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
    samplemaxz = sampleminz = 0;
    profps=0;
    profxs = profys = NULL;
+   viewer = Point(0, 0, 0);
    totnumpoints = 0;
+   width = 0;
    // Brightness by none for profile
    brightnessBy = brightnessByNone;
    //Initialisation:
    flightlinepoints = NULL;
    linez = NULL;
+   // hideProfNoise
+   hideProfNoise = false;
    //Drawing control:
    zoompower = 0.7;
    imageexists = false;
@@ -122,8 +126,7 @@ Profile::~Profile(){
 // gluLookAt is then used so that the viewpoint is that of seeing the centre 
 // from a position to the right of the profile, when looking from the start 
 // to the end of it.
-void Profile::
-resetview(){
+void Profile::resetview(){
    double breadth = end.getX() - start.getX();
    double height = end.getY() - start.getY();
    //Right triangle.
@@ -172,8 +175,7 @@ resetview(){
 // The passed value should be 1 for the main image, 2 for the preview and 3 
 // for the expose event (which is the same as the preview). Note that if the 
 // imagetype is anything other than 1, 2 or 3 then all points will be drawn.
-bool Profile::
-drawviewable(int imagetype){
+bool Profile::drawviewable(int imagetype){
    // If there is an attempt to draw with no data, the program will 
    // probably crash.
    if(!imageexists){
@@ -193,9 +195,7 @@ drawviewable(int imagetype){
       detail=(int)(totnumpoints*maindetailmod/100000);
    else if(imagetype==2||imagetype==3)
       //Preview.
-    // CHANGE THIS TO FIX MOVING PROFILE
-    //detail=(int)(totnumpoints*previewdetailmod/100000);
-      detail = 100;
+      detail=(int)(totnumpoints*previewdetailmod/100000);
 
    //The image is now drawn.
    mainimage(detail);
@@ -207,8 +207,7 @@ drawviewable(int imagetype){
 // the viewer position and the ratio of world coordinates to window coordinates 
 // so that all of the porifle is visible before resetting the view and then 
 // drawing.
-bool Profile::
-returntostart(){
+bool Profile::returntostart(){
    //This way, all of the profile should be on-screen.
    centre.move((start.getX() + end.getX()) /2,
                (start.getY() + end.getY()) /2,
@@ -245,11 +244,11 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
    double breadth = end.getX() - start.getX();
    double height = end.getY() - start.getY();
    //Right triangle.
-   double length = start.distanceTo(end);//sqrt(breadth*breadth+height*height);
+   double length = start.distanceTo(end);
    // Where "up" and "forward" are supposed to be the same, these account for 
    // moving a slanted profile.
    double sameaxis = shiftspeed*breadth/length;
-   double diffaxis = -shiftspeed*height/length;//...
+   double diffaxis = -shiftspeed*height/length;
    switch(event->keyval){
       case GDK_W:
          centre.translate(diffaxis, sameaxis, 0);
@@ -321,7 +320,6 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed){
  *
  * */
 bool Profile::
-//showprofile(SelectionBox profileBox, bool changeview) {
 showprofile(double* profxs, double* profys, int profps, bool changeview){
    //Defining profile parameters (used elsewhere only)
    start.move ((profxs[0]+profxs[1])/2,
@@ -385,7 +383,7 @@ showprofile(double* profxs, double* profys, int profps, bool changeview){
          queriedbucketsarray[i] = true;//Record as cached.
          //Determine whether the points in this bucket are within the profile.
          correctpointsbuckets[i] = vetpoints((*pointvector)[i],
-                                             profxs,profys,profps);
+                                             profxs,profys,profps, hideProfNoise);
       //For all points in the bucket:
       for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
          //If the point is within the profile:
@@ -406,7 +404,7 @@ showprofile(double* profxs, double* profys, int profps, bool changeview){
       if(!queriedbucketsarray[i]){
          //Determine whether the points in this bucket are within the profile.
          correctpointsbuckets[i] = vetpoints((*pointvector)[i],
-                                             profxs,profys,profps);
+                                             profxs,profys,profps, hideProfNoise);
       //For all points in the bucket:
       for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
          //If the point is within the profile:
@@ -493,6 +491,7 @@ showprofile(double* profxs, double* profys, int profps, bool changeview){
       sort(flightlinepoints[i].begin(),flightlinepoints[i].end(),
            boost::bind(&Profile::linecomp,this,_1,_2));
       }
+
    delete[]queriedbucketsarray;
    if(pointvector!=NULL)delete pointvector;
    for(int i=0;i<numbuckets;i++)delete[] correctpointsbuckets[i];
@@ -611,7 +610,7 @@ bool Profile::classify(uint8_t classification){
       // Store whether the points in the buckets are inside the boundaries of 
       // the profile.
       correctpointsbuckets[i] = vetpoints((*pointvector)[i],
-                                          profxs,profys,profps);
+                                          profxs,profys,profps, hideProfNoise);
 
    //These will contain the corner coordinates of the fence.
    double *xs,*ys,*zs;
@@ -932,23 +931,23 @@ on_pan_key(GdkEventKey *event,double scrollspeed){
    switch(event->keyval){
       case GDK_w: // Up
          centre.translate(0, 0, hypotenuse);
-         return drawviewable(2);
+         return drawviewable(1);
          break;
       case GDK_s: // Down
          centre.translate(0, 0, -hypotenuse);
-         return drawviewable(2);
+         return drawviewable(1);
          break;
       case GDK_a: // Left
          centre.translate(-hypotenuse*breadth/length,
                           -hypotenuse*height/length,
                           0);
-         return drawviewable(2);
+         return drawviewable(1);
          break;
       case GDK_d: // Right
          centre.translate(hypotenuse*breadth/length,
                           hypotenuse*height/length,
                           0);
-         return drawviewable(2);
+         return drawviewable(1);
          break;
       case GDK_z: //Redraw.
       case GDK_Z:
@@ -1566,6 +1565,7 @@ mainimage(int detail){
             vertices[3*count] = flightlinepoints[i][j].getX()-centre.getX();
             vertices[3*count+1] = flightlinepoints[i][j].getY()-centre.getY();
             vertices[3*count+2] = linez[i][j]-centre.getZ();
+            //printf("%f, %f, %f\n", vertices[3*count], vertices[3*count+1], vertices[3*count+2]);
             colours[3*count] = tempColour.getR();//red;
             colours[3*count+1] = tempColour.getG();//green;
             colours[3*count+2] = tempColour.getB();//blue;
@@ -1622,6 +1622,7 @@ mainimage(int detail){
             vertices[3*count] = flightlinepoints[i][j].getX()-centre.getX();
             vertices[3*count+1] = flightlinepoints[i][j].getY()-centre.getY();
             vertices[3*count+2]= z-centre.getZ();
+            //printf("%f, %f, %f\n", vertices[3*count], vertices[3*count+1], vertices[3*count+2]);
             colours[3*count]=tempColour.getR();//red;
             colours[3*count+1]=tempColour.getG();//green;
             colours[3*count+2]=tempColour.getB();//blue;
@@ -1641,4 +1642,9 @@ mainimage(int detail){
    delete[] vertices;
    delete[] colours;
    return true;
+}
+
+void Profile::toggleNoise()
+{
+   hideProfNoise = !hideProfNoise;
 }

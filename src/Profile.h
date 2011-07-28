@@ -31,6 +31,7 @@
 #include <vector>
 #include <boost/bind.hpp>
 #include "LagDisplay.h"
+#include <list>
 class Profile : public LagDisplay{
 public:
    Profile(string, const Glib::RefPtr<const Gdk::GL::Config>& config,
@@ -40,6 +41,7 @@ public:
 
    ~Profile();
 
+   void clearProfile();
    //This classifies the points selected by the profile fence.
    bool classify(uint8_t classification);
    //Moves the view using keyboard input.
@@ -137,6 +139,7 @@ public:
    void setslanted(double slanted){ 
       this->slanted = slanted; 
    }
+   void toggleNoise();
 
 protected:
    //Label showing the distance, in various dimensions, covered by the ruler.
@@ -305,6 +308,8 @@ protected:
    bool on_fence(GdkEventMotion* event);
    bool on_fence_end(GdkEventButton* event);
 
+   // hide profile noisey points
+   bool hideProfNoise;
 };
 
 #endif

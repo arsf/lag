@@ -73,6 +73,28 @@ FileOpener(TwoDeeOverview *tdo,
          connect(sigc::mem_fun(*this,&FileOpener::
                  on_filechooserdialogresponse));
 
+   // File filters
+   Gtk::FileFilter filters[3];
+   // LAS Filter
+   filters[0].set_name("LAS Filter");
+   filters[0].add_pattern("*.las");
+   filters[0].add_pattern("*.LAS");
+   // TXT Filter
+   filters[1].set_name("TXT Filter");
+   filters[1].add_pattern("*.txt");
+   filters[1].add_pattern("*.TXT");
+   // All Lidar Filers
+   filters[2].set_name("All LiDAR Files");
+   filters[2].add_pattern("*.las");
+   filters[2].add_pattern("*.LAS");
+   filters[2].add_pattern("*.txt");
+   filters[2].add_pattern("*.TXT");
+
+   for(int i = 0; i < 3; i++)
+      filechooserdialog->add_filter(filters[i]);
+
+   filechooserdialog->set_filter(filters[2]);
+
    builder->get_widget("pointskipselect",pointskipselect);
    builder->get_widget("fenceusecheck",fenceusecheck);
    builder->get_widget("asciicodeentry",asciicodeentry);
@@ -81,11 +103,11 @@ FileOpener(TwoDeeOverview *tdo,
       // That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 
       // 2009-10, so, if the rate of increase is that of quadrupling every 
       // five years, then 40 TB will be reached in less than 35 years.
-      cachesizeselect->set_range(1000000,1000000000000);
+      cachesizeselect->set_range(10e6,10e11);
       // 25000000 points is about 1 GB. On this 4 GB RAM machine, I only want 
       // LAG to use a quarter of my resources.
-      cachesizeselect->set_value(25000000);
-      cachesizeselect->set_increments(1000000,1000000);
+      cachesizeselect->set_value(250e5);
+      cachesizeselect->set_increments(10e5,10e5);
       builder->get_widget("cachesizeGBlabel",cachesizeGBlabel);
       if(cachesizeGBlabel){
          on_cachesize_changed();
@@ -245,9 +267,9 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
    try{//Attempt to get real files.
       string pointoffset,filename;
       if(argc < 3){
-         cout << "Form is \"lag <point skip number> <first file> \
-                  [other files]...\"" << endl;
-         return 11;
+//         cout << "Form is \"lag <point skip number> <first file> "
+//              << "[other files]...\"" << endl;
+         return 1;
       }
       pointoffset.append(argv[1]);
       // This returns the integer translation of the string, or zero 
@@ -257,9 +279,9 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
       // see whether this is because of there being a zero value or because of 
       // there not being an integer. If the value in the string is not zero:
       if(poffs == 0 && pointoffset != "0"){
-         cout << "The point offset must be an integer greater than or equal \
-                  to zero. In addition, zero can only be accepted in the \
-                  form \"0\", not \"00\" etc.." << endl;
+         cout << "The point offset must be an integer greater than or "
+              << "equal to zero. In addition, zero can only be accepted "
+              << "in the form \"0\", not \"00\" etc.." << endl;
          return 1;
       }
       if(usearea){
@@ -274,6 +296,7 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                  //int numberOfFenceCorners = 0;
                if(tdo->is_realized())
                   fence = tdo->getFence();
+// Please fix this!
                   if (true) {
 //               if(fence != NULL){
                   LidarPointLoader *loader = NULL;
@@ -296,11 +319,11 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                   }
                   //For incorrect file extensions:
                   else{
-                     string message = "Files must have the extensions \
-                                       .las, .LAS, .txt or .TXT.";
+                     string message = "\
+Files must have the extensions .las, .LAS, .txt or .TXT.";
                      cout << message << endl;
-                     loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                               message + "\n");
+//                     loadoutputlabel->set_text(loadoutputlabel->get_text() + 
+//                                               message + "\n");
                      Gdk::Window::process_all_updates();
                      validfile = false;
                   }
@@ -321,15 +344,12 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                                            resolutiondepth,loaderrorstream);
                         int numberofpointsloaded =lidardata->getNumberOfPoints();
                         if(numberofpointsloaded == 0){
-                           string message ="No points loaded from file, either \
-                                            because of a lack of points or \
-                                            because points lie outside \ 
-                                            quadtree boundary (possibly \
-                                            because of fence). Please check \
-                                            file.";
+                           string message ="\
+No points loaded from file, either because of a lack of points or because points \
+lie outside quadtree boundary (possibly because of fence). Please check file.";
                            cout << message << endl;
-                           loadoutputlabel->set_text(loadoutputlabel->get_text()
-                                                     + message + "\n");
+//                           loadoutputlabel->set_text(loadoutputlabel->get_text()
+//                                                     + message + "\n");
                            Gdk::Window::process_all_updates();
                            numlines--;
                         }
@@ -341,15 +361,12 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                                     fence.getXs(), fence.getYs(), 4);
 
                         if(numberofpointsloaded == 0){
-                           string message ="No points loaded from file, either \
-                                            because of a lack of points or \
-                                            because points lie outside \
-                                            quadtree boundary (possibly \
-                                            because of fence). Please check \
-                                            file.";
+                           string message ="\
+No points loaded from file, either because of a lack of points or because points \
+lie outside quadtree boundary (possibly because of fence). Please check file.";
                            cout << message << endl;
-                           loadoutputlabel->set_text(loadoutputlabel->get_text()
-                                                     + message + "\n");
+//                           loadoutputlabel->set_text(loadoutputlabel->get_text()
+//                                                     + message + "\n");
                            Gdk::Window::process_all_updates();
                            numlines--;
                         }
@@ -371,10 +388,10 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
             Gdk::Window::process_all_updates();
             if(loaderrorstream->str()!=""){
                string message = "There have been errors in loading. Please \
-                                 see the file " + loaderroroutputfile;
-               cout << message << endl;
-               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                         message + "\n");
+see the file " + loaderroroutputfile;
+               cerr << message << endl;
+//               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
+//                                         message + "\n");
                Gdk::Window::process_all_updates();
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
@@ -427,7 +444,7 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
             filename.assign(argv[count]);
             if(filename != ""){
                LidarPointLoader *loader = NULL;
-               bool validfile = true;
+//               bool validfile = true;
 
                //For LAS files.
                if(filename.find(".las",filename.length()-4)!=string::npos ||
@@ -445,25 +462,32 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                   const char* code = code1.c_str();
                   loader = new AsciiLoader(argv[count],code);
                }
-               else{//For incorrect file extensions:
-                  string message = "Files must have the extensions .las, .LAS, \
-                                    .txt or .TXT.";
-                  cout << message << endl;
-                  loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                            message + "\n");
-                  Gdk::Window::process_all_updates();
-                  validfile = false;
-               }
-               if(validfile){
+//               else{//For incorrect file extensions:
+//                  string message = "Files must have the extensions .las, .LAS, \
+//                                    .txt or .TXT.";
+//                  cout << message << endl;
+//                  loadoutputlabel->set_text(loadoutputlabel->get_text() + 
+//                                            message + "\n");
+//                  Gdk::Window::process_all_updates();
+//                  validfile = false;
+//               }
+//               if(validfile){
                   // If refreshing (or from command-line) use first filename 
                   // to make quadtree...
                   if((count==2 && (start || !loadedanyfiles)) ||
                      lidardata==NULL) {
-                     if(lidardata != NULL)delete lidardata;
+                     if(lidardata != NULL)
+                     {
+                        delete lidardata;
+                        //printf("Lidar data deleted - check memory now... sleeping 10 secs\n");
+                        //sleep(10);
+                     }
+
                      // This prevents a double free if the creation of the new 
                      // quadtree fails and throws an exception.
                      lidardata = NULL;
                      loaderrorstream->str("");
+                     
                      lidardata = new Quadtree(minx,miny,maxx,maxy,bucketlimit,
                                               cachelimit,bucketlevels,
                                               resolutionbase,resolutiondepth,
@@ -471,15 +495,15 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                      int numberofpointsloaded = lidardata->load(loader,poffs,
                                                                 bucketlevels);
                      if(numberofpointsloaded == 0){
-                        string message = "No points loaded from file, either \
-                                          because of a lack of points or \
-                                          because points lie outside \
-                                          quadtree boundary (possibly \
-                                          because of fence). Please check \
-                                          file.";
+                        string message = "\
+No points loaded from file, either because of a lack of points or \
+because points lie outside \
+quadtree boundary (possibly \
+because of fence). Please check \
+file.";
                         cout << message << endl;
-                        loadoutputlabel->set_text(loadoutputlabel->get_text() +
-                                                  message + "\n");
+//                        loadoutputlabel->set_text(loadoutputlabel->get_text() +
+//                                                  message + "\n");
                         Gdk::Window::process_all_updates();
                         numlines--;
                      }
@@ -490,10 +514,10 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                                                                 bucketlevels);
                      if(numberofpointsloaded == 0){
                         string message = "No points loaded from file, either \
-                                          because of a lack of points or \
-                                          because points lie outside \
-                                          quadtree boundary (possibly because \
-                                          of fence). Please check file.";
+because of a lack of points or \
+because points lie outside \
+quadtree boundary (possibly because \
+of fence). Please check file.";
                         cout << message << endl;
                         loadoutputlabel->set_text(loadoutputlabel->get_text() + 
                                                   message + "\n");
@@ -501,7 +525,7 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                         numlines--;
                      }
                   }
-               }
+//               }
                if(loader != NULL)delete loader;
             }
             cout << filename << endl;
@@ -510,10 +534,10 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
             Gdk::Window::process_all_updates();
             if(loaderrorstream->str()!=""){
                string message = "There have been errors in loading. Please see \
-                                 the file " + loaderroroutputfile;
+the file " + loaderroroutputfile;
                cout << message << endl;
-               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                         message + "\n");
+//               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
+//                                         message + "\n");
                Gdk::Window::process_all_updates();
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
@@ -631,8 +655,10 @@ on_filechooserdialogresponse(int response_id){
          //For adding, do not create a new quadtree (false).
          testfilename(argc,argv,false,fenceusecheck->get_active());
       if(response_id == 2)
+      {
          //For refreshing, do create a new quadtree (true).
          testfilename(argc,argv,true,fenceusecheck->get_active());
+      }
 
       for(int i = 0;i < argc;i++)
          delete[] argv[i];

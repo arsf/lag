@@ -39,7 +39,18 @@ FileSaver(TwoDeeOverview *tdo,
    if(filesaverdialog)
       filesaverdialog->signal_response().
          connect(sigc::mem_fun(*this,&FileSaver::
-                 on_filesaverdialogresponse));
+                on_filesaverdialogresponse));
+ 
+   // File filters
+   Gtk::FileFilter filter;
+   // LAS Filter
+   filter.set_name("LAS Filter");
+   filter.add_pattern("*.las");
+   filter.add_pattern("*.LAS");
+      
+   filesaverdialog->add_filter(filter);
+   filesaverdialog->set_filter(filter);
+
    builder->get_widget("flightlinelistlabel",flightlinelistlabel);
    builder->get_widget("flightlinesaveselect",flightlinesaveselect);
 
@@ -56,7 +67,11 @@ FileSaver::~FileSaver(){
 }
 
 void FileSaver::on_filesaverdialogresponse(int response_id){
-   if(response_id == Gtk::RESPONSE_CLOSE)filesaverdialog->hide_all();
+   if(response_id == Gtk::RESPONSE_CLOSE)
+   {
+      filesaverdialog->set_filename("");
+      filesaverdialog->hide_all();
+   }
    else if(response_id == 1){
       if(lidardata==NULL)return;
       try{
@@ -68,6 +83,8 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
          lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
                                    saver);
          delete saver;
+         filesaverdialog->set_filename("");
+         filesaverdialog->hide_all();
       }
       catch(DescriptiveException e){
          cout << "There has been an exception:" << endl;

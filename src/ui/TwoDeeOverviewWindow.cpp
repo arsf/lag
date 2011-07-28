@@ -52,11 +52,11 @@ TwoDeeOverviewWindow(TwoDeeOverview *tdo,
       //File menu
       //For saving files:
       //For selecting to get file-saving menu.
-      Gtk::MenuItem *savefilemenuitem = NULL;
-      builder->get_widget("savefilemenuitem",
-                         savefilemenuitem);
-      if(savefilemenuitem)
-         savefilemenuitem->signal_activate().
+      Gtk::MenuItem *saveasfilemenuitem = NULL;
+      builder->get_widget("saveasfilemenuitem",
+                         saveasfilemenuitem);
+      if(saveasfilemenuitem)
+         saveasfilemenuitem->signal_activate().
             connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::
                     on_savefilemenuactivated));
 

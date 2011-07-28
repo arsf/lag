@@ -44,9 +44,6 @@ public:
 
 private:
    float colourValues[3];
-   //float _r;
-   //float _g;
-   //float _b;
 };
 
 #endif
