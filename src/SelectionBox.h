@@ -1,7 +1,7 @@
 #ifndef _SELECTIONBOX_H_
 #define _SELECTIONBOX_H_
 
-#include <Point.h>
+#include "Point.h"
 
 class SelectionBox {
 

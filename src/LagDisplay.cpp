@@ -27,7 +27,7 @@
 #include "Quadtree.h"
 //#include "QuadtreeStructs.h"
 #include "PointBucket.h"
-#include <FTGL/ftgl.h>
+#include "FTGL/FTGLBitmapFont.h"
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -48,8 +48,8 @@ LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
 
    // Fonts
    fontpath += "fonts/DejaVuSansMono.ttf";
-   theFont = new FTGLBitmapFont(fontpath.c_str());
-   theFont->FaceSize(12);
+   //theFont = new FTGLBitmapFont::FTGLBitmapFont(fontpath.c_str());
+  //theFont->FaceSize(12);
 
    ratio = 1.0;
    zoomlevel = 1;
@@ -74,7 +74,7 @@ LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
 LagDisplay::
 ~LagDisplay(){
 
-   delete theFont;
+   //delete theFont;
    if(colourheightarray!=NULL)
       delete[] colourheightarray;
 //   if(colourintensityarray!=NULL)
@@ -88,6 +88,9 @@ LagDisplay::
 //Draw on expose.
 bool LagDisplay::
 on_expose_event(GdkEventExpose* event){
+   if(event==0){
+
+   }
    // Draw from scratch if window resized so that there is not 
    // (usually; this does not work perfectly) a blank area resulting.
 //   if(configuring){
@@ -98,7 +101,7 @@ on_expose_event(GdkEventExpose* event){
       // Call this method with 3, which means that it is an expose call 
       // that this method will handle in a way depending on the subclass. 
 //      drawviewable(3);
-//   return true;
+   return true;
 }
 
 // Please note that the Gtk::GL::DrawingArea::on_realize() method calls this 
@@ -112,7 +115,10 @@ on_expose_event(GdkEventExpose* event){
 // called right after this one.
 bool LagDisplay::
 on_configure_event(GdkEventConfigure* event){
-
+   //Added so debugger will not say anything about event not being used
+   if(event==0){
+      
+   }
    glViewport(0, 0, get_width(), get_height());
    resetview();
    // The expose event handler will be called immediately after the return 
@@ -363,15 +369,10 @@ double LagDisplay::imageUnitsToPixels(double imageUnits)
    return imageUnits * zoomlevel / ratio;
 } 
 
-void LagDisplay::printString(const string& s)
-{
-   theFont->Render(s.c_str());
-}
-
-void LagDisplay::printString(const string& s, double x, double y, double z)
+void LagDisplay::printString(double x, double y, double z)
 {
    glRasterPos3d(x, y, z);
-   theFont->Render(s.c_str());
+  // theFont->Render(s.c_str());
 }
 
 //Convenience code for clearing the screen.

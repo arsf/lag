@@ -29,7 +29,7 @@
 #include <vector>
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
-#include "Quadtree.h"
+//#include "../Quadtree.h"
 #include "LasLoader.h"
 #include "AsciiLoader.h"
 #include "AdvancedOptionsWindow.h"

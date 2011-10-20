@@ -33,6 +33,7 @@ ProfileWindow(Profile *prof,
               Gtk::EventBox *eventboxprof,
               Glib::RefPtr<Gtk::Builder> builder,
               AdvancedOptionsWindow *aow){
+
    this->prof = prof;
    this->tdo = tdo;
    this->profilewindow = profilewindow;
@@ -43,6 +44,7 @@ ProfileWindow(Profile *prof,
       connect(sigc::mem_fun(*this,&ProfileWindow::
               on_prof_key_press));
    profilewindow->set_title("LAG Profile");
+
 
    builder->get_widget("showheightscalecheck",
                        showheightscalecheck);
@@ -94,6 +96,7 @@ ProfileWindow(Profile *prof,
       colourbyreturnmenuprof->signal_activate().
          connect(sigc::mem_fun(*this,&ProfileWindow::
                  on_colouractivatedprof));
+
 
    //For determining how to shade the profile:
    Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
@@ -148,6 +151,7 @@ ProfileWindow(Profile *prof,
       pointshowtoggle->signal_toggled().
          connect(sigc::mem_fun(*this,&ProfileWindow::
                  on_pointshowtoggle));
+
 
    builder->get_widget("lineshowtoggle",
                       lineshowtoggle);
@@ -207,7 +211,9 @@ ProfileWindow(Profile *prof,
 
    builder->get_widget("slantwidthselectprof",
                       slantwidthselectprof);
+
    if(slantwidthselectprof){
+
 //      slantwidthselectprof->set_range(0,30000);
       slantwidthselectprof->set_value(5);
       slantwidthselectprof->signal_value_changed().
@@ -216,20 +222,16 @@ ProfileWindow(Profile *prof,
    }
    builder->get_widget("classificationselect",
                       classificationselect);
+
    classificationselect->set_value(7);
+
 
    profilewindow->show_all();
 //   prof->set_size_request(200,200);
 
    //Initialisations:
    prof->setshowheightscale(showheightscalecheck->get_active());
-   //prof->setintensitycolour(colourbyintensitymenuprof->get_active());
-   //prof->setheightcolour(colourbyheightmenuprof->get_active());
-   //prof->setlinecolour(colourbyflightlinemenuprof->get_active());
-   //prof->setclasscolour(colourbyclassificationmenuprof->get_active());
-   //prof->setreturncolour(colourbyreturnmenuprof->get_active());
-   //prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
-   //prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
+
    prof->setpointwidth(pointwidthselectprof->get_value());
    prof->setdrawpoints(pointshowtoggle->get_active());
    prof->setdrawmovingaverage(lineshowtoggle->get_active());
@@ -238,6 +240,12 @@ ProfileWindow(Profile *prof,
    prof->setslantwidth(slantwidthselectprof->get_value());
    prof->setslanted(slantedprof->get_active());
 }
+
+
+
+
+
+
 ProfileWindow::~ProfileWindow(){
    delete classificationselect;
    delete showheightscalecheck;

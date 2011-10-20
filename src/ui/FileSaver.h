@@ -27,7 +27,7 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
-#include "Quadtree.h"
+//#include "../Quadtree.h"
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
 #include "LasSaver.h"

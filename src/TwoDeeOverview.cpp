@@ -1410,7 +1410,7 @@ makecolourlegend(){
          for(int i=0;i<7;i++){
             sprintf(number, "%.2lf", ((6-i)*cbmax + i*cbmin)/6);
             stringwidth = FONT_CHAR_WIDTH * strlen(number); 
-            printString(number,
+            printString(
                         cornx - pixelsToImageUnits(hoffset+hwidth+stringwidth+hgap),
                         corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
                         altitude);
@@ -1442,7 +1442,7 @@ makecolourlegend(){
             glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
                           corny - padding - pixelsToImageUnits(0.5* FONT_CHAR_HEIGHT) - length*i,
                           altitude);
-            printString(number);
+       
          }
          // Draws a strip of quads with smooth colour transitions to give a 
          // spectrum-like effect (though the colours are in a different order 
@@ -1486,7 +1486,7 @@ makecolourlegend(){
             glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
                           corny - padding - pixelsToImageUnits(0.5 * FONT_CHAR_HEIGHT)- length * i,
                           altitude);
-            printString(text.c_str());
+
             glBegin(GL_QUADS);
                glColor3fv(colour.getRGB());
                glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
@@ -1523,7 +1523,7 @@ makecolourlegend(){
             glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
                           corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
                           altitude);
-            printString(text.c_str());
+
             glBegin(GL_QUADS);
                glColor3fv(colour.getRGB());
                glVertex3d(cornx-pixelsToImageUnits(hoffset+hwidth),
@@ -1622,7 +1622,7 @@ makedistancescale(){
       glRasterPos3d(origx + pixelsToImageUnits(85.0),
                     origy + padding + i*order - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT),
                     altitude);
-      printString(number);
+
    }
 }
    

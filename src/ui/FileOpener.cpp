@@ -462,16 +462,7 @@ see the file " + loaderroroutputfile;
                   const char* code = code1.c_str();
                   loader = new AsciiLoader(argv[count],code);
                }
-//               else{//For incorrect file extensions:
-//                  string message = "Files must have the extensions .las, .LAS, \
-//                                    .txt or .TXT.";
-//                  cout << message << endl;
-//                  loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-//                                            message + "\n");
-//                  Gdk::Window::process_all_updates();
-//                  validfile = false;
-//               }
-//               if(validfile){
+
                   // If refreshing (or from command-line) use first filename 
                   // to make quadtree...
                   if((count==2 && (start || !loadedanyfiles)) ||
@@ -586,6 +577,7 @@ the file " + loaderroroutputfile;
    
    // If drawing areas are already visible, prepare the new images and draw 
    // them.
+   
    if(loadedanyfiles){
       tdo->prepare_image();
       tdo->drawviewable(1);

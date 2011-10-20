@@ -167,7 +167,7 @@ void BoxOverlay::makeboundaries()
 //
 void BoxOverlay::drawinfo(){
    if(orthogonalshape){
-      double minx = start.getX(),maxx = end.getX(),miny = start.getY(),maxy = end.getY();
+      //double minx = start.getX(),maxx = end.getX(),miny = start.getY(),maxy = end.getY();
       Point min = start, max = end;
 
       if(start.getX()>end.getX()){

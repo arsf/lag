@@ -782,7 +782,7 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b){
       double widgradboxb = multy * (yb - minPlan.getY()) - 
                            (multx * (xb - minPlan.getX()) * widgradbox);
 
-      // Identify the points of intercept for each point-to-profile line and 
+      /*// Identify the points of intercept for each point-to-profile line and 
       // the profile line and find the distance along the profile line:{
       //
       //  0 (adjusted origin)
@@ -802,7 +802,7 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b){
       //       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to 
       //       find distance along the profile i.e distance from the adjusted
       //       origin.
-      //  
+      //  */
       double interxa,interxb,interya,interyb;
       // The x (intercept with plane) value of the line from the point a to
       // the plane.
@@ -1331,7 +1331,7 @@ makeZscale(){
       //Draw numbers by the horizontal lines.
       glRasterPos3d(origx3,origy3,origz3 + padding + i*order -
                                   pixelsToImageUnits(0.5 *FONT_CHAR_HEIGHT));
-      printString(number);
+
    }
 }
    

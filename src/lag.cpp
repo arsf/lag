@@ -41,10 +41,10 @@ string findgladepath(char* programpath){
    // I.e. in the event that there is no forward slash (so must be calling 
    // from the same directory), just go from 0, where the forward slash would 
    // have been.
-   if(index==string::npos)
-      index=0;
+   //if(index==string::npos)
+   //   index=0;
    //We do not actually want to include the forward slash.
-   else 
+   //else 
       index++;
    string gladename = exename;
    gladename.replace(index,9,"lag.ui");
@@ -60,32 +60,23 @@ int main(int argc, char** argv) {
    // This is required for GTK to work. It must be the first GTK object 
    // created and may not be global.
    Gtk::Main gtkmain(argc, argv);
+
    //This will extract widgets from the glade file when directed.
    Glib::RefPtr<Gtk::Builder> builder;
-   //try{
-      //Assign the glade file used to build the GUI.
       builder = Gtk::Builder::create_from_file(findgladepath(argv[0]));
-   //}
-   //catch(const Gnome::Glade::XmlError& ex){ 
-   //   cerr << ex.what() << std::endl;
-   //   cerr << "The file lag.glade must be located in the same directory as \
-the lag executable." << endl;
-   //   return 1;
-   //}
    Gtk::GL::init(argc, argv);
    Glib::RefPtr<Gdk::GL::Config> glconfig;
    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB |
                                       Gdk::GL::MODE_DEPTH |
                                       Gdk::GL::MODE_DOUBLE);
-   if (glconfig==NULL){
+   if (glconfig==0){
       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB |
                                          Gdk::GL::MODE_DEPTH);
-      if(glconfig==NULL){
+      if(glconfig==0){
          cout << "Cannot intialise OpenGL. Exiting." << endl;
          std::exit(1);
       }
    }
-
    printf("%s\n", argv[0]);
    //How many points in each bucket, maximum.
    int bucketlimit = 100000;
@@ -103,7 +94,6 @@ the lag executable." << endl;
    // etc. for the profile.
    Gtk::Label *rulerlabel = NULL;
    builder->get_widget("rulerlabel",rulerlabel);
-
    //The profile.
    Profile *prof = new Profile(argv[0], glconfig, lidardata, 
                                bucketlimit,rulerlabel);
@@ -123,6 +113,8 @@ the lag executable." << endl;
    builder->get_widget("overviewwindow", overviewwindow);
    Gtk::Window *profilewindow = NULL;
    builder->get_widget("profilewindow", profilewindow);
+   
+
    //This contains the widgets of the profile window.
    ProfileWindow *profwin = new ProfileWindow(prof, tdo, profilewindow, 
                                               overviewwindow, eventboxprof,
@@ -139,9 +131,14 @@ the lag executable." << endl;
    
    //In case of command-line commands 
    fo->testfilename(argc,argv,true,false);
+   
+
    gdk_threads_enter();
+
    gtkmain.run(*overviewwindow);
+
    gdk_threads_leave();
+
    delete tdow;
    delete profwin;
    delete fo;

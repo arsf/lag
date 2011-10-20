@@ -26,10 +26,12 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
-#include <FTGL/ftgl.h>
+#include "FTGL/FTGL.h"
+#include "FTGL/FTGLBitmapFont.h"
 #include "PointBucket.h"
 #include <vector>
 #include "Colour.h"
+#include <GL/gl.h>
 
 // Constants for "fixed" font
 const unsigned int FONT_CHAR_WIDTH = 7;
@@ -123,7 +125,8 @@ public:
    }
 
    void setpointwidth(double pointsize){
-      this->pointsize=pointsize;glPointSize(pointsize);
+      this->pointsize=pointsize;
+      //glPointSize(pointsize);
    }
 
    void setmaindetail(double maindetailmod){
@@ -161,7 +164,7 @@ protected:
    //
    //
    // For FTGL font
-   FTFont  *theFont;
+   FTGLBitmapFont  *theFont;
 
    //Point data and related stuff:
    Point centre;
@@ -246,10 +249,9 @@ protected:
 
    //Fonts
    //void initFont();
-   // Prints a raster string at current raster position.
-   void printString(const string&);
+
    // Printfs a raster string at a certain position
-   void printString(const string&, double, double, double);
+   void printString(double, double, double);
  
    //Colouring and shading:
    

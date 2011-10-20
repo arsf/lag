@@ -633,6 +633,9 @@ on_helpmenuactivated(){
 //Hide the help dialog when close button activated.
 void TwoDeeOverviewWindow::
 on_helpresponse(int response_id){ 
+   if(response_id==0){
+
+   }
    help->hide(); 
 }
 
@@ -645,6 +648,9 @@ on_aboutmenuactivated(){
 //Hide the about dialog when close button activated.
 void TwoDeeOverviewWindow::
 on_aboutresponse(int response_id){ 
+   if(response_id==0){
+   
+   }
    about->hide(); 
 }
 

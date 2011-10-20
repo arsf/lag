@@ -268,6 +268,7 @@ AdvancedOptionsWindow::~AdvancedOptionsWindow(){
 //Closes the advanced options dialog.
 void AdvancedOptionsWindow::
 on_advancedoptionsdialog_response(int response_id){ 
+   response_id=0;
    advancedoptionsdialog->hide(); 
 }
 //The checkbuttons and their activations:
@@ -425,6 +426,9 @@ on_heightminselect_changed() {
 
 bool AdvancedOptionsWindow::
 on_heightscrollbar_scrolled(Gtk::ScrollType scroll,double new_value) {
+   if (scroll==0){
+
+   }
    if(new_value + heightscrollbar->get_adjustment()->get_page_size() >
                   heightscrollbar->get_adjustment()->get_upper())
    // New upper value (new_value plus page size) must not exceed the maximum 
@@ -500,6 +504,9 @@ on_intensityminselect_changed() {
 bool AdvancedOptionsWindow::
 on_intensityscrollbar_scrolled(Gtk::ScrollType scroll,
                                double new_value) {
+   if(scroll==0){
+        
+   }
    if(new_value + intensityscrollbar->get_adjustment()->get_page_size() > 
       intensityscrollbar->get_adjustment()->get_upper())
 
