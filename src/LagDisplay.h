@@ -26,8 +26,6 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
-#include "FTGL/FTGL.h"
-#include "FTGL/FTGLBitmapFont.h"
 #include "PointBucket.h"
 #include <vector>
 #include "Colour.h"
@@ -154,17 +152,6 @@ protected:
    // The zoomlevel's change is determined by a pow(a,b) call. This 
    // variable stores the power.
    double zoompower;
-
-
-   // This is for GLX Fonts.  I have added FTGL Fonts due to it being
-   // cross platform and also because it offers antialiasing.
-   //
-   // Font base
-   //GLuint fontBase;
-   //
-   //
-   // For FTGL font
-   FTGLBitmapFont  *theFont;
 
    //Point data and related stuff:
    Point centre;

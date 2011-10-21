@@ -25,9 +25,7 @@
 #include <vector>
 #include <iostream>
 #include "Quadtree.h"
-//#include "QuadtreeStructs.h"
 #include "PointBucket.h"
-#include "FTGL/FTGLBitmapFont.h"
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -48,8 +46,6 @@ LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
 
    // Fonts
    fontpath += "fonts/DejaVuSansMono.ttf";
-   //theFont = new FTGLBitmapFont::FTGLBitmapFont(fontpath.c_str());
-  //theFont->FaceSize(12);
 
    ratio = 1.0;
    zoomlevel = 1;
@@ -372,7 +368,6 @@ double LagDisplay::imageUnitsToPixels(double imageUnits)
 void LagDisplay::printString(double x, double y, double z)
 {
    glRasterPos3d(x, y, z);
-  // theFont->Render(s.c_str());
 }
 
 //Convenience code for clearing the screen.
