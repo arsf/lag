@@ -14,8 +14,16 @@ AC_PROG_CXX
 #AC_PROG_INSTALL
 
 # Checks for libraries using pkg-config
-PKG_CHECK_MODULES([DEPS], [gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 
-libgeotiff lidarquadtree] )
+#PKG_CHECK_MODULES([DEPS], [gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 libgeotiff lidarquadtree] )
+PKG_CHECK_MODULES([GTKmm], [gtkmm-2.4])
+PKG_CHECK_MODULES([GTKGLextmm], [gtkglextmm-1.2])
+PKG_CHECK_MODULES([GThread], [gthread-2.0])
+PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
+# strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
+# and fails silently in the makefile.  This makes it explicit
+PKG_CHECK_MODULES([liblas], [liblas])
+PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree])
+
 
 # Checs for header files.
 AC_HEADER_STDC
