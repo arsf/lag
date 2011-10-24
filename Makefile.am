@@ -13,3 +13,9 @@ src/ui/TwoDeeOverviewWindow.cpp src/LagDisplay.cpp src/ui/ProfileWindow.cpp \
 src/Colour.cpp src/SelectionBox.cpp 
 lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @libgeotiff_CFLAGS@ @lidarquadtree_CFLAGS@
 lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @lidarquadtree_LIBS@
+lagdir = $(prefix)
+lag_DATA = lag.ui
+lagiconsdir = $(prefix)/lagicons
+lagicons_DATA = lagicons/*
+
+#lag_DATA = lagfonts/* lagicons/* lag.glade lag.ui
