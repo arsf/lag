@@ -14,13 +14,8 @@ AC_PROG_CXX
 #AC_PROG_INSTALL
 
 # Checks for libraries using pkg-config
-PKG_CHECK_MODULES(DEPS, gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 libgeotiff)
-
-# because of how autoconf works we need a special c++ test for quadtree
-LDFLAGS="$LDFLAGS -llidarquadtree -llas"
-AC_LINK_IFELSE(
-[ AC_LANG_PROGRAM([#include <quadtree/Quadtree.h>], [Quadtree* lidardata = NULL])], , , AC_MSG_ERROR(lidarquadtree 
-library required))
+PKG_CHECK_MODULES([DEPS], [gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 
+libgeotiff lidarquadtree] )
 
 # Checs for header files.
 AC_HEADER_STDC
