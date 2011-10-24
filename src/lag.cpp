@@ -47,7 +47,7 @@ string findgladepath(char* programpath){
    //else 
       index++;
    string gladename = exename;
-   gladename.replace(index,9,"lag.ui");
+   gladename.replace(index,9,"../lag.ui");
    cout << exename << endl;
    cout << gladename << endl;
    return gladename;
