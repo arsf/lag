@@ -1303,6 +1303,11 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 
          ostringstream x,y,z,time,intensity,classification,
                        rnumber,flightlinenumber;
+         x << setprecision(12);
+         y << setprecision(12);
+         z << setprecision(12);
+         time << setprecision(12);
+
          x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
          y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
          z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
