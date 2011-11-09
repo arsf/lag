@@ -31,6 +31,11 @@
 #include "ui/FileOpener.h"
 using namespace std;
 
+bool glade_exists(const char *filename){
+  ifstream ifile(filename);
+  return ifile;
+}
+
 // Takes the path the executable was called with and uses it to find the 
 // .glade file needed to make the GUI.
 string findgladepath(char* programpath){
@@ -45,12 +50,27 @@ string findgladepath(char* programpath){
    //   index=0;
    //We do not actually want to include the forward slash.
    //else 
-      index++;
-   string gladename = exename;
-   gladename.replace(index,9,"../lag.ui");
+   index++;
+   string gladename1 = exename;
+   string gladename2 = exename;
+   
+   gladename1.replace(index,9,"../lag.ui");
+   gladename2.replace(index,9,"lag.ui");
+   
    cout << exename << endl;
-   cout << gladename << endl;
-   return gladename;
+   if(glade_exists(gladename1.c_str())){
+      cout << gladename1 << endl;
+      return gladename1;
+   }
+   else if(glade_exists(gladename2.c_str())){
+      cout << gladename2 << endl;
+      return gladename2;
+   }
+   else{
+      std::cerr << "No lag.ui glade file found" << std::endl;
+      exit(1);
+      return "BANG!";
+   }
 }
 
 int main(int argc, char** argv) {
