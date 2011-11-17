@@ -3,6 +3,9 @@ autoheader && aclocal && automake --add-missing && autoconf
 
 Please note you will need a compiled version of liblidarquadtree.so on your machine, and may need to modify Makefile.am to point to this library.  By default it should point to ./quadtreelink
  
+Depending on where you've installed liblas, you may need to do the following to allow configure to find it:
+ export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig/
+
 Then you can do the normal:
  ./configure
  make
