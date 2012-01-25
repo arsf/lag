@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([LiDAR Analysis GUI], [1.0] , [anch@pml.ac.uk])
+AC_INIT([LiDAR Analysis GUI], [1.0] , [mark1@pml.ac.uk])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define])
 AC_CONFIG_HEADERS([config.h])
-# use som not always publicly available autoconf magic
+# use some not always publicly available autoconf magic
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
@@ -25,7 +25,7 @@ PKG_CHECK_MODULES([liblas], [liblas])
 PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree])
 
 
-# Checs for header files.
+# Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h])
 
