@@ -41,16 +41,6 @@ FileSaver(TwoDeeOverview *tdo,
          connect(sigc::mem_fun(*this,&FileSaver::
                 on_filesaverdialogresponse));
  
-   // File filters
-   Gtk::FileFilter filter;
-   // LAS Filter
-   filter.set_name("LAS Filter");
-   filter.add_pattern("*.las");
-   filter.add_pattern("*.LAS");
-      
-   filesaverdialog->add_filter(filter);
-   filesaverdialog->set_filter(filter);
-
    builder->get_widget("flightlinelistlabel",flightlinelistlabel);
    builder->get_widget("flightlinesaveselect",flightlinesaveselect);
 

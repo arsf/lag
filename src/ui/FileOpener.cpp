@@ -73,28 +73,6 @@ FileOpener(TwoDeeOverview *tdo,
          connect(sigc::mem_fun(*this,&FileOpener::
                  on_filechooserdialogresponse));
 
-   // File filters
-   Gtk::FileFilter filters[3];
-   // LAS Filter
-   filters[0].set_name("LAS Filter");
-   filters[0].add_pattern("*.las");
-   filters[0].add_pattern("*.LAS");
-   // TXT Filter
-   filters[1].set_name("TXT Filter");
-   filters[1].add_pattern("*.txt");
-   filters[1].add_pattern("*.TXT");
-   // All Lidar Filers
-   filters[2].set_name("All LiDAR Files");
-   filters[2].add_pattern("*.las");
-   filters[2].add_pattern("*.LAS");
-   filters[2].add_pattern("*.txt");
-   filters[2].add_pattern("*.TXT");
-
-   for(int i = 0; i < 3; i++)
-      filechooserdialog->add_filter(filters[i]);
-
-   filechooserdialog->set_filter(filters[2]);
-
    builder->get_widget("pointskipselect",pointskipselect);
    builder->get_widget("fenceusecheck",fenceusecheck);
    builder->get_widget("asciicodeentry",asciicodeentry);
