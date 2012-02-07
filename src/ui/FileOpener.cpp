@@ -283,17 +283,22 @@ testfilename(int argc,char *argv[],bool start,bool usearea){
                   //For LAS files.
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
                      filename.find(".LAS",filename.length()-4)!=string::npos)
-                     loader = new LasLoader(argv[count]);
+
+                	  loader = new LasLoader(argv[count]);
+
+
                   // For ASCII files (only works through GUI... Must get it to 
                   // work for command-line at some point:
                   else if(filename.find(".txt",filename.length()-4) !=   
                                         string::npos ||
                           filename.find(".TXT",filename.length()-4) !=
                                         string::npos) {
-                     // The type code is needed to properly interpret the 
+
+                	  // The type code is needed to properly interpret the
                      // ASCII file.
                      string code1 = asciicodeentry->get_text();
-                     loader = new AsciiLoader(argv[count],code1.c_str());
+
+                     loader = new LasLoader(argv[count],code1.c_str());
                   }
                   //For incorrect file extensions:
                   else{
@@ -381,26 +386,32 @@ see the file " + loaderroroutputfile;
       else{
          double minx=0,maxx=0,miny=0,maxy=0;
          if(start || !loadedanyfiles || lidardata==NULL){
-            //We start after the executable path and the point offset.
+
+        	 //We start after the executable path and the point offset.
             for(int count = 2;count<argc;count++) {
                filename.assign(argv[count]);
+
                if(filename != "") {
                   LidarPointLoader *loader = NULL;
+
                   // For las files:
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
                      filename.find(".LAS",filename.length()-4)!=string::npos) {
                      loader = new LasLoader(argv[count]);
                   }
+
                   // For ASCII files (only works through GUI... Must get it to 
                   // work for command-line at some point:
                   else if(filename.find(".txt",filename.length()-4) !=
                                         string::npos ||
                           filename.find(".TXT",filename.length()-4) !=
                                         string::npos){
-                     // The type code is needed to properly interpret the 
+
+                	 // The type code is needed to properly interpret the
                      // ASCII file.
                      string code1 = asciicodeentry->get_text();
-                     loader = new AsciiLoader(argv[count],code1.c_str());
+
+                     loader = new LasLoader(argv[count],code1.c_str());
                   }
                   Boundary lidarboundary = loader->getBoundary();
                   if(lidarboundary.minX < minx || count == 2)
@@ -420,25 +431,30 @@ see the file " + loaderroroutputfile;
          for(int count = 2;count<argc;count++){
             numlines++;
             filename.assign(argv[count]);
+
             if(filename != ""){
                LidarPointLoader *loader = NULL;
-//               bool validfile = true;
+               // bool validfile = true;
 
                //For LAS files.
                if(filename.find(".las",filename.length()-4)!=string::npos ||
                   filename.find(".LAS",filename.length()-4)!=string::npos)
-                  loader = new LasLoader(argv[count]);
+
+            	   loader = new LasLoader(argv[count]);
+
                // For ASCII files (only works through GUI... Must get it to 
                // work for command-line at some point:
                else if(filename.find(".txt",filename.length()-4) !=
                                      string::npos ||
                        filename.find(".TXT",filename.length()-4) !=
                                      string::npos){
-                  // The type code is needed to properly interpret the 
+
+            	  // The type code is needed to properly interpret the
                   // ASCII file.
-                  string code1 = asciicodeentry->get_text();
-                  const char* code = code1.c_str();
-                  loader = new AsciiLoader(argv[count],code);
+            	  string code1 = asciicodeentry->get_text();
+
+                  loader = new LasLoader(argv[count], code1.c_str());
+
                }
 
                   // If refreshing (or from command-line) use first filename 

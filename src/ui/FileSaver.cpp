@@ -43,6 +43,7 @@ FileSaver(TwoDeeOverview *tdo,
  
    builder->get_widget("flightlinelistlabel",flightlinelistlabel);
    builder->get_widget("flightlinesaveselect",flightlinesaveselect);
+   builder->get_widget("parsestringentry", parsestringentry);
 
    if(flightlinesaveselect)
       flightlinesaveselect->signal_value_changed().
@@ -52,8 +53,10 @@ FileSaver(TwoDeeOverview *tdo,
 FileSaver::~FileSaver(){
    delete flightlinelistlabel;
    delete flightlinesaveselect;
+   delete parsestringentry;
    //Have to delete parent after children?
    delete filesaverdialog;
+
 }
 
 void FileSaver::on_filesaverdialogresponse(int response_id){
@@ -64,28 +67,52 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
    }
    else if(response_id == 1){
       if(lidardata==NULL)return;
-      try{
-         LasSaver *saver = new LasSaver(filesaverdialog->get_filename().c_str(),
-                                        lidardata->getFileName(
-                                        flightlinesaveselect->
-                                        get_value_as_int()).c_str());
 
-         lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
-                                   saver);
-         delete saver;
-         filesaverdialog->set_filename("");
-         filesaverdialog->hide_all();
+      const char* filename = filesaverdialog->get_filename().c_str();
+      LasSaver* saver = NULL;
+
+      if (strstr(filename, ".txt") || strstr(filename, ".TXT"))
+      {
+          try{
+        	 string parse_string = parsestringentry->get_text();
+             saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
+                                            get_value_as_int()).c_str(), parse_string.c_str());
+
+             lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
+                                       saver);
+             delete saver;
+             filesaverdialog->set_filename("");
+             //filesaverdialog->hide_all();
+          }
+          catch(DescriptiveException e){
+             cout << "There has been an exception:" << endl;
+             cout << "What: " << e.what() << endl;
+             cout << "Why: " << e.why() << endl;
+             return;
+          }
       }
-      catch(DescriptiveException e){
-         cout << "There has been an exception:" << endl;
-         cout << "What: " << e.what() << endl;
-         cout << "Why: " << e.why() << endl;
-         return;
+      else
+      {
+    	  try{
+    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
+                                        			get_value_as_int()).c_str());
+
+    		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
+                                   	   saver);
+    		  delete saver;
+    		  filesaverdialog->set_filename("");
+    		  //filesaverdialog->hide_all();
+    	  }
+    	  catch(DescriptiveException e){
+    		  cout << "There has been an exception:" << endl;
+    		  cout << "What: " << e.what() << endl;
+    		  cout << "Why: " << e.why() << endl;
+    		  return;
+    	  }
       }
    }
 }
 void FileSaver::on_flightlinesaveselected(){
    if(lidardata!=NULL)
-      filesaverdialog->set_filename(lidardata->getFileName(
-                                    flightlinesaveselect->get_value_as_int()));
+      filesaverdialog->set_filename(lidardata->getFileName(flightlinesaveselect->get_value_as_int()));
 }

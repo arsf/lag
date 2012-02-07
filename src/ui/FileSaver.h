@@ -68,6 +68,10 @@ protected:
    Gtk::Label *flightlinelistlabel;
    Gtk::SpinButton *flightlinesaveselect;
    Quadtree *lidardata;
+
+   // (jaho)
+   Gtk::Entry *parsestringentry;
+
    void on_filesaverdialogresponse(int response_id);
 };
 
