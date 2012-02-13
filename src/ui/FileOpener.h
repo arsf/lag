@@ -72,6 +72,11 @@ protected:
    Gtk::CheckButton *fenceusecheck;
    //The type code for opening ASCII files.
    Gtk::Entry *asciicodeentry;
+   // Scale factor entries and check box
+   Gtk::Entry* scaleFactorEntryX;
+   Gtk::Entry* scaleFactorEntryY;
+   Gtk::Entry* scaleFactorEntryZ;
+   Gtk::CheckButton* btnUseDefault;
    //The maximumum number of points to hold in cache.
    Gtk::SpinButton *cachesizeselect;
    //This displays the cache size in terms of gigabytes, approximately.
@@ -96,6 +101,8 @@ protected:
    int cachelimit;
    //How many points in each bucket, maximum.
    int bucketlimit;
+
+   void on_usedefault_changed();
 
    void on_filechooserdialogresponse(int response_id);
    void on_cachesize_changed();

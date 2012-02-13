@@ -27,45 +27,73 @@
 #include "../Profile.h"
 #include "FileSaver.h"
 
-FileSaver::
-FileSaver(TwoDeeOverview *tdo,
-          Profile *prof,
-          Glib::RefPtr<Gtk::Builder> builder,
-          Quadtree *lidardata){
+FileSaver::FileSaver(TwoDeeOverview *tdo,
+          	  	  	 Profile *prof,
+          	  	  	 Glib::RefPtr<Gtk::Builder> builder,
+          	  	  	 Quadtree *lidardata)
+{
    this->tdo = tdo;
    this->prof = prof;
    this->lidardata = lidardata;
+
    builder->get_widget("filesaverdialog",filesaverdialog);
    if(filesaverdialog)
-      filesaverdialog->signal_response().
-         connect(sigc::mem_fun(*this,&FileSaver::
-                on_filesaverdialogresponse));
+   {
+      filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
+   }
  
    builder->get_widget("flightlinelistlabel",flightlinelistlabel);
    builder->get_widget("flightlinesaveselect",flightlinesaveselect);
    builder->get_widget("parsestringentry", parsestringentry);
+   builder->get_widget("scaleFactorEntryX1", scaleFactorEntryX);
+   builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
+   builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
+   builder->get_widget("btnUseDefault1", btnUseDefault);
+
+   if(btnUseDefault)
+   {
+	   on_usedefault_changed();
+	   btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
+   }
+
 
    if(flightlinesaveselect)
-      flightlinesaveselect->signal_value_changed().
-         connect(sigc::mem_fun(*this,&FileSaver::
-                 on_flightlinesaveselected));
+   {
+      flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
+   }
 }
-FileSaver::~FileSaver(){
+FileSaver::~FileSaver()
+{
    delete flightlinelistlabel;
    delete flightlinesaveselect;
    delete parsestringentry;
+   delete scaleFactorEntryX;
+   delete scaleFactorEntryY;
+   delete scaleFactorEntryZ;
+   delete btnUseDefault;
    //Have to delete parent after children?
    delete filesaverdialog;
 
 }
 
-void FileSaver::on_filesaverdialogresponse(int response_id){
+void FileSaver::on_usedefault_changed()
+{
+	bool temp = !(btnUseDefault->get_active());
+
+	scaleFactorEntryX->set_sensitive(temp);
+	scaleFactorEntryY->set_sensitive(temp);
+	scaleFactorEntryZ->set_sensitive(temp);
+}
+
+void FileSaver::on_filesaverdialogresponse(int response_id)
+{
    if(response_id == Gtk::RESPONSE_CLOSE)
    {
       filesaverdialog->set_filename("");
       filesaverdialog->hide_all();
    }
-   else if(response_id == 1){
+   else if(response_id == 1)
+   {
       if(lidardata==NULL)return;
 
       const char* filename = filesaverdialog->get_filename().c_str();
@@ -75,11 +103,29 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
       {
           try{
         	 string parse_string = parsestringentry->get_text();
-             saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
+             if(btnUseDefault->get_active())
+             {
+            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
                                             get_value_as_int()).c_str(), parse_string.c_str());
+             }
+             else
+             {
+            	 double scale_factor[3];
+            	 const char* temp;
+            	 temp = scaleFactorEntryX->get_text().c_str();
+            	 scale_factor[0] = atof(temp);
+            	 temp = scaleFactorEntryY->get_text().c_str();
+            	 scale_factor[1] = atof(temp);
+            	 temp = scaleFactorEntryZ->get_text().c_str();
+            	 scale_factor[2] = atof(temp);
 
-             lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
-                                       saver);
+            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(),
+            			 	 	 	 	 parse_string.c_str(), scale_factor);
+
+                 temp = NULL;
+             }
+
+             lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
              delete saver;
              filesaverdialog->set_filename("");
              //filesaverdialog->hide_all();
@@ -97,8 +143,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id){
     		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
                                         			get_value_as_int()).c_str());
 
-    		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),
-                                   	   saver);
+    		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
     		  delete saver;
     		  filesaverdialog->set_filename("");
     		  //filesaverdialog->hide_all();

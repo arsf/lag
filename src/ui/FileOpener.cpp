@@ -28,17 +28,17 @@
 #include "../SelectionBox.h"
 #include "FileOpener.h"
 
-FileOpener::
-FileOpener(TwoDeeOverview *tdo,
-           Profile *prof,
-           Glib::RefPtr<Gtk::Builder> builder,
-           AdvancedOptionsWindow *aow,
-           FileSaver *fs,
-           Quadtree *lidardata,
-           int bucketlimit,
-           Gtk::EventBox *eventboxtdo,
-           Gtk::EventBox *eventboxprof,
-           TwoDeeOverviewWindow *tdow) {
+FileOpener::FileOpener(TwoDeeOverview *tdo,
+           	   	   	   Profile *prof,
+           	   	   	   Glib::RefPtr<Gtk::Builder> builder,
+           	   	   	   AdvancedOptionsWindow *aow,
+           	   	   	   FileSaver *fs,
+           	   	   	   Quadtree *lidardata,
+           	   	   	   int bucketlimit,
+           	   	   	   Gtk::EventBox *eventboxtdo,
+           	   	   	   Gtk::EventBox *eventboxprof,
+           	   	   	   TwoDeeOverviewWindow *tdow)
+{
    this->tdo = tdo;
    this->prof = prof;
    this->aow = aow;
@@ -49,35 +49,54 @@ FileOpener(TwoDeeOverview *tdo,
    this->eventboxprof = eventboxprof;
    this->tdow = tdow;
    time_t starttime = time(NULL);
+
    char meh[80];
    strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
    ostringstream bleh;
    bleh << meh;
+
    loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
    loaderroroutput.open(loaderroroutputfile.c_str());
    loaderrorstream = new ostringstream();
    loadedanyfiles = false;
    cachelimit = 25000000;
+
    //For selecting to get file-opening menu.
    Gtk::MenuItem *openfilemenuitem = NULL;
 
    builder->get_widget("openfilemenuitem",openfilemenuitem);
+
    if(openfilemenuitem)
-      openfilemenuitem->signal_activate().
-         connect(sigc::mem_fun(*this,&FileOpener::
-                 on_openfilemenuactivated));
+   {
+      openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
+   }
 
    builder->get_widget("filechooserdialog",filechooserdialog);
+
    if(filechooserdialog)
-      filechooserdialog->signal_response().
-         connect(sigc::mem_fun(*this,&FileOpener::
-                 on_filechooserdialogresponse));
+   {
+      filechooserdialog->signal_response().connect(sigc::mem_fun(*this,&FileOpener::on_filechooserdialogresponse));
+   }
 
    builder->get_widget("pointskipselect",pointskipselect);
    builder->get_widget("fenceusecheck",fenceusecheck);
    builder->get_widget("asciicodeentry",asciicodeentry);
    builder->get_widget("cachesizeselect",cachesizeselect);
-   if(cachesizeselect){
+
+   builder->get_widget("scaleFactorEntryX", scaleFactorEntryX);
+   builder->get_widget("scaleFactorEntryY", scaleFactorEntryY);
+   builder->get_widget("scaleFactorEntryZ", scaleFactorEntryZ);
+
+   builder->get_widget("btnUseDefault", btnUseDefault);
+
+   if(btnUseDefault)
+   {
+	   on_usedefault_changed();
+	   btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this,&FileOpener::on_usedefault_changed));
+   }
+
+   if(cachesizeselect)
+   {
       // That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 
       // 2009-10, so, if the rate of increase is that of quadrupling every 
       // five years, then 40 TB will be reached in less than 35 years.
@@ -87,16 +106,18 @@ FileOpener(TwoDeeOverview *tdo,
       cachesizeselect->set_value(250e5);
       cachesizeselect->set_increments(10e5,10e5);
       builder->get_widget("cachesizeGBlabel",cachesizeGBlabel);
-      if(cachesizeGBlabel){
-         on_cachesize_changed();
-         cachesizeselect->signal_value_changed().
-            connect(sigc::mem_fun(*this,&FileOpener::
-                    on_cachesize_changed));
+      if(cachesizeGBlabel)
+      {
+    	  on_cachesize_changed();
+          cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
       }
    }
+
    builder->get_widget("loadoutputlabel",loadoutputlabel);
    builder->get_widget("resbaseselect",resbaseselect);
-   if(resbaseselect){
+
+   if(resbaseselect)
+   {
       // What is the probability someone will seriously want resolutions of 
       // 1000^(-x)? Note that a value of less than 2 would cause serious 
       // problems.
@@ -104,19 +125,21 @@ FileOpener(TwoDeeOverview *tdo,
       resbaseselect->set_value(4);
       resbaseselect->set_increments(1,1);
    }
+
    builder->get_widget("resdepthselect",resdepthselect);
-   if(resdepthselect){
+   if(resdepthselect)
+   {
       on_resolutionbase_changed();
-      resbaseselect->signal_value_changed().
-         connect(sigc::mem_fun(*this,&FileOpener::
-                 on_resolutionbase_changed));
+      resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
       resdepthselect->set_value(4);
       resdepthselect->set_increments(1,1);
    }
    numlines = 0;
 }
-FileOpener::
-~FileOpener(){
+
+
+FileOpener::~FileOpener()
+{
    loaderroroutput.close();
    delete loadoutputlabel;
    delete pointskipselect;
@@ -125,16 +148,30 @@ FileOpener::
    delete cachesizeselect;
    delete cachesizeGBlabel;
    delete loaderrorstream;
+   delete scaleFactorEntryX;
+   delete scaleFactorEntryY;
+   delete scaleFactorEntryZ;
+   delete btnUseDefault;
    //Have to delete parent after children?
    delete filechooserdialog;
 }
 
-void FileOpener::
-on_resolutionbase_changed(){
-   //This is absolutely vital to prevent an overflow.
-   resdepthselect->set_range(0,log(pow(2,sizeof(int)*8)/100)/
-                               log(resbaseselect->get_value_as_int()));
+void FileOpener::on_usedefault_changed()
+{
+	bool temp = !(btnUseDefault->get_active());
+
+	scaleFactorEntryX->set_sensitive(temp);
+	scaleFactorEntryY->set_sensitive(temp);
+	scaleFactorEntryZ->set_sensitive(temp);
 }
+
+
+void FileOpener::on_resolutionbase_changed()
+{
+   //This is absolutely vital to prevent an overflow.
+   resdepthselect->set_range(0,log(pow(2,sizeof(int)*8)/100)/log(resbaseselect->get_value_as_int()));
+}
+
 
 /*Determines whether the input filename(s) are correct and, if so, creates or 
  * modifies the quadtree to accomodate the data. First it makes sure that a 
@@ -232,150 +269,185 @@ on_resolutionbase_changed(){
  *
  *
  * */
-int FileOpener::
-testfilename(int argc,char *argv[],bool start,bool usearea){
+int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
+{
    int resolutiondepth = resdepthselect->get_value_as_int();
    int resolutionbase = resbaseselect->get_value_as_int();
    int bucketlevels = 0;
    bool newQuadtree = false;
+
    loadoutputlabel->set_text("");
    Gdk::Window::process_all_updates();
    cachelimit = cachesizeselect->get_value();
-   if(start || !loadedanyfiles || lidardata==NULL)numlines = 0;
-   try{//Attempt to get real files.
+
+   if(start || !loadedanyfiles || lidardata==NULL) numlines = 0;
+
+   try{
+	  //Attempt to get real files.
       string pointoffset,filename;
-      if(argc < 3){
-//         cout << "Form is \"lag <point skip number> <first file> "
-//              << "[other files]...\"" << endl;
+
+      if(argc < 3)
+      {
          return 1;
       }
+
       pointoffset.append(argv[1]);
+
       // This returns the integer translation of the string, or zero 
       // if there is none, so...
       int poffs = atoi(pointoffset.c_str());
+
       // in the situation where there is a value of zero, check the string to 
       // see whether this is because of there being a zero value or because of 
       // there not being an integer. If the value in the string is not zero:
-      if(poffs == 0 && pointoffset != "0"){
+      if(poffs == 0 && pointoffset != "0")
+      {
          cout << "The point offset must be an integer greater than or "
               << "equal to zero. In addition, zero can only be accepted "
               << "in the form \"0\", not \"00\" etc.." << endl;
          return 1;
       }
-      if(usearea){
+
+      if(usearea)
+      {
          //We start after the executable path and the point offset.
-         for(int count = 2;count<argc;count++){
+         for(int count = 2;count<argc;count++)
+         {
             numlines++;
             filename.assign(argv[count]);
-            if(filename != ""){
+
+            if(filename != "")
+            {
                //These are NOT to be deleted here as the arrays they will point 
                //to are managed by the TwoDeeOVerview object.
                SelectionBox fence;
-                 //int numberOfFenceCorners = 0;
+               //int numberOfFenceCorners = 0;
+
                if(tdo->is_realized())
+               {
                   fence = tdo->getFence();
-// Please fix this!
-                  if (true) {
-//               if(fence != NULL){
+               }
+
+               // Please fix this!
+               if (true)
+               {
+                  // if(fence != NULL){
                   LidarPointLoader *loader = NULL;
                   bool validfile = true;
 
                   //For LAS files.
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
                      filename.find(".LAS",filename.length()-4)!=string::npos)
-
+                  {
                 	  loader = new LasLoader(argv[count]);
-
-
-                  // For ASCII files (only works through GUI... Must get it to 
-                  // work for command-line at some point:
-                  else if(filename.find(".txt",filename.length()-4) !=   
-                                        string::npos ||
-                          filename.find(".TXT",filename.length()-4) !=
-                                        string::npos) {
-
-                	  // The type code is needed to properly interpret the
-                     // ASCII file.
-                     string code1 = asciicodeentry->get_text();
-
-                     loader = new LasLoader(argv[count],code1.c_str());
                   }
+
+                  // For ASCII files
+                  else if(filename.find(".txt",filename.length()-4) !=string::npos ||
+                          filename.find(".TXT",filename.length()-4) !=string::npos)
+                  {
+
+                	 if (btnUseDefault->get_active())
+                	 {
+                		 // The type code is needed to properly interpret the
+                		 // ASCII file.
+                		 string code1 = asciicodeentry->get_text();
+                		 loader = new LasLoader(argv[count],code1.c_str());
+                	 }
+                	 else
+                	 {
+                		 double scale_factor[3];
+                		 const char* temp;
+                		 temp = scaleFactorEntryX->get_text().c_str();
+                		 scale_factor[0] = atof(temp);
+                		 temp = scaleFactorEntryY->get_text().c_str();
+                		 scale_factor[1] = atof(temp);
+                		 temp = scaleFactorEntryZ->get_text().c_str();
+                		 scale_factor[2] = atof(temp);
+
+                		 temp = NULL;
+                		 string code1 = asciicodeentry->get_text();
+                		 loader = new LasLoader(argv[count], code1.c_str(), scale_factor);
+                	 }
+                  }
+
                   //For incorrect file extensions:
-                  else{
-                     string message = "\
-Files must have the extensions .las, .LAS, .txt or .TXT.";
+                  else
+                  {
+                     string message = "Files must have the extensions .las, .LAS, .txt or .TXT.";
                      cout << message << endl;
-//                     loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-//                                               message + "\n");
                      Gdk::Window::process_all_updates();
                      validfile = false;
                   }
-                  if(validfile){
+
+                  if(validfile)
+                  {
                      // If refreshing (or from command-line) use first filename 
                      // to make quadtree...
-                     if((count==2 && (start || !loadedanyfiles)) ||
-                        lidardata==NULL) {
+                     if((count==2 && (start || !loadedanyfiles)) || lidardata==NULL)
+                     {
                         if(lidardata != NULL)
+                        {
                            delete lidardata;
+                        }
+
                         // This prevents a double free if the creation of the 
                         // new quadtree fails and throws an exception.
                         lidardata = NULL;
                         loaderrorstream->str("");
-                        lidardata = new Quadtree(loader,bucketlimit,poffs,
-                                           fence.getXs(), fence.getYs(), 4, cachelimit,
-                                           bucketlevels,resolutionbase,
-                                           resolutiondepth,loaderrorstream);
+                        lidardata = new Quadtree(loader,bucketlimit,poffs, fence.getXs(), fence.getYs(), 4, cachelimit,
+                                           bucketlevels,resolutionbase, resolutiondepth,loaderrorstream);
+
                         int numberofpointsloaded =lidardata->getNumberOfPoints();
-                        if(numberofpointsloaded == 0){
-                           string message ="\
-No points loaded from file, either because of a lack of points or because points \
-lie outside quadtree boundary (possibly because of fence). Please check file.";
+
+                        if(numberofpointsloaded == 0)
+                        {
+                           string message =" No points loaded from file, either because of a lack of points or because points \
+                                                  lie outside quadtree boundary (possibly because of fence). Please check file.";
                            cout << message << endl;
-//                           loadoutputlabel->set_text(loadoutputlabel->get_text()
-//                                                     + message + "\n");
+
                            Gdk::Window::process_all_updates();
                            numlines--;
                         }
                         newQuadtree = true;
                      }
-                     else{
-                        int numberofpointsloaded = lidardata->load(loader,
-                                    poffs,bucketlevels,
-                                    fence.getXs(), fence.getYs(), 4);
+                     else
+                     {
+                        int numberofpointsloaded = lidardata->load(loader, poffs,bucketlevels, fence.getXs(), fence.getYs(), 4);
 
                         if(numberofpointsloaded == 0){
-                           string message ="\
-No points loaded from file, either because of a lack of points or because points \
-lie outside quadtree boundary (possibly because of fence). Please check file.";
+                           string message =" No points loaded from file, either because of a lack of points or because points \
+                                             lie outside quadtree boundary (possibly because of fence). Please check file.";
+
                            cout << message << endl;
-//                           loadoutputlabel->set_text(loadoutputlabel->get_text()
-//                                                     + message + "\n");
+
                            Gdk::Window::process_all_updates();
                            numlines--;
                         }
                      }
                   }
-                  if(loader != NULL)delete loader;
+                  if(loader != NULL) delete loader;
                }
-               else{
+               else
+               {
                   cout << "No fence!" << endl;
-                  loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                            "No fence!\n");
+                  loadoutputlabel->set_text(loadoutputlabel->get_text() + "No fence!\n");
                   Gdk::Window::process_all_updates();
                   return 222;
                }
             }
             cout << filename << endl;
-            loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                      filename + "\n");
+            loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
+
             Gdk::Window::process_all_updates();
-            if(loaderrorstream->str()!=""){
-               string message = "There have been errors in loading. Please \
-see the file " + loaderroroutputfile;
+
+            if(loaderrorstream->str()!="")
+            {
+               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
                cerr << message << endl;
-//               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-//                                         message + "\n");
+
                Gdk::Window::process_all_updates();
+
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
                loaderroroutput.flush();
@@ -383,36 +455,57 @@ see the file " + loaderroroutputfile;
             }
          }
       }
-      else{
+      else
+      {
          double minx=0,maxx=0,miny=0,maxy=0;
-         if(start || !loadedanyfiles || lidardata==NULL){
 
-        	 //We start after the executable path and the point offset.
-            for(int count = 2;count<argc;count++) {
+         if(start || !loadedanyfiles || lidardata==NULL)
+         {
+        	//We start after the executable path and the point offset.
+            for(int count = 2;count<argc;count++)
+            {
                filename.assign(argv[count]);
 
-               if(filename != "") {
+               if(filename != "")
+               {
                   LidarPointLoader *loader = NULL;
 
                   // For las files:
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
-                     filename.find(".LAS",filename.length()-4)!=string::npos) {
+                     filename.find(".LAS",filename.length()-4)!=string::npos)
+                  {
                      loader = new LasLoader(argv[count]);
                   }
 
                   // For ASCII files (only works through GUI... Must get it to 
                   // work for command-line at some point:
-                  else if(filename.find(".txt",filename.length()-4) !=
-                                        string::npos ||
-                          filename.find(".TXT",filename.length()-4) !=
-                                        string::npos){
+                  else if(filename.find(".txt",filename.length()-4) != string::npos ||
+                          filename.find(".TXT",filename.length()-4) != string::npos)
+                  {
+                	  if (btnUseDefault->get_active())
+                   	  {
+                		  // The type code is needed to properly interpret the
+                	      // ASCII file.
+                	      string code1 = asciicodeentry->get_text();
+                	      loader = new LasLoader(argv[count],code1.c_str());
+                   	  }
+                	  else
+                	  {
+                		  double scale_factor[3];
+                		  const char* temp;
+                		  temp = scaleFactorEntryX->get_text().c_str();
+                		  scale_factor[0] = atof(temp);
+                		  temp = scaleFactorEntryY->get_text().c_str();
+                		  scale_factor[1] = atof(temp);
+                		  temp = scaleFactorEntryZ->get_text().c_str();
+                		  scale_factor[2] = atof(temp);
 
-                	 // The type code is needed to properly interpret the
-                     // ASCII file.
-                     string code1 = asciicodeentry->get_text();
-
-                     loader = new LasLoader(argv[count],code1.c_str());
+                		  temp = NULL;
+                		  string code1 = asciicodeentry->get_text();
+                		  loader = new LasLoader(argv[count], code1.c_str(), scale_factor);
+                	  }
                   }
+
                   Boundary lidarboundary = loader->getBoundary();
                   if(lidarboundary.minX < minx || count == 2)
                      minx = lidarboundary.minX;
@@ -427,40 +520,57 @@ see the file " + loaderroroutputfile;
                }
             }
          }
+
          //We start after the executable path and the point offset.
-         for(int count = 2;count<argc;count++){
+         for(int count = 2;count<argc;count++)
+         {
             numlines++;
             filename.assign(argv[count]);
 
-            if(filename != ""){
+            if(filename != "")
+            {
                LidarPointLoader *loader = NULL;
                // bool validfile = true;
 
                //For LAS files.
                if(filename.find(".las",filename.length()-4)!=string::npos ||
                   filename.find(".LAS",filename.length()-4)!=string::npos)
-
+               {
             	   loader = new LasLoader(argv[count]);
+               }
 
-               // For ASCII files (only works through GUI... Must get it to 
-               // work for command-line at some point:
-               else if(filename.find(".txt",filename.length()-4) !=
-                                     string::npos ||
-                       filename.find(".TXT",filename.length()-4) !=
-                                     string::npos){
+               // For ASCII files
+               else if(filename.find(".txt",filename.length()-4) != string::npos ||
+                       filename.find(".TXT",filename.length()-4) != string::npos)
+               {
+             	  if (btnUseDefault->get_active())
+                	  {
+             		  // The type code is needed to properly interpret the
+             	      // ASCII file.
+             	      string code1 = asciicodeentry->get_text();
+             	      loader = new LasLoader(argv[count],code1.c_str());
+                	  }
+             	  else
+             	  {
+            		  double scale_factor[3];
+            		  const char* temp;
+            		  temp = scaleFactorEntryX->get_text().c_str();
+            		  scale_factor[0] = atof(temp);
+            		  temp = scaleFactorEntryY->get_text().c_str();
+            		  scale_factor[1] = atof(temp);
+            		  temp = scaleFactorEntryZ->get_text().c_str();
+            		  scale_factor[2] = atof(temp);
 
-            	  // The type code is needed to properly interpret the
-                  // ASCII file.
-            	  string code1 = asciicodeentry->get_text();
-
-                  loader = new LasLoader(argv[count], code1.c_str());
-
+            		  temp = NULL;
+            		  string code1 = asciicodeentry->get_text();
+            		  loader = new LasLoader(argv[count], code1.c_str(), scale_factor);
+             	  }
                }
 
                   // If refreshing (or from command-line) use first filename 
                   // to make quadtree...
-                  if((count==2 && (start || !loadedanyfiles)) ||
-                     lidardata==NULL) {
+                  if((count==2 && (start || !loadedanyfiles)) || lidardata==NULL)
+                  {
                      if(lidardata != NULL)
                      {
                         delete lidardata;
@@ -479,50 +589,43 @@ see the file " + loaderroroutputfile;
                                               loaderrorstream);
                      int numberofpointsloaded = lidardata->load(loader,poffs,
                                                                 bucketlevels);
-                     if(numberofpointsloaded == 0){
-                        string message = "\
-No points loaded from file, either because of a lack of points or \
-because points lie outside \
-quadtree boundary (possibly \
-because of fence). Please check \
-file.";
+                     if(numberofpointsloaded == 0)
+                     {
+                        string message = "No points loaded from file, either because of a lack of points or \
+                                          because points lie outside quadtree boundary (possibly \
+                                          because of fence). Please check file.";
                         cout << message << endl;
-//                        loadoutputlabel->set_text(loadoutputlabel->get_text() +
-//                                                  message + "\n");
+                        // loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                         Gdk::Window::process_all_updates();
                         numlines--;
                      }
                      newQuadtree = true;
                   }
-                  else{
-                     int numberofpointsloaded = lidardata->load(loader,poffs,
-                                                                bucketlevels);
-                     if(numberofpointsloaded == 0){
-                        string message = "No points loaded from file, either \
-because of a lack of points or \
-because points lie outside \
-quadtree boundary (possibly because \
-of fence). Please check file.";
+                  else
+                  {
+                     int numberofpointsloaded = lidardata->load(loader,poffs,bucketlevels);
+                     if(numberofpointsloaded == 0)
+                     {
+                        string message = "No points loaded from file, either because of a lack of points or \
+                                          because points lie outside quadtree boundary (possibly because \
+                                          of fence). Please check file.";
                         cout << message << endl;
-                        loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                                  message + "\n");
+                        loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                         Gdk::Window::process_all_updates();
                         numlines--;
                      }
                   }
-//               }
                if(loader != NULL)delete loader;
             }
             cout << filename << endl;
-            loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-                                      filename + "\n");
+            loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
             Gdk::Window::process_all_updates();
-            if(loaderrorstream->str()!=""){
-               string message = "There have been errors in loading. Please see \
-the file " + loaderroroutputfile;
+
+            if(loaderrorstream->str()!="")
+            {
+               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
                cout << message << endl;
-//               loadoutputlabel->set_text(loadoutputlabel->get_text() + 
-//                                         message + "\n");
+               //  loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                Gdk::Window::process_all_updates();
                loaderroroutput << filename << endl;
                loaderroroutput << loaderrorstream->str();
@@ -532,7 +635,8 @@ the file " + loaderroroutputfile;
          }
       }
    }
-   catch(DescriptiveException e){
+   catch(DescriptiveException e)
+   {
       string message = "There has been an exception:\n";
       message += "What: " + static_cast<string>(e.what());
       message += "\nWhy: " + static_cast<string>(e.why());
@@ -554,14 +658,15 @@ the file " + loaderroroutputfile;
    //Provide the drawing objects access to the quadtree:
    tdo->setlidardata(lidardata,bucketlimit);
    prof->setlidardata(lidardata,bucketlimit);
-   if(newQuadtree){
+   if(newQuadtree)
+   {
       tdo->setresolutionbase(resolutionbase);
       tdo->setresolutiondepth(resolutiondepth);
       // This is absolutely vital to prevent an overflow in the drawing thread 
       // in the overview that then causes an infinite loop.
-      aow->setmaindetailrange(0,log(pow(2,sizeof(int)*8)/100) /
-                                log(resbaseselect->get_value_as_int()));
+      aow->setmaindetailrange(0,log(pow(2,sizeof(int)*8)/100) / log(resbaseselect->get_value_as_int()));
    }
+
    // Possibly: Move two copies of this to the relevant LAS and ASCII parts, 
    // above, so that files are drawn as soon as they are loaded and as the 
    // other files are loading. This might not work because of the bug that 
@@ -572,28 +677,34 @@ the file " + loaderroroutputfile;
    // If drawing areas are already visible, prepare the new images and draw 
    // them.
    
-   if(loadedanyfiles){
+   if(loadedanyfiles)
+   {
       tdo->prepare_image();
       tdo->drawviewable(1);
       prof->prepare_image();
       prof->drawviewable(1);
    }
+
    // Otherwise, pack them into the vboxes and then show them, which will do 
    // as the above block does.
-   else{
+   else
+   {
       eventboxtdo->add(*tdo);
       tdo->show_all();
       eventboxprof->add(*prof);
       prof->show_all();
    }
+
    loadedanyfiles = true;
    string flightline,list="";
-   for(int i = 0;i<numlines;i++){
+   for(int i = 0;i<numlines;i++)
+   {
       flightline = lidardata->getFileName(i);
       ostringstream number;
       number << i;
       list += number.str() + ":  " + flightline + "\n";
    }
+
    fs->setlidardata(lidardata);
    fs->setlabeltext(list);
    fs->setlinerange(0,numlines-1);
@@ -607,39 +718,51 @@ the file " + loaderroroutputfile;
 // If either the add or refresh button is pressed, then this function takes 
 // the selected filenames and creates an imitation of a command-line command, 
 // which is then sent to testfilename() where the file will be opened.
-void FileOpener::
-on_filechooserdialogresponse(int response_id){
+void FileOpener::on_filechooserdialogresponse(int response_id)
+{
    if(response_id == Gtk::RESPONSE_CLOSE)
+   {
       filechooserdialog->hide_all();
-   else if(response_id == 1 || response_id == 2){
+   }
+   else if(response_id == 1 || response_id == 2)
+   {
       Glib::SListHandle<Glib::ustring> names=filechooserdialog->get_filenames();
+
       // testfilename expects a command-line command in the form: <this program>
       // <point offset <file 1> [file 2]...
       int argc = names.size() + 2;
+
       char** argv = new char*[argc];
+
       string exename = "blah";
+
       //This program.
       argv[0] = new char[exename.length()+1];
       strcpy(argv[0],exename.c_str());
       ostringstream pointoffset;
       pointoffset << pointskipselect->get_value_as_int();
       string poffs = pointoffset.str();
+
       //The point offset.
       argv[1] = new char[poffs.length()+1];
       strcpy(argv[1],poffs.c_str());
       argc=2;
+
       // Until the last iterator is reached, insert the contents of the 
       // iterators into argv.
       for(Glib::SListHandle<Glib::ustring>::iterator itera = names.begin();
-          itera!=names.end();
-          itera++){
+          itera!=names.end(); itera++)
+      {
          argv[argc] = new char[(*itera).length()+1];
          strcpy(argv[argc],(*itera).c_str());
          argc++;
       }
+
       if(response_id == 1)
+      {
          //For adding, do not create a new quadtree (false).
          testfilename(argc,argv,false,fenceusecheck->get_active());
+      }
       if(response_id == 2)
       {
          //For refreshing, do create a new quadtree (true).
@@ -655,8 +778,8 @@ on_filechooserdialogresponse(int response_id){
 
 // When the cachesize (in points) is changed, this outputs the value in 
 // Gigabytes (NOT Gibibytes) to a label next to it.
-void FileOpener::
-on_cachesize_changed(){
+void FileOpener::on_cachesize_changed()
+{
    ostringstream GB;
    GB << ((double)cachesizeselect->get_value()*sizeof(Point))/1000000000;
    string labelstring = "Approximately: " + GB.str() + " GB.";
@@ -665,6 +788,7 @@ on_cachesize_changed(){
 
 //When selected from the menu, the file chooser opens.
 void FileOpener::
-on_openfilemenuactivated(){ 
+on_openfilemenuactivated()
+{
    show(); 
 }

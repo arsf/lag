@@ -70,9 +70,14 @@ protected:
    Quadtree *lidardata;
 
    // (jaho)
-   Gtk::Entry *parsestringentry;
+   Gtk::Entry* parsestringentry;
+   Gtk::Entry* scaleFactorEntryX;
+   Gtk::Entry* scaleFactorEntryY;
+   Gtk::Entry* scaleFactorEntryZ;
+   Gtk::CheckButton* btnUseDefault;
 
    void on_filesaverdialogresponse(int response_id);
+   void on_usedefault_changed();
 };
 
 #endif
