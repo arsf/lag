@@ -32,15 +32,16 @@
 #include "MathFuncs.h"
 #include "LagDisplay.h"
 
-LagDisplay::
-LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, 
-        Quadtree* lidardata,
-        int bucketlimit ) : Gtk::GL::DrawingArea(config) {
+LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
+        Quadtree* lidardata, int bucketlimit ) : Gtk::GL::DrawingArea(config)
+{
 
    this->lidardata=lidardata;
    this->bucketlimit = bucketlimit;
+
    //Control:
    zoompower = 0.5;
+
    //Drawing
    pointsize = 1;
 
@@ -50,6 +51,7 @@ LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
    ratio = 1.0;
    zoomlevel = 1;
    maindetailmod = 0;
+
    //Colouring and shading:
    cbmaxz=cbminz=0;
    cbmaxintensity=cbminintensity=0;
@@ -67,8 +69,8 @@ LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
    brightnessintensityarray = NULL;
 }
 
-LagDisplay::
-~LagDisplay(){
+LagDisplay::~LagDisplay()
+{
 
    //delete theFont;
    if(colourheightarray!=NULL)
@@ -82,10 +84,10 @@ LagDisplay::
 }
 
 //Draw on expose.
-bool LagDisplay::
-on_expose_event(GdkEventExpose* event){
-   if(event==0){
-
+bool LagDisplay::on_expose_event(GdkEventExpose* event)
+{
+   if(event==0)
+   {
    }
    // Draw from scratch if window resized so that there is not 
    // (usually; this does not work perfectly) a blank area resulting.
@@ -109,23 +111,25 @@ on_expose_event(GdkEventExpose* event){
 // the viewing properties. Please note that the expose event will be emitted 
 // right after the configure event, so the on_expose_event method will be 
 // called right after this one.
-bool LagDisplay::
-on_configure_event(GdkEventConfigure* event){
+bool LagDisplay::on_configure_event(GdkEventConfigure* event)
+{
    //Added so debugger will not say anything about event not being used
-   if(event==0){
-      
+   if(event==0)
+   {
    }
+
    glViewport(0, 0, get_width(), get_height());
    resetview();
    // The expose event handler will be called immediately after the return 
    // statement, so tell it that the window has changed shape/size now.
-//   configuring = true;
+   // configuring = true;
    return true;
 }
 
 //Prepares the arrays for looking up the colours and shades of the points.
 void LagDisplay::coloursandshades(double maxz, double minz,
-                               int maxintensity, int minintensity){
+                               int maxintensity, int minintensity)
+{
    //For the legend(s):
    cbmaxz = maxz;
    cbminz = minz;
@@ -151,7 +155,8 @@ void LagDisplay::coloursandshades(double maxz, double minz,
    colourheightarray = new double[30*(int)(rmaxz-rminz+4)];
 
    //Fill height colour array (by ten for extra detail):
-   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++){
+   for(int i=0;i<(int)(10*(rmaxz-rminz)+3);i++)
+   {
       //0.1 for 0.1 metres for extra detail.
       z = 0.1*(double)i + rminz;
       colour_by(z,maxz,minz,colour);
@@ -166,7 +171,8 @@ void LagDisplay::coloursandshades(double maxz, double minz,
    // look better.
    brightnessheightarray = new double[10*(int)(rmaxz-rminz+4)];
    //Fill height brightness array:
-   for(int i=0;i<10*(int)(rmaxz-rminz+4);i++){
+   for(int i=0;i<10*(int)(rmaxz-rminz+4);i++)
+   {
       // Please note that, as elsewhere in this method, the exact value rmaxz 
       // will not be reached, so its position in the array will probably not be
       // the first to equal 1, while the first element will be 0 and be for 
@@ -176,16 +182,17 @@ void LagDisplay::coloursandshades(double maxz, double minz,
    }
    brightnessintensityarray = new double[(int)(rmaxintensity-rminintensity+4)];
    //Fill intensity brightness array:
-   for(int i=0;i<rmaxintensity-rminintensity+4;i++){
+   for(int i=0;i<rmaxintensity-rminintensity+4;i++)
+   {
       intensity = i + rminintensity;
-      brightnessintensityarray[i] = brightness_by(intensity,maxintensity,
-                              minintensity,intensityoffset,intensityfloor);
+      brightnessintensityarray[i] = brightness_by(intensity,maxintensity,minintensity,intensityoffset,intensityfloor);
    }
 }
 
 //Prepare the image when the widget is first realised.
 void LagDisplay::
-on_realize() {
+on_realize()
+{
    // Please note that the this method calls the configure event and is (by 
    // necessity) before the prepare_image() method, so it is necessary to be 
    // careful about what to put into the on_configure_event method as 
@@ -294,8 +301,8 @@ Colour LagDisplay::getColourByIntensity(int intensity)
 
 // Given maximum and minimum values, find out the colour a certain value 
 // should be mapped to.
-void LagDisplay::
-colour_by(double value,double maxvalue,double minvalue, Colour& colour) {
+void LagDisplay::colour_by(double value,double maxvalue,double minvalue, Colour& colour)
+{
 
    double range = maxvalue-minvalue;
    if(value<=minvalue+range/6)//Green to Yellow:
@@ -315,9 +322,9 @@ colour_by(double value,double maxvalue,double minvalue, Colour& colour) {
  
  // Given maximum and minimum values, find out the brightness a certain value 
  // should be mapped to.
-double LagDisplay::
-brightness_by(double value, double maxvalue, double minvalue,
-              double offsetvalue, double floorvalue) {
+double LagDisplay::brightness_by(double value, double maxvalue, double minvalue,
+              double offsetvalue, double floorvalue)
+{
    double multiplier = floorvalue + offsetvalue + (1.0 - floorvalue) *
                        (value-minvalue) / (maxvalue-minvalue);
    // This prevents the situation where two negative values (for colour and 
@@ -334,12 +341,14 @@ brightness_by(double value, double maxvalue, double minvalue,
 
 // Convenience code for getting a subset and checking to see if the data is 
 // valid/useful.
-bool LagDisplay::
-advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps) {
-   try{
+bool LagDisplay::advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,double *ys,int ps)
+{
+   try
+   {
       pointvector = lidardata->advSubset(xs,ys,ps);
    }
-   catch(DescriptiveException e) {
+   catch(DescriptiveException e)
+   {
       cout << "There has been an exception:" << endl;
       cout << "What: " << e.what() << endl;
       cout << "Why: " << e.why() << endl;
@@ -371,8 +380,8 @@ void LagDisplay::printString(double x, double y, double z)
 }
 
 //Convenience code for clearing the screen.
-bool LagDisplay::
-clearscreen(){
+bool LagDisplay::clearscreen()
+{
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))return false;
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -384,8 +393,8 @@ clearscreen(){
 
 // Convenience code called so that graphical artefacts through changes of view
 // do not occur. This is because of being a multiwindow application.
-void LagDisplay::
-guard_against_interaction_between_GL_areas(){
+void LagDisplay::guard_against_interaction_between_GL_areas()
+{
    // This line MUST come before the other ones for this purpose as otherwise 
    // the others might be applied to the wrong context!
    get_gl_window()->make_current(get_gl_context());
@@ -398,8 +407,8 @@ guard_against_interaction_between_GL_areas(){
 // from the quadtree in order to find the maximum and minimum height and 
 // intensity values and calls the coloursandshades() method to prepare the 
 // colouring of the points. It also sets up clearing and the initial view.
-void LagDisplay::
-prepare_image(){
+void LagDisplay::prepare_image()
+{
    //Subsetting:
       Boundary* lidarboundary = lidardata->getBoundary();
       double *xs = new double[4];
@@ -419,7 +428,8 @@ prepare_image(){
       delete[]ys;
       delete lidarboundary;
       //If there is no data, then clear the screen to show no data.
-      if(!gotdata){
+      if(!gotdata)
+      {
          Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
          if (!glwindow->gl_begin(get_gl_context()))
             return;

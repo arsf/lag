@@ -102,8 +102,10 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
       if (strstr(filename, ".txt") || strstr(filename, ".TXT"))
       {
           try{
+
         	 string parse_string = parsestringentry->get_text();
-             if(btnUseDefault->get_active())
+
+        	 if(btnUseDefault->get_active())
              {
             	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
                                             get_value_as_int()).c_str(), parse_string.c_str());
@@ -126,11 +128,16 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
              }
 
              lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
+
+             saver->close();
              delete saver;
+
              filesaverdialog->set_filename("");
+
              //filesaverdialog->hide_all();
           }
-          catch(DescriptiveException e){
+          catch(DescriptiveException e)
+          {
              cout << "There has been an exception:" << endl;
              cout << "What: " << e.what() << endl;
              cout << "Why: " << e.why() << endl;
@@ -144,8 +151,12 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
                                         			get_value_as_int()).c_str());
 
     		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
+
+    		  saver->close();
     		  delete saver;
+
     		  filesaverdialog->set_filename("");
+
     		  //filesaverdialog->hide_all();
     	  }
     	  catch(DescriptiveException e){

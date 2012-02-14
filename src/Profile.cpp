@@ -155,8 +155,8 @@ void Profile::resetview(){
            +pixelsToImageUnits(get_width()/2),
            -pixelsToImageUnits(get_height()/2),
            +pixelsToImageUnits(get_height()/2),
-           -5*width,
-           +5*width);
+           -5*width,  // (jaho)
+           +5*width); // (jaho)
    // Switching to modelview matrix for defining the viewpoint. Be aware that 
    // the projection matrix should not be used for this and, if you DO use 
    // the projection matrix, everything will be reversed.
