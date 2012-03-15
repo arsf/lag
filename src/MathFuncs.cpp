@@ -25,11 +25,10 @@
 // Returns the value of the given percentile of a dataset. Makes a histogram 
 // of the dataset and goes along it until it gets a total count corresponding 
 // with the percentile.
-double percentilevalue(double* data, int datasize, double percentile, 
-                       double minval, double maxval){
-   unsigned long int* histogram = new unsigned long int [
-                                 (unsigned long int) floor(maxval - minval) +
-                                  1];
+double percentilevalue(double* data, int datasize, double percentile, double minval, double maxval)
+{
+   unsigned long int* histogram = new unsigned long int [(unsigned long int) floor(maxval - minval) + 1];
+
    //Fill histogram with zeroes.                                                        
    for (unsigned int i = 0; 
         i < (unsigned long int) floor(maxval - minval); 
@@ -52,11 +51,10 @@ double percentilevalue(double* data, int datasize, double percentile,
 }
 
 //Determines whether the points in the sent bucket fit within the profile area.
-//
 //If "hide noise points in profile" is ticket in advanced options, these are not sent to the
 //profile
-bool* vetpoints(PointBucket* points, double* xs, double* ys, 
-                int numberofcorners, bool hideNoise){
+bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners, bool hideNoise)
+{
    bool* correctpoints = new bool[points->getNumberOfPoints(0)];
    //Determines whether the point is within the boundary.
    bool pointinboundary;

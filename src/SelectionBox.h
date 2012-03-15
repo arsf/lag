@@ -3,16 +3,19 @@
 
 #include "Point.h"
 
-class SelectionBox {
+class SelectionBox
+{
 
 public:
-   SelectionBox();
+   SelectionBox() {}
+
    SelectionBox(double, double, double,
                 double, double, double,
                 double, double, double,
                 double, double, double);
+
    SelectionBox(Point, Point, Point, Point);
-//   SelectionBox(Point*);
+
    ~SelectionBox();
 
    Point getCorner(int);

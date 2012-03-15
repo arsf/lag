@@ -31,9 +31,12 @@
 #include "LagDisplay.h"
 #include "SelectionBox.h"
 #include "BoxOverlay.h"
-class TwoDeeOverview : public LagDisplay{
+
+class TwoDeeOverview : public LagDisplay
+{
 public:
-   TwoDeeOverview(string, const Glib::RefPtr<const Gdk::GL::Config>& config,
+   TwoDeeOverview(string,
+		   	   	  const Glib::RefPtr<const Gdk::GL::Config>& config,
                   Quadtree* lidardata,
                   int bucketlimit,
                   Gtk::Label *rulerlabelover);
@@ -43,24 +46,26 @@ public:
    //Handles keyboard input for panning.
    bool on_pan_key(GdkEventKey* event,double scrollspeed);
    //Handles keyboard input for profiling.
-   bool on_prof_key(GdkEventKey* event,double scrollspeed,
-                    bool fractionalshift);
+   bool on_prof_key(GdkEventKey* event,double scrollspeed, bool fractionalshift);
    //Handles keyboard input for fencing.
    bool on_fence_key(GdkEventKey* event,double scrollspeed);
    //Handles keyboard input for zooming.
    bool on_zoom_key(GdkEventKey* event);
+
    //Method that waits until the drawing thread has paused.
    void waitforpause(){
       while(thread_running) {
          usleep(10);
       }
    }
+
    //Returns to the initial view.
    bool returntostart();
    //Draw the viewable part of the image.
    bool drawviewable(int imagetype);
 
    void toggleNoise(); 
+
    //Short, status changing methods:
    //Blocks pan signals and unblocks profile signals:
    void setupprofile(){
@@ -131,86 +136,93 @@ public:
       if(is_realized())get_window()->set_cursor();
       rulering=false;
    }
+
    //Getters:
-   SelectionBox getProfile() {
+   inline SelectionBox getProfile()
+   {
       return profbox->getSelectionBox();
    }
 
-   SelectionBox getFence() {
+   inline SelectionBox getFence()
+   {
       return fencebox->getSelectionBox();
    }
 
-   void getprofile(double*& profxs, double*& profys, int& profps){
-      //profbox->getboundaries(corners, profps);
+   inline void getprofile(double*& profxs, double*& profys, int& profps)
+   {
       profxs = profbox->getSelectionBox().getXs();
       profys = profbox->getSelectionBox().getYs();
       profps = 4;
    }
 
-//   void getfence(double*& profxs, double*& profys, int& profps) {
-//      profxs = fencebox->getSelectionBox().getXs();
-//      profys = fencebox->getSelectionBox().getYs();
-//      profps = 4;
-//   }
-
-//   void getfence(Point* corners,int&fenceps){
-//      fencebox->getboundaries(corners, fenceps);
-//   }
-
-   bool getpausethread(){ 
+   inline bool getpausethread()
+   {
       return pausethread; 
    }
 
-   bool getthread_running(){ 
+   inline bool getthread_running()
+   {
       return thread_running; 
    }
 
-   BoxOverlay* getfencebox(){ 
+   inline BoxOverlay* getfencebox()
+   {
       return fencebox; 
    }
 
-   BoxOverlay* getprofbox(){ 
+   inline BoxOverlay* getprofbox()
+   {
       return profbox; 
    }
 
    //Setters:
-   void setshowprofile(double showprofile){ 
+   inline void setshowprofile(double showprofile)
+   {
       this->showprofile = showprofile;
    }
 
-   void setshowfence(double showfence){ 
+   inline void setshowfence(double showfence)
+   {
       this->showfence = showfence;
    }
 
-   void setshowdistancescale(double showdistancescale){ 
+   inline void setshowdistancescale(double showdistancescale)
+   {
       this->showdistancescale = showdistancescale;
    }
 
-   void setshowlegend(double showlegend){ 
+   inline void setshowlegend(double showlegend)
+   {
       this->showlegend = showlegend;
    }
 
-   void setpausethread(bool pausethread){ 
+   inline void setpausethread(bool pausethread)
+   {
       this->pausethread = pausethread; 
    }
 
-   void setreversez(bool reversez){ 
+   inline void setreversez(bool reversez)
+   {
       this->reversez = reversez; 
    }
 
-   void setraiseline(bool raiseline){ 
+   inline void setraiseline(bool raiseline)
+   {
       this->raiseline = raiseline; 
    }
 
-   void setlinetoraise(int linetoraise){ 
+   inline void setlinetoraise(int linetoraise)
+   {
       this->linetoraise = linetoraise; 
    }
 
-   void setresolutiondepth(int resolutiondepth){ 
+   inline void setresolutiondepth(int resolutiondepth)
+   {
       this->resolutiondepth = resolutiondepth; 
    }
 
-   void setresolutionbase(int resolutionbase){ 
+   inline void setresolutionbase(int resolutionbase)
+   {
       this->resolutionbase = resolutionbase; 
    }
 

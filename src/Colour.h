@@ -16,6 +16,10 @@ public:
    Colour(const std::string&);
    ~Colour();
 
+   // Comparison operators
+   friend bool operator== (Colour& lhs, Colour& rhs);
+   friend bool operator!= (Colour& lhs, Colour& rhs);
+
    // Multiply
    void multiply(Colour);
    void multiply(float);

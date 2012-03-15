@@ -27,41 +27,16 @@
 #include "../Profile.h"
 #include "FileSaver.h"
 
-FileSaver::FileSaver(TwoDeeOverview *tdo,
-          	  	  	 Profile *prof,
-          	  	  	 Glib::RefPtr<Gtk::Builder> builder,
-          	  	  	 Quadtree *lidardata)
+FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, Quadtree *lidardata)
+:
+		tdo			(tdo),
+		prof		(prof),
+		lidardata	(lidardata)
 {
-   this->tdo = tdo;
-   this->prof = prof;
-   this->lidardata = lidardata;
-
-   builder->get_widget("filesaverdialog",filesaverdialog);
-   if(filesaverdialog)
-   {
-      filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
-   }
- 
-   builder->get_widget("flightlinelistlabel",flightlinelistlabel);
-   builder->get_widget("flightlinesaveselect",flightlinesaveselect);
-   builder->get_widget("parsestringentry", parsestringentry);
-   builder->get_widget("scaleFactorEntryX1", scaleFactorEntryX);
-   builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
-   builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
-   builder->get_widget("btnUseDefault1", btnUseDefault);
-
-   if(btnUseDefault)
-   {
-	   on_usedefault_changed();
-	   btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
-   }
-
-
-   if(flightlinesaveselect)
-   {
-      flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
-   }
+  load_xml(builder);
+  connect_signals();
 }
+
 FileSaver::~FileSaver()
 {
    delete flightlinelistlabel;
@@ -73,7 +48,25 @@ FileSaver::~FileSaver()
    delete btnUseDefault;
    //Have to delete parent after children?
    delete filesaverdialog;
+}
 
+void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
+{
+	builder->get_widget("filesaverdialog",filesaverdialog);
+	builder->get_widget("flightlinelistlabel",flightlinelistlabel);
+	builder->get_widget("flightlinesaveselect",flightlinesaveselect);
+	builder->get_widget("parsestringentry", parsestringentry);
+	builder->get_widget("scaleFactorEntryX1", scaleFactorEntryX);
+	builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
+	builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
+	builder->get_widget("btnUseDefault1", btnUseDefault);
+}
+
+void FileSaver::connect_signals()
+{
+	filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
+	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
+	flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
 }
 
 void FileSaver::on_usedefault_changed()
@@ -94,21 +87,21 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
    }
    else if(response_id == 1)
    {
-      if(lidardata==NULL)return;
+      if(lidardata==NULL)
+    	  return;
 
       const char* filename = filesaverdialog->get_filename().c_str();
       LasSaver* saver = NULL;
 
       if (strstr(filename, ".txt") || strstr(filename, ".TXT"))
       {
-          try{
-
+          try
+          {
         	 string parse_string = parsestringentry->get_text();
 
         	 if(btnUseDefault->get_active())
              {
-            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
-                                            get_value_as_int()).c_str(), parse_string.c_str());
+            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str());
              }
              else
              {
@@ -121,8 +114,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
             	 temp = scaleFactorEntryZ->get_text().c_str();
             	 scale_factor[2] = atof(temp);
 
-            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(),
-            			 	 	 	 	 parse_string.c_str(), scale_factor);
+            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), scale_factor);
 
                  temp = NULL;
              }
@@ -146,9 +138,9 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
       }
       else
       {
-    	  try{
-    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->
-                                        			get_value_as_int()).c_str());
+    	  try
+    	  {
+    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str());
 
     		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
 
@@ -159,7 +151,8 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
 
     		  //filesaverdialog->hide_all();
     	  }
-    	  catch(DescriptiveException e){
+    	  catch(DescriptiveException e)
+    	  {
     		  cout << "There has been an exception:" << endl;
     		  cout << "What: " << e.what() << endl;
     		  cout << "Why: " << e.why() << endl;
@@ -168,7 +161,9 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
       }
    }
 }
-void FileSaver::on_flightlinesaveselected(){
+
+void FileSaver::on_flightlinesaveselected()
+{
    if(lidardata!=NULL)
       filesaverdialog->set_filename(lidardata->getFileName(flightlinesaveselect->get_value_as_int()));
 }

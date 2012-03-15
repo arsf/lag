@@ -28,113 +28,51 @@
 #include "../SelectionBox.h"
 #include "FileOpener.h"
 
-FileOpener::FileOpener(TwoDeeOverview *tdo,
-           	   	   	   Profile *prof,
-           	   	   	   Glib::RefPtr<Gtk::Builder> builder,
-           	   	   	   AdvancedOptionsWindow *aow,
-           	   	   	   FileSaver *fs,
-           	   	   	   Quadtree *lidardata,
-           	   	   	   int bucketlimit,
-           	   	   	   Gtk::EventBox *eventboxtdo,
-           	   	   	   Gtk::EventBox *eventboxprof,
-           	   	   	   TwoDeeOverviewWindow *tdow)
+FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
+           	   	   	   Quadtree *lidardata, int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow)
+:
+        tdo			(tdo),
+        prof		(prof),
+        tdow		(tdow),
+        aow			(aow),
+        fs			(fs),
+        lidardata	(lidardata),
+        eventboxtdo	(eventboxtdo),
+        eventboxprof(eventboxprof),
+        bucketlimit	(bucketlimit)
 {
-   this->tdo = tdo;
-   this->prof = prof;
-   this->aow = aow;
-   this->fs = fs;
-   this->lidardata = lidardata;
-   this->bucketlimit = bucketlimit;
-   this->eventboxtdo = eventboxtdo;
-   this->eventboxprof = eventboxprof;
-   this->tdow = tdow;
-   time_t starttime = time(NULL);
+	load_xml(builder);
 
-   char meh[80];
-   strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
-   ostringstream bleh;
-   bleh << meh;
+	time_t starttime = time(NULL);
 
-   loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
-   loaderroroutput.open(loaderroroutputfile.c_str());
-   loaderrorstream = new ostringstream();
-   loadedanyfiles = false;
-   cachelimit = 25000000;
+	char meh[80];
+	strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
+	ostringstream bleh;
+	bleh << meh;
 
-   //For selecting to get file-opening menu.
-   Gtk::MenuItem *openfilemenuitem = NULL;
+	loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
+	loaderroroutput.open(loaderroroutputfile.c_str());
+	loaderrorstream = new ostringstream();
+	loadedanyfiles = false;
+	cachelimit = 25000000;
 
-   builder->get_widget("openfilemenuitem",openfilemenuitem);
+	cachesizeselect->set_range(10e6,10e11);
 
-   if(openfilemenuitem)
-   {
-      openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
-   }
+	// 25000000 points is about 1 GB. On this 4 GB RAM machine, I only want
+	// LAG to use a quarter of my resources.
+	cachesizeselect->set_value(250e5);
+	cachesizeselect->set_increments(10e5,10e5);
 
-   builder->get_widget("filechooserdialog",filechooserdialog);
+	resbaseselect->set_range(2,1000);
+	resbaseselect->set_value(4);
+	resbaseselect->set_increments(1,1);
 
-   if(filechooserdialog)
-   {
-      filechooserdialog->signal_response().connect(sigc::mem_fun(*this,&FileOpener::on_filechooserdialogresponse));
-   }
+	resdepthselect->set_value(4);
+	resdepthselect->set_increments(1,1);
 
-   builder->get_widget("pointskipselect",pointskipselect);
-   builder->get_widget("fenceusecheck",fenceusecheck);
-   builder->get_widget("asciicodeentry",asciicodeentry);
-   builder->get_widget("cachesizeselect",cachesizeselect);
+	numlines = 0;
 
-   builder->get_widget("scaleFactorEntryX", scaleFactorEntryX);
-   builder->get_widget("scaleFactorEntryY", scaleFactorEntryY);
-   builder->get_widget("scaleFactorEntryZ", scaleFactorEntryZ);
-
-   builder->get_widget("btnUseDefault", btnUseDefault);
-
-   if(btnUseDefault)
-   {
-	   on_usedefault_changed();
-	   btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this,&FileOpener::on_usedefault_changed));
-   }
-
-   if(cachesizeselect)
-   {
-      // That is 0 to 40 TB! This code is written on a 4 GB RAM machine in 
-      // 2009-10, so, if the rate of increase is that of quadrupling every 
-      // five years, then 40 TB will be reached in less than 35 years.
-      cachesizeselect->set_range(10e6,10e11);
-      // 25000000 points is about 1 GB. On this 4 GB RAM machine, I only want 
-      // LAG to use a quarter of my resources.
-      cachesizeselect->set_value(250e5);
-      cachesizeselect->set_increments(10e5,10e5);
-      builder->get_widget("cachesizeGBlabel",cachesizeGBlabel);
-      if(cachesizeGBlabel)
-      {
-    	  on_cachesize_changed();
-          cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
-      }
-   }
-
-   builder->get_widget("loadoutputlabel",loadoutputlabel);
-   builder->get_widget("resbaseselect",resbaseselect);
-
-   if(resbaseselect)
-   {
-      // What is the probability someone will seriously want resolutions of 
-      // 1000^(-x)? Note that a value of less than 2 would cause serious 
-      // problems.
-      resbaseselect->set_range(2,1000);
-      resbaseselect->set_value(4);
-      resbaseselect->set_increments(1,1);
-   }
-
-   builder->get_widget("resdepthselect",resdepthselect);
-   if(resdepthselect)
-   {
-      on_resolutionbase_changed();
-      resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
-      resdepthselect->set_value(4);
-      resdepthselect->set_increments(1,1);
-   }
-   numlines = 0;
+	connect_signals();
 }
 
 
@@ -155,6 +93,34 @@ FileOpener::~FileOpener()
    //Have to delete parent after children?
    delete filechooserdialog;
 }
+
+void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
+{
+	builder->get_widget("openfilemenuitem",openfilemenuitem);
+	builder->get_widget("filechooserdialog",filechooserdialog);
+	builder->get_widget("pointskipselect",pointskipselect);
+	builder->get_widget("fenceusecheck",fenceusecheck);
+	builder->get_widget("asciicodeentry",asciicodeentry);
+	builder->get_widget("cachesizeselect",cachesizeselect);
+	builder->get_widget("scaleFactorEntryX", scaleFactorEntryX);
+	builder->get_widget("scaleFactorEntryY", scaleFactorEntryY);
+	builder->get_widget("scaleFactorEntryZ", scaleFactorEntryZ);
+	builder->get_widget("btnUseDefault", btnUseDefault);
+	builder->get_widget("cachesizeGBlabel",cachesizeGBlabel);
+	builder->get_widget("loadoutputlabel",loadoutputlabel);
+	builder->get_widget("resbaseselect",resbaseselect);
+	builder->get_widget("resdepthselect",resdepthselect);
+}
+
+void FileOpener::connect_signals()
+{
+	openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
+	filechooserdialog->signal_response().connect(sigc::mem_fun(*this,&FileOpener::on_filechooserdialogresponse));
+	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this,&FileOpener::on_usedefault_changed));
+	cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
+	resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
+}
+
 
 void FileOpener::on_usedefault_changed()
 {
@@ -269,6 +235,7 @@ void FileOpener::on_resolutionbase_changed()
  *
  *
  * */
+
 int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 {
    int resolutiondepth = resdepthselect->get_value_as_int();
@@ -331,7 +298,6 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                // Please fix this!
                if (true)
                {
-                  // if(fence != NULL){
                   LidarPointLoader *loader = NULL;
                   bool validfile = true;
 
@@ -787,8 +753,7 @@ void FileOpener::on_cachesize_changed()
 }
 
 //When selected from the menu, the file chooser opens.
-void FileOpener::
-on_openfilemenuactivated()
+void FileOpener::on_openfilemenuactivated()
 {
    show(); 
 }

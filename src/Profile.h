@@ -32,9 +32,11 @@
 #include <boost/bind.hpp>
 #include "LagDisplay.h"
 #include <list>
-class Profile : public LagDisplay{
+class Profile : public LagDisplay
+{
 public:
-   Profile(string, const Glib::RefPtr<const Gdk::GL::Config>& config,
+   Profile(string,
+		   const Glib::RefPtr<const Gdk::GL::Config>& config,
            Quadtree* lidardata,
            int bucketlimit,
            Gtk::Label *rulerlabel);
@@ -42,6 +44,7 @@ public:
    ~Profile();
 
    void clearProfile();
+
    //This classifies the points selected by the profile fence.
    bool classify(uint8_t classification);
    //Moves the view using keyboard input.
@@ -66,7 +69,9 @@ public:
    //Gets the parameters of the profile and then draws it to the screen.
    bool showprofile(double* profxs,double* profys,int profps,bool changeview);
    //Blocks pan signals and unblocks ruler signals:
-   void setupruler(){
+
+   void setupruler()
+   {
       sigpanstart.block();
       sigpan.block();
       sigpanend.block();
@@ -77,8 +82,10 @@ public:
       if(is_realized())get_window()->set_cursor(cursor);
       rulering=true;
    }
+
    //Blocks ruler signals and unblocks pan signals:
-   void unsetupruler(){
+   void unsetupruler()
+   {
       sigpanstart.unblock();
       sigpan.unblock();
       sigpanend.unblock();
@@ -88,8 +95,10 @@ public:
       if(is_realized())get_window()->set_cursor();
       rulering=false;
    }
+
    //Blocks pan signals and unblocks fence signals:
-   void setupfence(){
+   void setupfence()
+   {
       sigpanstart.block();
       sigpan.block();
       sigpanend.block();
@@ -100,8 +109,10 @@ public:
       if(is_realized())get_window()->set_cursor(cursor);
       fencing=true;
    }
+
    //Blocks fence signals and unblocks pan signals:
-   void unsetupfence(){
+   void unsetupfence()
+   {
       sigpanstart.unblock();
       sigpan.unblock();
       sigpanend.unblock();
@@ -111,32 +122,40 @@ public:
       if(is_realized())get_window()->set_cursor();
       fencing=false;
    }
+
    //Setters:
-   void setdrawpoints(bool drawpoints){ 
+   void setdrawpoints(bool drawpoints)
+   {
       this->drawpoints=drawpoints; 
    }
 
-   void setdrawmovingaverage(bool drawmovingaverage){ 
+   void setdrawmovingaverage(bool drawmovingaverage)
+   {
       this->drawmovingaverage=drawmovingaverage; 
    }
 
-   void setmavrgrange(int mavrgrange){ 
+   void setmavrgrange(int mavrgrange)
+   {
       this->mavrgrange=mavrgrange; 
    }
 
-   void setpreviewdetail(double previewdetailmod){ 
+   void setpreviewdetail(double previewdetailmod)
+   {
       this->previewdetailmod=previewdetailmod; 
    }
 
-   void setshowheightscale(bool showheightscale){ 
+   void setshowheightscale(bool showheightscale)
+   {
       this->showheightscale = showheightscale; 
    }
 
-   void setslantwidth(double slantwidth){ 
+   void setslantwidth(double slantwidth)
+   {
       this->slantwidth = slantwidth; 
    }
 
-   void setslanted(double slanted){ 
+   void setslanted(double slanted)
+   {
       this->slanted = slanted; 
    }
    void toggleNoise();
@@ -200,40 +219,35 @@ protected:
    // screen terms.
    //double centrex,centrey,centrez;
    //These give the coordinates of the "eye", looking towards the centre.
-//   double viewerx,viewery,viewerz;
    Point viewer;
    //Coordinates of the start of the pan move.
    //double panstartx,panstarty;
    // These indicate the "minimum" (i.e. left) coordinates of the 
    // viewable plane.
    Point minPlan;
-//   double minplanx,minplany;
    //The start coordinates of the profile.
-//   double startx,starty;
    Point start;
    //The end coordinates of the profile.
-//   double endx,endy;
    Point end;
    //The width of the profile.
    double width;
  
    //Rulering:
-   //The start coordinates for the ruler.
-//   double rulerstartx,rulerstarty,rulerstartz;
-   Point rulerStart;
-   //The end coordinates for the ruler.
-//   double rulerendx,rulerendy,rulerendz;
-   Point rulerEnd;
-   //The width of the ruler.
-   double rulerwidth;
    //Determines whether or not the ruler should be drawn.
    bool rulering;
+
+   //The start coordinates for the ruler.
+   Point rulerStart;
+   //The end coordinates for the ruler.
+   Point rulerEnd;
+
+   //The width of the ruler.
+   double rulerwidth;
+
    //Fencing:
    //The start coordinates for the fence.
-//   double fencestartx,fencestarty,fencestartz;
    Point fenceStart;
    //The end coordinates for the fence.
-//   double fenceendx,fenceendy,fenceendz;
    Point fenceEnd;
    //Determines whether or not the fence should be drawn.
    bool fencing;
@@ -308,7 +322,7 @@ protected:
    bool on_fence(GdkEventMotion* event);
    bool on_fence_end(GdkEventButton* event);
 
-   // hide profile noisey points
+   // hide profile noisy points
    bool hideProfNoise;
 };
 

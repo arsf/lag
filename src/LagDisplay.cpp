@@ -33,54 +33,43 @@
 #include "LagDisplay.h"
 
 LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
-        Quadtree* lidardata, int bucketlimit ) : Gtk::GL::DrawingArea(config)
+        Quadtree* lidardata, int bucketlimit )
+:
+    Gtk::GL::DrawingArea(config),
+        zoompower		(0.5),
+        lidardata		(lidardata),
+        bucketlimit		(bucketlimit),
+        maindetailmod	(0),
+        pointsize		(1),
+        zoomlevel		(1),
+        ratio			(1.0),
+        brightnessBy	(brightnessByIntensity),
+        colourBy		(colourByFlightline),
+        cbmaxz			(0),
+        cbminz			(0),
+        cbmaxintensity	(0),
+        cbminintensity	(0),
+        zoffset			(0),
+        zfloor			(0),
+        intensityoffset	(0),
+        intensityfloor	(0),
+        rmaxz			(0),
+        rminz			(0),
+        rmaxintensity	(0),
+        rminintensity	(0),
+        colourheightarray		(NULL),
+        brightnessheightarray	(NULL),
+        brightnessintensityarray(NULL)
+
 {
-
-   this->lidardata=lidardata;
-   this->bucketlimit = bucketlimit;
-
-   //Control:
-   zoompower = 0.5;
-
-   //Drawing
-   pointsize = 1;
-
-   // Fonts
    fontpath += "fonts/DejaVuSansMono.ttf";
-
-   ratio = 1.0;
-   zoomlevel = 1;
-   maindetailmod = 0;
-
-   //Colouring and shading:
-   cbmaxz=cbminz=0;
-   cbmaxintensity=cbminintensity=0;
-
-   brightnessBy = brightnessByIntensity;
-   colourBy = colourByFlightline;
-   zoffset=0;
-   zfloor=0;
-   intensityoffset = 0;
-   intensityfloor = 0;
-   rmaxz=rminz=0;
-   rmaxintensity=rminintensity=0;
-   colourheightarray = NULL;
-   brightnessheightarray = NULL;
-   brightnessintensityarray = NULL;
 }
 
 LagDisplay::~LagDisplay()
 {
-
-   //delete theFont;
-   if(colourheightarray!=NULL)
-      delete[] colourheightarray;
-//   if(colourintensityarray!=NULL)
-//      delete[] colourintensityarray;
-   if(brightnessheightarray!=NULL)
-      delete[] brightnessheightarray;
-   if(brightnessintensityarray!=NULL)
-      delete[] brightnessintensityarray;
+	delete[] colourheightarray;
+	delete[] brightnessheightarray;
+	delete[] brightnessintensityarray;
 }
 
 //Draw on expose.
@@ -89,16 +78,7 @@ bool LagDisplay::on_expose_event(GdkEventExpose* event)
    if(event==0)
    {
    }
-   // Draw from scratch if window resized so that there is not 
-   // (usually; this does not work perfectly) a blank area resulting.
-//   if(configuring){
-      drawviewable(1);
-//      configuring = false;
-//   }
-//   else
-      // Call this method with 3, which means that it is an expose call 
-      // that this method will handle in a way depending on the subclass. 
-//      drawviewable(3);
+   drawviewable(1);
    return true;
 }
 
@@ -113,22 +93,17 @@ bool LagDisplay::on_expose_event(GdkEventExpose* event)
 // called right after this one.
 bool LagDisplay::on_configure_event(GdkEventConfigure* event)
 {
-   //Added so debugger will not say anything about event not being used
    if(event==0)
    {
    }
 
    glViewport(0, 0, get_width(), get_height());
    resetview();
-   // The expose event handler will be called immediately after the return 
-   // statement, so tell it that the window has changed shape/size now.
-   // configuring = true;
    return true;
 }
 
 //Prepares the arrays for looking up the colours and shades of the points.
-void LagDisplay::coloursandshades(double maxz, double minz,
-                               int maxintensity, int minintensity)
+void LagDisplay::coloursandshades(double maxz, double minz, int maxintensity, int minintensity)
 {
    //For the legend(s):
    cbmaxz = maxz;
@@ -138,16 +113,14 @@ void LagDisplay::coloursandshades(double maxz, double minz,
 
    if(colourheightarray!=NULL)
       delete[] colourheightarray;
-//   if(colourintensityarray!=NULL)
-//      delete[] colourintensityarray;
    if(brightnessheightarray!=NULL)
       delete[] brightnessheightarray;
    if(brightnessintensityarray!=NULL)
       delete[] brightnessintensityarray;
 
    Colour colour;
-   //double red=0.0, green=0.0, blue=0.0;
    double z=0,intensity=0;
+
    // This is at 30, rather than three, for a reason: three, one for each 
    // colour, by ten, so that the "resolution" of the colouring by height 
    // is 0.1 metres, not one whole metre. It makes colouring by height 
@@ -165,10 +138,6 @@ void LagDisplay::coloursandshades(double maxz, double minz,
       colourheightarray[3*i+2]=colour.getB();
    }
 
-   // This is at 30, rather than three, for a reason: three, one for each 
-   // colour, by ten, so that the "resolution" of the colouring by height 
-   // is 0.1 metres, not one whole metre. It makes shading by height 
-   // look better.
    brightnessheightarray = new double[10*(int)(rmaxz-rminz+4)];
    //Fill height brightness array:
    for(int i=0;i<10*(int)(rmaxz-rminz+4);i++)
@@ -190,8 +159,7 @@ void LagDisplay::coloursandshades(double maxz, double minz,
 }
 
 //Prepare the image when the widget is first realised.
-void LagDisplay::
-on_realize()
+void LagDisplay::on_realize()
 {
    // Please note that the this method calls the configure event and is (by 
    // necessity) before the prepare_image() method, so it is necessary to be 
@@ -203,7 +171,8 @@ on_realize()
    
 Colour LagDisplay::getColourByFlightline(int flightline)
 {
-   switch(flightline%6){
+   switch(flightline%6)
+   {
       case 0:
          return Colour(0, 1, 0); // Green
       case 1:
@@ -223,7 +192,8 @@ Colour LagDisplay::getColourByFlightline(int flightline)
 
 Colour LagDisplay::getColourByReturn(int returnNumber)
 {
-   switch(returnNumber){
+   switch(returnNumber)
+   {
       case 1:
          return Colour(0, 0, 1); // Blue
       case 2:
@@ -245,7 +215,8 @@ Colour LagDisplay::getColourByReturn(int returnNumber)
 
 Colour LagDisplay::getColourByClassification(int classification)
 {
-   switch(classification){
+   switch(classification)
+   {
       //Yellow for non-classified.
       case 0:
       case 1:
@@ -292,12 +263,9 @@ Colour LagDisplay::getColourByHeight(float height)
 
 Colour LagDisplay::getColourByIntensity(int intensity)
 {
-   double greyValue = double(intensity - cbminintensity) /
-                      (cbmaxintensity - cbminintensity);
+   double greyValue = double(intensity - cbminintensity) / (cbmaxintensity - cbminintensity);
    return Colour(greyValue, greyValue, greyValue);
 }
-
-
 
 // Given maximum and minimum values, find out the colour a certain value 
 // should be mapped to.
@@ -327,15 +295,19 @@ double LagDisplay::brightness_by(double value, double maxvalue, double minvalue,
 {
    double multiplier = floorvalue + offsetvalue + (1.0 - floorvalue) *
                        (value-minvalue) / (maxvalue-minvalue);
+
    // This prevents the situation where two negative values (for colour and 
    // brightness respectively) multiply to create a positive value giving a 
    // non-black colour.   
-   if(multiplier < 0)multiplier = 0;
+   if(multiplier < 0)
+	   multiplier = 0;
+
    // This prevents the situation where a non-white colour can be made paler 
    // (rather than simply brighter) as a result of its RGB values being 
    // multiplied by some number greater than 1. Otherwise, non-white colours 
    // can eventually be made white when brightness mode is on.
-   if(multiplier > 1)multiplier = 1;
+   if(multiplier > 1)
+	   multiplier = 1;
    return multiplier;
 }
 
@@ -355,10 +327,8 @@ bool LagDisplay::advsubsetproc(vector<PointBucket*>*& pointvector,double *xs,dou
       cout << "No points returned." << endl;
       return false;
    }
+
    if(pointvector==NULL || pointvector->size() == 0)
-      // Do not put any output here as the user will be spammed horrendously 
-      // because pointvector->size()==0 happens often (say if the user zooms 
-      // in on an empty area).
       return false; 
    else 
       return true;
@@ -383,10 +353,16 @@ void LagDisplay::printString(double x, double y, double z)
 bool LagDisplay::clearscreen()
 {
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-   if (!glwindow->gl_begin(get_gl_context()))return false;
+   if (!glwindow->gl_begin(get_gl_context()))
+	   return false;
+
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-   if (glwindow->is_double_buffered())glwindow->swap_buffers();
-   else glFlush();
+
+   if (glwindow->is_double_buffered())
+	   glwindow->swap_buffers();
+   else
+	   glFlush();
+
    glwindow->gl_end();
    return true;
 }
@@ -422,11 +398,13 @@ void LagDisplay::prepare_image()
       ys[2] = lidarboundary->maxY;
       ys[3] = lidarboundary->minY;
       vector<PointBucket*> *pointvector = NULL;
+
       //Get ALL data.
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);
       delete[]xs;
       delete[]ys;
       delete lidarboundary;
+
       //If there is no data, then clear the screen to show no data.
       if(!gotdata)
       {

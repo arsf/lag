@@ -28,37 +28,43 @@
 #include <vector>
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
-class AdvancedOptionsWindow{
+
+class AdvancedOptionsWindow
+{
 public:
-   AdvancedOptionsWindow(TwoDeeOverview*,
-                         Profile*,
-                         Glib::RefPtr<Gtk::Builder>);
+   AdvancedOptionsWindow(TwoDeeOverview*, Profile*, const Glib::RefPtr<Gtk::Builder>&);
 
    ~AdvancedOptionsWindow();
 
-   void show(){ 
+   inline void show()
+   {
       advancedoptionsdialog->present(); 
    }
 
-   void resetcolouringandshading(){ 
+   inline void resetcolouringandshading()
+   {
       on_drawingresetbutton_clicked(); 
    }
 
-   bool getfractionalshift(){ 
+   inline bool getfractionalshift()
+   {
       return fractionalshiftcheck->get_active(); 
    }
 
-   double getmovespeed(){ 
+   inline double getmovespeed()
+   {
       return movespeedselect->get_value(); 
    }
 
-   void setmaindetailrange(double min,double max){
+   inline void setmaindetailrange(double min,double max)
+   {
       maindetailselect->set_range(min,max);
    }
 
-protected:
+private:
    TwoDeeOverview *tdo;
    Profile *prof;
+
    //Advanced viewing options:
    //Dialog window for advanced options.
    Gtk::Dialog *advancedoptionsdialog;
@@ -125,6 +131,11 @@ protected:
    sigc::connection intensityminconn;
    sigc::connection intensitymaxconn;
 
+   /********************/
+   void load_xml(const Glib::RefPtr<Gtk::Builder>&);
+   void connect_signals();
+
+
    //Closes the advanced options dialog.
    void on_advancedoptionsdialog_response(int response_id);
    //The checkbuttons and their activations:
@@ -140,7 +151,7 @@ protected:
    void on_classcheckbutton12_toggled();
    void on_classcheckbuttonA_toggled();
 
-   // To hide noisey points in profile
+   // To hide noisy points in profile
    void on_profile_noise_toggle();
    void on_tdo_noise_toggle();
    //The drawing settings:

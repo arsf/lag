@@ -34,13 +34,10 @@
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
 
-TwoDeeOverview::
-TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
-               Quadtree* lidardata,
-               int bucketlimit,
-               Gtk::Label *rulerlabel) 
-               :LagDisplay(fontpath, config,lidardata,bucketlimit){
-
+TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
+               Quadtree* lidardata, int bucketlimit, Gtk::Label *rulerlabel)
+:	LagDisplay(fontpath, config,lidardata,bucketlimit)
+{
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
@@ -219,40 +216,48 @@ TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& confi
 
 }
 
-TwoDeeOverview::
-~TwoDeeOverview(){ }
+TwoDeeOverview::~TwoDeeOverview()
+{
+}
 
 //Prepare the appropriate overlays for flushing to the screen.
-void TwoDeeOverview::drawoverlays(){
+void TwoDeeOverview::drawoverlays()
+{
    //Draw the profile box if profile mode is on.
    if(profiling||showprofile)
       profbox->makebox(rmaxz);
+
    //Draw the fence box if fence mode is on.
    if(fencing||showfence)
       fencebox->makebox(rmaxz);
+
    //Draw the ruler if ruler mode is on.
    if(rulering)
       makerulerbox();
+
    //Draw the distance scale when indicated.
    if(showdistancescale)
       makedistancescale();
+
    //Draw the appropriate legend when indicated.
    if(showlegend)
       makecolourlegend();
 }
 
-// Dispatcher handlers{
+// Dispatcher handlers
 // This handler prepares OpenGL for drawing the buckets, by "beginning" OpenGL 
 // and then clearing the buffers. It also then draws any profile or fencing 
 // boxes or the ruler.
-void TwoDeeOverview::
-InitGLDraw(){
+void TwoDeeOverview::InitGLDraw()
+{
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
+
    //Need to clear screen because of gaps.
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glwindow->gl_end();
+
    // The drawing thread running mainimage() may now continue. Also, new 
    // drawing threads may now be started.
    initialising_GL_draw = false;
@@ -268,16 +273,20 @@ InitGLDraw(){
 // not certain, but it seems that since the vertex array stuff has moved here 
 // the missing bucket problem has gone, and it is also now very very difficult 
 // to make the thread cause a crash.
-void TwoDeeOverview::
-DrawGLToCard(){
+void TwoDeeOverview::DrawGLToCard()
+{
    if(threaddebug) cout << "Boo!" << endl;
+
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+
    if (!glwindow->gl_begin(get_gl_context()))
       return;
+
    // This is extra important as the profile will be operating in a different 
    // thread from the drawing thread and so can grab OpenGL in between calls 
    // to this method.
    guard_against_interaction_between_GL_areas();
+
    // These relate to the enabling of vertex arrays and assigning the 
    // arrays to GL.
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -289,48 +298,53 @@ DrawGLToCard(){
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
+
    // The drawing thread running mainimage() may now continue. Also, new drawing 
    // threads may now be started.
    drawing_to_GL = false;
 }
+
 // This handler exists so that flushing of the framebuffer can be done 
 // independently of drawing to it. This allows an arbitrary frequency of 
 // flushes to be easily set, to compromise between showing the user things 
 // are happening and the desire to reduce the flicker and the fact that more 
 // flushes will make drawing slower.
-void TwoDeeOverview::
-FlushGLToScreen(){
+void TwoDeeOverview::FlushGLToScreen()
+{
    if(threaddebug)cout << "Lalalalalaaa!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
+
    //Draw to screen every (few) bucket(s) to show user stuff is happening.
    if (glwindow->is_double_buffered())
       glwindow->swap_buffers();
    else glFlush();
    glwindow->gl_end();
+
    //The main thread may now create new drawing threads.
    flushing = false;
 }
+
 // This cleans up when a drawing thread is ending/has ended. It flushes once 
 // more so that everything is visible on the screen, draws the overlays, ends 
 // the OpenGL session and then records that new threads may be made.
-void TwoDeeOverview::
-EndGLDraw(){
+void TwoDeeOverview::EndGLDraw()
+{
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
 
-// EXPERIMENTAL
+//   EXPERIMENTAL
 //   glDisable(GL_DEPTH_TEST);
 //   drawoverlays();
    if (glwindow->is_double_buffered())
       glwindow->swap_buffers();
    else 
       glFlush();
+
    glReadBuffer(GL_BACK);
    //Overlays go on top and should not be preserved otherwise you get shadowing.
-   //
    glDrawBuffer(GL_FRONT);
    drawoverlays();
    glFlush();
@@ -342,8 +356,8 @@ EndGLDraw(){
 
 // This tells the main thread to draw the main image again after all its tasks 
 // currently in its queue are complete.
-void TwoDeeOverview::
-extraDraw(){
+void TwoDeeOverview::extraDraw()
+{
    // Now any subsequent calls to drawiewable, including the one immediately 
    // below this line, may trigger another extraDraw() if interrupted by the 
    // fact that the drawing thread is waiting for this (the main) thread to 
@@ -352,7 +366,7 @@ extraDraw(){
    drawviewable(1);
 }
 
-//THREADS! BE AFRAID, BE VERY AFRAID.
+// THREADS! BE AFRAID, BE VERY AFRAID.
 // This method draws the main image. Note that redundancy (from this method 
 // and drawpointsfrombuckets()) in telling the main thread what to do is 
 // because the main thread's execution of the signals it receives is not 
@@ -371,61 +385,87 @@ extraDraw(){
 //   buckets.
 //   End the thread.
 //
-void TwoDeeOverview::
-mainimage(PointBucket** buckets,int numbuckets){
+void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
+{
    if(threaddebug)cout << "Wait?" << endl;
+
    // If another thread still exists (i.e. it has not cleared itself up yet) 
    // then wait until it is cleared.
-   while(thread_existsthread){usleep(100);}
+
+   while(thread_existsthread)
+   {
+	   usleep(100);
+   }
+
    if(threaddebug)cout << "***Finished waiting." << endl;
+
    // Any subsequent threads must wait until this becomes false again.
    thread_existsthread = true;
+
    // The thread now reserves the "right" to use the pointbucket::getpoint() 
    // method.
    thread_running = true;
+
    // These are "safe" versions of the centre coordinates, as they will not 
    // change while this thread is running, while the originals might.
    centreSafe.move(centre.getX(), centre.getY(), 0);
+
    if(threaddebug)cout << "First array" << endl;
    vertices = new float[3*bucketlimit];
    if(threaddebug)cout << "Second array" << endl;
    colours = new float[3*bucketlimit];
    if(threaddebug)cout << "Initialise GL drawing." << endl;
    drawneverything = false;
+
    // The main thread must not create any new threads like this while also 
    // being told to initialise OpenGL for drawing.
    initialising_GL_draw = true;
+
    //Prepare OpenGL.
    signal_InitGLDraw();
    Boundary* lidarboundary = lidardata->getBoundary();
+
    //Preparing to extract boundaries of drawn area.
    drawnsofarminx=lidarboundary->maxX;
    drawnsofarminy=lidarboundary->maxY;
    drawnsofarmaxx=lidarboundary->minX;
    drawnsofarmaxy=lidarboundary->minY;
    delete lidarboundary;
+
    // This records what buckets are drawn as a result of being initially cached 
    // which is then used to draw only the initially uncached ones.
    bool *drawnbucketsarray = new bool[numbuckets];
-   for(int i = 0;i < numbuckets;i++)drawnbucketsarray[i] = false;
+   for(int i = 0;i < numbuckets;i++)
+	   drawnbucketsarray[i] = false;
+
    //Draw the points from the initially cached buckets.
-   bool completed = drawpointsfrombuckets(buckets, numbuckets,
-                                          drawnbucketsarray, true);
-   if(!completed) {
-      if(threaddebug)cout << "Pass of cached interrupted. Stopping!" << endl;}
-   else{
-      if(threaddebug)cout << "Finished pass of cached." << endl;
+   bool completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, true);
+
+   if(!completed)
+   {
+      if(threaddebug)
+    	  cout << "Pass of cached interrupted. Stopping!" << endl;
+   }
+   else
+   {
+      if(threaddebug)
+    	  cout << "Finished pass of cached." << endl;
+
       //Draw the points from the initially uncached buckets.
-      completed = drawpointsfrombuckets(buckets, numbuckets,
-                                        drawnbucketsarray, false);
-      if(!completed) {
+      completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, false);
+
+      if(!completed)
+      {
          if(threaddebug)
             cout << "Pass of uncached interrupted. Stopping!" << endl;}
-      else{
-         if(threaddebug)cout << "Finished pass of uncached." << endl;
+      else
+      {
+         if(threaddebug)
+        	 cout << "Finished pass of uncached." << endl;
          if(numbuckets > 0)
             drawneverything = true;
-         if(threaddebug)cout << "Thread completed." << endl;
+         if(threaddebug)
+        	 cout << "Thread completed." << endl;
       }
    }
    delete[]drawnbucketsarray;
@@ -469,23 +509,24 @@ mainimage(PointBucket** buckets,int numbuckets){
 //               framebuffer has been flushed to the screen.
 //               Signal the main thread to flush the framebuffer to the screen.
 //   Wait until the main thread has finished drawing to the framebuffer.
-bool TwoDeeOverview::
-drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
-                      bool *drawnbucketsarray,bool cachedonly) {
+bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
+                      bool *drawnbucketsarray, bool cachedonly)
+{
    int line=0,intensity=0,classification=0,rnumber=0;
    double z=0;
+
    //Colour
    Colour tempColour;
+
    //For every bucket:
-   for(int i=0;i<numbuckets;i++){
+   for(int i=0;i<numbuckets;++i)
+   {
       if(threaddebug)cout << "Calculating resolution index." << endl;
-      double bucketscreenwidth = imageUnitsToPixels(buckets[i]->getmaxX() - 
-                                                    buckets[i]->getminX());
-      double bucketscreenheight = imageUnitsToPixels(buckets[i]->getmaxY() - 
-                                                     buckets[i]->getminY());
+      double bucketscreenwidth = imageUnitsToPixels(buckets[i]->getmaxX() - buckets[i]->getminX());
+      double bucketscreenheight = imageUnitsToPixels(buckets[i]->getmaxY() - buckets[i]->getminY());
       double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
-      int bucketpointtopixelratio = (int)((double)buckets[i] ->
-                                    getNumberOfPoints(0)/bucketpixelcount);
+      int bucketpointtopixelratio = (int)((double)buckets[i]->getNumberOfPoints(0)/bucketpixelcount);
+
       // This determines what resolution level of the bucket to grab 
       // from the quadtree.
       int resolutionindex = 0;
@@ -495,9 +536,7 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       // resolutionindex rounded up to be an integer. The user can change 
       // maindetailmod at will to modify the frequency of "holes" appearing 
       // in the visible data.
-      for (int j = bucketpointtopixelratio;
-           j > (int)pow(resolutionbase,maindetailmod) - 1;
-           j /= resolutionbase)
+      for (int j = bucketpointtopixelratio; j > (int)pow(resolutionbase,maindetailmod) - 1; j /= resolutionbase)
          resolutionindex++;
 
       // Obviously cannot call an index that is less detailed than any 
@@ -515,16 +554,17 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       // user interference could cause previously uncached buckets to become 
       // cached (like using pointinfo() or loading a preview in the middle 
       // of drawing).
-      if(drawnbucketsarray[i] == false && 
-         (!cachedonly || 
-          buckets[i]->getIncacheList()[resolutionindex] == cachedonly)){
+      if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly))
+      {
          drawnbucketsarray[i] = true;
          if(threaddebug)cout << i << " " << numbuckets << endl;
          if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
          if(threaddebug)cout << "If drawing, pause." << endl;
+
          // Under no circumstances may the arrays be modified until their 
          // contents have been sent to the framebuffer.
-         while(drawing_to_GL){
+         while(drawing_to_GL)
+         {
             // If paused, the thread releases pointbucket::getpoint(), waits 
             // and then grabs it again. Is here so that if there are multiple 
             // calls to pointinfo() in quick succession then there will not be 
@@ -535,21 +575,26 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                threadpause();
             usleep(10);
          }
+
          if(threaddebug)cout << "Not drawing (anymore)." << endl;
+
          // If paused, the thread releases pointbucket::getpoint(), waits and 
          // then grabs it again.
          if(pausethread)
             threadpause();
          if(threaddebug)cout << "Interrupt?" << endl;
+
          // Do not pass go, do not collect 200 dollars. The parent method will 
          // handle the fallout, just STOP!
          if(interruptthread)
             return false;
          if(threaddebug)cout << "No interrupt." << endl;
+
          // This is needed for putting values in the right indices for the 
          // vertices and colours arrays and for drawing them properly with 
          // OpenGL.
          pointcount=0;
+
          //Set the boundary of the buckets selected so far.
          if(buckets[i]->getminX()<drawnsofarminx)
             drawnsofarminx = buckets[i]->getminX();
@@ -559,16 +604,20 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             drawnsofarmaxx = buckets[i]->getmaxX();
          if(buckets[i]->getmaxY()>drawnsofarmaxy)
             drawnsofarmaxy = buckets[i]->getmaxY();
+
          //For every point, determine point colour and position:
-         for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);j++){
+         for(int j=0;j<buckets[i]->getNumberOfPoints(resolutionindex);++j)
+         {
             if (tdoDisplayNoise || (!tdoDisplayNoise && buckets[i]->getPoint(j,resolutionindex).getClassification() != 7))
             {
                //This is here because it is used in calculations.
                z = buckets[i]->getPoint(j,resolutionindex).getZ();
                //This is here because it is used in calculations.
                intensity = buckets[i]->getPoint(j,resolutionindex).getIntensity();
+
                // Select colour depending on colourBy value
-               switch (colourBy) {
+               switch (colourBy)
+               {
                   case colourByHeight:
                      tempColour = getColourByHeight(z); 
                      break;
@@ -596,10 +645,10 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                }
 
                // Select brightness depending on brightness setting
-               switch (brightnessBy) {
+               switch (brightnessBy)
+               {
                   case brightnessByIntensity:
-                     tempColour.multiply(
-                                brightnessintensityarray[(int)(intensity-rminintensity)]);
+                     tempColour.multiply(brightnessintensityarray[(int)(intensity-rminintensity)]);
                      break;
                   case brightnessByHeight:
                      tempColour.multiply(brightnessheightarray[int(10*(z-rminz))]);
@@ -609,10 +658,8 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                      break;
                }
                  
-               vertices[3*pointcount]=buckets[i]->
-                                      getPoint(j,resolutionindex).getX()-centreSafe.getX();
-               vertices[3*pointcount+1]=buckets[i]->
-                                        getPoint(j,resolutionindex).getY()-centreSafe.getY();
+               vertices[3*pointcount]=buckets[i]->getPoint(j,resolutionindex).getX()-centreSafe.getX();
+               vertices[3*pointcount+1]=buckets[i]->getPoint(j,resolutionindex).getY()-centreSafe.getY();
                if(heightenNonC ||
                   heightenGround ||
                   heightenLowVeg ||
@@ -623,9 +670,9 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                   heightenMass ||
                   heightenWater ||
                   heightenOverlap ||
-                  heightenUndefined){
-                  classification = buckets[i]->
-                                   getPoint(j,resolutionindex).getClassification();
+                  heightenUndefined)
+               {
+                  classification = buckets[i]->getPoint(j,resolutionindex).getClassification();
                   double incrementor = 100+abs(rmaxz-rminz);
                   switch(classification){
                      //Heighten non-classified.
@@ -656,21 +703,24 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                   // 90 000 metres (including the increase from above, but it 
                   // should still be able to handle the Himalayas); above that 
                   // and the points will be drawn at the same height.
-                  if(z>rmaxz+900){
-                     z = rmaxz+900+z/1000;
+                  if(z>rmaxz+900)
+                  {
+                	 z = rmaxz+900+z/1000;
                      if(z>rmaxz+990)z=rmaxz+990;
                   }
                }
                if(raiseline)
-                  if(linetoraise == buckets[i]->
-                                    getPoint(j,resolutionindex).getFlightline()){
+                  if(linetoraise == buckets[i]->getPoint(j,resolutionindex).getFlightline())
+                  {
                   z += 100+abs(rmaxz-rminz);
+
                   // This is to prevent the points ever obscuring the overlays. 
                   // Note that this can handle well anything up to a height of 
                   // 90 000 metres (including the increase from above, but it 
                   // should still be able to handle the Himalayas); above that 
                   // and the points will be drawn at the same height.
-                  if(z>rmaxz+900){
+                  if(z>rmaxz+900)
+                  {
                      z = rmaxz+900+z/1000;
                      if(z>rmaxz+990)z=rmaxz+990;
                   }
@@ -684,41 +734,52 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                   // reversed.
                   vertices[3*pointcount+2]= rmaxz + rminz - z;
 
-               colours[3*pointcount]=tempColour.getR();//red;
-               colours[3*pointcount+1]=tempColour.getG();//green;
-               colours[3*pointcount+2]=tempColour.getB();//blue;
+               colours[3*pointcount]=tempColour.getR();		//red;
+               colours[3*pointcount+1]=tempColour.getG();	//green;
+               colours[3*pointcount+2]=tempColour.getB();	//blue;
                pointcount++;
             }
          }
          if(threaddebug)cout << pointcount << endl;
          if(threaddebug)cout << vertices[3*pointcount/2] << endl;
          if(threaddebug)cout << "Draw if not interrupted." << endl;
-         if(!interruptthread){
+
+         if(!interruptthread)
+         {
             if(threaddebug)cout << "Yes!" << endl;
+
             // Main thread must not attempt to create a new thread like this 
             // while this is waiting for a draw to the framebuffer.
             drawing_to_GL = true;
             if(threaddebug)cout << "Sending draw signal." << endl;
+
             signal_DrawGLToCard();
+
             if(threaddebug)cout << "Flush?" << endl;
+
             // Main thread must not attempt to create a new thread like this 
             // while flushing has yet to occur.
             if(i >= (numbuckets-1) || numbuckets > 10)
-               if( (i + 1) % 10  == 0){
+               if( (i + 1) % 10  == 0)
+               {
                flushing = true;
+
                if(threaddebug)cout << "Sending flush signal." << endl;
 
                signal_FlushGLToScreen();
-            }
+               }
          }
-         else if(threaddebug)cout << "Draw interrupted." << endl;
+         else
+        	 if(threaddebug)cout << "Draw interrupted." << endl;
       }
    }
    if(threaddebug)cout << "Checking for drawing to make sure there is no \
                            deadlock. Might wait." << endl;
+
    // Under no circumstances may the arrays be modified until their contents 
    // have been sent to the framebuffer.
-   while(drawing_to_GL){
+   while(drawing_to_GL)
+   {
       // If paused, the thread releases pointbucket::getpoint(), waits and then 
       // grabs it again. Is here so that if there are multiple calls to 
       // pointinfo() in quick succession then there will not be a deadlock 
@@ -732,54 +793,66 @@ drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
    }
    return true;
 }
-// This clears up after and ends a drawing thread. It works like this:   
+
+// 	  This clears up after and ends a drawing thread. It works like this:
 //    Tell the main thread that this thread is no longer (significantly) 
 //    running.
 //    Delete data array.
-//    Signal main thread to clear up the OpenGL settings fo drawing.
+//    Signal main thread to clear up the OpenGL settings for drawing.
 //    Delete vertices and colours arrays.
 //    Set it so that subsequent threads will not be interrupted immediately.
 //    Allow subsequent threads to act.
 //
-void TwoDeeOverview::
-threadend(PointBucket** buckets){
+void TwoDeeOverview::threadend(PointBucket** buckets)
+{
    if(threaddebug)
       cout << "Allowing main thread to start new thread... DANGER!" << endl;
 
    //This thread will not use pointbucket::getpoint() again.
    thread_running = false;
+
    if(threaddebug)cout << "Delete data array." << endl;
+
    //This is up here so that buckets is deleted before it is newed again.
    delete[] buckets;
+
    if(threaddebug)cout << "End drawing" << endl;
+
    // For the sake of neatness, clear up. This comes before allowing the main 
    // thread to create another thread like this to ensure that this signal is 
    // processed before, say, a signal to prepare OpenGL for drawing again.
    signal_EndGLDraw();
    if(threaddebug)cout << "Delete vertex array." << endl;
+
    // These are here, before a new thread like this is allowed to do anything, 
    // so that they are deleted before they are newed again.
    delete[] vertices;
    if(threaddebug)cout << "Delete colour array." << endl;
    delete[] colours;
    if(threaddebug)cout << "Booleans." << endl;
+
    //New threads like this will now not be interrupted.
    interruptthread = false;
+
    //New threads like this will now be allowed to act.
    thread_existsthread = false;
    if(threaddebug)cout << "*********Finished thread!" << endl;
 }
 
 //Pauses the thread and waits for the unpause signal to resume.
-void TwoDeeOverview::
-threadpause(){
+void TwoDeeOverview::threadpause()
+{
    thread_running = false;
+
    if(threaddebug)cout << "Pausing thread. Allowing the rest of the \
                            program access to point data. Waiting until \
                            thread is allowed to unpause." << endl;
+
    while(pausethread){usleep(10);}
+
    if(threaddebug)cout << "Yippee! Can go now! Depriving the rest of the \
                            program of resources again!" << endl;
+
    thread_running = true;
 }
 
@@ -801,8 +874,8 @@ threadpause(){
 // This is because it is thought that having previously-drawn things obscure 
 // latterly-drawn things will reduce flicker.
 //
-bool TwoDeeOverview::
-drawbuckets(PointBucket** buckets,int numbuckets){
+bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets)
+{
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return false;
@@ -814,14 +887,17 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    //Need to clear screen because of gaps.
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    drawoverlays();
+
    // This makes sure the preview grid and the framebuffer are drawn under the 
    // profile, ruler etc..
    double altitude = rminz-1000;
-   //Copy pixels from back buffer
+
+   // Copy pixels from back buffer
    // The position of the bottom left corner of where the region is to be copied 
    // TO. In world coordinates.
    double xpos = drawnsofarminx-centre.getX();
    double ypos = drawnsofarminy-centre.getY();
+
    // These offsets are used for when the position of the bottom left corner of 
    // the destination region would go off the screen to the left or bottom 
    // (which would cause NOTHING to be drawn). In pixels.
@@ -833,16 +909,20 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
+
    //The world coordinates of the origin for the screen coordinates.
    GLdouble origx,origy,origz;
    gluUnProject(0,0,0,modelview,projection,viewport,&origx,&origy,&origz);
-   if(xpos < origx){
+
+   if(xpos < origx)
+   {
       // Converts the difference between the 'old' xpos and the edge of the 
       // screen into pixel values for modification of the region copied from.
       xoffset = imageUnitsToPixels(origx-xpos);
       xpos = origx;
    }
-   if(ypos < origy){
+   if(ypos < origy)
+   {
       // Converts the difference between the 'old' ypos and the edge of the 
       // screen into pixel values for modification of the region copied from.
       yoffset = imageUnitsToPixels(origy-ypos);
@@ -853,6 +933,7 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    // glWindowPos does the same thing directly with pixels, but it requires 
    // OpenGL 1.4.
    glRasterPos3f(xpos,ypos,altitude+1);
+
    // These define the boundaries of the region to be copied FROM.
    // ...The offsets are here so that if the destination position should be 
    // too far left or down then these account for it. Otherwise the skeleton 
@@ -865,6 +946,7 @@ drawbuckets(PointBucket** buckets,int numbuckets){
                        (double)(get_width())/2;
    double bucketmaxy = imageUnitsToPixels(drawnsofarmaxy-centreSafe.getY()) + 
                        (double)(get_height())/2;
+
    // I think that having ANYTHING going beyond the boundaries of the screen 
    // will cause NOTHING to be drawn. Apparently bottom left corner does not 
    // matter here, though, only the top right (???).
@@ -872,6 +954,7 @@ drawbuckets(PointBucket** buckets,int numbuckets){
       bucketmaxx = get_width();
    if(bucketmaxy > get_height())
       bucketmaxy = get_height();
+
    // ...Oh, and the bottom left corner must be further left and down than 
    // the top right corner.
    if(bucketminx > bucketmaxx)
@@ -881,14 +964,12 @@ drawbuckets(PointBucket** buckets,int numbuckets){
 
    // The business end, at last. Copies from the region defined to the current 
    // raster position.
-   glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx,
-                bucketmaxy-bucketminy,GL_COLOR);
+   glCopyPixels(bucketminx,bucketminy,bucketmaxx-bucketminx, bucketmaxy-bucketminy,GL_COLOR);
 
    //The world coordinates of the origin for the screen coordinates.
    GLdouble endx,endy,endz;
-   gluUnProject(get_width(),get_height(),0,
-                modelview,projection,viewport,
-                &endx,&endy,&endz);
+   gluUnProject(get_width(),get_height(),0, modelview,projection,viewport, &endx,&endy,&endz);
+
    // If not all the buckets have been drawn OR the boundaries of the drawn
    // region extend beyond the screen AND the image has been moved in the 
    // opposite direction to that extension. i.e. if part of the image 
@@ -897,7 +978,8 @@ drawbuckets(PointBucket** buckets,int numbuckets){
       (((drawnsofarmaxx-centreSafe.getX() > endx && centre.getX()-centreSafe.getX()>0) ||
       (drawnsofarminx-centreSafe.getX() < origx && centre.getX()-centreSafe.getX()<0) ||
       (drawnsofarmaxy-centreSafe.getY() > endy && centre.getY()-centreSafe.getY()>0) ||
-      (drawnsofarminy-centreSafe.getY() < origy && centre.getY()-centreSafe.getY()<0)))){
+      (drawnsofarminy-centreSafe.getY() < origy && centre.getY()-centreSafe.getY()<0))))
+   {
       //Needed for the glDrawArrays() call further down.
       float* vertices = new float[12];
       glEnableClientState(GL_VERTEX_ARRAY);
@@ -925,10 +1007,12 @@ drawbuckets(PointBucket** buckets,int numbuckets){
    }
    //After all this effort, something must be drawn to the screen.
    glFlush();
+
    //Reset the raster position.
    glRasterPos2s(0,0);
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
+
    return true;
 }
 
@@ -941,13 +1025,15 @@ drawbuckets(PointBucket** buckets,int numbuckets){
 // (imagetype==2). When this is called from the expose event (imagetype==3) 
 // it draws the main image (drawing speed is not so urgent now that it is 
 // threaded).
-bool TwoDeeOverview::
-drawviewable(int imagetype){
+bool TwoDeeOverview::drawviewable(int imagetype)
+{
    guard_against_interaction_between_GL_areas();
+
    // If there is an expose event while the image is already being drawn from 
    // scratch and the image has been drawn from scratch at least once then 
    // refresh the screen without interfering with the drawing from scratch:
-   if(thread_running && imagetype == 3 && drawnsinceload){
+   if(thread_running && imagetype == 3 && drawnsinceload)
+   {
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))
          return false;
@@ -958,18 +1044,23 @@ drawviewable(int imagetype){
       glwindow->gl_end();
       return true;
    }
+
    //This causes any existing drawing thread to stop.
    interruptthread = true;
+
    //Draw the main image.
-   if(imagetype==1 || (!drawnsinceload && imagetype == 3)){
+   if(imagetype==1 || (!drawnsinceload && imagetype == 3))
+   {
       // If any of these conditions are true and a new thread is created now, 
       // deadlock is possible.
       if(drawing_to_GL||
          initialising_GL_draw||
          flushing||
          thread_existsthread||
-         thread_existsmain){
-         if(threaddebug){
+         thread_existsmain)
+      {
+         if(threaddebug)
+         {
             cout << "Help! Am stalling!";
             if(drawing_to_GL)cout << " Stalling because drawing to OpenGL.";
             if(initialising_GL_draw)cout << " Stalling because initialising \
@@ -984,7 +1075,8 @@ drawviewable(int imagetype){
          }
          // If not doing so already, prepare to draw again after the 
          // interrupt.
-         if(!extraDrawing){
+         if(!extraDrawing)
+         {
             extraDrawing = true;
             if(threaddebug)cout << "Trying to draw again." << endl;
             signal_extraDraw();
@@ -993,10 +1085,14 @@ drawviewable(int imagetype){
       }
       if(threaddebug)cout << "Am fluid" << endl;
       if(threaddebug)cout << "Changed offsets." << endl;
+
       // Expose events draw the image from scratch at least once so that the 
       // image will be shown immediately after loading a file for the first 
       // time.
-      if(imagetype == 3)drawnsinceload = true;
+
+      if(imagetype == 3)
+    	  drawnsinceload = true;
+
       //Limits of viewable area:
       double minx = centre.getX()-pixelsToImageUnits(get_width()/2);
       double maxx = centre.getX()+pixelsToImageUnits(get_width()/2);
@@ -1013,13 +1109,18 @@ drawviewable(int imagetype){
       ys[1] = maxy;
       ys[2] = maxy;
       ys[3] = miny;
+
       vector<PointBucket*> *pointvector = NULL;
+
       //Get data.
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);
       delete[]xs;
       delete[]ys;
-      if(!gotdata){
-         if(pointvector==NULL){
+
+      if(!gotdata)
+      {
+         if(pointvector==NULL)
+         {
             drawneverything = false;
             drawnsofarminx=0;
             drawnsofarminy=0;
@@ -1029,31 +1130,38 @@ drawviewable(int imagetype){
          }
          else return drawviewable(2);
       }
+
       numbuckets = pointvector->size();
+
       //This is not deleted here but in the drawing thread.
       PointBucket** buckets = new PointBucket*[numbuckets];
+
       // Convert to pointer for faster access in for loops in image methods. 
       // Why? Expect >100000 points. ........Probably will not make any 
       // difference BUT it does mean that the data can be accessed without 
       // doing (*pointvector)[i] every time, as doing pointvector->at(i) may 
       // be slower due to checks.
-      for(int i=0;i<numbuckets;i++){
+      for(int i=0;i<numbuckets;i++)
+      {
          buckets[i]=(*pointvector)[i];
       }
+
       //New threads should not be immediately interrupted.
       interruptthread = false;
+
       //No more threads should be made for now.
       thread_existsmain = true;
       Glib::Thread* data_former_thread;
+
       // This thread will interpret the data before telling the main 
       // thread to draw.
-      data_former_thread = Glib::Thread::create(sigc::bind(
-                           sigc::mem_fun(*this,&TwoDeeOverview::mainimage),
-                                         buckets,numbuckets),false);
+      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets),false);
+
       delete pointvector;
    }
    //Draw the preview.
-   else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload)){
+   else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload))
+   {
       //Limits of viewable area:
       double minx = centre.getX()-pixelsToImageUnits(get_width()/2);
       double maxx = centre.getX()+pixelsToImageUnits(get_width()/2);
@@ -1070,18 +1178,23 @@ drawviewable(int imagetype){
       ys[2] = maxy;
       ys[3] = miny;
       vector<PointBucket*> *pointvector = NULL;
+
       //Get data.
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);
       delete[]xs;
       delete[]ys;
-      if(!gotdata){
+      if(!gotdata)
+      {
          if(pointvector==NULL)return clearscreen();
       }
+
       int numbuckets = pointvector->size();
       PointBucket** buckets = new PointBucket*[numbuckets];
+
       // Convert to pointer for faster access in for loops in image methods. 
       // Why? Expect >100000 points.
-      for(int i=0;i<numbuckets;i++){
+      for(int i=0;i<numbuckets;i++)
+      {
          buckets[i]=(*pointvector)[i];
       }
       drawbuckets(buckets,numbuckets);
@@ -1099,17 +1212,19 @@ drawviewable(int imagetype){
 }
 
 //Return to initial viewing position.
-bool TwoDeeOverview::
-returntostart(){
+bool TwoDeeOverview::returntostart()
+{
    Boundary* lidarboundary = lidardata->getBoundary();
    double xdif = lidarboundary->maxX-lidarboundary->minX;
    double ydif = lidarboundary->maxY-lidarboundary->minY;
+
    // This ratio defines, along with zoomlevel, the translation from world 
    // coordinates to window coordinates.
    double xratio = xdif/get_parent()->get_width();
    double yratio = ydif/get_parent()->get_height();
    if(xratio>yratio)ratio = xratio;
    else ratio = yratio;
+
    // The image should appear slightly smaller so that its edges do not touch 
    // the edge of the drawing area.
    ratio *= 1.1;
@@ -1117,9 +1232,11 @@ returntostart(){
    fencebox->setratio(ratio);
    //Image should be centred at its centre.
    centre.move(lidarboundary->minX+xdif/2, lidarboundary->minY+ydif/2, 0);
+
    // Back to the starting zoom, which should cause the entire image to be 
    // visible.
    zoomlevel=1;
+
    //Update matrices.
    resetview();
    set_overlay_zoomlevels(zoomlevel);
@@ -1133,8 +1250,8 @@ returntostart(){
 // it the identity matrix, and then defines the limits of the viewing area 
 // from the dimensions of the window. *ratio/zoomlevel is there to convert 
 // window coordinates to world coordinates.
-void TwoDeeOverview::
-resetview(){
+void TwoDeeOverview::resetview()
+{
    //Extra space to work with is good.
    double altitude = rmaxz+5000;
    double depth = rminz-5000;
@@ -1166,7 +1283,8 @@ resetview(){
 // displayed is the following: X, Y and Z values; the time; the intensity; 
 // the classification; the filename of the file the point is from and the 
 // return number.
-bool TwoDeeOverview::pointinfo(double eventx,double eventy){
+bool TwoDeeOverview::pointinfo(double eventx,double eventy)
+{
    string meh = "0\n0\n0";
    //This offset exists because, in world coordinates, 0 is the centre.
    double pointeroffx = eventx - get_width()/2;
@@ -1191,7 +1309,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
    //Get data.
    bool gotdata = advsubsetproc(pointvector,xs,ys,4);
    //If there aren't any points, don't bother.
-   if(gotdata){
+   if(gotdata)
+   {
       // Determines whether there are any points that the user could reasonably 
       // have meant to select.
       bool anypoint = false;
@@ -1203,17 +1322,21 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       waitforpause();
       // For every bucket, in case of the uncommon instances where more than 
       // one bucket is returned. 
-      for(unsigned int i=0;i<pointvector->size();i++){
+      for(unsigned int i=0;i<pointvector->size();i++)
+      {
          // This returns an array of booleans saying whether or not each point 
          // (indicated by indices that are shared with pointvector) is in the 
          // area prescribed.
          bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false);
          // For all points (no sorting as it seems pointless with a maximum of 
          // four buckets possible)...
-         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++){
+         for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++)
+         {
             //If they are in the right area...
-            if(pointsinarea[j]){
-               if(!anypoint){
+            if(pointsinarea[j])
+            {
+               if(!anypoint)
+               {
                   bucketno=i;
                   pointno=j;
                   anypoint = true;
@@ -1221,15 +1344,16 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
                //...and if they are higher than the currently selected point 
                // assuming the z values are not being reversed.
                if(!reversez && (*pointvector)[i]->getPoint(j,0).getZ() >= 
-                  (*pointvector)[bucketno]->getPoint(pointno,0).getZ()){
+                  (*pointvector)[bucketno]->getPoint(pointno,0).getZ())
+               {
                   //Select them.
                   bucketno=i;
                   pointno=j;
                }
                //...or, alternatively, if they are lower than the currently 
                // selected point assuming the z values ARE being reversed.
-               else if(reversez && (*pointvector)[i]->getPoint(j,0).getZ() <= 
-               (*pointvector)[bucketno]->getPoint(pointno,0).getZ()){
+               else if(reversez && (*pointvector)[i]->getPoint(j,0).getZ() <= (*pointvector)[bucketno]->getPoint(pointno,0).getZ())
+               {
                   //Select them.
                   bucketno=i;
                   pointno=j;
@@ -1238,17 +1362,20 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          }
          delete pointsinarea;
       }
-      if(anypoint){
+      if(anypoint)
+      {
          if(drawing_to_GL ||
             initialising_GL_draw ||
             flushing ||
             thread_existsthread ||
             thread_existsmain);
-         else{
+         else
+         {
             drawviewable(2);
             Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
             if (!glwindow->gl_begin(get_gl_context()))
                return false;
+
             // This makes sure the highlight is drawn over the top of the 
             // flightlines.
             double altitude = rmaxz+1000;
@@ -1290,8 +1417,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
             glwindow->gl_end();
          }
          //Returns the filepath.
-         string flightline = lidardata->getFileName((*pointvector)[bucketno]->
-                                        getPoint(pointno,0).getFlightline());
+         string flightline = lidardata->getFileName((*pointvector)[bucketno]-> getPoint(pointno,0).getFlightline());
 
          //Only the filename is desired, not the filepath.
          size_t index = flightline.rfind("/");
@@ -1311,16 +1437,13 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
          y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
          z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
-         time << (*pointvector)[bucketno]->
-                 getPoint(pointno,0).getTime();
-         intensity << (*pointvector)[bucketno]->
-                      getPoint(pointno,0).getIntensity();
-         classification << (int)(*pointvector)[bucketno]->
-                           getPoint(pointno,0).getClassification();
-         rnumber << (int)((*pointvector)[bucketno]->
-                    getPoint(pointno,0).getReturn());
-         flightlinenumber << (int)((*pointvector)[bucketno]->
-                             getPoint(pointno,0).getFlightline());
+
+         time << (*pointvector)[bucketno]->getPoint(pointno,0).getTime();
+         intensity << (*pointvector)[bucketno]->getPoint(pointno,0).getIntensity();
+         classification << (int)(*pointvector)[bucketno]->getPoint(pointno,0).getClassification();
+         rnumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).getReturn());
+         flightlinenumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).getFlightline());
+
          //Is bored with pointbucket::getpoint(), now.
          pausethread = false;
          string pointstring = "X: " + x.str() + 
@@ -1335,7 +1458,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 
          rulerlabel->set_text(pointstring);
       }
-      else{ 
+      else
+      {
          rulerlabel->set_text(meh);
          if(drawing_to_GL ||
             initialising_GL_draw ||
@@ -1347,7 +1471,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
       //Is bored with pointbucket::getpoint(), now.
       pausethread = false;
    }
-   else{ 
+   else
+   {
       rulerlabel->set_text(meh);
       if(drawing_to_GL ||
          initialising_GL_draw ||
@@ -1356,7 +1481,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
          thread_existsmain);
       else drawviewable(2);
    }
-   if(pointvector!=NULL)delete pointvector;
+   delete pointvector;
+
    //These are here because vetpoints needs to use them as well as advsubset.
    delete[]xs;
    delete[]ys;
@@ -1373,8 +1499,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy){
 // draws nothing when the colouring mode is by none or by flightline (the 
 // latter because flightline numbering is arbitrary, discrete and of 
 // potentially unlimited number). 
-void TwoDeeOverview::
-makecolourlegend(){
+void TwoDeeOverview::makecolourlegend()
+{
    //The height of the area in world coordinates.
    double rheight = pixelsToImageUnits(get_height());
    double padding = 0.05*rheight;
@@ -1406,25 +1532,26 @@ makecolourlegend(){
    Colour colour;
    string text;
    char number[30];
-   switch (colourBy) {
+   switch (colourBy)
+   {
       case colourByHeight:
          length = 0.9*rheight/6;
          //Getting the maxima and minima as far as the colouring is concerned.
          cbmax = cbmaxz;
          cbmin = cbminz;
-         for(int i=0;i<7;i++){
+         for(int i=0;i<7;++i)
+         {
             sprintf(number, "%.2lf", ((6-i)*cbmax + i*cbmin)/6);
             stringwidth = FONT_CHAR_WIDTH * strlen(number); 
-            printString(
-                        cornx - pixelsToImageUnits(hoffset+hwidth+stringwidth+hgap),
-                        corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
-                        altitude);
+            printString(cornx - pixelsToImageUnits(hoffset+hwidth+stringwidth+hgap),
+                        corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i, altitude);
          }
          // Draws a strip of quads with smooth colour transitions to give a 
          // spectrum-like effect (though the colours are in a different order 
          // from the real spectrum).
          glBegin(GL_QUAD_STRIP);
-            for(int i=0;i<7;i++){
+            for(int i=0;i<7;++i)
+            {
                Colour colour;
                colour_by(((6-i)*cbmax + i*cbmin)/6,cbmax,cbmin,colour);
                glColor3fv(colour.getRGB());
@@ -1437,17 +1564,16 @@ makecolourlegend(){
             }
          glEnd();
          break;
+
       case colourByIntensity:
          length = 0.9*rheight/6;
          
-         for(int i=0;i<10;i++){
-            sprintf(number, "%.1lf", (double((6-i)*cbmaxintensity + 
-                                                 i*cbminintensity))/6);
+         for(int i=0;i<10;++i)
+         {
+            sprintf(number, "%.1lf", (double((6-i)*cbmaxintensity + i*cbminintensity))/6);
             stringwidth = FONT_CHAR_WIDTH * strlen(number); 
             glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
-                          corny - padding - pixelsToImageUnits(0.5* FONT_CHAR_HEIGHT) - length*i,
-                          altitude);
-       
+                          corny - padding - pixelsToImageUnits(0.5* FONT_CHAR_HEIGHT) - length*i, altitude);
          }
          // Draws a strip of quads with smooth colour transitions to give a 
          // spectrum-like effect (though the colours are in a different order 
@@ -1469,11 +1595,14 @@ makecolourlegend(){
                           altitude);
          glEnd();
          break;
+
       case colourByClassification:
          length = 0.9*rheight/10;
-         for(int i=0;i<11;i++){
+         for(int i=0;i<11;++i)
+         {
             colour = getColourByClassification(i);
-            switch(i){
+            switch(i)
+            {
                case 0:  text = "Non-classified";break;
                case 1:  text = "Ground";break;
                case 2:  text = "Low vegetation";break;
@@ -1509,11 +1638,14 @@ makecolourlegend(){
             glEnd();
          }
          break;
+
       case colourByReturn:
          length = 0.9*rheight/7;
-         for(int i=0;i<8;i++){
+         for(int i=0;i<8;++i)
+         {
             colour = getColourByReturn(i);
-            switch(i){
+            switch(i)
+            {
                case 0: text = "First";break;
                case 1: text = "Second";break;
                case 2: text = "Third";break;
@@ -1526,8 +1658,7 @@ makecolourlegend(){
            glColor3d(1.0,1.0,1.0);//White.
             stringwidth = FONT_CHAR_WIDTH*text.length();
             glRasterPos3d(cornx - pixelsToImageUnits(hoffset + hwidth + stringwidth + hgap),
-                          corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,
-                          altitude);
+                          corny - padding - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT)- length*i,altitude);
 
             glBegin(GL_QUADS);
                glColor3fv(colour.getRGB());
@@ -1556,10 +1687,11 @@ makecolourlegend(){
 // if there would be too few or too many intervals. It then draws the 
 // vertical line and the small horizontal markers before setting up the font 
 // settings and then drawing the numbers by the markers.
-void TwoDeeOverview::
-makedistancescale(){
+void TwoDeeOverview::makedistancescale()
+{
    double rheight = pixelsToImageUnits(get_height());
    double order=1;
+
    // This finds the order of magnitude (base 10) of rheight with the added 
    // proviso that rheight must be at least five times that order so that 
    // there are enough intervals to draw a decent scale. This gives a range 
@@ -1580,15 +1712,19 @@ makedistancescale(){
    // calculation while i is the result (probably) of several such 
    // calculations, and so has lost more precision.
    int nummarks = (int)(0.9*rheight/order);
+
    // The original order we calculated would give a number of scale widths from 
    // 5-50, but anything more than 10 is probably too much, so this loop doubles 
    // the order value until nummarks falls below 10.
-   while(nummarks>10){
+   while(nummarks>10)
+   {
       order*=2;
       nummarks = (int)(0.9*rheight/order);
    }
+
    //It would be more aesthetically pleasing to centre the scale.
    double padding = (rheight - nummarks*order)/2;
+
    //This makes sure the scale is drawn on top of the flightlines.
    double altitude = rmaxz+1000;
    GLint viewport[4];
@@ -1599,9 +1735,7 @@ makedistancescale(){
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
-   gluUnProject(0, 0, 0,
-                modelview,projection,viewport,
-                &origx,&origy,&origz);
+   gluUnProject(0, 0, 0,modelview,projection,viewport,&origx,&origy,&origz);
    glColor3f(1.0,1.0,1.0);
    glBegin(GL_LINES);
       //Vertical line.
@@ -1612,7 +1746,8 @@ makedistancescale(){
                  origy + padding + nummarks*order,
                  altitude);
       //Horizontal lines.
-      for(int i=0;i<=nummarks;i++){
+      for(int i=0;i<=nummarks;++i)
+      {
          glVertex3d(origx + pixelsToImageUnits(50.0),
                     origy + padding + i*order,
                     altitude);
@@ -1621,25 +1756,25 @@ makedistancescale(){
                     altitude);
       }
    glEnd();
-   for(int i=0;i<=nummarks;i++){
+   for(int i=0;i<=nummarks;++i)
+   {
       char number[30];
       sprintf(number, "%.1lf", i*order);
       glRasterPos3d(origx + pixelsToImageUnits(85.0),
-                    origy + padding + i*order - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT),
-                    altitude);
-
+                    origy + padding + i*order - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT),altitude);
    }
 }
    
 // On a left click, this prepares for panning by storing the initial i
 // position of the cursor.
-bool TwoDeeOverview::
-on_pan_start(GdkEventButton* event){
-   if(event->button==1 || event->button==2){
+bool TwoDeeOverview::on_pan_start(GdkEventButton* event)
+{
+   if(event->button==1 || event->button==2)
+   {
       panStart.move(event->x, event->y, 0);
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
-      // directly as that wuld cause expose events to be called when focus 
+      // directly as that would cause expose events to be called when focus
       // changes, resulting in graphical glitches).
       get_parent()->grab_focus();
       return true;
@@ -1655,14 +1790,11 @@ on_pan_start(GdkEventButton* event){
 // current position of the cursor is taken to be the starting position for 
 // the next drag (if there is one). The view is then refreshed and then the 
 // image is drawn (as a preview).
-bool TwoDeeOverview::
-on_pan(GdkEventMotion* event){
-   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || 
-      (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK){
-
-      centre.translate(-pixelsToImageUnits(event->x-panStart.getX()),
-                       pixelsToImageUnits(event->y-panStart.getY()),
-                       0);
+bool TwoDeeOverview::on_pan(GdkEventMotion* event)
+{
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)
+   {
+      centre.translate(-pixelsToImageUnits(event->x-panStart.getX()), pixelsToImageUnits(event->y-panStart.getY()), 0);
   
       set_overlay_centres(centre);
       panStart.move(event->x, event->y, 0);
@@ -1675,8 +1807,8 @@ on_pan(GdkEventMotion* event){
 }
 
 //At the end of the pan draw the full image.
-bool TwoDeeOverview::
-on_pan_end(GdkEventButton* event){
+bool TwoDeeOverview::on_pan_end(GdkEventButton* event)
+{
    if(event->button==1 || event->button==2)
       return drawviewable(1);
    else 
@@ -1684,9 +1816,10 @@ on_pan_end(GdkEventButton* event){
 }
 
 //Moves view depending on keyboard commands.
-bool TwoDeeOverview::
-on_pan_key(GdkEventKey* event,double scrollspeed){
-   switch(event->keyval){
+bool TwoDeeOverview::on_pan_key(GdkEventKey* event,double scrollspeed)
+{
+   switch(event->keyval)
+   {
       case GDK_w: // Up
          centre.translate(0, pixelsToImageUnits(scrollspeed), 0);
          set_overlay_centres(centre);
@@ -1720,13 +1853,14 @@ on_pan_key(GdkEventKey* event,double scrollspeed){
 // At the beginning of profiling, defines the start point and, for the 
 // moment, the end point of the profile, Prepares the profile box for 
 // drawing and then calls the drawing method.
-bool TwoDeeOverview::
-on_prof_start(GdkEventButton* event){
-   if(event->button==1){
+bool TwoDeeOverview::on_prof_start(GdkEventButton* event)
+{
+   if(event->button==1)
+   {
       profbox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
-      // directly as that wuld cause expose events to be called when focus 
+      // directly as that would cause expose events to be called when focus
       // changes, resulting in graphical glitches).
       get_parent()->grab_focus();
       return drawviewable(2);
@@ -1742,9 +1876,10 @@ on_prof_start(GdkEventButton* event){
 // horizontal differences betweent the start and end points. These are used 
 // to determine the length of the profile and hence the positions of the 
 // vertices of the profile rectangle. Then the drawing method is called.
-bool TwoDeeOverview::
-on_prof(GdkEventMotion* event){
-   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
+bool TwoDeeOverview::on_prof(GdkEventMotion* event)
+{
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
+   {
       profbox->on_(Point(event->x, event->y),get_width(),get_height());
       return drawviewable(2);
    }
@@ -1754,9 +1889,12 @@ on_prof(GdkEventMotion* event){
       return pointinfo(event->x,event->y);
    else return false;
 }
+
 //Draw the full image at the end of selecting a profile.
-bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
-   if(event->button==1){
+bool TwoDeeOverview::on_prof_end(GdkEventButton* event)
+{
+   if(event->button==1)
+   {
       profbox->makeboundaries();
       return drawviewable(2);
    }
@@ -1765,9 +1903,10 @@ bool TwoDeeOverview::on_prof_end(GdkEventButton* event){
    else 
       return false;
 }
+
 //Moves the profile depending on keyboard commands.
-bool TwoDeeOverview::
-on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
+bool TwoDeeOverview::on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift)
+{
    //5 means 0.5 etc. as fraction.
    if(fractionalshift)
       scrollspeed /= 10;
@@ -1783,13 +1922,14 @@ on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift){
 }
 
 //Initialises the coordinates of the fence and then draws preview.
-bool TwoDeeOverview::
-on_fence_start(GdkEventButton* event){
-   if(event->button==1){
+bool TwoDeeOverview::on_fence_start(GdkEventButton* event)
+{
+   if(event->button==1)
+   {
       fencebox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
-      // directly as that wuld cause expose events to be called when focus 
+      // directly as that would cause expose events to be called when focus
       // changes, resulting in graphical glitches).
       get_parent()->grab_focus();
       return drawviewable(2);
@@ -1803,9 +1943,10 @@ on_fence_start(GdkEventButton* event){
 }
 
 //Updates end coordinates of the fence and then draws preview.
-bool TwoDeeOverview::
-on_fence(GdkEventMotion* event){
-   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
+bool TwoDeeOverview::on_fence(GdkEventMotion* event)
+{
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
+   {
       fencebox->on_(Point(event->x, event->y) ,get_width(),get_height());
       fencebox->drawinfo();
       return drawviewable(2);
@@ -1818,9 +1959,10 @@ on_fence(GdkEventMotion* event){
 }
 
 //Draws the main image one more.
-bool TwoDeeOverview::
-on_fence_end(GdkEventButton* event){
-   if(event->button==1){
+bool TwoDeeOverview::on_fence_end(GdkEventButton* event)
+{
+   if(event->button==1)
+   {
       fencebox->makeboundaries();
       return drawviewable(2);
    }
@@ -1831,8 +1973,8 @@ on_fence_end(GdkEventButton* event){
 }
 
 //Moves the fence depending on keyboard commands.
-bool TwoDeeOverview::
-on_fence_key(GdkEventKey* event,double scrollspeed){
+bool TwoDeeOverview::on_fence_key(GdkEventKey* event,double scrollspeed)
+{
    bool moved = fencebox->on_key(event,pixelsToImageUnits(scrollspeed),false);
    if(!moved)
       return false;
@@ -1842,9 +1984,10 @@ on_fence_key(GdkEventKey* event,double scrollspeed){
 }
 
 //Find the starting coordinates of the ruler and set the label values to zero.
-bool TwoDeeOverview::
-on_ruler_start(GdkEventButton* event){
-   if(event->button==1){
+bool TwoDeeOverview::on_ruler_start(GdkEventButton* event)
+{
+   if(event->button==1)
+   {
       rulerEnd.move(centre.getX() + pixelsToImageUnits(event->x-get_width()/2),
                     centre.getY() - pixelsToImageUnits(event->y-get_height()/2), 
                     0);
@@ -1870,13 +2013,14 @@ on_ruler_start(GdkEventButton* event){
    else 
       return false;
 }
+
 // Find the current cursor coordinates in image terms (as opposed to 
 // window/screen terms) and then update the label with the distances. 
 // Then draw the ruler.
-bool TwoDeeOverview::
-on_ruler(GdkEventMotion* event){
-   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK){
-
+bool TwoDeeOverview::on_ruler(GdkEventMotion* event)
+{
+   if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
+   {
       rulerEnd.move(centre.getX() + pixelsToImageUnits(event->x-get_width()/2),
                     centre.getY() - pixelsToImageUnits(event->y-get_height()/2), 
                     0);
@@ -1907,8 +2051,8 @@ on_ruler(GdkEventMotion* event){
 }
 
 //Draw again.
-bool TwoDeeOverview::
-on_ruler_end(GdkEventButton* event){
+bool TwoDeeOverview::on_ruler_end(GdkEventButton* event)
+{
    if(event->button==1)
       return drawviewable(2);
    else if(event->button==2)
@@ -1918,8 +2062,8 @@ on_ruler_end(GdkEventButton* event){
 }
 
 //Make the ruler as a thick line.
-void TwoDeeOverview::
-makerulerbox(){
+void TwoDeeOverview::makerulerbox()
+{
    //This makes sure the ruler is drawn on top of the flightlines.
    double altitude = rmaxz+1000;
    glColor3f(1.0,1.0,1.0);
@@ -1938,19 +2082,22 @@ makerulerbox(){
 // event occured. Then, depending on the direction of the scroll, the 
 // zoomlevel is increased or decreased. Then the centre is moved to where 
 // the centre of the window will now lie. The image is then drawn.
-bool TwoDeeOverview::
-on_zoom(GdkEventScroll* event){
+bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
+{
 
    centre.translate(pixelsToImageUnits(event->x-get_width()/2),
                     -pixelsToImageUnits(event->y-get_height()/2), 
                     0);
-   if(zoomlevel>=1){
+
+   if(zoomlevel>=1)
+   {
       if(event->direction==GDK_SCROLL_UP)
          zoomlevel+=pow(zoomlevel,zoompower)/2;
       else if(event->direction==GDK_SCROLL_DOWN)
          zoomlevel-=pow(zoomlevel,zoompower)/2;
    }
-   else if(zoomlevel>=0.2){
+   else if(zoomlevel>=0.2)
+   {
       if(event->direction==GDK_SCROLL_UP)
          zoomlevel+=0.1;
       else if(event->direction==GDK_SCROLL_DOWN)
@@ -1965,20 +2112,23 @@ on_zoom(GdkEventScroll* event){
                     pixelsToImageUnits(event->y-get_height()/2), 
                     0);
    resetview();
+
    // This causes the event box containing the overview to grab the focus, 
    // and so to allow keyboard control of the overview (this is not done 
-   // directly as that wuld cause expose events to be called when focus 
+   // directly as that would cause expose events to be called when focus
    // changes, resulting in graphical glitches).
    get_parent()->grab_focus();
    set_overlay_centres(centre);
    set_overlay_zoomlevels(zoomlevel);
    return drawviewable(1);
 }
+
 //Zooms depending on keybaord signals.
-bool TwoDeeOverview::
-on_zoom_key(GdkEventKey* event){
+bool TwoDeeOverview::on_zoom_key(GdkEventKey* event)
+{
    if(zoomlevel>=1)
-      switch(event->keyval){
+      switch(event->keyval)
+      {
          case GDK_i: // In
          case GDK_I:
          case GDK_g:
@@ -1996,7 +2146,8 @@ on_zoom_key(GdkEventKey* event){
             break;
    }
    else if(zoomlevel>=0.2)
-      switch(event->keyval){
+      switch(event->keyval)
+      {
          case GDK_i: // In
          case GDK_I:
          case GDK_g:
@@ -2013,7 +2164,8 @@ on_zoom_key(GdkEventKey* event){
             return false;
             break;
    }
-   else switch(event->keyval){
+   else switch(event->keyval)
+   {
          case GDK_i: // In only
          case GDK_I:
          case GDK_g:

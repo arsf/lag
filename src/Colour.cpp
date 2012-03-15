@@ -42,6 +42,24 @@ Colour::Colour(const std::string& colourName)
    }
 }
 
+bool operator==(Colour& lhs, Colour& rhs)
+{
+	for(int i = 0; i < 3; ++i)
+	{
+		if(lhs.getRGB()[i] != rhs.getRGB()[i])
+			return false;
+	}
+	return true;
+}
+
+bool operator!=(Colour& lhs, Colour& rhs)
+{
+	if (lhs == rhs)
+		return false;
+	else
+		return true;
+}
+
 void Colour::multiply(Colour other)
 {
    colourValues[0] *= other.getR();

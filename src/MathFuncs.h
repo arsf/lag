@@ -26,20 +26,15 @@
 #include <vector>
 #include <iterator>
 #include <cmath>
-//#include "QuadtreeStructs.h"
 
 #include "PointBucket.h"
-//#include "LidarPoint.h"
+
 using namespace std;
 
 // Returns the value of the given percentile of a dataset. Makes a histogram 
 // of the dataset and goes along it until it gets a total count corresponding 
 // with the percentile. NOTE: not currently used by anything. Keep?
-double percentilevalue(double* data,
-                       int datasize,
-                       double percentile,
-                       double minval,
-                       double maxval);
+double percentilevalue(double* data, int datasize, double percentile, double minval, double maxval);
 
 //Determines whether the points in the sent bucket fit within the profile area.
 bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners, bool profileNoisePoints);

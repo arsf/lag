@@ -31,29 +31,37 @@
 #include "../Profile.h"
 #include "AdvancedOptionsWindow.h"
 
-class ProfileWindow{
+class ProfileWindow
+{
 public:
    ProfileWindow(Profile*,
                  TwoDeeOverview*,
                  Gtk::Window*,
                  Gtk::Window*,
                  Gtk::EventBox*,
-                 Glib::RefPtr<Gtk::Builder>,
+                 const Glib::RefPtr<Gtk::Builder>&,
                  AdvancedOptionsWindow*);
    ~ProfileWindow();
    //This grabs the profile from the overview.
    void on_showprofilebutton_clicked();
-protected:
+
+private:
    Profile *prof;
    TwoDeeOverview *tdo;
    AdvancedOptionsWindow *aow;
+
    // This contains the profile area and takes keyboard input for it.
    Gtk::EventBox *eventboxprof;
    Gtk::Window *profilewindow;
    Gtk::Window *overviewwindow;
+
    // Check button determining whether the height scale is viewable on 
    // the profile.
    Gtk::CheckMenuItem *showheightscalecheck;
+
+
+   Gtk::RadioMenuItem* colourbynonemenuprof;
+   Gtk::RadioMenuItem* brightnessbynonemenuprof;
    //Determines whether the profile is coloured by intensity.
    Gtk::RadioMenuItem *colourbyintensitymenuprof;
    //Determines whether the profile is coloured by height.
@@ -70,29 +78,46 @@ protected:
    Gtk::RadioMenuItem *brightnessbyheightmenuprof;
    //Determines the width of the points in the profile in pixels.
    Gtk::SpinButton *pointwidthselectprof;
+
    //Whether to show the points on the profile.
    Gtk::ToggleToolButton *pointshowtoggle;
    //Whether to show the lines on the profile.
    Gtk::ToggleToolButton *lineshowtoggle;
+
+   Gtk::ToolButton *returnbuttonprof;
+   Gtk::ToolButton *showprofilebutton;
+   Gtk::ToolButton *classbutton;
+
    //The range of the moving average for the lines on the profile.
    Gtk::SpinButton *movingaveragerangeselect;
+
    //Toggle button determining whether mouse dragging selects the fence.
    Gtk::ToggleToolButton *fencetoggleprof;
+
    //Toggle button determining whether the ruler is viewable on the profile.
    Gtk::ToggleToolButton *rulertoggle;
+
    //Determines the width of the fence in metres when slanted.
    Gtk::SpinButton *slantwidthselectprof;
+
    //Determine whether the profile fence is orthogonal or slanted.
    Gtk::ToggleToolButton *orthogonalprof;
    Gtk::ToggleToolButton *slantedprof;
+
    // This determines what to classify points as when selected through the 
    // profile.
    Gtk::SpinButton *classificationselect;
 
+   // Initialisation
+   void load_xml(const Glib::RefPtr<Gtk::Builder>&);
+   void connect_signals();
+
    //When toggled, the height scale is shown on the profile.
    void on_showheightscalecheck();
+
    //Does the same as on_colouractivated, except for the profile.
    void on_colouractivatedprof();
+
    //Does the same as on_brightnessactivated, except for the profile.
    void on_brightnessactivatedprof();
 

@@ -34,11 +34,13 @@
 #include "AdvancedOptionsWindow.h"
 #include "FileSaver.h"
 #include "TwoDeeOverviewWindow.h"
-class FileOpener{
+
+class FileOpener
+{
 public:
    FileOpener(TwoDeeOverview*,
               Profile*,
-              Glib::RefPtr<Gtk::Builder>,
+              const Glib::RefPtr<Gtk::Builder>&,
               AdvancedOptionsWindow*,
               FileSaver*,
               Quadtree*,
@@ -51,11 +53,12 @@ public:
 
    int testfilename(int argc,char *argv[],bool start,bool usearea);
 
-   void show(){ 
+   inline void show()
+   {
       filechooserdialog->present();
    }
 
-protected:
+private:
    int numlines;
    TwoDeeOverview *tdo;
    Profile* prof;
@@ -63,44 +66,66 @@ protected:
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
    Quadtree *lidardata;
+
    //For opening files.
    Gtk::FileChooserDialog *filechooserdialog;
+
    //How many points to skip while loading one.
    Gtk::SpinButton *pointskipselect;
+
    // Check button determining whether the (overview) fence is used for 
    // loading flightlines.
    Gtk::CheckButton *fenceusecheck;
+
    //The type code for opening ASCII files.
    Gtk::Entry *asciicodeentry;
+
    // Scale factor entries and check box
    Gtk::Entry* scaleFactorEntryX;
    Gtk::Entry* scaleFactorEntryY;
    Gtk::Entry* scaleFactorEntryZ;
    Gtk::CheckButton* btnUseDefault;
+
    //The maximumum number of points to hold in cache.
    Gtk::SpinButton *cachesizeselect;
+
    //This displays the cache size in terms of gigabytes, approximately.
    Gtk::Label *cachesizeGBlabel;
+
    //This displays the errors and so on that occur in loading.
    Gtk::Label *loadoutputlabel;
+
    //Contains the overview.
    Gtk::EventBox *eventboxtdo;
+
    //Contains the profile.
    Gtk::EventBox *eventboxprof;
    Gtk::SpinButton *resbaseselect;
    Gtk::SpinButton *resdepthselect;
+
+   Gtk::MenuItem* openfilemenuitem;
+
    //Path of file for error message output.
    string loaderroroutputfile;
+
    //Stream outputting error messages from the quadtree to a file.
    ofstream loaderroroutput;
+
    //Stringstream getting error messages from the quadtree.
    ostringstream *loaderrorstream;
+
    //Whether or not any files have already been loaded in this session.
    bool loadedanyfiles;
+
    //How many points to hold in cache. 1 GB ~= 25000000 points.
    int cachelimit;
+
    //How many points in each bucket, maximum.
    int bucketlimit;
+
+   void load_xml(const Glib::RefPtr<Gtk::Builder>&);
+
+   void connect_signals();
 
    void on_usedefault_changed();
 

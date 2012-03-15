@@ -25,228 +25,41 @@
 #include <vector>
 #include "ProfileWindow.h"
 
-ProfileWindow::
-ProfileWindow(Profile *prof,
-              TwoDeeOverview *tdo,
-              Gtk::Window *profilewindow,
-              Gtk::Window *overviewwindow,
-              Gtk::EventBox *eventboxprof,
-              Glib::RefPtr<Gtk::Builder> builder,
-              AdvancedOptionsWindow *aow){
+ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *profilewindow, Gtk::Window *overviewwindow,
+							 Gtk::EventBox *eventboxprof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow)
+:
+		prof			(prof),
+		tdo				(tdo),
+		aow				(aow),
+		eventboxprof	(eventboxprof),
+		profilewindow	(profilewindow),
+		overviewwindow	(overviewwindow)
+{
+	load_xml(builder);
 
-   this->prof = prof;
-   this->tdo = tdo;
-   this->profilewindow = profilewindow;
-   this->overviewwindow = overviewwindow;
-   this->eventboxprof = eventboxprof;
-   this->aow = aow;
-   eventboxprof->signal_key_press_event().
-      connect(sigc::mem_fun(*this,&ProfileWindow::
-              on_prof_key_press));
-   profilewindow->set_title("LAG Profile");
+	profilewindow->set_title("LAG Profile");
 
+	pointwidthselectprof->set_value(2);
+	movingaveragerangeselect->set_value(5);
+	slantwidthselectprof->set_value(5);
+	classificationselect->set_value(7);
 
-   builder->get_widget("showheightscalecheck",
-                       showheightscalecheck);
-   if(showheightscalecheck)
-      showheightscalecheck->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_showheightscalecheck));
-   //For determining how to colour the profile:
-   //
-   Gtk::RadioMenuItem *colourbynonemenuprof = NULL;
-   builder->get_widget("colourbynonemenuprof",
-                      colourbynonemenuprof);
-   if(colourbynonemenuprof)
-      colourbynonemenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
+	connect_signals();
 
-   builder->get_widget("colourbyintensitymenuprof",
-                      colourbyintensitymenuprof);
-   if(colourbyintensitymenuprof)
-      colourbyintensitymenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
+	profilewindow->show_all();
 
-   builder->get_widget("colourbyheightmenuprof",
-                      colourbyheightmenuprof);
-   if(colourbyheightmenuprof)
-      colourbyheightmenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
-
-   builder->get_widget("colourbyflightlinemenuprof",
-                      colourbyflightlinemenuprof);
-   if(colourbyflightlinemenuprof)
-      colourbyflightlinemenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
-
-   builder->get_widget("colourbyclassificationmenuprof",
-                      colourbyclassificationmenuprof);
-   if(colourbyclassificationmenuprof)
-      colourbyclassificationmenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
-
-   builder->get_widget("colourbyreturnmenuprof",
-                      colourbyreturnmenuprof);
-   if(colourbyreturnmenuprof)
-      colourbyreturnmenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_colouractivatedprof));
-
-
-   //For determining how to shade the profile:
-   Gtk::RadioMenuItem *brightnessbynonemenuprof = NULL;
-   builder->get_widget("brightnessbynonemenuprof",
-                      brightnessbynonemenuprof);
-   if(brightnessbynonemenuprof)
-      brightnessbynonemenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_brightnessactivatedprof));
-
-   builder->get_widget("brightnessbyintensitymenuprof",
-                      brightnessbyintensitymenuprof);
-   if(brightnessbyintensitymenuprof)
-      brightnessbyintensitymenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_brightnessactivatedprof));
-
-   builder->get_widget("brightnessbyheightmenuprof",
-                      brightnessbyheightmenuprof);
-   if(brightnessbyheightmenuprof)
-      brightnessbyheightmenuprof->signal_activate().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_brightnessactivatedprof));
-
-   //The fence:
-   builder->get_widget("fencetoggleprof",fencetoggleprof);
-   if(fencetoggleprof)
-      fencetoggleprof->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_fencetoggleprof));
-   //The ruler:
-   builder->get_widget("rulertoggle",rulertoggle);
-   if(rulertoggle)
-      rulertoggle->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_rulertoggle));
-
-   //For overview image viewing attributes:
-   builder->get_widget("pointwidthselectprof",
-                      pointwidthselectprof);
-   if(pointwidthselectprof){
-      // Sensible values
-//      pointwidthselectprof->set_range(1,300);
-      pointwidthselectprof->set_value(2);
-      pointwidthselectprof->signal_value_changed().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_pointwidthselectedprof));
-   }
-   builder->get_widget("pointshowtoggle",
-                      pointshowtoggle);
-   if(pointshowtoggle)
-      pointshowtoggle->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_pointshowtoggle));
-
-
-   builder->get_widget("lineshowtoggle",
-                      lineshowtoggle);
-   if(lineshowtoggle)
-      lineshowtoggle->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_lineshowtoggle));
-
-   builder->get_widget("movingaveragerangeselect",
-                      movingaveragerangeselect);
-
-   if(movingaveragerangeselect){
-//      movingaveragerangeselect->set_range(0,30000);
-      movingaveragerangeselect->set_value(5);
-      movingaveragerangeselect->signal_value_changed().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_movingaveragerangeselect));
-   }
-   Gtk::ToolButton *returnbuttonprof = NULL;
-   builder->get_widget("returnbuttonprof",
-                      returnbuttonprof);
-   if(returnbuttonprof)
-      returnbuttonprof->signal_clicked().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_returnbuttonprof_clicked));
-
-   Gtk::ToolButton *showprofilebutton = NULL;
-   builder->get_widget("showprofilebutton",
-                      showprofilebutton);
-   if(showprofilebutton)
-      showprofilebutton->signal_clicked().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_showprofilebutton_clicked));
-
-   Gtk::ToolButton *classbutton = NULL;
-
-   builder->get_widget("classbutton",
-                      classbutton);
-   if(classbutton)
-      classbutton->signal_clicked().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_classbutton_clicked));
-
-   builder->get_widget("orthogonalprof",
-                      orthogonalprof);
-   if(orthogonalprof)
-      orthogonalprof->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_orthogonalprof));
-
-   builder->get_widget("slantedprof",
-                      slantedprof);
-   if(slantedprof)
-      slantedprof->signal_toggled().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_slantedprof));
-
-   builder->get_widget("slantwidthselectprof",
-                      slantwidthselectprof);
-
-   if(slantwidthselectprof){
-
-//      slantwidthselectprof->set_range(0,30000);
-      slantwidthselectprof->set_value(5);
-      slantwidthselectprof->signal_value_changed().
-         connect(sigc::mem_fun(*this,&ProfileWindow::
-                 on_slantwidthselectedprof));
-   }
-   builder->get_widget("classificationselect",
-                      classificationselect);
-
-   classificationselect->set_value(7);
-
-
-   profilewindow->show_all();
-//   prof->set_size_request(200,200);
-
-   //Initialisations:
-   prof->setshowheightscale(showheightscalecheck->get_active());
-
-   prof->setpointwidth(pointwidthselectprof->get_value());
-   prof->setdrawpoints(pointshowtoggle->get_active());
-   prof->setdrawmovingaverage(lineshowtoggle->get_active());
-   prof->setmavrgrange(movingaveragerangeselect->get_value());
-   prof->setslantwidth(slantwidthselectprof->get_value());
-   prof->setslantwidth(slantwidthselectprof->get_value());
-   prof->setslanted(slantedprof->get_active());
+	prof->setshowheightscale(showheightscalecheck->get_active());
+	prof->setpointwidth(pointwidthselectprof->get_value());
+	prof->setdrawpoints(pointshowtoggle->get_active());
+	prof->setdrawmovingaverage(lineshowtoggle->get_active());
+	prof->setmavrgrange(movingaveragerangeselect->get_value());
+	prof->setslantwidth(slantwidthselectprof->get_value());
+	prof->setslantwidth(slantwidthselectprof->get_value());
+	prof->setslanted(slantedprof->get_active());
 }
 
-
-
-
-
-
-ProfileWindow::~ProfileWindow(){
+ProfileWindow::~ProfileWindow()
+{
    delete classificationselect;
    delete showheightscalecheck;
    delete colourbyintensitymenuprof;
@@ -267,14 +80,69 @@ ProfileWindow::~ProfileWindow(){
    delete slantedprof;
 }
 
+void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
+{
+	builder->get_widget("showheightscalecheck", 			showheightscalecheck);
+	builder->get_widget("colourbynonemenuprof",				colourbynonemenuprof);
+	builder->get_widget("colourbyintensitymenuprof",		colourbyintensitymenuprof);
+	builder->get_widget("colourbyheightmenuprof",			colourbyheightmenuprof);
+	builder->get_widget("colourbyflightlinemenuprof",		colourbyflightlinemenuprof);
+	builder->get_widget("colourbyclassificationmenuprof",	colourbyclassificationmenuprof);
+	builder->get_widget("colourbyreturnmenuprof",			colourbyreturnmenuprof);
+	builder->get_widget("brightnessbynonemenuprof",			brightnessbynonemenuprof);
+	builder->get_widget("brightnessbyintensitymenuprof",	brightnessbyintensitymenuprof);
+	builder->get_widget("brightnessbyheightmenuprof",		brightnessbyheightmenuprof);
+	builder->get_widget("fencetoggleprof",					fencetoggleprof);
+	builder->get_widget("rulertoggle",						rulertoggle);
+	builder->get_widget("pointwidthselectprof", 			pointwidthselectprof);
+	builder->get_widget("pointshowtoggle",					pointshowtoggle);
+	builder->get_widget("lineshowtoggle",	                lineshowtoggle);
+	builder->get_widget("movingaveragerangeselect",	        movingaveragerangeselect);
+	builder->get_widget("returnbuttonprof",	                returnbuttonprof);
+	builder->get_widget("showprofilebutton",	            showprofilebutton);
+	builder->get_widget("classbutton",	                    classbutton);
+	builder->get_widget("orthogonalprof",	                orthogonalprof);
+	builder->get_widget("slantedprof",	                    slantedprof);
+	builder->get_widget("slantwidthselectprof",             slantwidthselectprof);
+	builder->get_widget("classificationselect",	            classificationselect);
+}
+
+void ProfileWindow::connect_signals()
+{
+	eventboxprof->signal_key_press_event().connect(sigc::mem_fun(*this,&ProfileWindow::on_prof_key_press));
+	showheightscalecheck->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_showheightscalecheck));
+	colourbynonemenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	colourbyintensitymenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	colourbyheightmenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	colourbyflightlinemenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	colourbyclassificationmenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	colourbyreturnmenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_colouractivatedprof));
+	brightnessbynonemenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_brightnessactivatedprof));
+	brightnessbyintensitymenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_brightnessactivatedprof));
+	brightnessbyheightmenuprof->signal_activate().connect(sigc::mem_fun(*this,&ProfileWindow::on_brightnessactivatedprof));
+	fencetoggleprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_fencetoggleprof));
+	rulertoggle->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_rulertoggle));
+	pointwidthselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&ProfileWindow::on_pointwidthselectedprof));
+	pointshowtoggle->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_pointshowtoggle));
+	lineshowtoggle->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_lineshowtoggle));
+	movingaveragerangeselect->signal_value_changed().connect(sigc::mem_fun(*this,&ProfileWindow::on_movingaveragerangeselect));
+	returnbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_returnbuttonprof_clicked));
+	showprofilebutton->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_showprofilebutton_clicked));
+	classbutton->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_classbutton_clicked));
+	orthogonalprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_orthogonalprof));
+	slantedprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantedprof));
+	slantwidthselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantwidthselectedprof));
+}
+
 //When toggled, the height scale is shown on the profile.
-void ProfileWindow::on_showheightscalecheck(){
+void ProfileWindow::on_showheightscalecheck()
+{
    prof->setshowheightscale(showheightscalecheck->get_active());
    if(prof->is_realized())prof->drawviewable(2);
 }
 //Does the same as on_colouractivated, except for the profile.
-void ProfileWindow::on_colouractivatedprof(){
-  
+void ProfileWindow::on_colouractivatedprof()
+{
    if (colourbyintensitymenuprof->get_active())
       prof->setColourBy(prof->colourByIntensity);
    else if (colourbyheightmenuprof->get_active())
@@ -288,18 +156,12 @@ void ProfileWindow::on_colouractivatedprof(){
    else
       prof->setColourBy(prof->colourByNone);
 
-//   prof->setintensitycolour(colourbyintensitymenuprof->get_active());
-//   prof->setheightcolour(colourbyheightmenuprof->get_active());
-//   prof->setlinecolour(colourbyflightlinemenuprof->get_active());
-//   prof->setclasscolour(colourbyclassificationmenuprof->get_active());
-//   prof->setreturncolour(colourbyreturnmenuprof->get_active());
-//
-   if(prof->is_realized())prof->drawviewable(1);
+   if(prof->is_realized())
+	   prof->drawviewable(1);
 }
 //Does the same as on_brightnessactivated, except for the profile.
-void ProfileWindow::on_brightnessactivatedprof(){
-
-
+void ProfileWindow::on_brightnessactivatedprof()
+{
    if (brightnessbyintensitymenuprof->get_active())
       prof->setBrightnessBy(prof->brightnessByIntensity);
    else if (brightnessbyheightmenuprof->get_active())
@@ -307,20 +169,25 @@ void ProfileWindow::on_brightnessactivatedprof(){
    else
       prof->setBrightnessBy(prof->brightnessByNone);
 
-//   prof->setintensitybrightness(brightnessbyintensitymenuprof->get_active());
-//   prof->setheightbrightness(brightnessbyheightmenuprof->get_active());
    if(prof->is_realized())prof->drawviewable(1);
 }
 
 //This grabs the profile from the overview.
-void ProfileWindow::on_showprofilebutton_clicked(){
-   if(tdo->is_realized())profilewindow->present();
+void ProfileWindow::on_showprofilebutton_clicked()
+{
+   if(tdo->is_realized())
+	   profilewindow->present();
+
    // These are NOT to be deleted here as the arrays they will point to 
    // will be managed by the TwoDeeOVerview object.
-   double *profxs = NULL,*profys = NULL;
+   double* profxs = NULL;
+   double* profys = NULL;
    int profps = 0;
+
    if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
-   if(profxs!=NULL&&profys!=NULL){
+
+   if(profxs!=NULL && profys!=NULL)
+   {
       // Showprofile uses the getpoint() method, and that must never be used 
       // by more than one thread at once.
       tdo->setpausethread(true);
@@ -331,39 +198,49 @@ void ProfileWindow::on_showprofilebutton_clicked(){
 }
 
 //This returns the profile to its original position.
-void ProfileWindow::on_returnbuttonprof_clicked(){
-   if(prof->is_realized())prof->returntostart();
+void ProfileWindow::on_returnbuttonprof_clicked()
+{
+   if(prof->is_realized())
+	   prof->returntostart();
 }
 
 //Does the same as on_pointwidthselected, except for the profile.
-void ProfileWindow::on_pointwidthselectedprof(){
+void ProfileWindow::on_pointwidthselectedprof()
+{
    prof->setpointwidth(pointwidthselectprof->get_value());
-   if(prof->is_realized())prof->drawviewable(2);
+   if(prof->is_realized())
+	   prof->drawviewable(2);
 }
+
 //Determines whether to display the points on the profile.
-void ProfileWindow::on_pointshowtoggle(){
+void ProfileWindow::on_pointshowtoggle()
+{
    prof->setdrawpoints(pointshowtoggle->get_active());
-   if(prof->is_realized())prof->drawviewable(1);
+   if(prof->is_realized())
+	   prof->drawviewable(1);
 }
 
 //Determines whether to display the (best fit) lines on the profile.
-void ProfileWindow::on_lineshowtoggle(){
+void ProfileWindow::on_lineshowtoggle()
+{
    prof->setdrawmovingaverage(lineshowtoggle->get_active());
-   if(prof->is_realized())prof->drawviewable(1);
+   if(prof->is_realized())
+	   prof->drawviewable(1);
 }
 
 // The best fit is a moving average, and this changes the range, and 
 // therefore the shape of the line.
-void ProfileWindow::
-on_movingaveragerangeselect(){
+void ProfileWindow::on_movingaveragerangeselect()
+{
    prof->setmavrgrange(movingaveragerangeselect->get_value());
    prof->make_moving_average();
-   if(prof->is_realized())prof->drawviewable(1);
+   if(prof->is_realized())
+	   prof->drawviewable(1);
 }
 
 //This classifies the points surrounded by the fence.
-void ProfileWindow::
-on_classbutton_clicked(){
+void ProfileWindow::on_classbutton_clicked()
+{
    // Nothing else must read the points (or indeed write to them!) 
    // while the classifier is writing to them. Also, it uses the 
    // getpoint() method.
@@ -376,9 +253,10 @@ on_classbutton_clicked(){
 }
 
 //Toggles whether clicking and dragging will select the fence in the profile.
-void ProfileWindow::
-on_fencetoggleprof(){
-   if(fencetoggleprof->get_active()){
+void ProfileWindow::on_fencetoggleprof()
+{
+   if(fencetoggleprof->get_active())
+   {
       if(rulertoggle->get_active())
          rulertoggle->set_active(false);
 
@@ -394,14 +272,15 @@ on_fencetoggleprof(){
          prof->drawviewable(1);
    }
 }
-void ProfileWindow::
-on_slantwidthselectedprof(){
+
+void ProfileWindow::on_slantwidthselectedprof()
+{
    prof->setslantwidth(slantwidthselectprof->get_value());
    if(prof->is_realized())prof->drawviewable(1);
 }
 
-void ProfileWindow::
-on_orthogonalprof(){
+void ProfileWindow::on_orthogonalprof()
+{
    if(orthogonalprof->get_active())
       if(slantedprof->get_active())
          slantedprof->set_active(false);
@@ -414,8 +293,8 @@ on_orthogonalprof(){
       prof->drawviewable(1);
 }
 
-void ProfileWindow::
-on_slantedprof(){
+void ProfileWindow::on_slantedprof()
+{
    if(slantedprof->get_active())
       if(orthogonalprof->get_active())
          orthogonalprof->set_active(false);
@@ -432,9 +311,10 @@ on_slantedprof(){
 
 // When toggled, the profile view goes into rulering mode. When untoggled, 
 // rulering mode ends.
-void ProfileWindow::
-on_rulertoggle(){
-   if(rulertoggle->get_active()){
+void ProfileWindow::on_rulertoggle()
+{
+   if(rulertoggle->get_active())
+   {
       if(fencetoggleprof->get_active())
          fencetoggleprof->set_active(false);
       
@@ -443,7 +323,8 @@ on_rulertoggle(){
       if(prof->is_realized())
          prof->drawviewable(1);
    }
-   else{
+   else
+   {
       prof->unsetupruler();
       if(prof->is_realized()&&!rulertoggle->get_active()&&
          !fencetoggleprof->get_active())
@@ -454,8 +335,8 @@ on_rulertoggle(){
 
 // This takes keyboard input from the event box around the profile area and 
 // interprets it.
-bool ProfileWindow::
-on_prof_key_press(GdkEventKey* event){
+bool ProfileWindow::on_prof_key_press(GdkEventKey* event)
+{
    // Do nothing unless the overview and profile are realized, otherwise 
    // segfaults may happen.
    if(!tdo->is_realized())
@@ -464,7 +345,8 @@ on_prof_key_press(GdkEventKey* event){
    if(!prof->is_realized())
       return false;
   
-   switch(event->keyval){
+   switch(event->keyval)
+   {
       //Grab new profile.
       case GDK_P:
       case GDK_p:
@@ -550,10 +432,11 @@ on_prof_key_press(GdkEventKey* event){
    }
 }
 
-bool ProfileWindow::
-on_profile_shift(GdkEventKey* event){
+bool ProfileWindow::on_profile_shift(GdkEventKey* event)
+{
    //Translate signal to be compatible with called methods.
-   switch(event->keyval){
+   switch(event->keyval)
+   {
       case GDK_r:
       case GDK_R:
          event->keyval = GDK_W;
@@ -592,7 +475,8 @@ on_profile_shift(GdkEventKey* event){
       tdo->getprofile(profxs,profys,profps);
    // Changed centre x and y values etc. so that points in profile remain 
    // within the viewing box (i.e. the clipping planes).
-   if(profxs!=NULL&&profys!=NULL){
+   if(profxs!=NULL&&profys!=NULL)
+   {
       shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());
       if(!shifted)return shifted;
       // Showprofile uses the getpoint() method, and that must never be used 

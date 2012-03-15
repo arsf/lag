@@ -21,6 +21,7 @@
  *
  * */
 #include <iostream>
+
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include "Quadtree.h"
@@ -82,7 +83,7 @@ string findgladepath(char* programpath)
 
 int main(int argc, char** argv)
 {
-   cout << "Build number: 2012.1.33.7" << endl;
+   cout << "Build number: 2012.1.3.37" << endl;
 
    //This allows the creation and running of threads.
    Glib::thread_init();
@@ -92,7 +93,7 @@ int main(int argc, char** argv)
    Gtk::Main gtkmain(argc, argv);
 
    //This will extract widgets from the glade file when directed.
-   Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
+   const Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
    try
    {
 	   builder->add_from_file(findgladepath(argv[0]));
@@ -100,15 +101,19 @@ int main(int argc, char** argv)
    catch(const Glib::FileError& ex)
    {
 	   std::cerr << "FileError: " << ex.what() << std::endl;
+	   return 1;
    }
    catch(const Glib::MarkupError& ex)
    {
 	   std::cerr << "MarkupError: " << ex.what() << std::endl;
+	   return 1;
    }
    catch(const Gtk::BuilderError& ex)
    {
 	   std::cerr << "BuilderError: " << ex.what() << std::endl;
+	   return 1;
    }
+
 
    Gtk::GL::init(argc, argv);
    Glib::RefPtr<Gdk::GL::Config> glconfig;
@@ -207,5 +212,6 @@ int main(int argc, char** argv)
    if(tdo!=NULL)delete tdo;
    if(prof != NULL)delete prof;
    if(lidardata != NULL)delete lidardata;
+
    return 0;
 }

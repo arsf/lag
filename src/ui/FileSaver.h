@@ -35,35 +35,41 @@ class FileSaver{
 public:
    FileSaver(TwoDeeOverview*,
              Profile*,
-             Glib::RefPtr<Gtk::Builder>,
+             const Glib::RefPtr<Gtk::Builder>&,
              Quadtree*);
 
    ~FileSaver();
 
-   void show(){ 
+   inline void show()
+   {
       filesaverdialog->present(); 
    }
 
-   void setlinerange(int first, int second){ 
+   inline void setlinerange(int first, int second)
+   {
       flightlinesaveselect->set_range(first,second); 
    }
 
-   void setlabeltext(string text){ 
+   inline void setlabeltext(string text)
+   {
       flightlinelistlabel->set_text(text); 
    }
 
    void on_flightlinesaveselected();
 
-   void setlidardata(Quadtree *lidardata){ 
+   inline void setlidardata(Quadtree *lidardata)
+   {
       this->lidardata = lidardata; 
    }
 
-protected:
+private:
 
    TwoDeeOverview *tdo;
    Profile *prof;
+
    //For opening files.
    Gtk::FileChooserDialog *filesaverdialog;
+
    //This displays the cache size in terms of gigabytes, approximately.
    Gtk::Label *flightlinelistlabel;
    Gtk::SpinButton *flightlinesaveselect;
@@ -75,6 +81,9 @@ protected:
    Gtk::Entry* scaleFactorEntryY;
    Gtk::Entry* scaleFactorEntryZ;
    Gtk::CheckButton* btnUseDefault;
+
+   void load_xml(const Glib::RefPtr<Gtk::Builder>&);
+   void connect_signals();
 
    void on_filesaverdialogresponse(int response_id);
    void on_usedefault_changed();
