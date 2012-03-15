@@ -36,20 +36,50 @@
 
 TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
                Quadtree* lidardata, int bucketlimit, Gtk::Label *rulerlabel)
-:	LagDisplay(fontpath, config,lidardata,bucketlimit)
+:	LagDisplay(fontpath, config,lidardata,bucketlimit),
+		drawnsofarminx		(0),
+		drawnsofarminy		(0),
+		drawnsofarmaxx		(1),
+		drawnsofarmaxy		(1),
+		resolutionbase		(1),
+		resolutiondepth		(1),
+		numbuckets			(0),
+		raiseline			(false),
+		linetoraise			(0),
+		drawnsinceload		(false),
+		reversez			(false),
+		showlegend			(false),
+		showdistancescale	(false),
+		drawneverything		(false),
+		pointcount			(0),
+		vertices			(NULL),
+		colours				(NULL),
+		tdoDisplayNoise		(true),
+		rulerlabel			(rulerlabel),
+		profiling			(false),
+		showprofile			(false),
+		fencing				(false),
+		showfence			(false),
+		rulerwidth			(2),
+		rulering			(false),
+		heightenNonC		(false),
+		heightenGround		(false),
+		heightenLowVeg		(false),
+		heightenMedVeg		(false),
+		heightenHighVeg		(false),
+		heightenBuildings	(false),
+		heightenNoise		(false),
+		heightenMass		(false),
+		heightenWater		(false),
+		heightenOverlap		(false),
+		heightenUndefined	(false)
 {
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
-   raiseline = false;
-   linetoraise = 0;
-   reversez = false;
 
-   //Threading:
-   // Setting this to TRUE will spam you with information about what the 
-   // threads are doing. When modifying how drawing works here, or indeed 
-   // anything that directly manipulates the point data, set this to TRUE 
-   // unless you REALLY know what you are doing.
+   // Threading:
+   // These should probably all be removed as threading is not present at the moment.
    threaddebug = false;
    thread_existsmain = false;
    thread_existsthread = false;
@@ -61,58 +91,16 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    pausethread = false;
    thread_running = false;
 
-   //Drawing:
-   numbuckets = 0;
-   resolutionbase = 1;
-   resolutiondepth = 1;
-   drawnsinceload = false;
-   drawneverything = false;
-   pointcount = 0;
-
-   tdoDisplayNoise = true;
-
-   //Limits of pixel copying for the preview:
-   drawnsofarminx=0;
-   drawnsofarminy=0;
-   drawnsofarmaxx=1;
-   drawnsofarmaxy=1;
-
-   //Overlays:
-   showdistancescale = false;
-   showlegend = false;
-
    //Profiling:
-   profiling=false;
-   showprofile=false;
    Colour red = Colour("red");
    Colour white = Colour("white");
    profbox = new BoxOverlay(rulerlabel,white,red);
    profbox->setcentre(centre);
 
    //Fencing:
-   fencing=false;
-   showfence=false;
    Colour blue = Colour("blue");
    fencebox = new BoxOverlay(rulerlabel,blue,blue);
    fencebox->setcentre(centre);
-
-   //Rulering:
-   rulering=false;
-   rulerwidth=2;
-   this->rulerlabel = rulerlabel;
-
-   //Classification heightening:
-   heightenNonC = false;
-   heightenGround = false;
-   heightenLowVeg = false;
-   heightenMedVeg = false;
-   heightenHighVeg = false;
-   heightenBuildings = false;
-   heightenNoise = false;
-   heightenMass = false;
-   heightenWater = false;
-   heightenOverlap = false;
-   heightenUndefined = false;
 
    //Events and signals:
    add_events(Gdk::SCROLL_MASK |
@@ -123,34 +111,17 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
               Gdk::BUTTON_RELEASE_MASK);
 
    //Zooming:
-   signal_scroll_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_zoom));
+   signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
+
    //Panning:
-   sigpanstart = signal_button_press_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_pan_start));
-
-   sigpan = signal_motion_notify_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_pan));
-
-   sigpanend = signal_button_release_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_pan_end));
+   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_start));
+   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan));
+   sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_end));
 
    //Profiling:
-   sigprofstart = signal_button_press_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_prof_start));
-
-   sigprof = signal_motion_notify_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_prof));
-
-   sigprofend = signal_button_release_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_prof_end));
+   sigprofstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_start));
+   sigprof = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof));
+   sigprofend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_end));
 
    //Not in profiling mode initially.
    sigprofstart.block();
@@ -158,17 +129,9 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigprofend.block();
 
    //Fencing:
-   sigfencestart = signal_button_press_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_fence_start));
-
-   sigfence = signal_motion_notify_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_fence));
-
-   sigfenceend = signal_button_release_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_fence_end));
+   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_start));
+   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence));
+   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_end));
 
    //Not in fencing mode initially.
    sigfencestart.block();
@@ -176,48 +139,29 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigfenceend.block();
 
    //Rulering:
-   sigrulerstart = signal_button_press_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_ruler_start));
-
-   sigruler = signal_motion_notify_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_ruler));
-
-   sigrulerend = signal_button_release_event().
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              on_ruler_end));
+   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler_start));
+   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler));
+   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler_end));
 
    //Not in rulering mode initially.
    sigrulerstart.block();
    sigruler.block();
    sigrulerend.block();
 
-   //Dispatchers (threading):
-   signal_InitGLDraw.
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              InitGLDraw));
-
-   signal_DrawGLToCard.
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              DrawGLToCard));
-
-   signal_FlushGLToScreen.
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              FlushGLToScreen));
-
-   signal_EndGLDraw.
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              EndGLDraw));
-
-   signal_extraDraw.
-      connect(sigc::mem_fun(*this,&TwoDeeOverview::
-              extraDraw));
+   // Dispatchers (threading):
+   // Can be removed?
+   signal_InitGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::InitGLDraw));
+   signal_DrawGLToCard.connect(sigc::mem_fun(*this,&TwoDeeOverview::DrawGLToCard));
+   signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));
+   signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
+   signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
 
 }
 
 TwoDeeOverview::~TwoDeeOverview()
 {
+	delete fencebox;
+	delete profbox;
 }
 
 //Prepare the appropriate overlays for flushing to the screen.
