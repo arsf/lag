@@ -12,14 +12,14 @@
 2012-03-08  Jan Holownia <jaho@pml.ac.uk>
     * general:  Added some exception handling, possible minor performance improvements
     * all UI classes:   Partialy rewritten most of the classes to improve maintainability, improved interface, 
-                        reorganised code, added some missing delete statements, comments etc.
-    * Colour.cpp:       Added overloaded comparison operators (==, !=) to simplify class interface.
+                        refactored code, added some missing delete statements, comments etc.
+    * Colour.cpp:       Added comparison operators (==, !=) to simplify class interface.
                         
 2012-03-09  Jan Holownia <jaho@pml.ac.uk>
     * general/quadtree: Fixed a bug which would cause some incorrect points to load when using the fence.
     
 2012-03-15  Jan Holownia <jaho@pml.ac.uk>
-    * general:  Cleaned up unused code, reorganised some parts for better maintainability.        
+    * general:  Cleaned up unused code, refactored and optimised some parts.
     
     
 

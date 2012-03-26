@@ -155,7 +155,6 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));
    signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
    signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
-
 }
 
 TwoDeeOverview::~TwoDeeOverview()

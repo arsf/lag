@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = lag
-AM_CXXFLAGS=-Wall -Wextra -Werror -DLINUX
+AM_CXXFLAGS=-Wall -Wextra -Werror -DLINUX -pg -g
 # allow automake to find any required extra m4 macros
 ACLOCAL_AMFLAGS = -I m4
 

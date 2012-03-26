@@ -73,6 +73,8 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	numlines = 0;
 
 	connect_signals();
+
+	on_cachesize_changed();
 }
 
 
@@ -747,7 +749,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 void FileOpener::on_cachesize_changed()
 {
    ostringstream GB;
-   GB << ((double)cachesizeselect->get_value()*sizeof(Point))/1000000000;
+   GB << ((double)cachesizeselect->get_value()*sizeof(LidarPoint))/1000000000;
    string labelstring = "Approximately: " + GB.str() + " GB.";
    cachesizeGBlabel->set_text(labelstring);
 }
