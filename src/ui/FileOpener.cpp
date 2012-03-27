@@ -121,6 +121,19 @@ void FileOpener::connect_signals()
 	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this,&FileOpener::on_usedefault_changed));
 	cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
 	resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
+    Gtk::Main::signal_quit().connect(sigc::mem_fun(*this, &FileOpener::on_quit));
+}
+
+// This is a temporary solution as pointers need to be reorganised
+int FileOpener::on_quit()
+{
+	if (lidardata != NULL)
+	{
+		std::cout << "Cleaning up..." << std::endl;
+		delete lidardata;
+	}
+
+	return 0;
 }
 
 

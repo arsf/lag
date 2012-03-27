@@ -199,6 +199,7 @@ int main(int argc, char** argv)
 
    gdk_threads_leave();
 
+
    delete tdow;
    delete profwin;
    delete fo;

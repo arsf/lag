@@ -21,6 +21,11 @@
 2012-03-15  Jan Holownia <jaho@pml.ac.uk>
     * general:  Cleaned up unused code, refactored and optimised some parts.
     
+2012-03-27  Jan Holownia <jaho@pml.ac.uk>
+    * FileOpener.cpp:   Added the code to clean up after quadtree. It has to be here because this class creates
+                        the lidardata quadtree. It should be reorganised though, especially the null pointers
+                        passed from main().
+    
     
 
 

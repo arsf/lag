@@ -136,6 +136,8 @@ private:
    //When selected from the menu, the file chooser opens.
    void on_openfilemenuactivated();
 
+   //Clean up on quit.
+   int on_quit();
 };
 
 #endif
