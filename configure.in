@@ -16,6 +16,7 @@ AC_PROG_CXX
 # Checks for libraries using pkg-config
 #PKG_CHECK_MODULES([DEPS], [gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 libgeotiff lidarquadtree] )
 PKG_CHECK_MODULES([GTKmm], [gtkmm-2.4])
+#PKG_CHECK_MODULES([GTKmm], [gtkmm-3.0])
 PKG_CHECK_MODULES([GTKGLextmm], [gtkglextmm-1.2])
 PKG_CHECK_MODULES([GThread], [gthread-2.0])
 PKG_CHECK_MODULES([libgeotiff], [libgeotiff])

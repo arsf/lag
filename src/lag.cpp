@@ -132,7 +132,7 @@ int main(int argc, char** argv)
    printf("%s\n", argv[0]);
 
    //How many points in each bucket, maximum.
-   int bucketlimit = 100000;
+   int bucketlimit = 65536;
 
    //The flightlines are stored here.
    Quadtree* lidardata = NULL;
