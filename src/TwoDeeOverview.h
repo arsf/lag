@@ -37,7 +37,6 @@ class TwoDeeOverview : public LagDisplay
 public:
    TwoDeeOverview(string,
 		   	   	  const Glib::RefPtr<const Gdk::GL::Config>& config,
-                  Quadtree* lidardata,
                   int bucketlimit,
                   Gtk::Label *rulerlabelover);
 

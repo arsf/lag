@@ -37,7 +37,6 @@ class Profile : public LagDisplay
 public:
    Profile(string,
 		   const Glib::RefPtr<const Gdk::GL::Config>& config,
-           Quadtree* lidardata,
            int bucketlimit,
            Gtk::Label *rulerlabel);
 

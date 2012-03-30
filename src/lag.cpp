@@ -134,9 +134,6 @@ int main(int argc, char** argv)
    //How many points in each bucket, maximum.
    int bucketlimit = 65536;
 
-   //The flightlines are stored here.
-   Quadtree* lidardata = NULL;
-
    // Label displaying the distance along the ruler, in all dimensions etc. 
    // for the overview. Also other text output about the data and fences,
    // profiles etc. is put here.
@@ -144,7 +141,7 @@ int main(int argc, char** argv)
    builder->get_widget("rulerlabelover",rulerlabelover);
 
    //The 2d overview.
-   TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, lidardata,bucketlimit, rulerlabelover);
+   TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, bucketlimit, rulerlabelover);
 
    // Label displaying the distance along the ruler, in all dimensions 
    // etc. for the profile.
@@ -152,13 +149,13 @@ int main(int argc, char** argv)
    builder->get_widget("rulerlabel",rulerlabel);
 
    //The profile.
-   Profile *prof = new Profile(argv[0], glconfig, lidardata, bucketlimit,rulerlabel);
+   Profile *prof = new Profile(argv[0], glconfig, bucketlimit,rulerlabel);
 
    //This contains the widgets of the advanced options window.
    AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo,prof,builder);
 
    //This contains the widgets of the file saver window.
-   FileSaver *fs = new FileSaver(tdo,prof,builder,lidardata);
+   FileSaver *fs = new FileSaver(tdo,prof,builder);
 
    // Contains the overview. It is used to simulate the 2d overview getting 
    // focus without causing it to be redrawn every time.
@@ -187,8 +184,7 @@ int main(int argc, char** argv)
                                                          eventboxtdo,profwin);
 
    //This contains the widgets of the file opener window.
-   FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, lidardata, 
-                                   bucketlimit,eventboxtdo,eventboxprof,tdow);
+   FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,eventboxtdo,eventboxprof,tdow);
    
    //In case of command-line commands 
    fo->testfilename(argc,argv,true,false);
@@ -212,7 +208,6 @@ int main(int argc, char** argv)
    delete profilewindow;
    if(tdo!=NULL)delete tdo;
    if(prof != NULL)delete prof;
-   if(lidardata != NULL)delete lidardata;
 
    return 0;
 }

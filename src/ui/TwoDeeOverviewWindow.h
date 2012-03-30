@@ -80,6 +80,7 @@ private:
    Gtk::AboutDialog *about;
 
    // Menu items
+   Gtk::MenuItem* openfilemenuitem;
    Gtk::MenuItem* saveasfilemenuitem;
    Gtk::MenuItem* quitfilemenuitem;
    Gtk::MenuItem* helpmenu;
@@ -248,6 +249,9 @@ private:
 
    //Hide the about dialog when close button activated.
    void on_aboutresponse(int response_id);
+
+   //When selected from the menu, the file chooser opens.
+   void on_openfilemenuactivated();
 
    //When selected from the menu, the file saver opens.
    void on_savefilemenuactivated();

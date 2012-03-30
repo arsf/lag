@@ -43,7 +43,6 @@ public:
               const Glib::RefPtr<Gtk::Builder>&,
               AdvancedOptionsWindow*,
               FileSaver*,
-              Quadtree*,
               int,
               Gtk::EventBox*,
               Gtk::EventBox*,
@@ -132,7 +131,7 @@ private:
    void on_filechooserdialogresponse(int response_id);
    void on_cachesize_changed();
    void on_resolutionbase_changed();
-   
+
    //When selected from the menu, the file chooser opens.
    void on_openfilemenuactivated();
 

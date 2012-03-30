@@ -31,9 +31,8 @@
 #include "Profile.h"
 #include "MathFuncs.h"
 
-Profile::Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, Quadtree* lidardata,
-		int bucketlimit, Gtk::Label *rulerlabel)
-:	LagDisplay(fontpath, config, lidardata, bucketlimit),
+Profile::Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit, Gtk::Label *rulerlabel)
+:	LagDisplay(fontpath, config, bucketlimit),
  		rulerlabel			(rulerlabel),
  		profxs				(NULL),
  		profys				(NULL),
@@ -98,7 +97,14 @@ Profile::~Profile()
 	delete[]profxs;
 	delete[]profys;
 	delete[]flightlinepoints;
-	delete[]linez;
+	if (linez != NULL)
+	{
+		for(int i=0;i<linezsize;++i)
+		{
+			delete[] linez[i];
+		}
+	delete[] linez;
+	}
 }
 
 // Firstly, this determines the boundary of the viewable area in world 
@@ -212,7 +218,7 @@ bool Profile::returntostart()
    double height = end.getY() - start.getY();
 
    //Right triangle.
-   double length = start.distanceTo(end);//sqrt(breadth*breadth+height*height);
+   double length = start.distanceTo(end); //sqrt(breadth*breadth+height*height);
 
    //To the right when looking from start to end.
    viewer.move(width*height/length, -width*breadth/length, 0);
@@ -770,9 +776,9 @@ bool Profile::classify(uint8_t classification)
    }
    
    delete[]classifiedbucketsarray;
-   delete zs;
-   delete ys;
-   delete xs;
+   delete[] zs;
+   delete[] ys;
+   delete[] xs;
    for(int i=0;i<numbuckets;++i)
       delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;

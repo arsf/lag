@@ -35,8 +35,8 @@
 #include "MathFuncs.h"
 
 TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
-               Quadtree* lidardata, int bucketlimit, Gtk::Label *rulerlabel)
-:	LagDisplay(fontpath, config,lidardata,bucketlimit),
+							int bucketlimit, Gtk::Label *rulerlabel)
+:	LagDisplay(fontpath, config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
 		drawnsofarmaxx		(1),
@@ -149,7 +149,6 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigrulerend.block();
 
    // Dispatchers (threading):
-   // Can be removed?
    signal_InitGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::InitGLDraw));
    signal_DrawGLToCard.connect(sigc::mem_fun(*this,&TwoDeeOverview::DrawGLToCard));
    signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));

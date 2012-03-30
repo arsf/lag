@@ -29,17 +29,17 @@
 #include "FileOpener.h"
 
 FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
-           	   	   	   Quadtree *lidardata, int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow)
+           	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow)
 :
-        tdo			(tdo),
-        prof		(prof),
-        tdow		(tdow),
-        aow			(aow),
-        fs			(fs),
-        lidardata	(lidardata),
-        eventboxtdo	(eventboxtdo),
-        eventboxprof(eventboxprof),
-        bucketlimit	(bucketlimit)
+        tdo				(tdo),
+        prof			(prof),
+        tdow			(tdow),
+        aow				(aow),
+        fs				(fs),
+        lidardata		(NULL),
+        eventboxtdo		(eventboxtdo),
+        eventboxprof	(eventboxprof),
+        bucketlimit		(bucketlimit)
 {
 	load_xml(builder);
 
@@ -54,19 +54,18 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	loaderroroutput.open(loaderroroutputfile.c_str());
 	loaderrorstream = new ostringstream();
 	loadedanyfiles = false;
-	cachelimit = 25000000;
+	cachelimit = 30000000;
 
 	cachesizeselect->set_range(10e6,10e11);
 
-	// 25000000 points is about 1 GB. On this 4 GB RAM machine, I only want
-	// LAG to use a quarter of my resources.
-	cachesizeselect->set_value(250e5);
+	cachesizeselect->set_value(300e5);
 	cachesizeselect->set_increments(10e5,10e5);
 
 	resbaseselect->set_range(2,1000);
-	resbaseselect->set_value(4);
+	resbaseselect->set_value(5);
 	resbaseselect->set_increments(1,1);
 
+	resdepthselect->set_range(1,10);
 	resdepthselect->set_value(4);
 	resdepthselect->set_increments(1,1);
 

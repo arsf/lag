@@ -32,12 +32,11 @@
 #include "MathFuncs.h"
 #include "LagDisplay.h"
 
-LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
-        Quadtree* lidardata, int bucketlimit )
+LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit)
 :
     Gtk::GL::DrawingArea(config),
         zoompower		(0.5),
-        lidardata		(lidardata),
+        lidardata		(NULL),
         bucketlimit		(bucketlimit),
         maindetailmod	(0),
         pointsize		(1),

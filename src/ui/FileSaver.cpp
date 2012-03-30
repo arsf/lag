@@ -27,11 +27,11 @@
 #include "../Profile.h"
 #include "FileSaver.h"
 
-FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, Quadtree *lidardata)
+FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder)
 :
 		tdo			(tdo),
 		prof		(prof),
-		lidardata	(lidardata)
+		lidardata	(NULL)
 {
   load_xml(builder);
   connect_signals();

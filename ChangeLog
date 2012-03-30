@@ -25,6 +25,9 @@
     * FileOpener.cpp:   Added the code to clean up after quadtree. It has to be here because this class creates
                         the lidardata quadtree. It should be reorganised though, especially the null pointers
                         passed from main().
+                        
+2012-03-28  Jan Holownia <jaho@pml.ac.uk>
+    * Profile.cpp:      Fixed a memory leak in Profile::classify.
     
     
 

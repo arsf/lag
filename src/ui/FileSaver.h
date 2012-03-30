@@ -35,8 +35,7 @@ class FileSaver{
 public:
    FileSaver(TwoDeeOverview*,
              Profile*,
-             const Glib::RefPtr<Gtk::Builder>&,
-             Quadtree*);
+             const Glib::RefPtr<Gtk::Builder>&);
 
    ~FileSaver();
 
