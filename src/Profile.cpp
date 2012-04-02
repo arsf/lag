@@ -66,26 +66,26 @@ Profile::Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& con
               Gdk::BUTTON_RELEASE_MASK);
 
    // Scrolling
-   signal_scroll_event().connect(sigc::mem_fun(*this,&Profile::on_zoom));
+   signal_scroll_event().connect(sigc::mem_fun(this,&Profile::on_zoom));
 
    // Panning:
-   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_pan_start));
-   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_pan));
-   sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_pan_end));
+   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(this,&Profile::on_pan_start));
+   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(this,&Profile::on_pan));
+   sigpanend = signal_button_release_event().connect(sigc::mem_fun(this,&Profile::on_pan_end));
 
    // Rulering:
-   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_start));
-   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_ruler));
-   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_ruler_end));
+   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(this,&Profile::on_ruler_start));
+   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(this,&Profile::on_ruler));
+   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(this,&Profile::on_ruler_end));
 
    sigrulerstart.block();
    sigruler.block();
    sigrulerend.block();
 
    //Fencing:
-   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&Profile::on_fence_start));
-   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&Profile::on_fence));
-   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&Profile::on_fence_end));
+   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(this,&Profile::on_fence_start));
+   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(this,&Profile::on_fence));
+   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(this,&Profile::on_fence_end));
 
    sigfencestart.block();
    sigfence.block();
@@ -1135,8 +1135,7 @@ bool Profile::on_fence_end(GdkEventButton* event)
 }
 
 //Moves the fence depending on keyboard commands.
-bool Profile::
-on_fence_key(GdkEventKey *event,double scrollspeed)
+bool Profile::on_fence_key(GdkEventKey *event,double scrollspeed)
 {
    double breadth = end.getX() - start.getX();
    double height = end.getY() - start.getY();
@@ -1328,7 +1327,7 @@ bool Profile::on_ruler(GdkEventMotion* event)
                            zdist.str() + " Pos: " + zpos.str();
 
       rulerlabel->set_text(rulerstring);
-      return drawviewable(2);
+      return drawviewable(1);
    }
    else if((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)
       return on_pan(event);

@@ -72,14 +72,14 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
 		heightenMass		(false),
 		heightenWater		(false),
 		heightenOverlap		(false),
-		heightenUndefined	(false)
+		heightenUndefined	(false),
+		panningRefresh		(1)
 {
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
 
    // Threading:
-   // These should probably all be removed as threading is not present at the moment.
    threaddebug = false;
    thread_existsmain = false;
    thread_existsthread = false;
@@ -111,17 +111,17 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
               Gdk::BUTTON_RELEASE_MASK);
 
    //Zooming:
-   signal_scroll_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_zoom));
+   signal_scroll_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_zoom));
 
    //Panning:
-   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_start));
-   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan));
-   sigpanend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_pan_end));
+   sigpanstart = signal_button_press_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_pan_start));
+   sigpan = signal_motion_notify_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_pan));
+   sigpanend = signal_button_release_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_pan_end));
 
    //Profiling:
-   sigprofstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_start));
-   sigprof = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof));
-   sigprofend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_prof_end));
+   sigprofstart = signal_button_press_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_prof_start));
+   sigprof = signal_motion_notify_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_prof));
+   sigprofend = signal_button_release_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_prof_end));
 
    //Not in profiling mode initially.
    sigprofstart.block();
@@ -129,9 +129,9 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigprofend.block();
 
    //Fencing:
-   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_start));
-   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence));
-   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_fence_end));
+   sigfencestart = signal_button_press_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_fence_start));
+   sigfence = signal_motion_notify_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_fence));
+   sigfenceend = signal_button_release_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_fence_end));
 
    //Not in fencing mode initially.
    sigfencestart.block();
@@ -139,9 +139,9 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigfenceend.block();
 
    //Rulering:
-   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler_start));
-   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler));
-   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(*this,&TwoDeeOverview::on_ruler_end));
+   sigrulerstart = signal_button_press_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_ruler_start));
+   sigruler = signal_motion_notify_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_ruler));
+   sigrulerend = signal_button_release_event().connect(sigc::mem_fun(this,&TwoDeeOverview::on_ruler_end));
 
    //Not in rulering mode initially.
    sigrulerstart.block();
@@ -149,11 +149,11 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
    sigrulerend.block();
 
    // Dispatchers (threading):
-   signal_InitGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::InitGLDraw));
-   signal_DrawGLToCard.connect(sigc::mem_fun(*this,&TwoDeeOverview::DrawGLToCard));
-   signal_FlushGLToScreen.connect(sigc::mem_fun(*this,&TwoDeeOverview::FlushGLToScreen));
-   signal_EndGLDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::EndGLDraw));
-   signal_extraDraw.connect(sigc::mem_fun(*this,&TwoDeeOverview::extraDraw));
+   signal_InitGLDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::InitGLDraw));
+   signal_DrawGLToCard.connect(sigc::mem_fun(this,&TwoDeeOverview::DrawGLToCard));
+   signal_FlushGLToScreen.connect(sigc::mem_fun(this,&TwoDeeOverview::FlushGLToScreen));
+   signal_EndGLDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::EndGLDraw));
+   signal_extraDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::extraDraw));
 }
 
 TwoDeeOverview::~TwoDeeOverview()
@@ -1097,7 +1097,7 @@ bool TwoDeeOverview::drawviewable(int imagetype)
 
       // This thread will interpret the data before telling the main 
       // thread to draw.
-      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(*this,&TwoDeeOverview::mainimage),buckets,numbuckets),false);
+      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(this,&TwoDeeOverview::mainimage),buckets,numbuckets),false);
 
       delete pointvector;
    }
@@ -1752,7 +1752,7 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event)
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event)
 {
    if(event->button==1 || event->button==2)
-      return drawviewable(1);
+      return drawviewable(panningRefresh);
    else 
       return false;
 }

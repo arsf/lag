@@ -58,8 +58,11 @@ LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config
         rminintensity	(0),
         colourheightarray		(NULL),
         brightnessheightarray	(NULL),
-        brightnessintensityarray(NULL)
-
+        brightnessintensityarray(NULL),
+        red				(0.0),
+        green			(0.0),
+        blue			(0.0),
+        alpha			(0.0)
 {
    fontpath += "fonts/DejaVuSansMono.ttf";
 }
@@ -411,7 +414,7 @@ void LagDisplay::prepare_image()
          if (!glwindow->gl_begin(get_gl_context()))
             return;
 
-         glClearColor(0.0, 0.0, 0.0, 0.0);
+         glClearColor(red, green, blue, alpha);
          glClearDepth(1.0);
          glwindow->gl_end();
          clearscreen();
@@ -451,7 +454,7 @@ void LagDisplay::prepare_image()
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))
          return;
-      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClearColor(red, green, blue, alpha);
       glClearDepth(1.0);
       glPointSize(pointsize);
       // Very important to include this! This allows us to see the things on 
@@ -463,4 +466,21 @@ void LagDisplay::prepare_image()
    delete pointvector;
    //Set up initial view and draw it.
    returntostart();
+}
+
+void LagDisplay::set_background_colour(float r, float g, float b, float a)
+{
+	 red = r;
+	 green = g;
+	 blue = b;
+	 alpha = a;
+}
+
+void LagDisplay::update_background_colour()
+{
+	 Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+	 if (!glwindow->gl_begin(get_gl_context()))
+		 return;
+	 glClearColor(red, green, blue, alpha);
+	 glClearDepth(1.0);
 }

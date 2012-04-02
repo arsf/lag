@@ -164,38 +164,38 @@ Connects signals to widgets
 */
 void TwoDeeOverviewWindow::connect_signals()
 {
-	eventboxtdo->signal_key_press_event().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_tdo_key_press));
-	saveasfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_savefilemenuactivated));
+	eventboxtdo->signal_key_press_event().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_tdo_key_press));
+	saveasfilemenuitem->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_savefilemenuactivated));
 	quitfilemenuitem->signal_activate().connect(sigc::ptr_fun(gtk_main_quit));
-	showprofilecheck->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_showprofilecheck));
-	showfencecheck->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_showfencecheck));
-	showdistancescalecheck->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_showdistancescalecheck));
-	showlegendcheck->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_showlegendcheck));
-	reverseheightcheck->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_reverseheightcheck));
-	colourbynonemenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-	colourbyintensitymenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-	colourbyheightmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-	colourbyflightlinemenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-	colourbyclassificationmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-    colourbyreturnmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_colouractivated));
-    brightnessbynonemenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_brightnessactivated));
-    brightnessbyintensitymenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_brightnessactivated));
-    brightnessbyheightmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_brightnessactivated));
-    helpmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_helpmenuactivated));
-    help->signal_response().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_helpresponse));
-    aboutmenu->signal_activate().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_aboutmenuactivated));
-    about->signal_response().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_aboutresponse));
-    returnbutton->signal_clicked().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_returnbutton_clicked));
-    advancedbutton->signal_clicked().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_advancedbutton_clicked));
-    pointwidthselect->signal_value_changed().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_pointwidthselected));
-    rulertoggleover->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_rulertoggleover));
-    fencetoggle->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_fencetoggle));
-    profiletoggle->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_profiletoggle));
-    orthogonalrectshapetoggle->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_orthogonalrectshapetoggle));
-    slantedrectshapetoggle->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_slantedrectshapetoggle));
-    slantwidthselect->signal_value_changed().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_slantwidthselected));
-    raiselinecheckmenu->signal_toggled().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_raiselinecheckmenu));
-    raiselineselect->signal_value_changed().connect(sigc::mem_fun(*this,&TwoDeeOverviewWindow::on_raiselineselected));
+	showprofilecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showprofilecheck));
+	showfencecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showfencecheck));
+	showdistancescalecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showdistancescalecheck));
+	showlegendcheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showlegendcheck));
+	reverseheightcheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_reverseheightcheck));
+	colourbynonemenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+	colourbyintensitymenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+	colourbyheightmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+	colourbyflightlinemenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+	colourbyclassificationmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+    colourbyreturnmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_colouractivated));
+    brightnessbynonemenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_brightnessactivated));
+    brightnessbyintensitymenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_brightnessactivated));
+    brightnessbyheightmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_brightnessactivated));
+    helpmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_helpmenuactivated));
+    help->signal_response().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_helpresponse));
+    aboutmenu->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_aboutmenuactivated));
+    about->signal_response().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_aboutresponse));
+    returnbutton->signal_clicked().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_returnbutton_clicked));
+    advancedbutton->signal_clicked().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_advancedbutton_clicked));
+    pointwidthselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_pointwidthselected));
+    rulertoggleover->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_rulertoggleover));
+    fencetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_fencetoggle));
+    profiletoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_profiletoggle));
+    orthogonalrectshapetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_orthogonalrectshapetoggle));
+    slantedrectshapetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_slantedrectshapetoggle));
+    slantwidthselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_slantwidthselected));
+    raiselinecheckmenu->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselinecheckmenu));
+    raiselineselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselineselected));
 }
 
 // When toggled, the profile box is shown on the 2d overview regardless of 

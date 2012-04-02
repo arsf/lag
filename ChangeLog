@@ -27,7 +27,14 @@
                         passed from main().
                         
 2012-03-28  Jan Holownia <jaho@pml.ac.uk>
-    * Profile.cpp:      Fixed a memory leak in Profile::classify.
+    * Profile.cpp:      Fixed a memory leak in Profile::classify().
+
+2012-04-02  Jan Holownia <jaho@pml.ac.uk>
+    * general:          Improved responsiveness by tuning some of the rendering parameters. Added an option to
+                        turn on/off full refresh while panning. Added an option to change background colour.
+    * lag.cpp:          Removed the misleading null pointers passed around for no reason and altered constructors
+                        most classes to reflect this change.
+    
     
     
 

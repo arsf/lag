@@ -36,27 +36,27 @@ public:
 
    ~AdvancedOptionsWindow();
 
-   inline void show()
+   void show()
    {
       advancedoptionsdialog->present(); 
    }
 
-   inline void resetcolouringandshading()
+   void resetcolouringandshading()
    {
       on_drawingresetbutton_clicked(); 
    }
 
-   inline bool getfractionalshift()
+   bool getfractionalshift()
    {
       return fractionalshiftcheck->get_active(); 
    }
 
-   inline double getmovespeed()
+   double getmovespeed()
    {
       return movespeedselect->get_value(); 
    }
 
-   inline void setmaindetailrange(double min,double max)
+   void setmaindetailrange(double min,double max)
    {
       maindetailselect->set_range(min,max);
    }
@@ -122,6 +122,9 @@ private:
    //Determines how many points are skipped displaying the profile preview.
    Gtk::SpinButton *previewdetailselectprof;
 
+   Gtk::CheckButton *fullrefreshonpanning;
+   Gtk::ColorButton *backgroundcolorbutton;
+
    //Signals:
    // These connections are for controlling the interaction of the height and 
    // intensity colouring and shading scrollbars and spinbuttons, particularly 
@@ -135,6 +138,8 @@ private:
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
 
+   void on_fullrefresh_toggled();
+   void on_backgroundcolor_changed();
 
    //Closes the advanced options dialog.
    void on_advancedoptionsdialog_response(int response_id);

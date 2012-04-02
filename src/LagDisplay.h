@@ -168,6 +168,9 @@ public:
       this->intensityfloor = intensityfloor;
    }
 
+   void set_background_colour(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
+   void update_background_colour();
+
 protected:
    //Control:
    // The zoomlevel's change is determined by a pow(a,b) call. This 
@@ -240,6 +243,12 @@ protected:
    //Array containing shades for different intensities.
    double* brightnessintensityarray;
    
+   // Background colour
+   float red;
+   float green;
+   float blue;
+   float alpha;
+
    //Methods:
 
    //Convenience code:
@@ -297,5 +306,6 @@ protected:
 
    //Handles resizing of the window. Calls resetview().
    bool on_configure_event(GdkEventConfigure* event);
+
 };
 #endif

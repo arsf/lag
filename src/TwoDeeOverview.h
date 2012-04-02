@@ -137,92 +137,97 @@ public:
    }
 
    //Getters:
-   inline SelectionBox getProfile()
+   SelectionBox getProfile()
    {
       return profbox->getSelectionBox();
    }
 
-   inline SelectionBox getFence()
+   SelectionBox getFence()
    {
       return fencebox->getSelectionBox();
    }
 
-   inline void getprofile(double*& profxs, double*& profys, int& profps)
+   void getprofile(double*& profxs, double*& profys, int& profps)
    {
       profxs = profbox->getSelectionBox().getXs();
       profys = profbox->getSelectionBox().getYs();
       profps = 4;
    }
 
-   inline bool getpausethread()
+   bool getpausethread()
    {
       return pausethread; 
    }
 
-   inline bool getthread_running()
+   bool getthread_running()
    {
       return thread_running; 
    }
 
-   inline BoxOverlay* getfencebox()
+   BoxOverlay* getfencebox()
    {
       return fencebox; 
    }
 
-   inline BoxOverlay* getprofbox()
+   BoxOverlay* getprofbox()
    {
       return profbox; 
    }
 
    //Setters:
-   inline void setshowprofile(double showprofile)
+   void setshowprofile(double showprofile)
    {
       this->showprofile = showprofile;
    }
 
-   inline void setshowfence(double showfence)
+   void setshowfence(double showfence)
    {
       this->showfence = showfence;
    }
 
-   inline void setshowdistancescale(double showdistancescale)
+   void setshowdistancescale(double showdistancescale)
    {
       this->showdistancescale = showdistancescale;
    }
 
-   inline void setshowlegend(double showlegend)
+   void setshowlegend(double showlegend)
    {
       this->showlegend = showlegend;
    }
 
-   inline void setpausethread(bool pausethread)
+   void setpausethread(bool pausethread)
    {
       this->pausethread = pausethread; 
    }
 
-   inline void setreversez(bool reversez)
+   void setreversez(bool reversez)
    {
       this->reversez = reversez; 
    }
 
-   inline void setraiseline(bool raiseline)
+   void setraiseline(bool raiseline)
    {
       this->raiseline = raiseline; 
    }
 
-   inline void setlinetoraise(int linetoraise)
+   void setlinetoraise(int linetoraise)
    {
       this->linetoraise = linetoraise; 
    }
 
-   inline void setresolutiondepth(int resolutiondepth)
+   void setresolutiondepth(int resolutiondepth)
    {
       this->resolutiondepth = resolutiondepth; 
    }
 
-   inline void setresolutionbase(int resolutionbase)
+   void setresolutionbase(int resolutionbase)
    {
       this->resolutionbase = resolutionbase; 
+   }
+
+   void set_panning_refresh(int refreshType)
+   {
+	   this->panningRefresh = refreshType;
    }
 
    //Classification:
@@ -425,6 +430,9 @@ protected:
    bool heightenWater;
    bool heightenOverlap;
    bool heightenUndefined;
+
+   //Panning: 2 = no refresh, 1 = full refresh
+   int panningRefresh;
 
    //Signal handlers:
    //Panning:

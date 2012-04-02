@@ -554,8 +554,6 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                      if(lidardata != NULL)
                      {
                         delete lidardata;
-                        //printf("Lidar data deleted - check memory now... sleeping 10 secs\n");
-                        //sleep(10);
                      }
 
                      // This prevents a double free if the creation of the new 

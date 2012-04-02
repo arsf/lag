@@ -35,8 +35,9 @@ AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo, Profile *prof,
 {
 	load_xml(builder);
 
-	movespeedselect->set_value(5.00);
-    maindetailselect->set_value(2.00);
+	movespeedselect->set_value(10.00);
+    maindetailselect->set_value(1.50);
+    previewdetailselectprof->set_value(2.0);
 
     connect_signals();
 
@@ -48,6 +49,8 @@ AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo, Profile *prof,
 AdvancedOptionsWindow::~AdvancedOptionsWindow()
 {
    // Really a deleting the parent will clean up the children
+   delete fullrefreshonpanning;
+   delete backgroundcolorbutton;
    delete classcheckbutton0;
    delete classcheckbutton2;
    delete classcheckbutton3;
@@ -108,6 +111,8 @@ void AdvancedOptionsWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("previewdetailselectprof",previewdetailselectprof);
 	builder->get_widget("profdisplaynoise", profdisplaynoise);
 	builder->get_widget("tdodisplaynoise", tdodisplaynoise);
+	builder->get_widget("fullrefreshonpanning", fullrefreshonpanning);
+	builder->get_widget("backgroundcolorbutton", backgroundcolorbutton);
 }
 
 void AdvancedOptionsWindow::connect_signals()
@@ -140,6 +145,8 @@ void AdvancedOptionsWindow::connect_signals()
 	previewdetailselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_previewdetailselectedprof));
 	profdisplaynoise->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_profile_noise_toggle));
 	tdodisplaynoise->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_tdo_noise_toggle));
+	fullrefreshonpanning->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_fullrefresh_toggled));
+	backgroundcolorbutton->signal_color_set().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_backgroundcolor_changed));
 }
 
 // Callback functions
@@ -152,6 +159,14 @@ void AdvancedOptionsWindow::on_advancedoptionsdialog_response(int response_id)
 }
 
 //The checkbuttons and their activations:
+void AdvancedOptionsWindow::on_fullrefresh_toggled()
+{
+	if(fullrefreshonpanning->get_active())
+		tdo->set_panning_refresh(1);
+	else
+		tdo->set_panning_refresh(2);
+}
+
 void AdvancedOptionsWindow::on_classcheckbutton0_toggled()
 {
    tdo->setheightenNonC(classcheckbutton0->get_active()); 
@@ -472,4 +487,26 @@ void AdvancedOptionsWindow::on_previewdetailselectedprof()
    prof->setpreviewdetail(previewdetailselectprof->get_value());
    if(prof->is_realized())
       prof->drawviewable(2);
+}
+
+void AdvancedOptionsWindow::on_backgroundcolor_changed()
+{
+	Gdk::Color c = backgroundcolorbutton->get_color();
+	float red = (float)c.get_red() / 65535.0;
+	float green = (float)c.get_green() / 65535.0;
+	float blue = (float)c.get_blue() / 65535.0;
+	float alpha = (float)backgroundcolorbutton->get_alpha() / 65535.0;
+	tdo->set_background_colour(red, green, blue, alpha);
+	prof->set_background_colour(red, green, blue, alpha);
+
+	if (tdo->get_realized())
+	{
+		tdo->update_background_colour();
+		tdo->drawviewable(1);
+	}
+	if (prof->get_realized())
+	{
+		prof->update_background_colour();
+		prof->drawviewable(1);
+	}
 }

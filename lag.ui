@@ -2401,7 +2401,7 @@ Plymouth Marine Laboratory)</property>
             <child>
               <object class="GtkTable" id="table3">
                 <property name="visible">True</property>
-                <property name="n_rows">4</property>
+                <property name="n_rows">6</property>
                 <child>
                   <object class="GtkCheckButton" id="fractionalshiftcheck">
                     <property name="label" translatable="yes">Set as multiple of slant width for profile only using value*0.1</property>
@@ -2411,8 +2411,8 @@ Plymouth Marine Laboratory)</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
                   </packing>
                 </child>
                 <child>
@@ -2451,8 +2451,8 @@ Plymouth Marine Laboratory)</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
                   </packing>
                 </child>
                 <child>
@@ -2464,8 +2464,56 @@ Plymouth Marine Laboratory)</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkCheckButton" id="fullrefreshonpanning">
+                    <property name="label" translatable="yes">Full refresh when panning</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">False</property>
+                    <property name="active">True</property>
+                    <property name="draw_indicator">True</property>
+                  </object>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkHBox" id="hbox7">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label29">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Background color:</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="padding">4</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkColorButton" id="backgroundcolorbutton">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="color">#000000000000</property>
+                      </object>
+                      <packing>
+                        <property name="padding">4</property>
+                        <property name="pack_type">end</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
                   </packing>
                 </child>
               </object>
