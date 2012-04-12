@@ -159,6 +159,23 @@ public:
    }
    void toggleNoise();
 
+   std::vector<double> get_averages();
+
+   void set_slicing(bool slice)
+   {
+	   this->slicing = slice;
+   }
+
+   void set_minz(double z)
+   {
+	   this->minz = z;
+   }
+
+   void set_maxz(double z)
+   {
+	   this->maxz = z;
+   }
+
 protected:
    //Label showing the distance, in various dimensions, covered by the ruler.
    Gtk::Label *rulerlabel;
@@ -250,6 +267,7 @@ protected:
    Point fenceEnd;
    //Determines whether or not the fence should be drawn.
    bool fencing;
+
  
    //Signal handlers:
    //Panning:
@@ -323,6 +341,11 @@ protected:
 
    // hide profile noisy points
    bool hideProfNoise;
+
+   // Slicing
+   bool slicing;
+   double minz;
+   double maxz;
 };
 
 #endif

@@ -58,8 +58,8 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo, AdvancedOptionsW
    tdo->getfencebox()->setslantwidth(slantwidthselect->get_value());
    tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
    tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
-   tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   //tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
+   //tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
    tdo->setraiseline(raiselinecheckmenu->get_active());
    tdo->setlinetoraise(raiselineselect->get_value_as_int());
 
@@ -96,7 +96,6 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
 
    delete fencetoggle;
    delete profiletoggle;
-   delete orthogonalrectshapetoggle;
    delete slantedrectshapetoggle;
    delete slantwidthselect;
    delete pointwidthselect;
@@ -111,6 +110,13 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
 
    delete returnbutton;
    delete advancedbutton;
+
+   delete superzoombutton;
+   delete refreshbutton;
+   delete saveasbutton;
+   delete slicebutton;
+   delete zminselect;
+   delete zmaxselect;
 }
 
 /*
@@ -148,11 +154,17 @@ void TwoDeeOverviewWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
     builder->get_widget("rulertoggleover", 			rulertoggleover);
     builder->get_widget("fencetoggle", 				fencetoggle);
     builder->get_widget("profiletoggle", 			profiletoggle);
-    builder->get_widget("orthogonalrectshapetoggle", orthogonalrectshapetoggle);
     builder->get_widget("slantedrectshapetoggle",	slantedrectshapetoggle);
     builder->get_widget("slantwidthselect", 		slantwidthselect);
     builder->get_widget("raiselinecheckmenu",		raiselinecheckmenu);
     builder->get_widget("raiselineselect", 			raiselineselect);
+
+    builder->get_widget("superzoombutton",			superzoombutton);
+    builder->get_widget("refreshbutton",			refreshbutton);
+    builder->get_widget("saveasbutton", 			saveasbutton);
+    builder->get_widget("slicebutton", 				slicebutton);
+    builder->get_widget("zminselect", 				zminselect);
+    builder->get_widget("zmaxselect",  				zmaxselect);
 }
 
 /*
@@ -191,11 +203,70 @@ void TwoDeeOverviewWindow::connect_signals()
     rulertoggleover->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_rulertoggleover));
     fencetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_fencetoggle));
     profiletoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_profiletoggle));
-    orthogonalrectshapetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_orthogonalrectshapetoggle));
     slantedrectshapetoggle->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_slantedrectshapetoggle));
     slantwidthselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_slantwidthselected));
     raiselinecheckmenu->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselinecheckmenu));
     raiselineselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselineselected));
+
+    saveasbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_savefilemenuactivated));
+    refreshbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_refreshbuttonclicked));
+
+    superzoombutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_superzoomclicked));
+
+    slicebutton->signal_toggled().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_slicebuttontoggled));
+    zminselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zminvaluechanged));
+    zmaxselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zmaxvaluechanged));
+}
+
+void TwoDeeOverviewWindow::on_slicebuttontoggled()
+{
+	if (slicebutton->get_active())
+	{
+		tdo->set_slicing(true);
+		tdo->set_slice_minz(zminselect->get_value());
+		tdo->set_slice_maxz(zmaxselect->get_value());
+	}
+	else
+	{
+		tdo->set_slicing(false);
+	}
+	tdo->drawviewable(1);
+}
+
+void TwoDeeOverviewWindow::on_zminvaluechanged()
+{
+	if (slicebutton->get_active())
+	{
+		tdo->set_slice_minz(zminselect->get_value());
+		tdo->drawviewable(1);
+	}
+}
+
+void TwoDeeOverviewWindow::on_zmaxvaluechanged()
+{
+	if (slicebutton->get_active())
+	{
+		tdo->set_slice_maxz(zmaxselect->get_value());
+		tdo->drawviewable(1);
+	}
+}
+
+void TwoDeeOverviewWindow::set_slice_range(double min, double max)
+{
+   zminselect->set_range(min, max);
+   zminselect->set_value(min);
+   zmaxselect->set_range(min, max);
+   zmaxselect->set_value(max);
+}
+
+void TwoDeeOverviewWindow::on_refreshbuttonclicked()
+{
+	tdo->drawviewable(1);
+}
+
+void TwoDeeOverviewWindow::on_superzoomclicked()
+{
+	tdo->super_zoom();
 }
 
 // When toggled, the profile box is shown on the 2d overview regardless of 
@@ -225,8 +296,7 @@ void TwoDeeOverviewWindow::on_showdistancescalecheck()
 }
 
 //When toggled, the legend is shown on the 2d overview.
-void TwoDeeOverviewWindow::
-on_showlegendcheck()
+void TwoDeeOverviewWindow::on_showlegendcheck()
 {
    tdo->setshowlegend(showlegendcheck->get_active());
    if(tdo->is_realized())
@@ -311,8 +381,14 @@ void TwoDeeOverviewWindow::on_brightnessactivated()
 //This returns the overview to its original position.
 void TwoDeeOverviewWindow::on_returnbutton_clicked()
 {
-   if(tdo->is_realized())
-      tdo->returntostart();
+	pointwidthselect->set_value(1.0);
+	double zmin, zmax;
+	zminselect->get_range(zmin, zmax);
+	zminselect->set_value(zmin);
+	zmaxselect->set_value(zmax);
+	tdo->setpointwidth(pointwidthselect->get_value());
+	if(tdo->is_realized())
+		tdo->returntostart();
 }
 
 //This changes the width of the points in pixels.
@@ -400,50 +476,19 @@ void TwoDeeOverviewWindow::on_profiletoggle()
    }
 }
 
-// When toggled, this makes sure that the slant toggle is in the opposite state 
-// and then sets the orthogonal shape on the overview and makes new profile and 
-// fence boundaries before redrawing the overview, possibly with the new 
-// boundaries for profile and/or fence displayed.
-void TwoDeeOverviewWindow::on_orthogonalrectshapetoggle()
-{
-   if(orthogonalrectshapetoggle->get_active())
-      if(slantedrectshapetoggle->get_active())
-         slantedrectshapetoggle->set_active(false);
-   if(!orthogonalrectshapetoggle->get_active())
-      if(!slantedrectshapetoggle->get_active())
-         slantedrectshapetoggle->set_active(true);
-   tdo->getprofbox()->
-      setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->getfencebox()->
-      setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   tdo->getprofbox()->makeboundaries();
-   tdo->getfencebox()->makeboundaries();
-   if(tdo->is_realized())
-      tdo->drawviewable(2);
-}
-
 // When toggled, this makes sure that the orthogonal toggle is in the opposite 
 // state and then sets the slanted shape on the overview and makes new profile 
 // and fence boundaries before redrawing the overview, possibly with the new 
 // boundaries for profile and/or fence displayed.
 void TwoDeeOverviewWindow::on_slantedrectshapetoggle()
 {
-   if(slantedrectshapetoggle->get_active())
-      if(orthogonalrectshapetoggle->get_active())
-         orthogonalrectshapetoggle->set_active(false);
-   if(!slantedrectshapetoggle->get_active())
-      if(!orthogonalrectshapetoggle->get_active())
-         orthogonalrectshapetoggle->set_active(true);
-
-   tdo->getprofbox()->
-      setslantedshape(slantedrectshapetoggle->get_active());
-   tdo->getfencebox()->
-      setslantedshape(slantedrectshapetoggle->get_active());
-
-   tdo->getprofbox()->makeboundaries();
-   tdo->getfencebox()->makeboundaries();
-   if(tdo->is_realized())tdo->
-      drawviewable(2);
+	tdo->getprofbox()->setorthogonalshape(!slantedrectshapetoggle->get_active());
+	tdo->getfencebox()->setorthogonalshape(!slantedrectshapetoggle->get_active());
+	tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
+	tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
+	tdo->getprofbox()->makeboundaries();
+	tdo->getfencebox()->makeboundaries();
+	if(tdo->is_realized())tdo->drawviewable(2);
 }
 
 // When the value in the spinbutton for slanted shape width is changed, tell the 
@@ -617,4 +662,9 @@ void TwoDeeOverviewWindow::on_raiselinecheckmenu()
    tdo->setraiseline(raiselinecheckmenu->get_active());
    if(tdo->is_realized())
       tdo->drawviewable(1);
+}
+
+Gtk::Window* TwoDeeOverviewWindow::get_profilewindow()
+{
+	return profilewindow;
 }

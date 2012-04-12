@@ -65,12 +65,10 @@ string findgladepath(char* programpath)
    cout << exename << endl;
    if(glade_exists(gladename1.c_str()))
    {
-      cout << gladename1 << endl;
       return gladename1;
    }
    else if(glade_exists(gladename2.c_str()))
    {
-      cout << gladename2 << endl;
       return gladename2;
    }
    else

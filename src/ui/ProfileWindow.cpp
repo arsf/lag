@@ -76,8 +76,9 @@ ProfileWindow::~ProfileWindow()
    delete fencetoggleprof;
    delete rulertoggle;
    delete slantwidthselectprof;
-   delete orthogonalprof;
    delete slantedprof;
+   delete refreshbuttonprof;
+   delete heightsbuttonprof;
 }
 
 void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
@@ -101,10 +102,11 @@ void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("returnbuttonprof",	                returnbuttonprof);
 	builder->get_widget("showprofilebutton",	            showprofilebutton);
 	builder->get_widget("classbutton",	                    classbutton);
-	builder->get_widget("orthogonalprof",	                orthogonalprof);
 	builder->get_widget("slantedprof",	                    slantedprof);
 	builder->get_widget("slantwidthselectprof",             slantwidthselectprof);
 	builder->get_widget("classificationselect",	            classificationselect);
+	builder->get_widget("refreshbuttonprof",			    refreshbuttonprof);
+	builder->get_widget("heightsbuttonprof",	            heightsbuttonprof);
 }
 
 void ProfileWindow::connect_signals()
@@ -129,9 +131,46 @@ void ProfileWindow::connect_signals()
 	returnbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_returnbuttonprof_clicked));
 	showprofilebutton->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_showprofilebutton_clicked));
 	classbutton->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_classbutton_clicked));
-	orthogonalprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_orthogonalprof));
 	slantedprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantedprof));
 	slantwidthselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantwidthselectedprof));
+
+	refreshbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_refreshbutton_clicked));
+	heightsbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_heightsbuttonprof_clicked));
+}
+
+void ProfileWindow::on_refreshbutton_clicked()
+{
+	prof->drawviewable(1);
+}
+
+void ProfileWindow::on_heightsbuttonprof_clicked()
+{
+	Gtk::MessageDialog dialog("Average heights for flightlines", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
+	std::ostringstream message;
+	std::vector<double> avgs = prof->get_averages();
+	size_t size = avgs.size();
+
+	for (size_t i = 0; i < size; ++i)
+	{
+		message << i << ": " << avgs.at(i) << "\n";
+	}
+
+	if (size > 1)
+	{
+		message << "\nElevation difference in centimetres:\n";
+
+		for (size_t i = 0; i < size; ++i)
+		{
+			for (size_t j = size-1; j > i; --j)
+			{
+				message << i << " - " << j << ": "
+						<< (avgs[i] - avgs[j]) * 100;
+			}
+		}
+	}
+
+	dialog.set_secondary_text(message.str());
+	dialog.run();
 }
 
 //When toggled, the height scale is shown on the profile.
@@ -184,7 +223,20 @@ void ProfileWindow::on_showprofilebutton_clicked()
    double* profys = NULL;
    int profps = 0;
 
-   if(tdo->is_realized())tdo->getprofile(profxs,profys,profps);
+   if(tdo->is_realized())
+   {
+	   tdo->getprofile(profxs,profys,profps);
+	   if (tdo->get_slicing())
+	   {
+		   prof->set_slicing(true);
+		   prof->set_minz(tdo->get_slice_minz());
+		   prof->set_maxz(tdo->get_slice_maxz());
+	   }
+	   else
+	   {
+		   prof->set_slicing(false);
+	   }
+   }
 
    if(profxs!=NULL && profys!=NULL)
    {
@@ -279,29 +331,8 @@ void ProfileWindow::on_slantwidthselectedprof()
    if(prof->is_realized())prof->drawviewable(1);
 }
 
-void ProfileWindow::on_orthogonalprof()
-{
-   if(orthogonalprof->get_active())
-      if(slantedprof->get_active())
-         slantedprof->set_active(false);
-   if(!orthogonalprof->get_active())
-      if(!slantedprof->get_active())
-         slantedprof->set_active(true);
-
-   prof->setslanted(!orthogonalprof->get_active());
-   if(prof->is_realized())
-      prof->drawviewable(1);
-}
-
 void ProfileWindow::on_slantedprof()
 {
-   if(slantedprof->get_active())
-      if(orthogonalprof->get_active())
-         orthogonalprof->set_active(false);
-
-   if(!slantedprof->get_active())
-      if(!orthogonalprof->get_active())
-         orthogonalprof->set_active(true);
 
    prof->setslanted(slantedprof->get_active());
 

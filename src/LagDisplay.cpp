@@ -35,12 +35,12 @@
 LagDisplay::LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit)
 :
     Gtk::GL::DrawingArea(config),
+    	zoomlevel		(1),
         zoompower		(0.5),
         lidardata		(NULL),
         bucketlimit		(bucketlimit),
         maindetailmod	(0),
         pointsize		(1),
-        zoomlevel		(1),
         ratio			(1.0),
         brightnessBy	(brightnessByIntensity),
         colourBy		(colourByFlightline),

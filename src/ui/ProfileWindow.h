@@ -88,6 +88,9 @@ private:
    Gtk::ToolButton *showprofilebutton;
    Gtk::ToolButton *classbutton;
 
+   Gtk::ToolButton *refreshbuttonprof;
+   Gtk::ToolButton *heightsbuttonprof;
+
    //The range of the moving average for the lines on the profile.
    Gtk::SpinButton *movingaveragerangeselect;
 
@@ -101,7 +104,6 @@ private:
    Gtk::SpinButton *slantwidthselectprof;
 
    //Determine whether the profile fence is orthogonal or slanted.
-   Gtk::ToggleToolButton *orthogonalprof;
    Gtk::ToggleToolButton *slantedprof;
 
    // This determines what to classify points as when selected through the 
@@ -111,6 +113,9 @@ private:
    // Initialisation
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
+
+   void on_refreshbutton_clicked();
+   void on_heightsbuttonprof_clicked();
 
    //When toggled, the height scale is shown on the profile.
    void on_showheightscalecheck();

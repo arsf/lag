@@ -73,7 +73,8 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
 		heightenWater		(false),
 		heightenOverlap		(false),
 		heightenUndefined	(false),
-		panningRefresh		(1)
+		panningRefresh		(1),
+		slicing				(false)
 {
    //Control:
    zoompower = 0.5;
@@ -554,6 +555,12 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             {
                //This is here because it is used in calculations.
                z = buckets[i]->getPoint(j,resolutionindex).getZ();
+
+               if (slicing && (z < slice_minz || z > slice_maxz))
+               {
+            	   continue;
+               }
+
                //This is here because it is used in calculations.
                intensity = buckets[i]->getPoint(j,resolutionindex).getIntensity();
 
@@ -1269,7 +1276,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          // This returns an array of booleans saying whether or not each point 
          // (indicated by indices that are shared with pointvector) is in the 
          // area prescribed.
-         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false);
+         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false, false, 0, 0);
          // For all points (no sorting as it seems pointless with a maximum of 
          // four buckets possible)...
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++)
@@ -2131,4 +2138,18 @@ void TwoDeeOverview::toggleNoise()
 {
    tdoDisplayNoise = !tdoDisplayNoise;
    drawviewable(1);
+}
+
+void TwoDeeOverview::super_zoom()
+{
+	setpointwidth(15);
+	zoomlevel = 1;
+
+	for (int i = 0; i < 50; ++i)
+	{
+		zoomlevel+=pow(zoomlevel, zoompower)/2;
+	}
+	resetview();
+	set_overlay_zoomlevels(zoomlevel);
+	drawviewable(1);
 }

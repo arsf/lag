@@ -2,15 +2,15 @@
     * general:  Moved LAG to use laslib library instead of liblas, added support for las 1.3 with modified quadtree.
 
 2012-02-17  Jan Holownia <jaho@pml.ac.uk>
-    * general:  Fixed ascii support, can now load and save ascii files correctly. Removed AsciiLoader from the
-                quadtree and replaced it with overloaded load methods.
+    * general:          Fixed ascii support, can now load and save ascii files correctly. Removed AsciiLoader from the
+                        quadtree and replaced it with overloaded load methods.
     * FileSaver.cpp:    Added option to specify scale factors for ascii files, fixed segfault occuring sometimes 
                         when saving multiple files.
     * FileOpener.cpp:   Added option to specify scale factors for ascii files.
-    * ui:               Added controls to specify scale factors or use default laslib values (0.01).    
+    * lag.ui:           Added controls to specify scale factors or use default laslib values (0.01).    
 
 2012-03-08  Jan Holownia <jaho@pml.ac.uk>
-    * general:  Added some exception handling, possible minor performance improvements
+    * general:          Added some exception handling, possible minor performance improvements
     * all UI classes:   Partialy rewritten most of the classes to improve maintainability, improved interface, 
                         refactored code, added some missing delete statements, comments etc.
     * Colour.cpp:       Added comparison operators (==, !=) to simplify class interface.
@@ -19,7 +19,7 @@
     * general/quadtree: Fixed a bug which would cause some incorrect points to load when using the fence.
     
 2012-03-15  Jan Holownia <jaho@pml.ac.uk>
-    * general:  Cleaned up unused code, refactored and optimised some parts.
+    * general:          Cleaned up unused code, refactored and optimised some parts.
     
 2012-03-27  Jan Holownia <jaho@pml.ac.uk>
     * FileOpener.cpp:   Added the code to clean up after quadtree. It has to be here because this class creates
@@ -33,7 +33,15 @@
     * general:          Improved responsiveness by tuning some of the rendering parameters. Added an option to
                         turn on/off full refresh while panning. Added an option to change background colour.
     * lag.cpp:          Removed the misleading null pointers passed around for no reason and altered constructors
-                        most classes to reflect this change.
+                        of most classes to reflect this change.
+                        
+2012-04-12  Jan Holownia <jaho@pml.ac.uk>
+    * general:          Removed loading errors files. Added vertical slicing (only use data in given z range).
+                        Added 'Super zoom' option which zooms in to points very closely. Added Heights dialog
+                        to profile window which shows average heights and elevation differences for selected data.
+    * lag.ui:           Modified toolbars to look more consistent and added controls for new functionality.
+    * MathFuncs.cpp:    Modified vetpoints() method to exclude points outside given z values range.
+
     
     
     

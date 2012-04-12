@@ -50,15 +50,13 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	ostringstream bleh;
 	bleh << meh;
 
-	loaderroroutputfile = "/tmp/LAGloadingerrors" + bleh.str() + ".txt";
-	loaderroroutput.open(loaderroroutputfile.c_str());
 	loaderrorstream = new ostringstream();
 	loadedanyfiles = false;
-	cachelimit = 30000000;
+	cachelimit = 35000000;
 
 	cachesizeselect->set_range(10e6,10e11);
 
-	cachesizeselect->set_value(300e5);
+	cachesizeselect->set_value(350e5);
 	cachesizeselect->set_increments(10e5,10e5);
 
 	resbaseselect->set_range(2,1000);
@@ -79,7 +77,6 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 
 FileOpener::~FileOpener()
 {
-   loaderroroutput.close();
    delete loadoutputlabel;
    delete pointskipselect;
    delete fenceusecheck;
@@ -91,6 +88,7 @@ FileOpener::~FileOpener()
    delete scaleFactorEntryY;
    delete scaleFactorEntryZ;
    delete btnUseDefault;
+   delete openbutton;
    //Have to delete parent after children?
    delete filechooserdialog;
 }
@@ -111,11 +109,13 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("loadoutputlabel",loadoutputlabel);
 	builder->get_widget("resbaseselect",resbaseselect);
 	builder->get_widget("resdepthselect",resdepthselect);
+	builder->get_widget("openbutton",openbutton);
 }
 
 void FileOpener::connect_signals()
 {
 	openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
+	openbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
 	filechooserdialog->signal_response().connect(sigc::mem_fun(*this,&FileOpener::on_filechooserdialogresponse));
 	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this,&FileOpener::on_usedefault_changed));
 	cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
@@ -123,9 +123,12 @@ void FileOpener::connect_signals()
     Gtk::Main::signal_quit().connect(sigc::mem_fun(*this, &FileOpener::on_quit));
 }
 
-// This is a temporary solution as pointers need to be reorganised
 int FileOpener::on_quit()
 {
+	Gtk::Window* profw = tdow->get_profilewindow();
+	if (profw->get_realized())
+		profw->hide_all();
+
 	if (lidardata != NULL)
 	{
 		std::cout << "Cleaning up..." << std::endl;
@@ -256,6 +259,10 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
    int resolutionbase = resbaseselect->get_value_as_int();
    int bucketlevels = 0;
    bool newQuadtree = false;
+
+   // These variables store min and max Z values used for slicing
+   double minZ=0, maxZ=0;
+   bool zSet = false;
 
    loadoutputlabel->set_text("");
    Gdk::Window::process_all_updates();
@@ -406,6 +413,17 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                         }
                      }
                   }
+                  if (!zSet)
+                  {
+                	  minZ = maxZ = loader->getMinZ();
+                	  zSet = true;
+                  }
+
+                  if (loader->getMinZ() < minZ)
+                	  minZ = loader->getMinZ();
+                  if (loader->getMaxZ() > maxZ)
+                	  maxZ = loader->getMaxZ();
+
                   if(loader != NULL) delete loader;
                }
                else
@@ -423,14 +441,11 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 
             if(loaderrorstream->str()!="")
             {
-               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
+               string message = "There have been errors in loading.";
                cerr << message << endl;
 
                Gdk::Window::process_all_updates();
 
-               loaderroroutput << filename << endl;
-               loaderroroutput << loaderrorstream->str();
-               loaderroroutput.flush();
                loaderrorstream->str("");
             }
          }
@@ -495,6 +510,17 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                      miny = lidarboundary.minY;
                   if(lidarboundary.maxY > maxy || count == 2)
                      maxy = lidarboundary.maxY;
+
+                  if (!zSet)
+                  {
+                	  minZ = maxZ = loader->getMinZ();
+                	  zSet = true;
+                  }
+                  if (loader->getMinZ() < minZ)
+                	  minZ = loader->getMinZ();
+                  if (loader->getMaxZ() > maxZ)
+                	  maxZ = loader->getMaxZ();
+
                   if(loader != NULL)
                      delete loader;
                }
@@ -569,9 +595,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                                                                 bucketlevels);
                      if(numberofpointsloaded == 0)
                      {
-                        string message = "No points loaded from file, either because of a lack of points or \
-                                          because points lie outside quadtree boundary (possibly \
-                                          because of fence). Please check file.";
+                        string message = "No points loaded from file, either because of a lack of points or because points "
+                        		"lie outside quadtree boundary (possibly because of fence). Please check file.";
                         cout << message << endl;
                         // loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                         Gdk::Window::process_all_updates();
@@ -593,7 +618,18 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                         numlines--;
                      }
                   }
-               if(loader != NULL)delete loader;
+
+                  if (!zSet)
+                  {
+                	  minZ = maxZ = loader->getMinZ();
+                	  zSet = true;
+                  }
+                  if (loader->getMinZ() < minZ)
+                	  minZ = loader->getMinZ();
+                  if (loader->getMaxZ() > maxZ)
+                	  maxZ = loader->getMaxZ();
+
+                  if(loader != NULL)delete loader;
             }
             cout << filename << endl;
             loadoutputlabel->set_text(loadoutputlabel->get_text() + filename + "\n");
@@ -601,13 +637,10 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 
             if(loaderrorstream->str()!="")
             {
-               string message = "There have been errors in loading. Please see the file " + loaderroroutputfile;
+               string message = "There have been errors in loading.";
                cout << message << endl;
                //  loadoutputlabel->set_text(loadoutputlabel->get_text() + message + "\n");
                Gdk::Window::process_all_updates();
-               loaderroroutput << filename << endl;
-               loaderroroutput << loaderrorstream->str();
-               loaderroroutput.flush();
                loaderrorstream->str("");
             }
          }
@@ -687,6 +720,9 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
    fs->setlabeltext(list);
    fs->setlinerange(0,numlines-1);
    tdow->setraiselinerange(0,numlines-1);
+
+   tdow->set_slice_range(minZ, maxZ);
+
    // (Re)Set the advanced colouring and shading options to the values 
    // indicated by the recently loaded flightlines.
    aow->resetcolouringandshading();

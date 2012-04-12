@@ -53,7 +53,7 @@ double percentilevalue(double* data, int datasize, double percentile, double min
 //Determines whether the points in the sent bucket fit within the profile area.
 //If "hide noise points in profile" is ticket in advanced options, these are not sent to the
 //profile
-bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners, bool hideNoise)
+bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners, bool hideNoise, bool slicing, double minz, double maxz)
 {
    bool* correctpoints = new bool[points->getNumberOfPoints(0)];
    //Determines whether the point is within the boundary.
@@ -61,14 +61,16 @@ bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners
    //These define the edge being considered.
    int lastcorner,currentcorner;
    //For every point:
-   for(int i=0; i < points->getNumberOfPoints(0); i++) {
+   for(int i=0; i < points->getNumberOfPoints(0); i++)
+   {
       // Zero is an even number, so if the point is to the right of an edge 
       // of the boundary zero times, it cannot be within it.
       pointinboundary = false;
       //Initially the last corner is looped back.
       lastcorner = numberofcorners - 1;
       //For every edge:
-      for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++){
+      for(currentcorner = 0;currentcorner < numberofcorners; currentcorner++)
+      {
          // This segments the line to the length of the segment that 
          // helps define the boundary.
          if((ys[currentcorner] < points->getPoint(i,0).getY() && 
@@ -90,7 +92,9 @@ bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners
          lastcorner = currentcorner;
      }
      if (hideNoise == true && points->getPoint(i, 0).getClassification() == 7)
-        pointinboundary = false;
+    	 pointinboundary = false;
+     if (slicing == true && (points->getPoint(i, 0).getZ() < minz || points->getPoint(i, 0).getZ() > maxz))
+    	 pointinboundary = false;
      correctpoints[i] = pointinboundary;
    }
    return correctpoints;

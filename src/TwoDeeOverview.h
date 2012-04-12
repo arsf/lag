@@ -52,8 +52,10 @@ public:
    bool on_zoom_key(GdkEventKey* event);
 
    //Method that waits until the drawing thread has paused.
-   void waitforpause(){
-      while(thread_running) {
+   void waitforpause()
+   {
+      while(thread_running)
+      {
          usleep(10);
       }
    }
@@ -275,6 +277,39 @@ public:
    void setheightenUndefined(bool heightenUndefined){ 
       this->heightenUndefined = heightenUndefined; 
    }
+
+   void super_zoom();
+
+   void set_slicing(bool slice)
+   {
+	   this->slicing = slice;
+   }
+
+   bool get_slicing()
+   {
+	   return this->slicing;
+   }
+
+   void set_slice_minz(double minz)
+   {
+	   this->slice_minz = minz;
+   }
+
+   double get_slice_minz()
+   {
+	   return this->slice_minz;
+   }
+
+   void set_slice_maxz(double maxz)
+   {
+	   this->slice_maxz = maxz;
+   }
+
+   double get_slice_maxz()
+   {
+	   return this->slice_maxz;
+   }
+
 protected:
 
    //Drawing variables:
@@ -434,6 +469,11 @@ protected:
    //Panning: 2 = no refresh, 1 = full refresh
    int panningRefresh;
 
+   // Slicing
+   bool slicing;
+   double slice_minz;
+   double slice_maxz;
+
    //Signal handlers:
    //Panning:
    sigc::connection sigpanstart;
@@ -497,7 +537,7 @@ protected:
    //Positioning methods:
    // Determines what part of the image is displayed with 
    // orthographic projection.
-   void resetview();
+
    //Allows the user to zoom with the mouse wheel.
    bool on_zoom(GdkEventScroll* event);
    //Set zoomlevels of the overlays.
@@ -534,6 +574,8 @@ protected:
    bool on_ruler_start(GdkEventButton* event);
    bool on_ruler(GdkEventMotion* event);
    bool on_ruler_end(GdkEventButton* event);
+
+   void resetview();
 };
 
 #endif

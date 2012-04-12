@@ -79,6 +79,8 @@ public:
                         rulering,
                         fencing };
 
+   double zoomlevel;
+
    //Getters:
    inline double getrmaxz()
    {
@@ -199,7 +201,7 @@ protected:
    // with ratio it determines the translation from screen scale to 
    // world scale and vice versa and is set so that when its value is 
    // 1 all of the quadtree must be just visible on the window.
-   double zoomlevel;
+   //double zoomlevel;
 
    // This determines, along with the zoomlevel, the scaling of the image 
    // relative to the screen. At zoomlevel 1, the image should just fit 

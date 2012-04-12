@@ -49,10 +49,14 @@ public:
 
    // Update so that all loaded flightlines can be raised without leaving 
    // a lot of useless options.
-   inline void setraiselinerange(int first, int second)
+   void setraiselinerange(int first, int second)
    {
       raiselineselect->set_range(first,second); 
    }
+
+   void set_slice_range(double min, double max);
+
+   Gtk::Window* get_profilewindow();
 
 private:
    TwoDeeOverview *tdo;
@@ -143,9 +147,6 @@ private:
    //Toggle button determining whether mouse dragging selects the profile.
    Gtk::ToggleToolButton *profiletoggle;
 
-   //Toggle button determining whether or not to use an orthogonal selection.
-   Gtk::ToggleToolButton *orthogonalrectshapetoggle;
-
    //Toggle button determining whether or not to use a slanted selection.
    Gtk::ToggleToolButton *slantedrectshapetoggle;
 
@@ -160,6 +161,21 @@ private:
 
    Gtk::ToolButton* returnbutton;
    Gtk::ToolButton* advancedbutton;
+
+   Gtk::ToolButton* refreshbutton;
+   void on_refreshbuttonclicked();
+
+   Gtk::ToolButton* saveasbutton;
+
+   // Vertical slices
+   Gtk::ToggleToolButton* slicebutton;
+   Gtk::SpinButton* zminselect;
+   Gtk::SpinButton* zmaxselect;
+
+
+   Gtk::ToolButton* superzoombutton;
+   void on_superzoomclicked();
+
 
    // Loads widgets from xml file
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
@@ -215,12 +231,6 @@ private:
    //parameters are sent to the profile area.
    void on_profiletoggle();
 
-   //When toggled, this makes sure that the slant toggle is in the opposite 
-   //state and then sets the orthogonal shape on the overview and makes new 
-   //profile and fence boundaries before redrawing the overview, possibly 
-   //with the new boundaries for profile and/or fence displayed.
-   void on_orthogonalrectshapetoggle();
-
    //When toggled, this makes sure that the orthogonal toggle is in the 
    //opposite state and then sets the slanted shape on the overview and makes 
    //new profile and fence boundaries before redrawing the overview, possibly 
@@ -264,6 +274,11 @@ private:
 
    //Updates whether any line is to be raised and redraws.
    void on_raiselinecheckmenu();
+
+   //Slicing
+   void on_slicebuttontoggled();
+   void on_zminvaluechanged();
+   void on_zmaxvaluechanged();
 
 };
 #endif

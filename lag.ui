@@ -265,14 +265,49 @@
             <child>
               <object class="GtkToolbar" id="toolbar2">
                 <property name="visible">True</property>
+                <property name="toolbar_style">both</property>
+                <property name="icon_size">2</property>
+                <child>
+                  <object class="GtkToolButton" id="openbutton">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Open</property>
+                    <property name="stock_id">gtk-open</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="saveasbutton">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Save</property>
+                    <property name="stock_id">gtk-save</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem3">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
                 <child>
                   <object class="GtkToolButton" id="returnbutton">
                     <property name="visible">True</property>
                     <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
                     <property name="is_important">True</property>
-                    <property name="label" translatable="yes">Return
-to start</property>
-                    <property name="stock_id">gtk-jump-to</property>
+                    <property name="label" translatable="yes">Reset</property>
+                    <property name="stock_id">gtk-fullscreen</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -280,12 +315,12 @@ to start</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolButton" id="advancedbutton">
+                  <object class="GtkToolButton" id="refreshbutton">
                     <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
                     <property name="is_important">True</property>
-                    <property name="label" translatable="yes">Advanced
-options</property>
-                    <property name="stock_id">gtk-preferences</property>
+                    <property name="label" translatable="yes">Refresh</property>
+                    <property name="stock_id">gtk-refresh</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -293,50 +328,7 @@ options</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem1">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkToolItem" id="toolbutton4">
-                    <property name="visible">True</property>
-                    <child>
-                      <object class="GtkVBox" id="vbox4">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <object class="GtkSpinButton" id="pointwidthselect">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="adjustment">pointWidthTdoAdj</property>
-                            <property name="digits">2</property>
-                            <property name="numeric">True</property>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="pointwidthlabel1">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Point width</property>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem2">
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem13">
                     <property name="visible">True</property>
                   </object>
                   <packing>
@@ -353,14 +345,6 @@ options</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem3">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
                   </packing>
                 </child>
                 <child>
@@ -396,18 +380,6 @@ options</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToggleToolButton" id="orthogonalrectshapetoggle">
-                    <property name="visible">True</property>
-                    <property name="is_important">True</property>
-                    <property name="label" translatable="yes">Orthogonal</property>
-                    <property name="stock_id">gtk-media-stop</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkToggleToolButton" id="slantedrectshapetoggle">
                     <property name="visible">True</property>
                     <property name="is_important">True</property>
@@ -418,14 +390,6 @@ options</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="homogeneous">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem4">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
                   </packing>
                 </child>
                 <child>
@@ -472,6 +436,98 @@ options</property>
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkToggleToolButton" id="slicebutton">
+                    <property name="visible">True</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Slice</property>
+                    <property name="stock_id">gtk-justify-right</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolItem" id="toolbutton6">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox23">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkSpinButton" id="zminselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">adjustment3</property>
+                            <property name="climb_rate">0.050000000000000003</property>
+                            <property name="digits">2</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="slantwidthlabel1">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Min Z</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolItem" id="toolbutton8">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox24">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkSpinButton" id="zmaxselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="adjustment">adjustment4</property>
+                            <property name="climb_rate">0.050000000000000003</property>
+                            <property name="digits">2</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="slantwidthlabel2">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Max Z</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem2">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkToolItem" id="toolitem5">
                     <property name="visible">True</property>
                     <child>
@@ -493,7 +549,7 @@ options</property>
                         <child>
                           <object class="GtkLabel" id="raiseLineLabel">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Raise</property>
+                            <property name="label" translatable="yes">Raise flightline</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -504,6 +560,82 @@ options</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem1">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolItem" id="toolbutton4">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox4">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkSpinButton" id="pointwidthselect">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="adjustment">pointWidthTdoAdj</property>
+                            <property name="digits">2</property>
+                            <property name="numeric">True</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="pointwidthlabel1">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Point width</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="superzoombutton">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Super Zoom</property>
+                    <property name="stock_id">gtk-zoom-in</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem4">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="advancedbutton">
+                    <property name="visible">True</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Options</property>
+                    <property name="stock_id">gtk-preferences</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
               </object>
@@ -695,18 +827,7 @@ options</property>
             <child>
               <object class="GtkToolbar" id="toolbar3">
                 <property name="visible">True</property>
-                <child>
-                  <object class="GtkToolButton" id="returnbuttonprof">
-                    <property name="visible">True</property>
-                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
-                    <property name="label" translatable="yes">Return to start</property>
-                    <property name="stock_id">gtk-jump-to</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="homogeneous">True</property>
-                  </packing>
-                </child>
+                <property name="toolbar_style">both</property>
                 <child>
                   <object class="GtkToolButton" id="showprofilebutton">
                     <property name="visible">True</property>
@@ -720,50 +841,39 @@ options</property>
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem14">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="returnbuttonprof">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="label" translatable="yes">Reset</property>
+                    <property name="stock_id">gtk-fullscreen</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="refreshbuttonprof">
+                    <property name="visible">True</property>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="label" translatable="yes">Refresh</property>
+                    <property name="stock_id">gtk-refresh</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkSeparatorToolItem" id="separatortoolitem10">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkToolItem" id="toolbutton7">
-                    <property name="visible">True</property>
-                    <child>
-                      <object class="GtkVBox" id="vbox7">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <object class="GtkSpinButton" id="pointwidthselectprof">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="adjustment">pointWidthProfAdj</property>
-                            <property name="climb_rate">0.050000000000000003</property>
-                            <property name="digits">2</property>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="pointwidthlabelprof">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Point width</property>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem5">
                     <property name="visible">True</property>
                   </object>
                   <packing>
@@ -806,7 +916,7 @@ options</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem6">
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem5">
                     <property name="visible">True</property>
                   </object>
                   <packing>
@@ -834,9 +944,50 @@ options</property>
                         <child>
                           <object class="GtkLabel" id="movingaveragerangelabel">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Moving
-Average
-Range</property>
+                            <property name="label" translatable="yes">Avg range</property>
+                          </object>
+                          <packing>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkSeparatorToolItem" id="separatortoolitem6">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolItem" id="toolbutton7">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkVBox" id="vbox7">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkSpinButton" id="pointwidthselectprof">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="adjustment">pointWidthProfAdj</property>
+                            <property name="climb_rate">0.050000000000000003</property>
+                            <property name="digits">2</property>
+                          </object>
+                          <packing>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="pointwidthlabelprof">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">Point width</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -915,10 +1066,11 @@ Range</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToggleToolButton" id="fencetoggleprof">
+                  <object class="GtkToggleToolButton" id="slantedprof">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Fence</property>
-                    <property name="stock_id">gtk-zoom-fit</property>
+                    <property name="is_important">True</property>
+                    <property name="label" translatable="yes">Slanted</property>
+                    <property name="stock_id">gtk-close</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -948,7 +1100,7 @@ Range</property>
                         <child>
                           <object class="GtkLabel" id="slantWidthSelectLabel">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Fence width</property>
+                            <property name="label" translatable="yes">Slant width</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -970,45 +1122,31 @@ Range</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolItem" id="toolitem3">
+                  <object class="GtkToolButton" id="heightsbuttonprof">
                     <property name="visible">True</property>
-                    <child>
-                      <object class="GtkVBox" id="vbox9">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                        <child>
-                          <object class="GtkToggleToolButton" id="orthogonalprof">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Orthogonal</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-media-stop</property>
-                            <property name="active">True</property>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToggleToolButton" id="slantedprof">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Slanted</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-close</property>
-                          </object>
-                          <packing>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                    </child>
+                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
+                    <property name="label" translatable="yes">Heights</property>
+                    <property name="stock_id">gtk-sort-ascending</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkSeparatorToolItem" id="toolbutton5">
                     <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToggleToolButton" id="fencetoggleprof">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Fence</property>
+                    <property name="stock_id">gtk-zoom-fit</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -3006,13 +3144,21 @@ One should note that the contiguous area surrounding the ASDF area of the home r
   <object class="GtkAdjustment" id="adjustment1">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-    <property name="page_size">10</property>
+    <property name="page_increment">10</property>    
   </object>
   <object class="GtkAdjustment" id="adjustment2">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
+    <property name="page_increment">10</property>    
+  </object>
+  <object class="GtkAdjustment" id="adjustment3">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>   
+  </object>
+  <object class="GtkAdjustment" id="adjustment4">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
     <property name="page_increment">10</property>
-    <property name="page_size">10</property>
   </object>
 </interface>

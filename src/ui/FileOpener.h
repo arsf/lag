@@ -103,12 +103,7 @@ private:
    Gtk::SpinButton *resdepthselect;
 
    Gtk::MenuItem* openfilemenuitem;
-
-   //Path of file for error message output.
-   string loaderroroutputfile;
-
-   //Stream outputting error messages from the quadtree to a file.
-   ofstream loaderroroutput;
+   Gtk::ToolButton* openbutton;
 
    //Stringstream getting error messages from the quadtree.
    ostringstream *loaderrorstream;

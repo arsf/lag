@@ -402,7 +402,7 @@ bool Profile::showprofile(double* profxs, double* profys, int profps, bool chang
       {
          queriedbucketsarray[i] = true;	//Record as cached.
          //Determine whether the points in this bucket are within the profile.
-         correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,profys,profps, hideProfNoise);
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,profys,profps, hideProfNoise, slicing, minz, maxz);
       //For all points in the bucket:
 
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++)
@@ -426,7 +426,7 @@ bool Profile::showprofile(double* profxs, double* profys, int profps, bool chang
       if(!queriedbucketsarray[i])
       {
          //Determine whether the points in this bucket are within the profile.
-         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps, hideProfNoise);
+         correctpointsbuckets[i] = vetpoints((*pointvector)[i],profxs,profys,profps, hideProfNoise, slicing, minz, maxz);
 
          //For all points in the bucket:
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++)
@@ -673,7 +673,7 @@ bool Profile::classify(uint8_t classification)
    for(int i=0;i<numbuckets;++i)
       // Store whether the points in the buckets are inside the boundaries of 
       // the profile.
-      correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,profys,profps, hideProfNoise);
+      correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,profys,profps, hideProfNoise, slicing, minz, maxz);
 
    //These will contain the corner coordinates of the fence.
    double *xs,*ys,*zs;
@@ -1603,6 +1603,25 @@ bool Profile::on_zoom_key(GdkEventKey* event)
    return drawviewable(1);
 }
 
+std::vector<double> Profile::get_averages()
+{
+	int lines = flightlinestot.size();
+	std::vector<double> avgs (lines);
+
+	for (int i = 0; i < lines; ++i)
+	{
+		int points = (int)flightlinepoints[i].size();
+		double z = 0;
+		for (int j=0; j < points; ++j)
+		{
+			z += flightlinepoints[i][j].getZ();
+		}
+		avgs.at(i) = z / points;
+	}
+
+	return avgs;
+}
+
 // This creates an array of z values for the points in the profile that are 
 // derived from the real z values through a moving average. This results in 
 // a smoothed line.
@@ -1624,7 +1643,7 @@ void Profile::make_moving_average()
    {
       int numofpoints = (int)flightlinepoints[i].size();
       linez[i] = new double[numofpoints];
-      for(int j=0;j<numofpoints;j++){
+      for(int j=0;j<numofpoints;++j){
          double z=0,zcount=0;
          // For (up to) the range (depending on how close to the edge the 
          // point is) add up the points...
