@@ -74,7 +74,9 @@ private:
    Gtk::SpinButton *flightlinesaveselect;
    Quadtree *lidardata;
 
-   // (jaho)
+   Gtk::RadioButton* utmselect;
+   Gtk::RadioButton* latlongselect;
+
    Gtk::Entry* parsestringentry;
    Gtk::Entry* scaleFactorEntryX;
    Gtk::Entry* scaleFactorEntryY;

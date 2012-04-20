@@ -35,6 +35,7 @@ FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk:
 {
   load_xml(builder);
   connect_signals();
+  utmselect->set_active(true);
 }
 
 FileSaver::~FileSaver()
@@ -42,6 +43,8 @@ FileSaver::~FileSaver()
    delete flightlinelistlabel;
    delete flightlinesaveselect;
    delete parsestringentry;
+   delete utmselect;
+   delete latlongselect;
    delete scaleFactorEntryX;
    delete scaleFactorEntryY;
    delete scaleFactorEntryZ;
@@ -60,6 +63,9 @@ void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
 	builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
 	builder->get_widget("btnUseDefault1", btnUseDefault);
+	builder->get_widget("utmselect", utmselect);
+	builder->get_widget("latlongselect", latlongselect);
+
 }
 
 void FileSaver::connect_signals()
@@ -101,7 +107,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
 
         	 if(btnUseDefault->get_active())
              {
-            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str());
+            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), latlongselect->get_active());
              }
              else
              {
@@ -114,7 +120,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
             	 temp = scaleFactorEntryZ->get_text().c_str();
             	 scale_factor[2] = atof(temp);
 
-            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), scale_factor);
+            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), scale_factor, latlongselect->get_active());
 
                  temp = NULL;
              }
@@ -140,7 +146,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
       {
     	  try
     	  {
-    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str());
+    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), latlongselect->get_active());
 
     		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
 

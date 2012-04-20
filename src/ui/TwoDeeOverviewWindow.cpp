@@ -47,8 +47,6 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo, AdvancedOptionsW
    tdowin->show_all();
 
    //Initialisations:
-   tdo->setshowprofile(showprofilecheck->get_active());
-   tdo->setshowfence(showfencecheck->get_active());
    tdo->setshowdistancescale(showdistancescalecheck->get_active());
    tdo->setshowlegend(showlegendcheck->get_active());
    tdo->setreversez(reverseheightcheck->get_active());
@@ -58,8 +56,6 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo, AdvancedOptionsW
    tdo->getfencebox()->setslantwidth(slantwidthselect->get_value());
    tdo->getprofbox()->setslantedshape(slantedrectshapetoggle->get_active());
    tdo->getfencebox()->setslantedshape(slantedrectshapetoggle->get_active());
-   //tdo->getprofbox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
-   //tdo->getfencebox()->setorthogonalshape(orthogonalrectshapetoggle->get_active());
    tdo->setraiseline(raiselinecheckmenu->get_active());
    tdo->setlinetoraise(raiselineselect->get_value_as_int());
 
@@ -80,8 +76,6 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
    delete help;
    delete about;
 
-   delete showprofilecheck;
-   delete showfencecheck;
    delete showdistancescalecheck;
    delete showlegendcheck;
    delete reverseheightcheck;
@@ -107,6 +101,7 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
    delete aboutmenu;
    delete colourbynonemenu;
    delete brightnessbynonemenu;
+   delete quadtreemenu;
 
    delete returnbutton;
    delete advancedbutton;
@@ -117,6 +112,7 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
    delete slicebutton;
    delete zminselect;
    delete zmaxselect;
+   delete uselatlongcheck;
 }
 
 /*
@@ -130,8 +126,6 @@ void TwoDeeOverviewWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
     builder->get_widget("saveasfilemenuitem",	 	saveasfilemenuitem);
     builder->get_widget("quitfilemenuitem",	 		quitfilemenuitem);
-    builder->get_widget("showprofilecheck",		 	showprofilecheck);
-    builder->get_widget("showfencecheck",		 	showfencecheck);
     builder->get_widget("showdistancescalecheck",	showdistancescalecheck);
     builder->get_widget("showlegendcheck",	 		showlegendcheck);
     builder->get_widget("reverseheightcheck", 		reverseheightcheck);
@@ -158,13 +152,14 @@ void TwoDeeOverviewWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
     builder->get_widget("slantwidthselect", 		slantwidthselect);
     builder->get_widget("raiselinecheckmenu",		raiselinecheckmenu);
     builder->get_widget("raiselineselect", 			raiselineselect);
-
     builder->get_widget("superzoombutton",			superzoombutton);
     builder->get_widget("refreshbutton",			refreshbutton);
     builder->get_widget("saveasbutton", 			saveasbutton);
     builder->get_widget("slicebutton", 				slicebutton);
     builder->get_widget("zminselect", 				zminselect);
     builder->get_widget("zmaxselect",  				zmaxselect);
+    builder->get_widget("quadtreemenu",				quadtreemenu);
+    builder->get_widget("uselatlongcheck",			uselatlongcheck);
 }
 
 /*
@@ -179,8 +174,6 @@ void TwoDeeOverviewWindow::connect_signals()
 	eventboxtdo->signal_key_press_event().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_tdo_key_press));
 	saveasfilemenuitem->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_savefilemenuactivated));
 	quitfilemenuitem->signal_activate().connect(sigc::ptr_fun(gtk_main_quit));
-	showprofilecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showprofilecheck));
-	showfencecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showfencecheck));
 	showdistancescalecheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showdistancescalecheck));
 	showlegendcheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_showlegendcheck));
 	reverseheightcheck->signal_activate().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_reverseheightcheck));
@@ -207,15 +200,109 @@ void TwoDeeOverviewWindow::connect_signals()
     slantwidthselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_slantwidthselected));
     raiselinecheckmenu->signal_toggled().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselinecheckmenu));
     raiselineselect->signal_value_changed().connect(sigc::mem_fun(this,&TwoDeeOverviewWindow::on_raiselineselected));
-
+    quadtreemenu->signal_activate().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_quadtreemenu_activated));
     saveasbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_savefilemenuactivated));
     refreshbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_refreshbuttonclicked));
-
     superzoombutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_superzoomclicked));
-
     slicebutton->signal_toggled().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_slicebuttontoggled));
     zminselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zminvaluechanged));
     zmaxselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zmaxvaluechanged));
+    uselatlongcheck->signal_activate().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_uselatlongcheck));
+}
+
+void TwoDeeOverviewWindow::on_uselatlongcheck()
+{
+	tdo->set_latlong(uselatlongcheck->get_active());
+}
+
+
+void TwoDeeOverviewWindow::on_quadtreemenu_activated()
+{
+	Gtk::MessageDialog dialog("Quadtree information\t", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
+	std::ostringstream message;
+	Quadtree* qt;
+	qt = tdo->getlidatdata();
+
+	if (qt == NULL)
+	{
+		message << "No quadtree found.";
+	}
+	else
+	{
+		Boundary* b;
+		b = qt->getBoundary();
+		double* xs = new double[4];
+		xs[0] = xs[1] = b->minX;
+		xs[2] = xs[3] = b->maxX;
+		double* ys = new double[4];
+		ys[0] = ys[1] = b->minY;
+		ys[2] = ys[3] = b->maxY;
+		vector<PointBucket*>* pointvector = NULL;
+
+		try
+		{
+			pointvector = qt->advSubset(xs,ys,4);
+		}
+		catch(DescriptiveException e)
+		{
+			cout << "There has been an exception:" << endl;
+			cout << "What: " << e.what() << endl;
+			cout << "Why: " << e.why() << endl;
+			cout << "No points returned." << endl;
+		}
+
+		delete[] xs;
+		delete[] ys;
+
+		if(pointvector == NULL || pointvector->size() == 0)
+		{
+			message << "No data found in the quandtree.";
+		}
+		else
+		{
+			int pointsInBuckets = 0;
+			for (unsigned int i = 0; i < pointvector->size(); ++i)
+			{
+				pointsInBuckets +=(*pointvector)[i]->getNumberOfPoints(0);
+			}
+
+			double min[3];
+			double max[3];
+			min[0] = b->minX;
+			min[1] = b->minY;
+			min[2] = (*pointvector)[0]->getminZ();
+			max[0] = b->maxX;
+			max[1] = b->maxY;
+			max[2] = (*pointvector)[0]->getmaxZ();
+
+			delete b;
+
+			if (uselatlongcheck->get_active())
+			{
+				tdo->convert_to_latlong(min);
+				tdo->convert_to_latlong(max);
+			}
+
+			message << "Number of points: " << "\t" << qt->getNumberOfPoints() << "\n"
+					<< "Points in buckets: " << "\t" << pointsInBuckets << "\n"
+					<< "Number of buckets:  " << pointvector->size() << "\n"
+					<< "Bucket size: " << "\t\t" << qt->get_capacity() << "\n"
+					<< "Points in cache: " << "\t" << (*pointvector)[0]->get_cache_used() << "\n"
+					<< "Size in memory: " << "\t" << (*pointvector)[0]->get_cache_used() * sizeof(LidarPoint) / 1048576 << " MB" << "\n"
+					<< "\n"
+					<< "Boundary:" << "\n"
+					<< "Min X - Max X: " << "\t" << min[0] << " - " << max[0] << "\n"
+					<< "Min Y - Max Y: " << "\t" << min[1] << " - " << max[1] << "\n"
+					<< "Min Z - Max Z: " << "\t" << min[2] << " - " << max[2] << "\n"
+					<< "\n"
+					<< "UTM zone: " << "\t" << tdo->get_utm_zone() << "\n";
+		}
+
+		delete pointvector;
+	}
+
+	dialog.set_secondary_text(message.str());
+	dialog.run();
 }
 
 void TwoDeeOverviewWindow::on_slicebuttontoggled()
@@ -267,24 +354,6 @@ void TwoDeeOverviewWindow::on_refreshbuttonclicked()
 void TwoDeeOverviewWindow::on_superzoomclicked()
 {
 	tdo->super_zoom();
-}
-
-// When toggled, the profile box is shown on the 2d overview regardless of 
-// whether profiling mode is active.
-void TwoDeeOverviewWindow::on_showprofilecheck()
-{
-   tdo->setshowprofile(showprofilecheck->get_active());
-   if(tdo->is_realized())
-	   tdo->drawviewable(2);
-}
-
-// When toggled, the fence box is shown on the 2d overview regardless of 
-// whether fencing mode is active.
-void TwoDeeOverviewWindow::on_showfencecheck()
-{
-   tdo->setshowfence(showfencecheck->get_active());
-   if(tdo->is_realized())
-      tdo->drawviewable(2);
 }
 
 //When toggled, the distance scale is shown on the 2d overview.
@@ -667,4 +736,13 @@ void TwoDeeOverviewWindow::on_raiselinecheckmenu()
 Gtk::Window* TwoDeeOverviewWindow::get_profilewindow()
 {
 	return profilewindow;
+}
+
+void TwoDeeOverviewWindow::set_utm_zone(std::string zone)
+{
+	tdo->set_utm_zone(zone);
+	if (zone == "" || zone == "unknown")
+		uselatlongcheck->set_inconsistent(true);
+	else
+		uselatlongcheck->set_inconsistent(false);
 }

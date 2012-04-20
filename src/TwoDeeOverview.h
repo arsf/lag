@@ -177,16 +177,6 @@ public:
    }
 
    //Setters:
-   void setshowprofile(double showprofile)
-   {
-      this->showprofile = showprofile;
-   }
-
-   void setshowfence(double showfence)
-   {
-      this->showfence = showfence;
-   }
-
    void setshowdistancescale(double showdistancescale)
    {
       this->showdistancescale = showdistancescale;
@@ -309,6 +299,28 @@ public:
    {
 	   return this->slice_maxz;
    }
+
+   bool get_latlong()
+   {
+	   return this->latlong;
+   }
+
+   void set_latlong(bool uselatlong)
+   {
+	   this->latlong = uselatlong;
+   }
+
+   void set_utm_zone(std::string zone)
+   {
+	   this->utm_zone = zone;
+   }
+
+   std::string get_utm_zone()
+   {
+	   return this->utm_zone;
+   }
+
+   void convert_to_latlong(double* point);
 
 protected:
 
@@ -473,6 +485,10 @@ protected:
    bool slicing;
    double slice_minz;
    double slice_maxz;
+
+   //Latlong
+   bool latlong;
+   std::string utm_zone;
 
    //Signal handlers:
    //Panning:

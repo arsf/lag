@@ -424,6 +424,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                   if (loader->getMaxZ() > maxZ)
                 	  maxZ = loader->getMaxZ();
 
+                  tdow->set_utm_zone(loader->get_utm_zone());
+
                   if(loader != NULL) delete loader;
                }
                else
@@ -520,6 +522,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                 	  minZ = loader->getMinZ();
                   if (loader->getMaxZ() > maxZ)
                 	  maxZ = loader->getMaxZ();
+
+                  tdow->set_utm_zone(loader->get_utm_zone());
 
                   if(loader != NULL)
                      delete loader;
@@ -628,6 +632,8 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                 	  minZ = loader->getMinZ();
                   if (loader->getMaxZ() > maxZ)
                 	  maxZ = loader->getMaxZ();
+
+                  tdow->set_utm_zone(loader->get_utm_zone());
 
                   if(loader != NULL)delete loader;
             }

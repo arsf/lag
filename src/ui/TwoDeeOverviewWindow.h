@@ -55,6 +55,7 @@ public:
    }
 
    void set_slice_range(double min, double max);
+   void set_utm_zone(std::string zone);
 
    Gtk::Window* get_profilewindow();
 
@@ -89,14 +90,9 @@ private:
    Gtk::MenuItem* quitfilemenuitem;
    Gtk::MenuItem* helpmenu;
    Gtk::MenuItem* aboutmenu;
+   Gtk::MenuItem* quadtreemenu;
 
-   // Check button determining whether the profile box is viewable on 
-   // the 2d overview.
-   Gtk::CheckMenuItem *showprofilecheck;
-
-   // Check button determining whether the fence box is viewable on the 
-   // 2d overview.
-   Gtk::CheckMenuItem *showfencecheck;
+   Gtk::CheckMenuItem* uselatlongcheck;
 
    //Check button determining whether the distance scale is viewable 
    //on the 2d overview.
@@ -182,14 +178,6 @@ private:
 
    // Connects signals
    void connect_signals();
-
-   // When toggled, the profile box is shown on the 2d overview regardless of 
-   // whether profiling mode is active.
-   void on_showprofilecheck();
-
-   //When toggled, the fence box is shown on the 2d overview regardless of 
-   //whether fencing mode is active.
-   void on_showfencecheck();
 
    //When toggled, the distance scale is shown on the 2d overview.
    void on_showdistancescalecheck();
@@ -280,5 +268,8 @@ private:
    void on_zminvaluechanged();
    void on_zmaxvaluechanged();
 
+   void on_quadtreemenu_activated();
+
+   void on_uselatlongcheck();
 };
 #endif

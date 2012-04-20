@@ -41,6 +41,11 @@
                         to profile window which shows average heights and elevation differences for selected data.
     * lag.ui:           Modified toolbars to look more consistent and added controls for new functionality.
     * MathFuncs.cpp:    Modified vetpoints() method to exclude points outside given z values range.
+    
+2012-04-20  Jan Holownia <jaho@pml.ac.uk>
+    * general:          Added options to handle latlong files and ability to convert between latlong and UTM. Added
+                        quandtree information dialog. Removed unused menu options.
+    * TwoDeeOverview:   Added option to display data as UTM or latlong.
 
     
     

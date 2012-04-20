@@ -73,20 +73,6 @@
                   <object class="GtkMenu" id="menu8">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkCheckMenuItem" id="showprofilecheck">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Show profile box</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkCheckMenuItem" id="showfencecheck">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Show fence box</property>
-                        <property name="use_underline">True</property>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkCheckMenuItem" id="showdistancescalecheck">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Show the distance scale</property>
@@ -217,6 +203,35 @@
                         <property name="use_underline">True</property>
                         <property name="draw_as_radio">True</property>
                         <property name="group">brightnessbynonemenu</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="toolsmenuitem">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Tools</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu" id="menu2">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkImageMenuItem" id="quadtreemenu">
+                        <property name="label">Quadtree Information</property>
+                        <property name="visible">True</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <property name="always_show_image">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkCheckMenuItem" id="uselatlongcheck">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Use latlong coordinates</property>
+                        <property name="use_underline">True</property>
+                        <property name="inconsistent">True</property>
                       </object>
                     </child>
                   </object>
@@ -2718,7 +2733,7 @@ Plymouth Marine Laboratory)</property>
             <child>
               <object class="GtkTable" id="table4">
                 <property name="visible">True</property>
-                <property name="n_rows">4</property>
+                <property name="n_rows">7</property>
                 <property name="n_columns">2</property>
                 <property name="column_spacing">2</property>
                 <property name="row_spacing">5</property>
@@ -2729,6 +2744,10 @@ Plymouth Marine Laboratory)</property>
                     <property name="justify">right</property>
                     <property name="single_line_mode">True</property>
                   </object>
+                  <packing>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                  </packing>
                 </child>
                 <child>
                   <object class="GtkEntry" id="parsestringentry">
@@ -2740,6 +2759,8 @@ Plymouth Marine Laboratory)</property>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
                   </packing>
                 </child>
                 <child>
@@ -2749,8 +2770,8 @@ Plymouth Marine Laboratory)</property>
                     <property name="justify">right</property>
                   </object>
                   <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
+                    <property name="top_attach">6</property>
+                    <property name="bottom_attach">7</property>
                   </packing>
                 </child>
                 <child>
@@ -2766,8 +2787,8 @@ Plymouth Marine Laboratory)</property>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
+                    <property name="top_attach">6</property>
+                    <property name="bottom_attach">7</property>
                   </packing>
                 </child>
                 <child>
@@ -2853,8 +2874,8 @@ Plymouth Marine Laboratory)</property>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
                   </packing>
                 </child>
                 <child>
@@ -2863,8 +2884,8 @@ Plymouth Marine Laboratory)</property>
                     <property name="label" translatable="yes">Scale Factors:</property>
                   </object>
                   <packing>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
                   </packing>
                 </child>
                 <child>
@@ -2873,8 +2894,71 @@ Plymouth Marine Laboratory)</property>
                   </object>
                   <packing>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">2</property>
+                    <property name="top_attach">5</property>
+                    <property name="bottom_attach">6</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkHSeparator" id="hseparator5">
+                    <property name="visible">True</property>
+                  </object>
+                  <packing>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">1</property>
                     <property name="bottom_attach">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="label30">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Output projection:</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkHBox" id="hbox8">
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkRadioButton" id="utmselect">
+                        <property name="label" translatable="yes">Universal Transverse Mercator</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="draw_indicator">True</property>
+                        <property name="group">latlongselect</property>
+                      </object>
+                      <packing>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkRadioButton" id="latlongselect">
+                        <property name="label" translatable="yes">Latitude/Longitude</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="active">True</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="usefullprecision">
+                        <property name="label" translatable="yes">Use Full Precision</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
                   </packing>
                 </child>
               </object>
@@ -3144,21 +3228,27 @@ One should note that the contiguous area surrounding the ASDF area of the home r
   <object class="GtkAdjustment" id="adjustment1">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>    
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="adjustment2">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>    
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="adjustment3">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>   
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="adjustment4">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkListStore" id="liststore1"/>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-info</property>
+    <property name="icon-size">1</property>
   </object>
 </interface>

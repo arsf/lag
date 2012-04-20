@@ -31,6 +31,7 @@
 #include "Profile.h"
 #include "MathFuncs.h"
 
+
 Profile::Profile(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit, Gtk::Label *rulerlabel)
 :	LagDisplay(fontpath, config, bucketlimit),
  		rulerlabel			(rulerlabel),
@@ -1860,6 +1861,7 @@ bool Profile::mainimage(int detail)
    delete[] vertices;
    delete[] colours;
    return true;
+
 }
 
 void Profile::toggleNoise()

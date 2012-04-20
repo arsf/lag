@@ -129,6 +129,11 @@ public:
       this->bucketlimit=bucketlimit;
    } 
    
+   Quadtree* getlidatdata()
+   {
+	   return this->lidardata;
+   }
+
    inline void setColourBy(colourBy_t colour)
    {
       colourBy = colour;

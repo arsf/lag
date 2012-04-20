@@ -33,6 +33,8 @@
 #include <GL/glu.h>
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
+#include "geoprojectionconverter.hpp"
+
 
 TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
 							int bucketlimit, Gtk::Label *rulerlabel)
@@ -74,7 +76,8 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
 		heightenOverlap		(false),
 		heightenUndefined	(false),
 		panningRefresh		(1),
-		slicing				(false)
+		slicing				(false),
+		latlong				(false)
 {
    //Control:
    zoompower = 0.5;
@@ -161,6 +164,15 @@ TwoDeeOverview::~TwoDeeOverview()
 {
 	delete fencebox;
 	delete profbox;
+}
+
+void TwoDeeOverview::convert_to_latlong(double* point)
+{
+	GeoProjectionConverter gpc;
+	char tmp[255];
+	gpc.set_latlong_projection(tmp, false);
+	gpc.set_utm_projection(const_cast<char*>(utm_zone.c_str()), tmp, true);
+	gpc.to_target(point);
 }
 
 //Prepare the appropriate overlays for flushing to the screen.
@@ -1383,9 +1395,25 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          z << setprecision(12);
          time << setprecision(12);
 
-         x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
-         y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
-         z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
+
+         if (!latlong)
+         {
+        	 x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
+        	 y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
+        	 z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
+         }
+         else
+         {
+        	 double point[3];
+        	 point[0] = (*pointvector)[bucketno]->getPoint(pointno,0).getX();
+        	 point[1] = (*pointvector)[bucketno]->getPoint(pointno,0).getY();
+        	 point[2] = (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
+        	 convert_to_latlong(point);
+
+        	 x << point[0];
+        	 y << point[1];
+        	 z << point[2];
+         }
 
          time << (*pointvector)[bucketno]->getPoint(pointno,0).getTime();
          intensity << (*pointvector)[bucketno]->getPoint(pointno,0).getIntensity();
@@ -2153,3 +2181,4 @@ void TwoDeeOverview::super_zoom()
 	set_overlay_zoomlevels(zoomlevel);
 	drawviewable(1);
 }
+
