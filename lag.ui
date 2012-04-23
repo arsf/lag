@@ -621,9 +621,8 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolButton" id="superzoombutton">
+                  <object class="GtkToggleToolButton" id="superzoombutton">
                     <property name="visible">True</property>
-                    <property name="events">GDK_BUTTON_PRESS_MASK | GDK_STRUCTURE_MASK</property>
                     <property name="is_important">True</property>
                     <property name="label" translatable="yes">Super Zoom</property>
                     <property name="stock_id">gtk-zoom-in</property>

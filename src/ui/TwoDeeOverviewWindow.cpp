@@ -203,7 +203,7 @@ void TwoDeeOverviewWindow::connect_signals()
     quadtreemenu->signal_activate().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_quadtreemenu_activated));
     saveasbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_savefilemenuactivated));
     refreshbutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_refreshbuttonclicked));
-    superzoombutton->signal_clicked().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_superzoomclicked));
+    superzoombutton->signal_toggled().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_superzoomclicked));
     slicebutton->signal_toggled().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_slicebuttontoggled));
     zminselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zminvaluechanged));
     zmaxselect->signal_value_changed().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_zmaxvaluechanged));
@@ -353,7 +353,12 @@ void TwoDeeOverviewWindow::on_refreshbuttonclicked()
 
 void TwoDeeOverviewWindow::on_superzoomclicked()
 {
-	tdo->super_zoom();
+	if (superzoombutton->get_active())
+		pointwidthselect->set_value(2.0);
+	else
+		pointwidthselect->set_value(1.0);
+
+	tdo->set_superzoom(superzoombutton->get_active());
 }
 
 //When toggled, the distance scale is shown on the 2d overview.

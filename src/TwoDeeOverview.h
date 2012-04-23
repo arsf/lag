@@ -268,7 +268,7 @@ public:
       this->heightenUndefined = heightenUndefined; 
    }
 
-   void super_zoom();
+   void set_superzoom(bool);
 
    void set_slicing(bool slice)
    {
@@ -489,6 +489,8 @@ protected:
    //Latlong
    bool latlong;
    std::string utm_zone;
+
+   bool superzoom;
 
    //Signal handlers:
    //Panning:

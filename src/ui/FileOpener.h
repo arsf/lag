@@ -30,7 +30,6 @@
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
 #include "LasLoader.h"
-#include "AsciiLoader.h"
 #include "AdvancedOptionsWindow.h"
 #include "FileSaver.h"
 #include "TwoDeeOverviewWindow.h"

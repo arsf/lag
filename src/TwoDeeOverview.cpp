@@ -77,7 +77,8 @@ TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL
 		heightenUndefined	(false),
 		panningRefresh		(1),
 		slicing				(false),
-		latlong				(false)
+		latlong				(false),
+		superzoom			(false)
 {
    //Control:
    zoompower = 0.5;
@@ -170,7 +171,7 @@ void TwoDeeOverview::convert_to_latlong(double* point)
 {
 	GeoProjectionConverter gpc;
 	char tmp[255];
-	gpc.set_latlong_projection(tmp, false);
+	gpc.set_longlat_projection(tmp, false);
 	gpc.set_utm_projection(const_cast<char*>(utm_zone.c_str()), tmp, true);
 	gpc.to_target(point);
 }
@@ -2061,6 +2062,10 @@ void TwoDeeOverview::makerulerbox()
 // the centre of the window will now lie. The image is then drawn.
 bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
 {
+	double factor = 2;
+
+	if (superzoom)
+		factor = 0.2;
 
    centre.translate(pixelsToImageUnits(event->x-get_width()/2),
                     -pixelsToImageUnits(event->y-get_height()/2), 
@@ -2069,9 +2074,9 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
    if(zoomlevel>=1)
    {
       if(event->direction==GDK_SCROLL_UP)
-         zoomlevel+=pow(zoomlevel,zoompower)/2;
+         zoomlevel+=pow(zoomlevel,zoompower)/factor;
       else if(event->direction==GDK_SCROLL_DOWN)
-         zoomlevel-=pow(zoomlevel,zoompower)/2;
+         zoomlevel-=pow(zoomlevel,zoompower)/factor;
    }
    else if(zoomlevel>=0.2)
    {
@@ -2086,7 +2091,7 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
       zoomlevel=0.2;
 
    centre.translate(-pixelsToImageUnits(event->x-get_width()/2),
-                    pixelsToImageUnits(event->y-get_height()/2), 
+                    pixelsToImageUnits(event->y-get_height()/2),
                     0);
    resetview();
 
@@ -2097,6 +2102,7 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
    get_parent()->grab_focus();
    set_overlay_centres(centre);
    set_overlay_zoomlevels(zoomlevel);
+
    return drawviewable(1);
 }
 
@@ -2168,15 +2174,25 @@ void TwoDeeOverview::toggleNoise()
    drawviewable(1);
 }
 
-void TwoDeeOverview::super_zoom()
+void TwoDeeOverview::set_superzoom(bool zoom)
 {
-	setpointwidth(15);
-	zoomlevel = 1;
+	superzoom = zoom;
 
-	for (int i = 0; i < 50; ++i)
+	if (superzoom)
 	{
-		zoomlevel+=pow(zoomlevel, zoompower)/2;
+		setpointwidth(2);
+		zoomlevel = 1;
+
+		for (int i = 0; i < 10; ++i)
+		{
+			zoomlevel+=pow(zoomlevel, zoompower)/2;
+		}
 	}
+	else
+	{
+		setpointwidth(1.0);
+	}
+
 	resetview();
 	set_overlay_zoomlevels(zoomlevel);
 	drawviewable(1);

@@ -169,7 +169,7 @@ private:
    Gtk::SpinButton* zmaxselect;
 
 
-   Gtk::ToolButton* superzoombutton;
+   Gtk::ToggleToolButton* superzoombutton;
    void on_superzoomclicked();
 
 

@@ -72,7 +72,7 @@ void FileSaver::connect_signals()
 {
 	filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
 	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
-	flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
+	//flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
 }
 
 void FileSaver::on_usedefault_changed()
@@ -130,8 +130,6 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
              saver->close();
              delete saver;
 
-             filesaverdialog->set_filename("");
-
              //filesaverdialog->hide_all();
           }
           catch(DescriptiveException e)
@@ -152,8 +150,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
 
     		  saver->close();
     		  delete saver;
-
-    		  filesaverdialog->set_filename("");
+    		  filesaverdialog->unselect_all();
 
     		  //filesaverdialog->hide_all();
     	  }
@@ -168,8 +165,10 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
    }
 }
 
+
 void FileSaver::on_flightlinesaveselected()
 {
    if(lidardata!=NULL)
       filesaverdialog->set_filename(lidardata->getFileName(flightlinesaveselect->get_value_as_int()));
 }
+

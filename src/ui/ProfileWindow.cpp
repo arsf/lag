@@ -164,7 +164,8 @@ void ProfileWindow::on_heightsbuttonprof_clicked()
 			for (size_t j = size-1; j > i; --j)
 			{
 				message << i << " - " << j << ": "
-						<< (avgs[i] - avgs[j]) * 100;
+						<< (avgs[i] - avgs[j]) * 100
+						<< "\n";
 			}
 		}
 	}
