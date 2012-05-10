@@ -34,6 +34,9 @@
 #include "FileSaver.h"
 #include "TwoDeeOverviewWindow.h"
 
+#include "../Worker.h"
+#include "../LoadWorker.h"
+
 class FileOpener
 {
 public:
@@ -51,10 +54,30 @@ public:
 
    int testfilename(int argc,char *argv[],bool start,bool usearea);
 
+   LoadWorker* loadworker;
+   void show_thread_message();
+   void files_loaded();
+
    inline void show()
    {
       filechooserdialog->present();
    }
+
+   inline void setlidardata(Quadtree* lidardata,int bucketlimit)
+   {
+      this->lidardata=lidardata;
+      this->bucketlimit=bucketlimit;
+   }
+
+   double minZ, maxZ;
+   std::string utm_zone;
+   bool newQuadtree;
+
+   Quadtree *lidardata;
+   std::string thread_message;
+
+   //Whether or not any files have already been loaded in this session.
+   bool loadedanyfiles;
 
 private:
    int numlines;
@@ -63,7 +86,7 @@ private:
    TwoDeeOverviewWindow *tdow;
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
-   Quadtree *lidardata;
+
 
    //For opening files.
    Gtk::FileChooserDialog *filechooserdialog;
@@ -107,8 +130,7 @@ private:
    //Stringstream getting error messages from the quadtree.
    ostringstream *loaderrorstream;
 
-   //Whether or not any files have already been loaded in this session.
-   bool loadedanyfiles;
+   Glib::Mutex mutex;
 
    //How many points to hold in cache. 1 GB ~= 25000000 points.
    int cachelimit;

@@ -31,16 +31,21 @@
 FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
            	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow)
 :
+        lidardata		(NULL),
         tdo				(tdo),
         prof			(prof),
         tdow			(tdow),
         aow				(aow),
         fs				(fs),
-        lidardata		(NULL),
         eventboxtdo		(eventboxtdo),
         eventboxprof	(eventboxprof),
         bucketlimit		(bucketlimit)
 {
+	loadworker = NULL;
+	newQuadtree = true;
+
+	loadedanyfiles = false;
+
 	load_xml(builder);
 
 	time_t starttime = time(NULL);
@@ -72,6 +77,7 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	connect_signals();
 
 	on_cachesize_changed();
+	on_usedefault_changed();
 }
 
 
@@ -136,8 +142,9 @@ int FileOpener::on_quit()
 	}
 
 	return 0;
-}
 
+
+}
 
 void FileOpener::on_usedefault_changed()
 {
@@ -319,7 +326,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                // Please fix this!
                if (true)
                {
-                  LidarPointLoader *loader = NULL;
+                  LasLoader *loader = NULL;
                   bool validfile = true;
 
                   //For LAS files.
@@ -465,7 +472,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 
                if(filename != "")
                {
-                  LidarPointLoader *loader = NULL;
+                  LasLoader *loader = NULL;
 
                   // For las files:
                   if(filename.find(".las",filename.length()-4)!=string::npos ||
@@ -539,7 +546,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 
             if(filename != "")
             {
-               LidarPointLoader *loader = NULL;
+               LasLoader *loader = NULL;
                // bool validfile = true;
 
                //For LAS files.
@@ -595,6 +602,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
                                               cachelimit,bucketlevels,
                                               resolutionbase,resolutiondepth,
                                               loaderrorstream);
+
                      int numberofpointsloaded = lidardata->load(loader,poffs,
                                                                 bucketlevels);
                      if(numberofpointsloaded == 0)
@@ -714,6 +722,7 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
 
    loadedanyfiles = true;
    string flightline,list="";
+
    for(int i = 0;i<numlines;i++)
    {
       flightline = lidardata->getFileName(i);
@@ -735,9 +744,15 @@ int FileOpener::testfilename(int argc,char *argv[],bool start,bool usearea)
    return 0;
 }
 
-// If either the add or refresh button is pressed, then this function takes 
-// the selected filenames and creates an imitation of a command-line command, 
-// which is then sent to testfilename() where the file will be opened.
+/*
+======================================================================
+ FileOpener::on_filechooserdialogresponse
+
+ When Refresh or Add button is pressed this function takes arguments
+ from FileOpener controls and creates a LoadWorker thread which loads
+ selected files.
+======================================================================
+*/
 void FileOpener::on_filechooserdialogresponse(int response_id)
 {
    if(response_id == Gtk::RESPONSE_CLOSE)
@@ -746,54 +761,177 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
    }
    else if(response_id == 1 || response_id == 2)
    {
-      Glib::SListHandle<Glib::ustring> names=filechooserdialog->get_filenames();
+	   // If the thread is already running - return
+	   if (loadworker != NULL)
+		   return;
 
-      // testfilename expects a command-line command in the form: <this program>
-      // <point offset <file 1> [file 2]...
-      int argc = names.size() + 2;
+	   // Get list of files from file chooser dialog
+	   Glib::SListHandle<Glib::ustring> names=filechooserdialog->get_filenames();
 
-      char** argv = new char*[argc];
+	   // This seems to never change...
+	   int bucketlevels = 0;
 
-      string exename = "blah";
+	   // Point offset
+	   ostringstream pointoffset;
+	   pointoffset << pointskipselect->get_value_as_int();
+	   string poffs = pointoffset.str();
 
-      //This program.
-      argv[0] = new char[exename.length()+1];
-      strcpy(argv[0],exename.c_str());
-      ostringstream pointoffset;
-      pointoffset << pointskipselect->get_value_as_int();
-      string poffs = pointoffset.str();
+	   // Fence
+	   SelectionBox fence = SelectionBox();
+	   if (fenceusecheck->get_active())
+	   {
+		   if (tdo->get_realized())
+			   fence = tdo->getFence();
+	   }
 
-      //The point offset.
-      argv[1] = new char[poffs.length()+1];
-      strcpy(argv[1],poffs.c_str());
-      argc=2;
+	   std::cout << "GUI thread fence: \n";
+	   for (int i = 0; i < 4; ++i)
+	   {
+		   std::cout << fence.getXs()[i] << ", " << fence.getYs()[i] << "\n";
+	   }
 
-      // Until the last iterator is reached, insert the contents of the 
-      // iterators into argv.
-      for(Glib::SListHandle<Glib::ustring>::iterator itera = names.begin();
-          itera!=names.end(); itera++)
-      {
-         argv[argc] = new char[(*itera).length()+1];
-         strcpy(argv[argc],(*itera).c_str());
-         argc++;
-      }
+	   // Scale factor
+	   double scale_factor[3];
+	   if (!btnUseDefault->get_active())
+	   {
+		   const char* temp;
+		   temp = scaleFactorEntryX->get_text().c_str();
+		   scale_factor[0] = atof(temp);
+		   temp = scaleFactorEntryY->get_text().c_str();
+		   scale_factor[1] = atof(temp);
+		   temp = scaleFactorEntryZ->get_text().c_str();
+		   scale_factor[2] = atof(temp);
+	   }
+	   else
+	   {
+		   scale_factor[0] = 0;
+		   scale_factor[1] = 0;
+		   scale_factor[2] = 0;
+	   }
 
-      if(response_id == 1)
-      {
-         //For adding, do not create a new quadtree (false).
-         testfilename(argc,argv,false,fenceusecheck->get_active());
-      }
-      if(response_id == 2)
-      {
-         //For refreshing, do create a new quadtree (true).
-         testfilename(argc,argv,true,fenceusecheck->get_active());
-      }
+	   // Create new quadtree if refreshing
+	   bool create_new_quadtree;
+	   if(response_id == 1)
+	   {
+		   create_new_quadtree = false;
+	   }
+	   if(response_id == 2)
+	   {
+		   create_new_quadtree = true;
+	   }
 
-      for(int i = 0;i < argc;i++)
-         delete[] argv[i];
+	   // Lasunch LoadWorker thread
+	   loadworker = new LoadWorker(this, pointskipselect->get_value_as_int(), names, create_new_quadtree, fenceusecheck->get_active(), resdepthselect->get_value_as_int(), resbaseselect->get_value_as_int(),
+	  	  	  	  	  	  	  	  	  	  bucketlevels, bucketlimit, cachelimit, btnUseDefault->get_active(), scale_factor, asciicodeentry->get_text(), fence);
 
-      delete[] argv;
+	   loadworker->sig_done.connect(sigc::mem_fun(*this, &FileOpener::files_loaded));
+	   loadworker->sig_message.connect(sigc::mem_fun(*this, &FileOpener::show_thread_message));
+	   loadworker->start();
+
+	   loadoutputlabel->set_text("Loading files...\n");
+
+	   // Change cursor to busy
+	   GdkDisplay* display;
+	   GdkCursor* cursor;
+	   GdkWindow* window;
+
+	   cursor = gdk_cursor_new(GDK_WATCH);
+	   display = gdk_display_get_default();
+	   window = (GdkWindow*) filechooserdialog->get_window()->gobj();
+
+	   gdk_window_set_cursor(window, cursor);
+	   gdk_display_sync(display);
+	   gdk_cursor_unref(cursor);
    }
+}
+
+void FileOpener::show_thread_message()
+{
+	{
+		Glib::Mutex::Lock lock (mutex);
+		loadoutputlabel->set_text(loadoutputlabel->get_text() + thread_message + "\n");
+	}
+
+	Gdk::Window::process_all_updates();
+}
+
+
+void FileOpener::files_loaded()
+{
+	delete loadworker;
+	loadworker = NULL;
+
+	loadoutputlabel->set_text(loadoutputlabel->get_text() + "Done." + "\n");
+	Gdk::Window::process_all_updates();
+
+	//Provide the drawing objects access to the quadtree:
+	tdo->setlidardata(lidardata,bucketlimit);
+	prof->setlidardata(lidardata,bucketlimit);
+
+	if(newQuadtree)
+	{
+		tdo->setresolutionbase(resbaseselect->get_value_as_int());
+	    tdo->setresolutiondepth(resdepthselect->get_value_as_int());
+	    // This is absolutely vital to prevent an overflow in the drawing thread
+	    // in the overview that then causes an infinite loop.
+	    aow->setmaindetailrange(0,log(pow(2,sizeof(int)*8)/100) / log(resbaseselect->get_value_as_int()));
+	}
+
+	// If drawing areas are already visible, prepare the new images and draw
+	// them.
+	if(loadedanyfiles)
+	{
+		tdo->prepare_image();
+		tdo->drawviewable(1);
+		prof->prepare_image();
+		prof->drawviewable(1);
+	}
+
+	// Otherwise, pack them into the vboxes and then show them, which will do
+	// as the above block does.
+	else
+	{
+		eventboxtdo->add(*tdo);
+		tdo->show_all();
+		eventboxprof->add(*prof);
+		prof->show_all();
+	}
+
+	loadedanyfiles = true;
+	string flightline,list="";
+
+	for(int i = 0;i<numlines;i++)
+	{
+		flightline = lidardata->getFileName(i);
+		ostringstream number;
+		number << i;
+		list += number.str() + ":  " + flightline + "\n";
+	}
+
+	fs->setlidardata(lidardata);
+	fs->setlabeltext(list);
+	fs->setlinerange(0,numlines-1);
+	tdow->setraiselinerange(0,numlines-1);
+
+	tdow->set_slice_range(minZ, maxZ);
+	tdow->set_utm_zone(utm_zone);
+
+	// (Re)Set the advanced colouring and shading options to the values
+	// indicated by the recently loaded flightlines.
+	aow->resetcolouringandshading();
+
+	// Set cursor back to normal
+	GdkDisplay* display;
+	GdkCursor* cursor;
+	GdkWindow* window;
+
+	cursor = gdk_cursor_new(GDK_LEFT_PTR);
+	display = gdk_display_get_default();
+	window = (GdkWindow*) filechooserdialog->get_window()->gobj();
+
+	gdk_window_set_cursor(window, cursor);
+	gdk_display_sync(display);
+	gdk_cursor_unref(cursor);
 }
 
 // When the cachesize (in points) is changed, this outputs the value in 
@@ -801,7 +939,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 void FileOpener::on_cachesize_changed()
 {
    ostringstream GB;
-   GB << ((double)cachesizeselect->get_value()*sizeof(LidarPoint))/1000000000;
+   GB << ((double)cachesizeselect->get_value()*sizeof(LidarPoint))/1073741824;
    string labelstring = "Approximately: " + GB.str() + " GB.";
    cachesizeGBlabel->set_text(labelstring);
 }

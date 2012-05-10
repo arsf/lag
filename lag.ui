@@ -1241,6 +1241,9 @@
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>
+          <placeholder/>
+        </child>
+        <child>
           <object class="GtkVBox" id="vbox11">
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
@@ -1554,6 +1557,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
+                            <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1589,6 +1593,11 @@
                     <child>
                       <object class="GtkLabel" id="loadoutputlabel">
                         <property name="visible">True</property>
+                        <property name="xalign">0</property>
+                        <property name="yalign">0</property>
+                        <property name="xpad">5</property>
+                        <property name="ypad">5</property>
+                        <property name="label" translatable="yes">aaaa</property>
                         <property name="selectable">True</property>
                       </object>
                     </child>
@@ -1602,6 +1611,7 @@
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="pack_type">end</property>
             <property name="position">2</property>
           </packing>
         </child>
@@ -1641,7 +1651,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="pack_type">end</property>
-            <property name="position">0</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

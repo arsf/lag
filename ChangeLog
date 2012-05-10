@@ -43,10 +43,12 @@
     * MathFuncs.cpp:    Modified vetpoints() method to exclude points outside given z values range.
     
 2012-04-20  Jan Holownia <jaho@pml.ac.uk>
-    * general:          Added options to handle latlong files and ability to convert between latlong and UTM. Added
-                        quandtree information dialog. Removed unused menu options.
+    * general:          Added options to handle latlong files and ability to convert between latlong and UTM.
+                        Added quandtree information dialog. Removed unused menu options.
     * TwoDeeOverview:   Added option to display data as UTM or latlong.
 
+2012-05-10  Jan Holownia <jaho@pml.ac.uk>
+    * LoadWorker.cpp:   Added.
     
     
     
