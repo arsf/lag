@@ -68,6 +68,8 @@ void LoadWorker::run()
 			for (size_t i = 0; i < filenames.size(); ++i)
 			{
 				std::string filename = filenames[i];
+				fileopener->thread_message = filename;
+				sig_message();
 
 				if (filename != "")
 				{
@@ -143,9 +145,8 @@ void LoadWorker::run()
 
 					}
 				}
-				fileopener->thread_message = filename;
+
 				sig_file_loaded();
-				sig_message();
 			}
 		}
 		else
@@ -204,6 +205,9 @@ void LoadWorker::run()
 			for (size_t i = 0; i < filenames.size(); ++i)
 			{
 				std::string filename = filenames[i];
+
+				fileopener->thread_message = filename;
+				sig_message();
 
 				if (filename != "")
 				{
@@ -266,9 +270,7 @@ void LoadWorker::run()
 					if (loader)
 						delete loader;
 				}
-				fileopener->thread_message = filename;
 				sig_file_loaded();
-				sig_message();
 			}
 		}
 	}

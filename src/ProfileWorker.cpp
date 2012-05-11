@@ -10,12 +10,11 @@
 #include "ProfileWorker.h"
 #include "Profile.h"
 
-ProfileWorker::ProfileWorker(Profile* prof, double* xs, double* ys, int ps, bool changeview) :
+ProfileWorker::ProfileWorker(Profile* prof, double* xs, double* ys, int ps) :
 		profile		(prof),
 		profxs		(xs),
 		profys		(ys),
-		profps		(ps),
-		changeview	(changeview)
+		profps		(ps)
 {}
 
 ProfileWorker::~ProfileWorker()
@@ -30,6 +29,6 @@ ProfileWorker::~ProfileWorker()
 
 void ProfileWorker::run()
 {
-	profile->showprofile(profxs,profys,profps,changeview);
+	profile->loadprofile(profxs,profys,profps);
 	sig_done();
 }

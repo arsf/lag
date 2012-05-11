@@ -36,6 +36,7 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 		overviewwindow	(overviewwindow)
 {
 	profileworker = NULL;
+	classifyworker = NULL;
 
 	load_xml(builder);
 
@@ -252,7 +253,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
       tdo->setpausethread(true);
       tdo->waitforpause();
 
-      profileworker = new ProfileWorker(this->prof, profxs, profys, profps, true);
+      profileworker = new ProfileWorker(this->prof, profxs, profys, profps);
       profileworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::profile_loaded));
       profileworker->start();
 
@@ -263,7 +264,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
 
 	  cursor = gdk_cursor_new(GDK_WATCH);
 	  display = gdk_display_get_default();
-	  window = (GdkWindow*) prof->get_window()->gobj();
+	  window = (GdkWindow*) profilewindow->get_window()->gobj();
 
 	  gdk_window_set_cursor(window, cursor);
 	  gdk_display_sync(display);
@@ -290,11 +291,13 @@ void ProfileWindow::profile_loaded()
 
     cursor = gdk_cursor_new(GDK_LEFT_PTR);
     display = gdk_display_get_default();
-    window = (GdkWindow*) prof->get_window()->gobj();
+    window = (GdkWindow*) profilewindow->get_window()->gobj();
 
     gdk_window_set_cursor(window, cursor);
     gdk_display_sync(display);
     gdk_cursor_unref(cursor);
+
+    prof->draw_profile(true);
 }
 
 //This returns the profile to its original position.
@@ -341,15 +344,59 @@ void ProfileWindow::on_movingaveragerangeselect()
 //This classifies the points surrounded by the fence.
 void ProfileWindow::on_classbutton_clicked()
 {
-   // Nothing else must read the points (or indeed write to them!) 
-   // while the classifier is writing to them. Also, it uses the 
-   // getpoint() method.
-   tdo->setpausethread(true);
-   tdo->waitforpause();
-   if(prof->is_realized())
-      prof->classify(classificationselect->get_value_as_int());
-   tdo->setpausethread(false);
-   tdo->drawviewable(1);
+	if (classifyworker != NULL)
+		return;
+
+	// Nothing else must read the points (or indeed write to them!)
+	// while the classifier is writing to them. Also, it uses the
+	// getpoint() method.
+	tdo->setpausethread(true);
+	tdo->waitforpause();
+
+	if(prof->is_realized())
+	{
+		//prof->classify(classificationselect->get_value_as_int());
+		classifyworker = new ClassifyWorker(this->prof, classificationselect->get_value_as_int());
+		classifyworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::points_classified));
+		classifyworker->start();
+
+		// Change cursor to busy
+		GdkDisplay* display;
+		GdkCursor* cursor;
+		GdkWindow* window;
+
+		cursor = gdk_cursor_new(GDK_WATCH);
+		display = gdk_display_get_default();
+		window = (GdkWindow*) profilewindow->get_window()->gobj();
+
+		gdk_window_set_cursor(window, cursor);
+		gdk_display_sync(display);
+		gdk_cursor_unref(cursor);
+	}
+}
+
+void ProfileWindow::points_classified()
+{
+	delete classifyworker;
+	classifyworker = NULL;
+
+	prof->draw_profile(false);
+
+	// Set cursor back to normal
+	GdkDisplay* display;
+	GdkCursor* cursor;
+	GdkWindow* window;
+
+	cursor = gdk_cursor_new(GDK_LEFT_PTR);
+	display = gdk_display_get_default();
+	window = (GdkWindow*) profilewindow->get_window()->gobj();
+
+	gdk_window_set_cursor(window, cursor);
+	gdk_display_sync(display);
+	gdk_cursor_unref(cursor);
+
+	tdo->setpausethread(false);
+	tdo->drawviewable(1);
 }
 
 //Toggles whether clicking and dragging will select the fence in the profile.
@@ -562,7 +609,8 @@ bool ProfileWindow::on_profile_shift(GdkEventKey* event)
       // by more than one thread at once.
       tdo->setpausethread(true);
       tdo->waitforpause();
-      prof->showprofile(profxs,profys,profps,false);
+      prof->loadprofile(profxs,profys,profps);
+      prof->draw_profile(false);
       tdo->setpausethread(false);
       return true;
    }

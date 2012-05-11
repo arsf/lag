@@ -328,7 +328,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event,double shiftspeed)
  * Draw the profile.
  *
  * */
-bool Profile::showprofile(double* profxs, double* profys, int profps, bool changeview)
+bool Profile::loadprofile(double* profxs, double* profys, int profps)
 {
    //Defining profile parameters (used elsewhere only)
    start.move ((profxs[0]+profxs[1])/2,
@@ -541,39 +541,45 @@ bool Profile::showprofile(double* profxs, double* profys, int profps, bool chang
 	   delete[] correctpointsbuckets[i];
    delete[] correctpointsbuckets;
 
-   // If there are no points within the profile area, even if there were in the 
-   // subset taken, then nothing should be drawn.
-   if(totnumpoints < 1)
-   {
-      //This will ensure that nothing is drawn.
-      imageexists = false;
-      return false;
-   }
+   return true;
 
-   //Make now the lines to be drawn when the user elects to draw them.
-   make_moving_average();
+}
 
-   // If an attempt to draw is made when the widget is not yet attached to the 
-   // GUI then there will be a segfault.
-   if(is_realized())
-   {
-      // If the view is to be changed (like for when a totally new profile is 
-      // made at possibly a different angle):
-      if(changeview)
-      {
-         // Reset the fence to prevent the situation where a fence is preserved 
-         // from profile to profile in a warped fashion allowing accidental 
-         // classification.
-         fenceStart.move(0, 0, 0);
-         fenceEnd.move(0, 0, 0);
-         return returntostart();
-      }
-      // Otherwise trust that any changes (like with scrolling) are dealt with 
-      // or that there are no position or viewpoint changes (like with 
-      // classification).
-      else return drawviewable(1);
-   }
-   else return false;
+bool Profile::draw_profile(bool changeview)
+{
+	// If there are no points within the profile area, even if there were in the
+	// subset taken, then nothing should be drawn.
+	if(totnumpoints < 1)
+	{
+	   //This will ensure that nothing is drawn.
+	   imageexists = false;
+	   return false;
+	}
+
+	//Make now the lines to be drawn when the user elects to draw them.
+	make_moving_average();
+
+	// If an attempt to draw is made when the widget is not yet attached to the
+	// GUI then there will be a segfault.
+	if(is_realized())
+	{
+	   // If the view is to be changed (like for when a totally new profile is
+	   // made at possibly a different angle):
+	   if(changeview)
+	   {
+	      // Reset the fence to prevent the situation where a fence is preserved
+	      // from profile to profile in a warped fashion allowing accidental
+	      // classification.
+	      fenceStart.move(0, 0, 0);
+	      fenceEnd.move(0, 0, 0);
+	      return returntostart();
+	   }
+	   // Otherwise trust that any changes (like with scrolling) are dealt with
+	   // or that there are no position or viewpoint changes (like with
+	   // classification).
+	   else return drawviewable(1);
+	}
+	else return false;
 }
 
 // This determines which points in the bucket (bucket) fit both in the profile 
@@ -798,7 +804,8 @@ bool Profile::classify(uint8_t classification)
 
    // Reload the modified points from the quadtree without changing the view 
    // or resetting the fence etc..
-   showprofile(tempxs,tempys,tempps,false);
+   loadprofile(tempxs,tempys,tempps);
+   //draw_profile(false);
    delete[]tempxs;
    delete[]tempys;
    return true;

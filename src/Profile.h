@@ -66,8 +66,10 @@ public:
    bool drawviewable(int imagetype);
    //Public methods:
    //Gets the parameters of the profile and then draws it to the screen.
-   bool showprofile(double* profxs,double* profys,int profps,bool changeview);
+   bool loadprofile(double* profxs,double* profys,int profps);
    //Blocks pan signals and unblocks ruler signals:
+
+   bool draw_profile(bool changeview);
 
    void setupruler()
    {

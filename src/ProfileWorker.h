@@ -17,7 +17,7 @@ class Profile;
 class ProfileWorker
 {
 public:
-	ProfileWorker(Profile* prof, double* xs, double* ys, int ps, bool changeview);
+	ProfileWorker(Profile* prof, double* xs, double* ys, int ps);
 
 	~ProfileWorker();
 
@@ -35,7 +35,6 @@ protected:
 	double* profxs;
 	double* profys;
 	int profps;
-	bool changeview;
 
 	Glib::Thread* thread;
 	Glib::Mutex mutex;

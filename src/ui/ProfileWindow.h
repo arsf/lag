@@ -32,6 +32,7 @@
 #include "AdvancedOptionsWindow.h"
 
 #include "../ProfileWorker.h"
+#include "../ClassifyWorker.h"
 
 class ProfileWindow
 {
@@ -49,6 +50,9 @@ public:
 
    ProfileWorker* profileworker;
    void profile_loaded();
+
+   ClassifyWorker* classifyworker;
+   void points_classified();
 
 private:
    Profile *prof;
