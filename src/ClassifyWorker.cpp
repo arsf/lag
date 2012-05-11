@@ -10,25 +10,17 @@
 #include "ClassifyWorker.h"
 #include "Profile.h"
 
-ClassifyWorker::ClassifyWorker(Profile* prof, uint8_t clas) :
+ClassifyWorker::ClassifyWorker(Profile* prof, uint8_t clas) : Worker(),
 		profile	(prof),
 		classification (clas)
 {}
 
-
-ClassifyWorker::~ClassifyWorker()
+void ClassifyWorker::run()
 {
 	{
 		Glib::Mutex::Lock lock (mutex);
-		stop = true;
+		profile->classify(classification);
 	}
-	if (thread)
-		thread->join();
-}
 
-
-void ClassifyWorker::run()
-{
-	profile->classify(classification);
 	sig_done();
 }

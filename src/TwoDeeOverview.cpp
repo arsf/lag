@@ -2181,7 +2181,6 @@ void TwoDeeOverview::set_superzoom(bool zoom)
 	if (superzoom)
 	{
 		setpointwidth(2);
-		zoomlevel = 1;
 
 		for (int i = 0; i < 10; ++i)
 		{

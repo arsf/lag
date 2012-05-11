@@ -11,16 +11,14 @@
 #include "ui/FileSaver.h"
 
 
-SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein, int flightline, std::string parse_string, bool use_latlong, bool use_default_scalefactor, double scale_factor[3]) :
+SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein, int flightline, std::string parse_string, bool use_latlong, bool use_default_scalefactor, double scale_factor[3]) : Worker(),
 		filesaver			(fs),
 		filename			(filename),
 		source_filename		(filein),
 		flightline_number	(flightline),
 		parse_string		(parse_string),
 		use_latlong			(use_latlong),
-		use_default_scalefactor	(use_default_scalefactor),
-		thread				(0),
-		stop				(false)
+		use_default_scalefactor	(use_default_scalefactor)
 {
 	if (!this->use_default_scalefactor)
 	{
@@ -35,30 +33,16 @@ SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein, 
 }
 
 
-SaveWorker::~SaveWorker()
-{
-	{
-		Glib::Mutex::Lock lock (mutex);
-		stop = true;
-	}
-	if (thread)
-		thread->join();
-}
-
-
 void SaveWorker::run()
 {
 	if (filesaver->lidardata == NULL)
 		return;
 	
 	LasSaver* saver = 0;
-	
-	std::cout << "SaveWorker: started" << std::endl;
 
-	// Check file extension
-	if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
+	try
 	{
-		try
+		if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
 		{
 			if (use_default_scalefactor)
 			{
@@ -68,40 +52,30 @@ void SaveWorker::run()
 			{
 				saver = new LasSaver(filename.c_str(), source_filename.c_str(), parse_string.c_str(), scale_factor, use_latlong);
 			}
-
-			filesaver->lidardata->saveFlightLine(flightline_number, saver);
-			
-			saver->close();
-			delete saver;
 		}
-		catch (DescriptiveException e)
-		{
-			std::cout << "SaveWorker: There has been an exception: " << "\n";
-			std::cout << "What: " << e.what() << "\n";
-			std::cout << "Why: " << e.why() << std::endl;
-			return;
-		}
-	}
-	else
-	{
-		try
+		else
 		{
 			saver = new LasSaver(filename.c_str(), source_filename.c_str(), use_latlong);
+		}
 
-			filesaver->lidardata->saveFlightLine(flightline_number, saver);
+		filesaver->lidardata->saveFlightLine(flightline_number, saver);
 
-			saver->close();
+		saver->close();
+		delete saver;
+	}
+	catch (DescriptiveException e)
+	{
+		std::cout << "SaveWorker: There has been an exception: " << "\n";
+		std::cout << "What: " << e.what() << "\n";
+		std::cout << "Why: " << e.why() << std::endl;
+
+		if (saver != 0)
 			delete saver;
-		}
-		catch (DescriptiveException e)
-		{
-			std::cout << "SaveWorker: There has been an exception: " << "\n";
-			std::cout << "What: " << e.what() << "\n";
-			std::cout << "Why: " << e.why() << std::endl;
-			return;
-		}
+
+		sig_done();
+
+		return;
 	}
 
 	sig_done();
-
 }

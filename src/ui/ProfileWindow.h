@@ -68,6 +68,8 @@ private:
    // the profile.
    Gtk::CheckMenuItem *showheightscalecheck;
 
+   // Status bar label
+   Gtk::Label* profstatuslabel;
 
    Gtk::RadioMenuItem* colourbynonemenuprof;
    Gtk::RadioMenuItem* brightnessbynonemenuprof;
@@ -119,6 +121,8 @@ private:
    // profile.
    Gtk::SpinButton *classificationselect;
 
+   Glib::Mutex mutex;
+
    // Initialisation
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
@@ -165,6 +169,12 @@ private:
    bool on_prof_key_press(GdkEventKey* event);
    //Manage scrolling of the profile with automatic redraw.
    bool on_profile_shift(GdkEventKey* event);
+
+   // Set cursor to busy/not busy
+   void make_busy_cursor(bool);
+
+   // Set status bar label
+   void set_statusbar_label(std::string);
 
 };
 

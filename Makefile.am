@@ -11,7 +11,7 @@ src/ui/FileOpener.cpp src/MathFuncs.cpp src/TwoDeeOverview.cpp \
 src/BoxOverlay.cpp src/ui/FileSaver.cpp src/Profile.cpp \
 src/ui/TwoDeeOverviewWindow.cpp src/LagDisplay.cpp src/ui/ProfileWindow.cpp \
 src/Colour.cpp src/SelectionBox.cpp src/LoadWorker.cpp src/SaveWorker.cpp \ 
-src/ProfileWorker.cpp src/ClassifyWorker.cpp
+src/ProfileWorker.cpp src/ClassifyWorker.cpp src/Worker.h
 lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @libgeotiff_CFLAGS@ @lidarquadtree_CFLAGS@
 lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @lidarquadtree_LIBS@
 lagdir = $(prefix)

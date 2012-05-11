@@ -10,34 +10,23 @@
 #ifndef CLASSIFYWORKER_H_
 #define CLASSIFYWORKER_H_
 
-#include <gtkmm.h>
+
 #include <stdint.h>
+#include "Worker.h"
+
 
 class Profile;
 
-class ClassifyWorker
+class ClassifyWorker : public Worker
 {
 public:
 	ClassifyWorker(Profile* prof, uint8_t clas);
-
-	~ClassifyWorker();
-
-	void start()
-	{
-		thread = Glib::Thread::create(sigc::mem_fun(*this, &ClassifyWorker::run), true);
-	}
-
-	Glib::Dispatcher sig_done;
 
 protected:
 	void run();
 
 	Profile* profile;
 	uint8_t classification;
-
-	Glib::Thread* thread;
-	Glib::Mutex mutex;
-	bool stop;
 
 };
 

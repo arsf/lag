@@ -51,6 +51,8 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 
 	profilewindow->show_all();
 
+	set_statusbar_label("");
+
 	prof->setshowheightscale(showheightscalecheck->get_active());
 	prof->setpointwidth(pointwidthselectprof->get_value());
 	prof->setdrawpoints(pointshowtoggle->get_active());
@@ -82,6 +84,7 @@ ProfileWindow::~ProfileWindow()
    delete slantedprof;
    delete refreshbuttonprof;
    delete heightsbuttonprof;
+   delete profstatuslabel;
 }
 
 void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
@@ -110,6 +113,7 @@ void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("classificationselect",	            classificationselect);
 	builder->get_widget("refreshbuttonprof",			    refreshbuttonprof);
 	builder->get_widget("heightsbuttonprof",	            heightsbuttonprof);
+	builder->get_widget("profstatuslabel",		            profstatuslabel);
 }
 
 void ProfileWindow::connect_signals()
@@ -224,6 +228,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
    if (profileworker != NULL)
 	   return;
 
+   set_statusbar_label("Loading profile...");
 
    // These are NOT to be deleted here as the arrays they will point to 
    // will be managed by the TwoDeeOVerview object.
@@ -248,7 +253,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
 
    if(profxs!=NULL && profys!=NULL)
    {
-      // Showprofile uses the getpoint() method, and that must never be used 
+	  // Showprofile uses the getpoint() method, and that must never be used
       // by more than one thread at once.
       tdo->setpausethread(true);
       tdo->waitforpause();
@@ -258,22 +263,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
       profileworker->start();
 
       // Change cursor to busy
-	  GdkDisplay* display;
-	  GdkCursor* cursor;
-	  GdkWindow* window;
-
-	  cursor = gdk_cursor_new(GDK_WATCH);
-	  display = gdk_display_get_default();
-	  window = (GdkWindow*) profilewindow->get_window()->gobj();
-
-	  gdk_window_set_cursor(window, cursor);
-	  gdk_display_sync(display);
-	  gdk_cursor_unref(cursor);
-
-      /*
-      prof->showprofile(profxs,profys,profps,true);
-      tdo->setpausethread(false);
-      */
+      make_busy_cursor(true);
    }
 }
 
@@ -284,20 +274,43 @@ void ProfileWindow::profile_loaded()
 
 	tdo->setpausethread(false);
 
-    // Set cursor back to normal
-    GdkDisplay* display;
-    GdkCursor* cursor;
-    GdkWindow* window;
+	make_busy_cursor(false);
 
-    cursor = gdk_cursor_new(GDK_LEFT_PTR);
-    display = gdk_display_get_default();
-    window = (GdkWindow*) profilewindow->get_window()->gobj();
-
-    gdk_window_set_cursor(window, cursor);
-    gdk_display_sync(display);
-    gdk_cursor_unref(cursor);
+	set_statusbar_label("");
 
     prof->draw_profile(true);
+}
+
+void ProfileWindow::make_busy_cursor(bool busy)
+{
+	{
+		Glib::Mutex::Lock lock (mutex);
+
+		GdkDisplay* display;
+		GdkCursor* cursor;
+		GdkWindow* window;
+
+		display = gdk_display_get_default();
+
+		if (busy)
+			cursor = gdk_cursor_new(GDK_WATCH);
+		else
+			cursor = gdk_cursor_new(GDK_LEFT_PTR);
+
+		window = (GdkWindow*) profilewindow->get_window()->gobj();
+		gdk_window_set_cursor(window, cursor);
+		window = (GdkWindow*) prof->get_window()->gobj();
+		if (!busy && (fencetoggleprof->get_active() || rulertoggle->get_active()))
+		{
+			gdk_cursor_unref(cursor);
+			cursor = gdk_cursor_new(GDK_CROSSHAIR);
+		}
+
+		gdk_window_set_cursor(window, cursor);
+		gdk_cursor_unref(cursor);
+
+		gdk_display_sync(display);
+	}
 }
 
 //This returns the profile to its original position.
@@ -347,6 +360,8 @@ void ProfileWindow::on_classbutton_clicked()
 	if (classifyworker != NULL)
 		return;
 
+	set_statusbar_label("Classifying...");
+
 	// Nothing else must read the points (or indeed write to them!)
 	// while the classifier is writing to them. Also, it uses the
 	// getpoint() method.
@@ -360,18 +375,7 @@ void ProfileWindow::on_classbutton_clicked()
 		classifyworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::points_classified));
 		classifyworker->start();
 
-		// Change cursor to busy
-		GdkDisplay* display;
-		GdkCursor* cursor;
-		GdkWindow* window;
-
-		cursor = gdk_cursor_new(GDK_WATCH);
-		display = gdk_display_get_default();
-		window = (GdkWindow*) profilewindow->get_window()->gobj();
-
-		gdk_window_set_cursor(window, cursor);
-		gdk_display_sync(display);
-		gdk_cursor_unref(cursor);
+		make_busy_cursor(true);
 	}
 }
 
@@ -383,20 +387,18 @@ void ProfileWindow::points_classified()
 	prof->draw_profile(false);
 
 	// Set cursor back to normal
-	GdkDisplay* display;
-	GdkCursor* cursor;
-	GdkWindow* window;
+	make_busy_cursor(false);
 
-	cursor = gdk_cursor_new(GDK_LEFT_PTR);
-	display = gdk_display_get_default();
-	window = (GdkWindow*) profilewindow->get_window()->gobj();
-
-	gdk_window_set_cursor(window, cursor);
-	gdk_display_sync(display);
-	gdk_cursor_unref(cursor);
+	set_statusbar_label("");
 
 	tdo->setpausethread(false);
 	tdo->drawviewable(1);
+}
+
+void ProfileWindow::set_statusbar_label(std::string text)
+{
+	Glib::Mutex::Lock lock (mutex);
+	profstatuslabel->set_text(text);
 }
 
 //Toggles whether clicking and dragging will select the fence in the profile.

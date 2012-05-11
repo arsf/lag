@@ -11,23 +11,14 @@
 #define SAVEWORKER_H_
 
 
-#include <gtkmm.h>
+#include "Worker.h"
 
 class FileSaver;
 
-class SaveWorker
+class SaveWorker : public Worker
 {
 public:
 	SaveWorker(FileSaver* fs, std::string filename, std::string filein, int flightline, std::string parse_string, bool use_latlong, bool use_default_scalefactor, double scale_factor[3]);
-
-	~SaveWorker();
-
-	void start()
-	{
-		thread = Glib::Thread::create(sigc::mem_fun(*this, &SaveWorker::run), true);
-	}
-
-	Glib::Dispatcher sig_done;
 
 protected:
 	void run();
@@ -40,10 +31,6 @@ protected:
 	bool use_latlong;
 	bool use_default_scalefactor;
 	double scale_factor[3];
-
-	Glib::Thread* thread;
-	Glib::Mutex mutex;
-	bool stop;
 };
 
 

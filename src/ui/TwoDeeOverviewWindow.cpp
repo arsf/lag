@@ -348,7 +348,8 @@ void TwoDeeOverviewWindow::set_slice_range(double min, double max)
 
 void TwoDeeOverviewWindow::on_refreshbuttonclicked()
 {
-	tdo->drawviewable(1);
+	if (tdo->get_realized())
+		tdo->drawviewable(1);
 }
 
 void TwoDeeOverviewWindow::on_superzoomclicked()

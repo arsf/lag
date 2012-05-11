@@ -11,10 +11,9 @@
 #include "ui/FileOpener.h"
 
 
-
 LoadWorker::LoadWorker(FileOpener* fo, int point_offset, std::vector<std::string> filenames, bool create_new, bool usearea, int resolutiondepth, int resolutionbase,
 		int bucketlevels, int bucketlimit, int cachelimit, bool default_scale_factors, double scale_factor[3],
-		std::string ascii_code, SelectionBox fence) :
+		std::string ascii_code, SelectionBox fence) : Worker(),
 		fileopener			(fo),
 		point_offset		(point_offset),
 		filenames			(filenames),
@@ -27,9 +26,7 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset, std::vector<std::string
 		cachelimit			(cachelimit),
 		use_default_scale_factors	(default_scale_factors),
 		ascii_code			(ascii_code),
-		fence				(fence),
-		thread				(0),
-		stop				(false)
+		fence				(fence)
 {
 	if (!use_default_scale_factors)
 	{
@@ -44,19 +41,9 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset, std::vector<std::string
 }
 
 
-LoadWorker::~LoadWorker()
-{
-	{
-		Glib::Mutex::Lock lock (mutex);
-		stop = true;
-	}
-	if (thread)
-		thread->join();
-}
-
 void LoadWorker::run()
 {
-	// If a new quadtree has been created
+	// Has a new quadtree been created?
 	bool newQuadtree = false;
 
 	try
@@ -276,12 +263,17 @@ void LoadWorker::run()
 	}
 	catch(DescriptiveException e)
 	{
-		std::cout << "LoadWorker: There has been an exception:\n";
+		std::cout << "LoadWorker: Error loading file.\n";
 		std::cout << e.what() << "\n" << e.why() << std::endl;
+
 		if (fileopener->lidardata != NULL)
 			delete fileopener->lidardata;
+
 		fileopener->loadedanyfiles = false;
 		newQuadtree = false;
+
+		sig_done();
+
 		return;
 	}
 
