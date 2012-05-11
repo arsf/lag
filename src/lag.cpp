@@ -185,7 +185,7 @@ int main(int argc, char** argv)
    FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,eventboxtdo,eventboxprof,tdow);
    
    //In case of command-line commands 
-   fo->testfilename(argc,argv,true,false);
+   //fo->testfilename(argc,argv,true,false);
    
    gdk_threads_enter();
 

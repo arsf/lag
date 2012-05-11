@@ -27,10 +27,12 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
-//#include "../Quadtree.h"
+
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
 #include "LasSaver.h"
+#include "../SaveWorker.h"
+
 class FileSaver{
 public:
    FileSaver(TwoDeeOverview*,
@@ -39,27 +41,29 @@ public:
 
    ~FileSaver();
 
-   inline void show()
+   void show()
    {
       filesaverdialog->present(); 
    }
 
-   inline void setlinerange(int first, int second)
+   void setlinerange(int first, int second)
    {
       flightlinesaveselect->set_range(first,second); 
    }
 
-   inline void setlabeltext(string text)
+   void setlabeltext(string text)
    {
       flightlinelistlabel->set_text(text); 
    }
 
    void on_flightlinesaveselected();
 
-   inline void setlidardata(Quadtree *lidardata)
+   void setlidardata(Quadtree *lidardata)
    {
       this->lidardata = lidardata; 
    }
+
+   Quadtree *lidardata;
 
 private:
 
@@ -72,7 +76,6 @@ private:
    //This displays the cache size in terms of gigabytes, approximately.
    Gtk::Label *flightlinelistlabel;
    Gtk::SpinButton *flightlinesaveselect;
-   Quadtree *lidardata;
 
    Gtk::RadioButton* utmselect;
    Gtk::RadioButton* latlongselect;
@@ -83,11 +86,15 @@ private:
    Gtk::Entry* scaleFactorEntryZ;
    Gtk::CheckButton* btnUseDefault;
 
+   SaveWorker* saveworker;
+
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
 
    void on_filesaverdialogresponse(int response_id);
    void on_usedefault_changed();
+
+   void files_saved();
 };
 
 #endif

@@ -35,6 +35,8 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 		profilewindow	(profilewindow),
 		overviewwindow	(overviewwindow)
 {
+	profileworker = NULL;
+
 	load_xml(builder);
 
 	profilewindow->set_title("LAG Profile");
@@ -218,6 +220,10 @@ void ProfileWindow::on_showprofilebutton_clicked()
    if(tdo->is_realized())
 	   profilewindow->present();
 
+   if (profileworker != NULL)
+	   return;
+
+
    // These are NOT to be deleted here as the arrays they will point to 
    // will be managed by the TwoDeeOVerview object.
    double* profxs = NULL;
@@ -245,9 +251,50 @@ void ProfileWindow::on_showprofilebutton_clicked()
       // by more than one thread at once.
       tdo->setpausethread(true);
       tdo->waitforpause();
+
+      profileworker = new ProfileWorker(this->prof, profxs, profys, profps, true);
+      profileworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::profile_loaded));
+      profileworker->start();
+
+      // Change cursor to busy
+	  GdkDisplay* display;
+	  GdkCursor* cursor;
+	  GdkWindow* window;
+
+	  cursor = gdk_cursor_new(GDK_WATCH);
+	  display = gdk_display_get_default();
+	  window = (GdkWindow*) prof->get_window()->gobj();
+
+	  gdk_window_set_cursor(window, cursor);
+	  gdk_display_sync(display);
+	  gdk_cursor_unref(cursor);
+
+      /*
       prof->showprofile(profxs,profys,profps,true);
       tdo->setpausethread(false);
+      */
    }
+}
+
+void ProfileWindow::profile_loaded()
+{
+	delete profileworker;
+	profileworker = NULL;
+
+	tdo->setpausethread(false);
+
+    // Set cursor back to normal
+    GdkDisplay* display;
+    GdkCursor* cursor;
+    GdkWindow* window;
+
+    cursor = gdk_cursor_new(GDK_LEFT_PTR);
+    display = gdk_display_get_default();
+    window = (GdkWindow*) prof->get_window()->gobj();
+
+    gdk_window_set_cursor(window, cursor);
+    gdk_display_sync(display);
+    gdk_cursor_unref(cursor);
 }
 
 //This returns the profile to its original position.

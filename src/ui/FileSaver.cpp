@@ -29,9 +29,11 @@
 
 FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder)
 :
+		lidardata	(NULL),
 		tdo			(tdo),
 		prof		(prof),
-		lidardata	(NULL)
+		saveworker	(NULL)
+
 {
   load_xml(builder);
   connect_signals();
@@ -88,81 +90,69 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
 {
    if(response_id == Gtk::RESPONSE_CLOSE)
    {
-      filesaverdialog->set_filename("");
+      //filesaverdialog->set_filename("");
       filesaverdialog->hide_all();
    }
    else if(response_id == 1)
    {
-      if(lidardata==NULL)
+      if (lidardata==NULL)
     	  return;
 
-      const char* filename = filesaverdialog->get_filename().c_str();
-      LasSaver* saver = NULL;
+      if (saveworker != NULL)
+    	  return;
 
-      if (strstr(filename, ".txt") || strstr(filename, ".TXT"))
+      double scale_factor[3];
+      if (!btnUseDefault->get_active())
       {
-          try
-          {
-        	 string parse_string = parsestringentry->get_text();
-
-        	 if(btnUseDefault->get_active())
-             {
-            	 saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), latlongselect->get_active());
-             }
-             else
-             {
-            	 double scale_factor[3];
-            	 const char* temp;
-            	 temp = scaleFactorEntryX->get_text().c_str();
-            	 scale_factor[0] = atof(temp);
-            	 temp = scaleFactorEntryY->get_text().c_str();
-            	 scale_factor[1] = atof(temp);
-            	 temp = scaleFactorEntryZ->get_text().c_str();
-            	 scale_factor[2] = atof(temp);
-
-            	 saver = new LasSaver(filename, lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), parse_string.c_str(), scale_factor, latlongselect->get_active());
-
-                 temp = NULL;
-             }
-
-             lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
-
-             saver->close();
-             delete saver;
-
-             //filesaverdialog->hide_all();
-          }
-          catch(DescriptiveException e)
-          {
-             cout << "There has been an exception:" << endl;
-             cout << "What: " << e.what() << endl;
-             cout << "Why: " << e.why() << endl;
-             return;
-          }
+    	  const char* temp;
+    	  temp = scaleFactorEntryX->get_text().c_str();
+    	  scale_factor[0] = atof(temp);
+    	  temp = scaleFactorEntryY->get_text().c_str();
+    	  scale_factor[1] = atof(temp);
+    	  temp = scaleFactorEntryZ->get_text().c_str();
+    	  scale_factor[2] = atof(temp);
       }
       else
       {
-    	  try
-    	  {
-    		  saver = new LasSaver(filename,lidardata->getFileName(flightlinesaveselect->get_value_as_int()).c_str(), latlongselect->get_active());
-
-    		  lidardata->saveFlightLine(flightlinesaveselect->get_value_as_int(),saver);
-
-    		  saver->close();
-    		  delete saver;
-    		  filesaverdialog->unselect_all();
-
-    		  //filesaverdialog->hide_all();
-    	  }
-    	  catch(DescriptiveException e)
-    	  {
-    		  cout << "There has been an exception:" << endl;
-    		  cout << "What: " << e.what() << endl;
-    		  cout << "Why: " << e.why() << endl;
-    		  return;
-    	  }
+    	  scale_factor[0] = scale_factor[1] = scale_factor[2] = 0;
       }
+
+      saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()), flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(), btnUseDefault->get_active(), scale_factor);
+      saveworker->start();
+      saveworker->sig_done.connect(sigc::mem_fun(*this, &FileSaver::files_saved));
+
+	  // Change cursor to busy
+	  GdkDisplay* display;
+	  GdkCursor* cursor;
+	  GdkWindow* window;
+
+	  cursor = gdk_cursor_new(GDK_WATCH);
+	  display = gdk_display_get_default();
+	  window = (GdkWindow*) filesaverdialog->get_window()->gobj();
+
+	  gdk_window_set_cursor(window, cursor);
+	  gdk_display_sync(display);
+	  gdk_cursor_unref(cursor);
    }
+}
+
+void FileSaver::files_saved()
+{
+	delete saveworker;
+	saveworker = NULL;
+
+	// Set cursor back to normal
+	GdkDisplay* display;
+	GdkCursor* cursor;
+	GdkWindow* window;
+
+	cursor = gdk_cursor_new(GDK_LEFT_PTR);
+	display = gdk_display_get_default();
+	window = (GdkWindow*) filesaverdialog->get_window()->gobj();
+
+	gdk_window_set_cursor(window, cursor);
+	gdk_display_sync(display);
+	gdk_cursor_unref(cursor);
 }
 
 

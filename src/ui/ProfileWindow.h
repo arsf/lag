@@ -31,6 +31,8 @@
 #include "../Profile.h"
 #include "AdvancedOptionsWindow.h"
 
+#include "../ProfileWorker.h"
+
 class ProfileWindow
 {
 public:
@@ -44,6 +46,9 @@ public:
    ~ProfileWindow();
    //This grabs the profile from the overview.
    void on_showprofilebutton_clicked();
+
+   ProfileWorker* profileworker;
+   void profile_loaded();
 
 private:
    Profile *prof;

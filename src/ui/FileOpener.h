@@ -33,8 +33,6 @@
 #include "AdvancedOptionsWindow.h"
 #include "FileSaver.h"
 #include "TwoDeeOverviewWindow.h"
-
-#include "../Worker.h"
 #include "../LoadWorker.h"
 
 class FileOpener
@@ -56,6 +54,7 @@ public:
 
    LoadWorker* loadworker;
    void show_thread_message();
+   void add_line();
    void files_loaded();
 
    inline void show()
