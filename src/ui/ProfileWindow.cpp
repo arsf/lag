@@ -85,6 +85,7 @@ ProfileWindow::~ProfileWindow()
    delete refreshbuttonprof;
    delete heightsbuttonprof;
    delete profstatuslabel;
+   delete heightsexcludenoise;
 }
 
 void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
@@ -114,6 +115,7 @@ void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("refreshbuttonprof",			    refreshbuttonprof);
 	builder->get_widget("heightsbuttonprof",	            heightsbuttonprof);
 	builder->get_widget("profstatuslabel",		            profstatuslabel);
+	builder->get_widget("heightsexcludenoise",		        heightsexcludenoise);
 }
 
 void ProfileWindow::connect_signals()
@@ -147,14 +149,14 @@ void ProfileWindow::connect_signals()
 
 void ProfileWindow::on_refreshbutton_clicked()
 {
-	prof->drawviewable(1);
+	if (prof->get_realized()) prof->drawviewable(1);
 }
 
 void ProfileWindow::on_heightsbuttonprof_clicked()
 {
 	Gtk::MessageDialog dialog("Average heights for flightlines", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
 	std::ostringstream message;
-	std::vector<double> avgs = prof->get_averages();
+	std::vector<double> avgs = prof->get_averages(heightsexcludenoise->get_active());
 	size_t size = avgs.size();
 
 	for (size_t i = 0; i < size; ++i)

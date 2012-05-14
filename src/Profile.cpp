@@ -1611,7 +1611,7 @@ bool Profile::on_zoom_key(GdkEventKey* event)
    return drawviewable(1);
 }
 
-std::vector<double> Profile::get_averages()
+std::vector<double> Profile::get_averages(bool exclude_noise)
 {
 	int lines = flightlinestot.size();
 	std::vector<double> avgs (lines);
@@ -1619,12 +1619,29 @@ std::vector<double> Profile::get_averages()
 	for (int i = 0; i < lines; ++i)
 	{
 		int points = (int)flightlinepoints[i].size();
+		int excluded = 0;
 		double z = 0;
-		for (int j=0; j < points; ++j)
+
+		if (!exclude_noise)
 		{
-			z += flightlinepoints[i][j].getZ();
+			for (int j=0; j < points; ++j)
+			{
+				z += flightlinepoints[i][j].getZ();
+			}
 		}
-		avgs.at(i) = z / points;
+		else
+		{
+			for (int j=0; j < points; ++j)
+			{
+				if (flightlinepoints[i][j].getClassification() != 1)
+				{
+					++excluded;
+					continue;
+				}
+				z += flightlinepoints[i][j].getZ();
+			}
+		}
+		avgs.at(i) = z / (points - excluded);
 	}
 
 	return avgs;

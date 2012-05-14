@@ -2180,6 +2180,9 @@ void TwoDeeOverview::set_superzoom(bool zoom)
 
 	if (superzoom)
 	{
+	    Gdk::Cursor cursor(Gdk::CROSSHAIR);
+	   	if(is_realized())get_window()->set_cursor(cursor);
+
 		setpointwidth(2);
 
 		for (int i = 0; i < 10; ++i)
@@ -2189,6 +2192,7 @@ void TwoDeeOverview::set_superzoom(bool zoom)
 	}
 	else
 	{
+	   	if(is_realized())get_window()->set_cursor();
 		setpointwidth(1.0);
 	}
 

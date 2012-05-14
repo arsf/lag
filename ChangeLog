@@ -48,8 +48,13 @@
     * TwoDeeOverview:   Added option to display data as UTM or latlong.
 
 2012-05-10  Jan Holownia <jaho@pml.ac.uk>
-    * LoadWorker.cpp:   Added.
-    
+    * general:          Improved superzoom. Added an option to excude noise points when calculating average heights
+                        in the profile. All long-running tasks are now in separate threads so the GUI doesn't lock.
+    * Worker.h:         Added as a base class for long-running tasks. Also added the following classes which inherit
+                        from it: LoadWorker, SaveWorker, ProfileWorker, ClassifyWorker. The last two use existing
+                        Profile class methods and can be improved by moving the logic into the worker calsses. Thread 
+                        safety needs to be improved (mutexes in get/set methods of variables accessed from multiple 
+                        threads).
     
     
 

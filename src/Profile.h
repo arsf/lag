@@ -161,7 +161,7 @@ public:
    }
    void toggleNoise();
 
-   std::vector<double> get_averages();
+   std::vector<double> get_averages(bool exclude_noise);
 
    void set_slicing(bool slice)
    {

@@ -121,6 +121,8 @@ private:
    // profile.
    Gtk::SpinButton *classificationselect;
 
+   Gtk::CheckButton* heightsexcludenoise;
+
    Glib::Mutex mutex;
 
    // Initialisation
