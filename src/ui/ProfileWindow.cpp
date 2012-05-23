@@ -142,7 +142,6 @@ void ProfileWindow::connect_signals()
 	classbutton->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_classbutton_clicked));
 	slantedprof->signal_toggled().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantedprof));
 	slantwidthselectprof->signal_value_changed().connect(sigc::mem_fun(*this,&ProfileWindow::on_slantwidthselectedprof));
-
 	refreshbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_refreshbutton_clicked));
 	heightsbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_heightsbuttonprof_clicked));
 }
@@ -462,6 +461,10 @@ void ProfileWindow::on_rulertoggle()
    }
 }
 
+void ProfileWindow::set_classification(double classification)
+{
+	classificationselect->set_value(classification);
+}
 
 // This takes keyboard input from the event box around the profile area and 
 // interprets it.
@@ -493,6 +496,35 @@ bool ProfileWindow::on_prof_key_press(GdkEventKey* event)
          on_classbutton_clicked();
          return true;
          break;
+      // Set classification
+      case GDK_1:
+    	  set_classification(1);
+    	  return true;
+    	  break;
+      case GDK_7:
+    	  set_classification(7);
+    	  return true;
+    	  break;
+      case GDK_2:
+    	  set_classification(2);
+    	  return true;
+    	  break;
+      case GDK_3:
+    	  set_classification(3);
+    	  return true;
+    	  break;
+      case GDK_4:
+    	  set_classification(4);
+    	  return true;
+    	  break;
+      case GDK_5:
+    	  set_classification(5);
+    	  return true;
+    	  break;
+      case GDK_6:
+    	  set_classification(6);
+    	  return true;
+    	  break;
       //Move view.
       case GDK_w:
       case GDK_s:

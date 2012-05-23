@@ -178,6 +178,9 @@ public:
 	   this->maxz = z;
    }
 
+   Glib::Dispatcher sig_class_progress;
+
+
 protected:
    //Label showing the distance, in various dimensions, covered by the ruler.
    Gtk::Label *rulerlabel;
@@ -270,6 +273,8 @@ protected:
    //Determines whether or not the fence should be drawn.
    bool fencing;
 
+   Glib::Mutex mutex;
+
  
    //Signal handlers:
    //Panning:
@@ -284,7 +289,7 @@ protected:
    sigc::connection sigfencestart;
    sigc::connection sigfence;
    sigc::connection sigfenceend;
- 
+
    //Methods:
    // This determines which points in the bucket (bucket) fit both in the 
    // profile (from the correctpoints pointer passed in) and in the fence 

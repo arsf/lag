@@ -17,10 +17,8 @@ ClassifyWorker::ClassifyWorker(Profile* prof, uint8_t clas) : Worker(),
 
 void ClassifyWorker::run()
 {
-	{
-		Glib::Mutex::Lock lock (mutex);
-		profile->classify(classification);
-	}
+
+	profile->classify(classification);
 
 	sig_done();
 }

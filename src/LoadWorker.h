@@ -24,9 +24,11 @@ public:
 
 	Glib::Dispatcher sig_message;
 	Glib::Dispatcher sig_file_loaded;
+	Glib::Dispatcher sig_fail;
 
 protected:
 	void run();
+	void show_message(std::string message);
 
 	FileOpener* fileopener;
 	int point_offset;

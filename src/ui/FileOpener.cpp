@@ -39,13 +39,11 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
         fs				(fs),
         eventboxtdo		(eventboxtdo),
         eventboxprof	(eventboxprof),
-        bucketlimit		(bucketlimit)
+        bucketlimit		(bucketlimit),
+        loadworker		(NULL),
+        newQuadtree		(true),
+        loadedanyfiles	(false)
 {
-	loadworker = NULL;
-	newQuadtree = true;
-
-	loadedanyfiles = false;
-
 	load_xml(builder);
 
 	time_t starttime = time(NULL);
@@ -242,6 +240,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 	   loadworker->sig_done.connect(sigc::mem_fun(*this, &FileOpener::files_loaded));
 	   loadworker->sig_message.connect(sigc::mem_fun(*this, &FileOpener::show_thread_message));
 	   loadworker->sig_file_loaded.connect(sigc::mem_fun(*this, &FileOpener::add_line));
+	   loadworker->sig_fail.connect(sigc::mem_fun(*this, &FileOpener::load_failed));
 
 	   loadworker->start();
 
@@ -275,6 +274,28 @@ void FileOpener::show_thread_message()
 void FileOpener::add_line()
 {
 	++numlines;
+}
+
+void FileOpener::load_failed()
+{
+	delete loadworker;
+	loadworker = NULL;
+
+	loadoutputlabel->set_text(loadoutputlabel->get_text() + "Load failed." + "\n");
+	Gdk::Window::process_all_updates();
+
+	// Set cursor back to normal
+	GdkDisplay* display;
+	GdkCursor* cursor;
+	GdkWindow* window;
+
+	cursor = gdk_cursor_new(GDK_LEFT_PTR);
+	display = gdk_display_get_default();
+	window = (GdkWindow*) filechooserdialog->get_window()->gobj();
+
+	gdk_window_set_cursor(window, cursor);
+	gdk_display_sync(display);
+	gdk_cursor_unref(cursor);
 }
 
 void FileOpener::files_loaded()

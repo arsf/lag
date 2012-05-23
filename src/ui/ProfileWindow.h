@@ -54,6 +54,7 @@ public:
    ClassifyWorker* classifyworker;
    void points_classified();
 
+
 private:
    Profile *prof;
    TwoDeeOverview *tdo;
@@ -177,6 +178,9 @@ private:
 
    // Set status bar label
    void set_statusbar_label(std::string);
+
+   // Set classification
+   void set_classification(double);
 
 };
 

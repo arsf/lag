@@ -50,42 +50,92 @@ public:
 
    ~FileOpener();
 
-   int testfilename(int argc,char *argv[],bool start,bool usearea);
-
-   LoadWorker* loadworker;
-   void show_thread_message();
-   void add_line();
-   void files_loaded();
-
-   inline void show()
+   void show()
    {
       filechooserdialog->present();
    }
 
-   inline void setlidardata(Quadtree* lidardata,int bucketlimit)
+   void set_lidardata(Quadtree* lidardata)
    {
-      this->lidardata=lidardata;
-      this->bucketlimit=bucketlimit;
+	   Glib::Mutex::Lock lock (mutex);
+	   this->lidardata=lidardata;
+   }
+   Quadtree* get_lidardata()
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   return this->lidardata;
+   }
+   void delete_lidardata()
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   if (lidardata != NULL)
+		   delete lidardata;
+	   lidardata = NULL;
+   }
+
+   void set_newQuadtree(bool newqt)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   this->newQuadtree = newqt;
+   }
+
+   void set_loadedanyfiles(bool loaded)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   this->loadedanyfiles = loaded;
+   }
+   bool get_loadedanyfiles()
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   return this->loadedanyfiles;
+   }
+
+   void set_thread_message(std::string message)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   this->thread_message = message;
+   }
+
+   void set_minZ(double z)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   this->minZ = z;
+   }
+   double get_minZ()
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   return this->minZ;
+   }
+
+   void set_maxZ(double z)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+   	   this->maxZ = z;
+   }
+   double get_maxZ()
+   {
+   	   Glib::Mutex::Lock lock (mutex);
+   	   return this->maxZ;
+   }
+
+   void set_utm_zone(std::string zone)
+   {
+	   Glib::Mutex::Lock lock (mutex);
+	   this->utm_zone = zone;
    }
 
    double minZ, maxZ;
    std::string utm_zone;
-   bool newQuadtree;
 
-   Quadtree *lidardata;
-   std::string thread_message;
-
-   //Whether or not any files have already been loaded in this session.
-   bool loadedanyfiles;
 
 private:
+   Quadtree *lidardata;
    int numlines;
    TwoDeeOverview *tdo;
    Profile* prof;
    TwoDeeOverviewWindow *tdow;
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
-
 
    //For opening files.
    Gtk::FileChooserDialog *filechooserdialog;
@@ -129,13 +179,22 @@ private:
    //Stringstream getting error messages from the quadtree.
    ostringstream *loaderrorstream;
 
-   Glib::Mutex mutex;
-
    //How many points to hold in cache. 1 GB ~= 25000000 points.
    int cachelimit;
 
    //How many points in each bucket, maximum.
    int bucketlimit;
+
+   // Threading
+   LoadWorker* loadworker;
+   Glib::Mutex mutex;
+
+   // Members accessed from other thread (need thread-safe get/set methods)
+   bool newQuadtree;
+   std::string thread_message;
+
+   //Whether or not any files have already been loaded in this session.
+   bool loadedanyfiles;
 
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
 
@@ -152,6 +211,12 @@ private:
 
    //Clean up on quit.
    int on_quit();
+
+   // Methods used called by another thread, through signals
+   void show_thread_message();
+   void add_line();
+   void files_loaded();
+   void load_failed();
 };
 
 #endif

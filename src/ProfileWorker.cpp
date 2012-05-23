@@ -21,10 +21,6 @@ ProfileWorker::ProfileWorker(Profile* prof, double* xs, double* ys, int ps) : Wo
 
 void ProfileWorker::run()
 {
-	{
-		Glib::Mutex::Lock lock (mutex);
-		profile->loadprofile(profxs,profys,profps);
-	}
-
+	profile->loadprofile(profxs,profys,profps);
 	sig_done();
 }

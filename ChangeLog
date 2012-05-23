@@ -55,6 +55,16 @@
                         Profile class methods and can be improved by moving the logic into the worker calsses. Thread 
                         safety needs to be improved (mutexes in get/set methods of variables accessed from multiple 
                         threads).
+                        
+2012-05-23  Jan Holownia <jaho@pml.ac.uk>
+    * general:          Improved thread safety - no more random segfaults. Keys 1-7 can now be used in profile window
+                        to quickly change classification.
+    * LoadWorker.cpp:   Fixed a bug where Adding files to an existing quadtree would sometimes not work correctly. 
+                        Improved handling of incorrect files and exceptions during loading.
+    * ProfileWindow:    Added Glib::Mutex as a member to protect critical sections (drawProfile()). This could be
+                        as there is still some GUI locking. Som of the code from loadProfile() could probably be moved
+                        to ProfileWorker class. The drawing methods are a mess and need to be fixed at some point.
+                        
     
     
 

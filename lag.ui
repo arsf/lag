@@ -1254,6 +1254,8 @@ Noise</property>
           <object class="GtkStatusbar" id="profstatusbar">
             <property name="visible">True</property>
             <property name="spacing">2</property>
+            <property name="homogeneous">True</property>
+            <property name="has_resize_grip">False</property>
             <child>
               <object class="GtkLabel" id="profstatuslabel">
                 <property name="visible">True</property>
@@ -1262,13 +1264,18 @@ Noise</property>
                 <property name="label" translatable="yes">label</property>
               </object>
               <packing>
+                <property name="padding">1</property>
                 <property name="position">0</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">False</property>
+            <property name="padding">1</property>
             <property name="position">3</property>
           </packing>
         </child>

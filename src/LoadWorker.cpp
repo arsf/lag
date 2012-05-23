@@ -40,6 +40,12 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset, std::vector<std::string
 	}
 }
 
+void LoadWorker::show_message(std::string message)
+{
+	fileopener->set_thread_message(message);
+	sig_message();
+}
+
 
 void LoadWorker::run()
 {
@@ -55,8 +61,7 @@ void LoadWorker::run()
 			for (size_t i = 0; i < filenames.size(); ++i)
 			{
 				std::string filename = filenames[i];
-				fileopener->thread_message = filename;
-				sig_message();
+				show_message(filename);
 
 				if (filename != "")
 				{
@@ -85,54 +90,51 @@ void LoadWorker::run()
 						else
 						{
 							std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
-							validfile = false;
+							show_message("Incorrect file type.");
+							sig_fail();
+							return;
 						}
 
 						if (validfile)
 						{
 							// If refreshing
-							if ((i == 0 && (create_new_quadtree || !fileopener->loadedanyfiles)) || fileopener->lidardata == NULL)
+							if ((i == 0 && (create_new_quadtree || !fileopener->get_loadedanyfiles())) || fileopener->get_lidardata() == NULL)
 							{
-								if (fileopener->lidardata != NULL)
-								{
-									delete fileopener->lidardata;
-								}
-
-								fileopener->lidardata = NULL;
+								fileopener->delete_lidardata();
 
 								Quadtree* qt = new Quadtree(loader, bucketlimit, point_offset, fence.getXs(), fence.getYs(), 4, cachelimit, 0, resolutionbase, resolutiondepth);
 								int numberofpointsloaded = qt->getNumberOfPoints();
 
-								fileopener->setlidardata(qt, bucketlimit);
+								fileopener->set_lidardata(qt);
 
 								if (numberofpointsloaded == 0)
 								{
 									std::cout << "No points loaded from file, possibly because of fence." << std::endl;
+									show_message("No points loaded from file.");
 								}
 								newQuadtree = true;
 								qt = NULL;
 							}
 							else
 							{
-								int numberofpointsloaded = fileopener->lidardata->load(loader, point_offset, 0, fence.getXs(), fence.getYs(), 4);
+								int numberofpointsloaded = fileopener->get_lidardata()->load(loader, point_offset, 0, fence.getXs(), fence.getYs(), 4);
 
 								if (numberofpointsloaded == 0)
 								{
 									std::cout << "No points loaded from file, possibly because of fence." << std::endl;
+									show_message("No points loaded from file.");
 								}
 							}
 
-							if (loader->getMinZ() < fileopener->minZ || i == 0)
-								fileopener->minZ = loader->getMinZ();
-							if (loader->getMaxZ() > fileopener->maxZ || i == 0)
-								fileopener->maxZ = loader->getMaxZ();
+							if (loader->getMinZ() < fileopener->get_minZ() || i == 0)
+								fileopener->set_minZ(loader->getMinZ());
+							if (loader->getMaxZ() > fileopener->get_maxZ() || i == 0)
+								fileopener->set_maxZ(loader->getMaxZ());
 
-							fileopener->utm_zone = loader->get_utm_zone();
+							fileopener->set_utm_zone(loader->get_utm_zone());
 						}
-
 					}
 				}
-
 				sig_file_loaded();
 			}
 		}
@@ -140,7 +142,7 @@ void LoadWorker::run()
 		{
 			double minx=0, maxx=0, miny=0, maxy=0;
 
-			if (create_new_quadtree || !fileopener->loadedanyfiles || fileopener->lidardata == NULL)
+			if (create_new_quadtree || !fileopener->get_loadedanyfiles() || fileopener->get_lidardata() == NULL)
 			{
 				for (size_t i = 0; i < filenames.size(); ++i)
 				{
@@ -167,7 +169,13 @@ void LoadWorker::run()
 								loader = new LasLoader(filename.c_str(), ascii_code.c_str(), scale_factor);
 							}
 						}
-						// else invalid extension
+						else
+						{
+							std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
+							show_message("Incorrect file type.");
+							sig_fail();
+							return;
+						}
 
 						Boundary lidarboundary = loader->getBoundary();
 						if (lidarboundary.minX < minx || i == 0)
@@ -192,9 +200,7 @@ void LoadWorker::run()
 			for (size_t i = 0; i < filenames.size(); ++i)
 			{
 				std::string filename = filenames[i];
-
-				fileopener->thread_message = filename;
-				sig_message();
+				show_message(filename);
 
 				if (filename != "")
 				{
@@ -217,22 +223,28 @@ void LoadWorker::run()
 							loader = new LasLoader(filename.c_str(), ascii_code.c_str(), scale_factor);
 						}
 					}
-					// else invalid extension
+					else
+					{
+						std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
+						show_message("Incorrect file type.");
+						sig_fail();
+						return;
+					}
 
 					// If refreshing
-					if ((i == 0 && (create_new_quadtree || !fileopener->loadedanyfiles)) || fileopener->lidardata == NULL)
+					if ((i == 0 && (create_new_quadtree || !fileopener->get_loadedanyfiles())) || fileopener->get_lidardata() == NULL)
 					{
 						Quadtree* qt = new Quadtree(minx, miny, maxx, maxy, bucketlimit, cachelimit, bucketLevels,
 								resolutionbase, resolutiondepth);
 
 						int numberofpointsloaded = qt->load(loader,point_offset, bucketLevels);
-						std::cout << "LoadWorker: loaded points: " << numberofpointsloaded << std::endl;
 
-						fileopener->setlidardata(qt, bucketlimit);
+						fileopener->set_lidardata(qt);
 
 						if (numberofpointsloaded == 0)
 						{
 							std::cout << "No points loaded from file, possibly because of fence." << std::endl;
+							show_message("No points loaded from file.");
 						}
 						newQuadtree = true;
 						qt = NULL;
@@ -240,19 +252,20 @@ void LoadWorker::run()
 					}
 					else
 					{
-						int numberofpointsloaded = fileopener->lidardata->load(loader, point_offset, bucketLevels);
+						int numberofpointsloaded = fileopener->get_lidardata()->load(loader, point_offset, bucketLevels);
 						if (numberofpointsloaded == 0)
 						{
 							std::cout << "No points loaded from file, possibly because of fence." << std::endl;
+							show_message("No points loaded from file.");
 						}
 
 					}
-					if (loader->getMinZ() < fileopener->minZ || i == 0)
+					if (loader->getMinZ() < fileopener->get_minZ() || i == 0)
 						fileopener->minZ = loader->getMinZ();
-					if (loader->getMaxZ() > fileopener->maxZ || i == 0)
+					if (loader->getMaxZ() > fileopener->get_maxZ() || i == 0)
 						fileopener->maxZ = loader->getMaxZ();
 
-					fileopener->utm_zone = loader->get_utm_zone();
+					fileopener->set_utm_zone(loader->get_utm_zone());
 
 					if (loader)
 						delete loader;
@@ -265,19 +278,19 @@ void LoadWorker::run()
 	{
 		std::cout << "LoadWorker: Error loading file.\n";
 		std::cout << e.what() << "\n" << e.why() << std::endl;
+		show_message(e.why());
 
-		if (fileopener->lidardata != NULL)
-			delete fileopener->lidardata;
+		fileopener->delete_lidardata();
 
-		fileopener->loadedanyfiles = false;
+		fileopener->set_loadedanyfiles(false);
 		newQuadtree = false;
 
-		sig_done();
+		sig_fail();
 
 		return;
 	}
 
-	fileopener->newQuadtree = newQuadtree;
+	fileopener->set_newQuadtree(newQuadtree);
 	sig_done();
 }
 
