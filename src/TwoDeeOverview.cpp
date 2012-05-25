@@ -1289,7 +1289,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          // This returns an array of booleans saying whether or not each point 
          // (indicated by indices that are shared with pointvector) is in the 
          // area prescribed.
-         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false, false, 0, 0);
+         bool* pointsinarea = vetpoints((*pointvector)[i],xs,ys,4, false);
          // For all points (no sorting as it seems pointless with a maximum of 
          // four buckets possible)...
          for(int j=0;j<(*pointvector)[i]->getNumberOfPoints(0);j++)

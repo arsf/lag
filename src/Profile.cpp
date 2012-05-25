@@ -395,8 +395,10 @@ bool Profile::loadprofile(double* profxs, double* profys, int profps)
 		{
 			queriedbucketsarray[i] = true; //Record as cached.
 			//Determine whether the points in this bucket are within the profile.
-			correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
-					profys, profps, hideProfNoise, slicing, minz, maxz);
+			if (!slicing)
+				correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs, profys, profps, hideProfNoise);
+			else
+				correctpointsbuckets[i] = vetpoints_slice((*pointvector)[i], profxs, profys, profps, hideProfNoise, minz, maxz);
 			//For all points in the bucket:
 
 			for (int j = 0; j < (*pointvector)[i]->getNumberOfPoints(0); j++)
@@ -424,8 +426,12 @@ bool Profile::loadprofile(double* profxs, double* profys, int profps)
 		if (!queriedbucketsarray[i])
 		{
 			//Determine whether the points in this bucket are within the profile.
-			correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
-					profys, profps, hideProfNoise, slicing, minz, maxz);
+			if (!slicing)
+				correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
+						profys, profps, hideProfNoise);
+			else
+				correctpointsbuckets[i] = vetpoints_slice((*pointvector)[i],
+						profxs, profys, profps, hideProfNoise, minz, maxz);
 
 			//For all points in the bucket:
 			for (int j = 0; j < (*pointvector)[i]->getNumberOfPoints(0); j++)
@@ -700,10 +706,16 @@ bool Profile::classify(uint8_t classification)
 	bool** correctpointsbuckets = new bool*[numbuckets];
 
 	for (int i = 0; i < numbuckets; ++i)
+	{
 		// Store whether the points in the buckets are inside the boundaries of
 		// the profile.
-		correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs, profys,
-				profps, hideProfNoise, slicing, minz, maxz);
+		if (!slicing)
+			correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
+					profys, profps, hideProfNoise);
+		else
+			correctpointsbuckets[i] = vetpoints_slice((*pointvector)[i], profxs,
+					profys, profps, hideProfNoise, minz, maxz);
+	}
 
 	//These will contain the corner coordinates of the fence.
 	double *xs, *ys, *zs;

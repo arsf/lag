@@ -37,6 +37,10 @@ using namespace std;
 double percentilevalue(double* data, int datasize, double percentile, double minval, double maxval);
 
 //Determines whether the points in the sent bucket fit within the profile area.
-bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners, bool profileNoisePoints, bool slicing, double minz, double maxz);
+// x, y
+bool* vetpoints(PointBucket* points,double* xs,double* ys,int numberofcorners, bool profileNoisePoints);
+// x, y, z
+bool* vetpoints_slice(PointBucket* points,double* xs,double* ys,int numberofcorners, bool profileNoisePoints, double minz, double maxz);
+
 
 #endif
