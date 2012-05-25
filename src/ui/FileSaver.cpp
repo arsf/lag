@@ -136,6 +136,7 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
    }
 }
 
+
 void FileSaver::files_saved()
 {
 	delete saveworker;

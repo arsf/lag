@@ -75,7 +75,8 @@ void LoadWorker::run()
 							loader = new LasLoader(filename.c_str());
 						}
 						// ASCII files
-						else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
+						else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos
+								|| filename.find(".csv", filename.length()-4) != std::string::npos || filename.find(".CSV", filename.length()-4) != std::string::npos )
 						{
 							if (use_default_scale_factors)
 							{
@@ -89,8 +90,8 @@ void LoadWorker::run()
 						// Incorrect files
 						else
 						{
-							std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
-							show_message("Incorrect file type.");
+							std::cout << "LoadWorker: Files must have an extension .las, .txt or .csv." << std::endl;
+							show_message("Unrecognised file type.");
 							sig_fail();
 							return;
 						}
@@ -158,7 +159,8 @@ void LoadWorker::run()
 							loader = new LasLoader(filename.c_str());
 						}
 						// ASCII files
-						else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
+						else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos
+							|| filename.find(".csv", filename.length()-4) != std::string::npos || filename.find(".CSV", filename.length()-4) != std::string::npos )
 						{
 							if (use_default_scale_factors)
 							{
@@ -171,8 +173,8 @@ void LoadWorker::run()
 						}
 						else
 						{
-							std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
-							show_message("Incorrect file type.");
+							std::cout << "LoadWorker: Files must have an extension .las, .txt or .csv." << std::endl;
+							show_message("Unrecognised file type.");
 							sig_fail();
 							return;
 						}
@@ -212,7 +214,8 @@ void LoadWorker::run()
 						loader = new LasLoader(filename.c_str());
 					}
 					// ASCII files
-					else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
+					else if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos
+						|| filename.find(".csv", filename.length()-4) != std::string::npos || filename.find(".CSV", filename.length()-4) != std::string::npos )
 					{
 						if (use_default_scale_factors)
 						{
@@ -225,8 +228,8 @@ void LoadWorker::run()
 					}
 					else
 					{
-						std::cout << "LoadWorker: Files must have an extension .las or .txt." << std::endl;
-						show_message("Incorrect file type.");
+						std::cout << "LoadWorker: Files must have an extension .las , .txt or .csv." << std::endl;
+						show_message("Unrecognised file type.");
 						sig_fail();
 						return;
 					}

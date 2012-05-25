@@ -42,7 +42,8 @@ void SaveWorker::run()
 
 	try
 	{
-		if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos)
+		if (filename.find(".txt", filename.length()-4) != std::string::npos || filename.find(".TXT", filename.length()-4) != std::string::npos
+			|| filename.find(".csv", filename.length()-4) != std::string::npos || filename.find(".CSV", filename.length()-4) != std::string::npos )
 		{
 			if (use_default_scalefactor)
 			{
@@ -66,8 +67,7 @@ void SaveWorker::run()
 	catch (DescriptiveException e)
 	{
 		std::cout << "SaveWorker: There has been an exception: " << "\n";
-		std::cout << "What: " << e.what() << "\n";
-		std::cout << "Why: " << e.why() << std::endl;
+		std::cout << e.why() << std::endl;
 
 		if (saver != 0)
 			delete saver;
