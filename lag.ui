@@ -1285,6 +1285,7 @@ Noise</property>
   <object class="GtkFileChooserDialog" id="filechooserdialog">
     <property name="border_width">5</property>
     <property name="title" translatable="yes">Open a file</property>
+    <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">lagicons/lagicon_small.png</property>
