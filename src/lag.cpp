@@ -68,14 +68,11 @@ string findgladepath(char* programpath)
     		  << gladename1.string() << std::endl
     		  << gladename2.string();
       exit(1);
-      return "BANG!";
    }
 }
 
 int main(int argc, char** argv)
 {
-   cout << "Build number: 2012.1.3.37" << endl;
-
    //This allows the creation and running of threads.
    Glib::thread_init();
 
