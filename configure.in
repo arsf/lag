@@ -9,6 +9,9 @@ AC_CONFIG_HEADERS([config.h])
 # use some not always publicly available autoconf magic
 AC_CONFIG_MACRO_DIR([m4])
 
+# we want things to break quickly
+: ${CXXFLAGS="-O3"}
+
 # Checks for programs.
 AC_PROG_CXX
 #AC_PROG_INSTALL
