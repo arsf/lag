@@ -24,18 +24,20 @@
 
 #include <gtkmm.h>
 #include <gtkglmm.h>
+#include <boost/filesystem.hpp>
 #include "Quadtree.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
 #include "ui/TwoDeeOverviewWindow.h"
 #include "ui/ProfileWindow.h"
 #include "ui/FileOpener.h"
-using namespace std;
 
-bool glade_exists(const char *filename)
+using namespace std;
+namespace fs = boost::filesystem;
+
+bool glade_exists(fs::path const& filename)
 {
-  ifstream ifile(filename);
-  return ifile;
+	return fs::exists(filename);
 }
 
 // Takes the path the executable was called with and uses it to find the 
@@ -43,37 +45,28 @@ bool glade_exists(const char *filename)
 string findgladepath(char* programpath)
 {
    //The path of the executable.
-   string exename = programpath;
+   fs::path mypath(programpath);
 
-   //Find the last forward slash and make its index our index.
-   unsigned int index = exename.rfind("/");
+   fs::path gladename1 = fs::system_complete(mypath).remove_filename();
+   fs::path gladename2 = gladename1;
 
-   // I.e. in the event that there is no forward slash (so must be calling 
-   // from the same directory), just go from 0, where the forward slash would 
-   // have been.
-   //if(index==string::npos)
-   //   index=0;
-   //We do not actually want to include the forward slash.
-   //else 
-   index++;
-   string gladename1 = exename;
-   string gladename2 = exename;
-   
-   gladename1.replace(index,9,"../lag.ui");
-   gladename2.replace(index,9,"lag.ui");
-   
-   cout << exename << endl;
-   if(glade_exists(gladename1.c_str()))
+   gladename1 /= ("../lag.ui");
+   gladename2 /= ("lag.ui");
+
+   if(glade_exists(gladename1))
    {
-      return gladename1;
+      return gladename1.string();
    }
-   else if(glade_exists(gladename2.c_str()))
+   else if(glade_exists(gladename2))
    {
-      return gladename2;
+      return gladename2.string();
    }
    else
    {
-      std::cerr << "No lag.ui glade file found" << std::endl;
+      std::cerr << "No lag.ui glade file found" << std::endl
+    		  << "Tried: " << std::endl
+    		  << gladename1.string() << std::endl
+    		  << gladename2.string();
       exit(1);
       return "BANG!";
    }
