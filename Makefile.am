@@ -14,9 +14,7 @@ src/Colour.cpp src/SelectionBox.cpp src/LoadWorker.cpp src/SaveWorker.cpp \
 src/ProfileWorker.cpp src/ClassifyWorker.cpp src/Worker.h
 lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @libgeotiff_CFLAGS@ @lidarquadtree_CFLAGS@
 lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @lidarquadtree_LIBS@
-lagdir = $(prefix)
+lagdir = $(prefix)/share/lag
 lag_DATA = lag.ui
-lagiconsdir = $(prefix)/lagicons
+lagiconsdir = $(prefix)/share/lag/icons
 lagicons_DATA = lagicons/*
-
-#lag_DATA = lagfonts/* lagicons/* lag.glade lag.ui

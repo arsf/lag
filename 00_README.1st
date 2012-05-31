@@ -1,9 +1,9 @@
 This codebase uses the GNU packaging tools.  To get things to a sane state after checkout, do:
 autoheader && aclocal && automake --add-missing && autoconf
 
-Please note you will need a compiled version of liblidarquadtree.so on your machine, and may need to modify Makefile.am to point to this library.  By default it should point to ./quadtreelink
+Please note you will need a compiled version of liblidarquadtree.so on your machine, and may need to modify Makefile.am to point to this library.
  
-Depending on where you've installed liblas, you may need to do the following to allow configure to find it:
+Depending on where you've installed liblaslib, you may need to do the following to allow configure to find it:
  export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig/
 
 Then you can do the normal:
