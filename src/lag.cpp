@@ -117,8 +117,6 @@ int main(int argc, char** argv)
       }
    }
 
-   printf("%s\n", argv[0]);
-
    //How many points in each bucket, maximum.
    int bucketlimit = 65536;
 
