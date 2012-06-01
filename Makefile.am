@@ -17,4 +17,4 @@ lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @l
 lagdir = $(prefix)/share/lag
 lag_DATA = lag.ui
 lagiconsdir = $(prefix)/share/lag/icons
-lagicons_DATA = lagicons/*
+lagicons_DATA = icons/*

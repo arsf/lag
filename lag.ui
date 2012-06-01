@@ -8,7 +8,7 @@
     <property name="default_width">1024</property>
     <property name="default_height">768</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <child>
       <object class="GtkVBox" id="vboxtdo">
         <property name="visible">True</property>
@@ -697,7 +697,7 @@
     <property name="default_width">1024</property>
     <property name="default_height">768</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <child>
       <object class="GtkVBox" id="vboxprof">
         <property name="visible">True</property>
@@ -1288,7 +1288,7 @@ Noise</property>
     <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="create_folders">False</property>
     <property name="preview_widget_active">False</property>
@@ -1724,7 +1724,7 @@ Noise</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-on-parent</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">LIDAR Analysis GUI (LAG)</property>
     <property name="version">1.0.0</property>
@@ -1987,7 +1987,7 @@ Remote Sensing Group (Sea From Space),
 Plymouth Marine Laboratory)</property>
     <property name="documenters">Haraldur Tristan Gunnarsson</property>
     <property name="artists">Haraldur Tristan Gunnarsson</property>
-    <property name="logo">lagicons/lagicon_small.png</property>
+    <property name="logo">icons/lagicon_small.png</property>
     <property name="wrap_license">True</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox2">
@@ -2016,7 +2016,7 @@ Plymouth Marine Laboratory)</property>
     <property name="title" translatable="yes">Advanced viewing options</property>
     <property name="window_position">center</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox3">
@@ -2780,7 +2780,7 @@ Plymouth Marine Laboratory)</property>
     <property name="border_width">5</property>
     <property name="modal">True</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <property name="has_separator">True</property>
     <property name="action">save</property>
@@ -3083,7 +3083,7 @@ Plymouth Marine Laboratory)</property>
     <property name="default_width">500</property>
     <property name="default_height">500</property>
     <property name="destroy_with_parent">True</property>
-    <property name="icon">lagicons/lagicon_small.png</property>
+    <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">normal</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox7">

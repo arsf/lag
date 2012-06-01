@@ -44,156 +44,176 @@ bool glade_exists(fs::path const& filename)
 // .glade file needed to make the GUI.
 string findgladepath(char* programpath)
 {
-   //The path of the executable.
-   fs::path mypath(programpath);
+	// For lag installed in /usr/local/bin, /usr/local/share/lag
 
-   fs::path gladename1 = fs::system_complete(mypath).remove_filename();
-   fs::path gladename2 = gladename1;
+	string exepath;
 
-   gladename1 /= ("../lag.ui");
-   gladename2 /= ("lag.ui");
+	// Find the path of the executable (linux only)
+	char buff[1024];
+	ssize_t len = readlink("/proc/self/exe", buff, sizeof(buff)-1);
+	if(len != -1)
+	{
+		buff[len] = '\0';
+		exepath = string(buff);
+	}
 
-   if(glade_exists(gladename1))
-   {
-      return gladename1.string();
-   }
-   else if(glade_exists(gladename2))
-   {
-      return gladename2.string();
-   }
-   else
-   {
-      std::cerr << "No lag.ui glade file found" << std::endl
-    		  << "Tried: " << std::endl
-    		  << gladename1.string() << std::endl
-    		  << gladename2.string();
-      exit(1);
-   }
+	fs::path gladepath(exepath);
+	gladepath = fs::system_complete(gladepath).remove_filename();
+	gladepath /= ("../share/lag/lag.ui");
+
+	if (glade_exists(gladepath))
+	{
+		return gladepath.string();
+	}
+
+	// For lag not installed
+
+	//The path of the executable.
+	fs::path mypath(programpath);
+
+	fs::path gladename1 = fs::system_complete(mypath).remove_filename();
+	fs::path gladename2 = gladename1;
+
+	gladename1 /= ("../lag.ui");
+	gladename2 /= ("lag.ui");
+
+	if (glade_exists(gladename1))
+	{
+		return gladename1.string();
+	}
+	else if (glade_exists(gladename2))
+	{
+		return gladename2.string();
+	}
+	else
+	{
+		std::cerr << "No lag.ui glade file found" << std::endl << "Tried: "
+				<< std::endl << gladename1.string() << std::endl
+				<< gladename2.string();
+		exit(1);
+	}
 }
 
 int main(int argc, char** argv)
 {
-   //This allows the creation and running of threads.
-   Glib::thread_init();
+	//This allows the creation and running of threads.
+	Glib::thread_init();
 
-   // This is required for GTK to work. It must be the first GTK object 
-   // created and may not be global.
-   Gtk::Main gtkmain(argc, argv);
+	// This is required for GTK to work. It must be the first GTK object
+	// created and may not be global.
+	Gtk::Main gtkmain(argc, argv);
 
-   //This will extract widgets from the glade file when directed.
-   const Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
-   try
-   {
-	   builder->add_from_file(findgladepath(argv[0]));
-   }
-   catch(const Glib::FileError& ex)
-   {
-	   std::cerr << "FileError: " << ex.what() << std::endl;
-	   return 1;
-   }
-   catch(const Glib::MarkupError& ex)
-   {
-	   std::cerr << "MarkupError: " << ex.what() << std::endl;
-	   return 1;
-   }
-   catch(const Gtk::BuilderError& ex)
-   {
-	   std::cerr << "BuilderError: " << ex.what() << std::endl;
-	   return 1;
-   }
+	//This will extract widgets from the glade file when directed.
+	const Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
+	try
+	{
+		builder->add_from_file(findgladepath(argv[0]));
+	} catch (const Glib::FileError& ex)
+	{
+		std::cerr << "FileError: " << ex.what() << std::endl;
+		return 1;
+	} catch (const Glib::MarkupError& ex)
+	{
+		std::cerr << "MarkupError: " << ex.what() << std::endl;
+		return 1;
+	} catch (const Gtk::BuilderError& ex)
+	{
+		std::cerr << "BuilderError: " << ex.what() << std::endl;
+		return 1;
+	}
 
+	Gtk::GL::init(argc, argv);
+	Glib::RefPtr<Gdk::GL::Config> glconfig;
 
-   Gtk::GL::init(argc, argv);
-   Glib::RefPtr<Gdk::GL::Config> glconfig;
+	glconfig = Gdk::GL::Config::create(
+			Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH | Gdk::GL::MODE_DOUBLE);
+	if (glconfig == 0)
+	{
+		glconfig = Gdk::GL::Config::create(
+				Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH);
+		if (glconfig == 0)
+		{
+			cout << "Cannot intialise OpenGL. Exiting." << endl;
+			std::exit(1);
+		}
+	}
 
-   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH | Gdk::GL::MODE_DOUBLE);
-   if (glconfig==0)
-   {
-      glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH);
-      if(glconfig==0)
-      {
-         cout << "Cannot intialise OpenGL. Exiting." << endl;
-         std::exit(1);
-      }
-   }
+	//How many points in each bucket, maximum.
+	int bucketlimit = 65536;
 
-   //How many points in each bucket, maximum.
-   int bucketlimit = 65536;
+	// Label displaying the distance along the ruler, in all dimensions etc.
+	// for the overview. Also other text output about the data and fences,
+	// profiles etc. is put here.
+	Gtk::Label *rulerlabelover = NULL;
+	builder->get_widget("rulerlabelover", rulerlabelover);
 
-   // Label displaying the distance along the ruler, in all dimensions etc. 
-   // for the overview. Also other text output about the data and fences,
-   // profiles etc. is put here.
-   Gtk::Label *rulerlabelover = NULL;
-   builder->get_widget("rulerlabelover",rulerlabelover);
+	//The 2d overview.
+	TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, bucketlimit,
+			rulerlabelover);
 
-   //The 2d overview.
-   TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, bucketlimit, rulerlabelover);
+	// Label displaying the distance along the ruler, in all dimensions
+	// etc. for the profile.
+	Gtk::Label *rulerlabel = NULL;
+	builder->get_widget("rulerlabel", rulerlabel);
 
-   // Label displaying the distance along the ruler, in all dimensions 
-   // etc. for the profile.
-   Gtk::Label *rulerlabel = NULL;
-   builder->get_widget("rulerlabel",rulerlabel);
+	//The profile.
+	Profile *prof = new Profile(argv[0], glconfig, bucketlimit, rulerlabel);
 
-   //The profile.
-   Profile *prof = new Profile(argv[0], glconfig, bucketlimit,rulerlabel);
+	//This contains the widgets of the advanced options window.
+	AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo, prof, builder);
 
-   //This contains the widgets of the advanced options window.
-   AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo,prof,builder);
+	//This contains the widgets of the file saver window.
+	FileSaver *fs = new FileSaver(tdo, prof, builder);
 
-   //This contains the widgets of the file saver window.
-   FileSaver *fs = new FileSaver(tdo,prof,builder);
+	// Contains the overview. It is used to simulate the 2d overview getting
+	// focus without causing it to be redrawn every time.
+	Gtk::EventBox *eventboxtdo = NULL;
+	builder->get_widget("eventboxtdo", eventboxtdo);
 
-   // Contains the overview. It is used to simulate the 2d overview getting 
-   // focus without causing it to be redrawn every time.
-   Gtk::EventBox *eventboxtdo = NULL;
-   builder->get_widget("eventboxtdo",eventboxtdo);
+	// Contains the profile. It is used to simulate the profile getting focus
+	// without causing it to be redrawn every time.
+	Gtk::EventBox *eventboxprof = NULL;
+	builder->get_widget("eventboxprof", eventboxprof);
+	Gtk::Window *overviewwindow = NULL;
+	builder->get_widget("overviewwindow", overviewwindow);
+	Gtk::Window *profilewindow = NULL;
+	builder->get_widget("profilewindow", profilewindow);
 
-   // Contains the profile. It is used to simulate the profile getting focus 
-   // without causing it to be redrawn every time.
-   Gtk::EventBox *eventboxprof = NULL;
-   builder->get_widget("eventboxprof",eventboxprof);
-   Gtk::Window *overviewwindow = NULL;
-   builder->get_widget("overviewwindow", overviewwindow);
-   Gtk::Window *profilewindow = NULL;
-   builder->get_widget("profilewindow", profilewindow);
-   
+	//This contains the widgets of the profile window.
+	ProfileWindow *profwin = new ProfileWindow(prof, tdo, profilewindow,
+			overviewwindow, eventboxprof, builder, aow);
 
-   //This contains the widgets of the profile window.
-   ProfileWindow *profwin = new ProfileWindow(prof, tdo, profilewindow, 
-                                              overviewwindow, eventboxprof,
-                                              builder, aow);
+	//This contains the widgets of the 2D overview window.
+	TwoDeeOverviewWindow *tdow = new TwoDeeOverviewWindow(tdo, aow, fs,
+			overviewwindow, profilewindow, builder, eventboxtdo, profwin);
 
-   //This contains the widgets of the 2D overview window.
-   TwoDeeOverviewWindow *tdow = new TwoDeeOverviewWindow(tdo, aow, fs, 
-                                                         overviewwindow,
-                                                         profilewindow, builder, 
-                                                         eventboxtdo,profwin);
+	//This contains the widgets of the file opener window.
+	FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,
+			eventboxtdo, eventboxprof, tdow);
 
-   //This contains the widgets of the file opener window.
-   FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,eventboxtdo,eventboxprof,tdow);
-   
-   //In case of command-line commands 
-   //fo->testfilename(argc,argv,true,false);
-   
-   gdk_threads_enter();
+	//In case of command-line commands
+	//fo->testfilename(argc,argv,true,false);
 
-   gtkmain.run(*overviewwindow);
+	gdk_threads_enter();
 
-   gdk_threads_leave();
+	gtkmain.run(*overviewwindow);
 
+	gdk_threads_leave();
 
-   delete tdow;
-   delete profwin;
-   delete fo;
-   delete fs;
-   delete aow;
-   delete eventboxtdo;
-   delete eventboxprof;
-   delete rulerlabelover;
-   delete overviewwindow;
-   delete profilewindow;
-   if(tdo!=NULL)delete tdo;
-   if(prof != NULL)delete prof;
+	delete tdow;
+	delete profwin;
+	delete fo;
+	delete fs;
+	delete aow;
+	delete eventboxtdo;
+	delete eventboxprof;
+	delete rulerlabelover;
+	delete overviewwindow;
+	delete profilewindow;
+	if (tdo != NULL)
+		delete tdo;
+	if (prof != NULL)
+		delete prof;
 
-   return 0;
+	return 0;
 }
