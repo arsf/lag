@@ -56,7 +56,7 @@ double percentilevalue(double* data, int datasize, double percentile,
 //If "hide noise points in profile" is ticket in advanced options, these are not sent to the
 //profile
 
-bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners, bool hideNoise)
+bool* vetpoints(PointBucket* points, vector<double> xs, vector<double> ys, int numberofcorners, bool hideNoise)
 {
 	bool* correctpoints = new bool[points->getNumberOfPoints(0)];
 	//Determines whether the point is within the boundary.
@@ -150,7 +150,7 @@ bool* vetpoints(PointBucket* points, double* xs, double* ys, int numberofcorners
 	return correctpoints;
 }
 
-bool* vetpoints_slice(PointBucket* points, double* xs, double* ys,
+bool* vetpoints_slice(PointBucket* points, vector<double> xs, vector<double> ys,
 		int numberofcorners, bool hideNoise, double minz, double maxz)
 {
 	bool* correctpoints = new bool[points->getNumberOfPoints(0)];

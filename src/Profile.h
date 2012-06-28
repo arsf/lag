@@ -66,7 +66,7 @@ public:
    bool drawviewable(int imagetype);
    //Public methods:
    //Gets the parameters of the profile and then draws it to the screen.
-   bool loadprofile(double* profxs,double* profys,int profps);
+   bool loadprofile(std::vector<double> profxs, std::vector<double> profys,int profps);
    //Blocks pan signals and unblocks ruler signals:
 
    bool draw_profile(bool changeview);
@@ -186,7 +186,7 @@ protected:
    Gtk::Label *rulerlabel;
    // These contain the x and y coordinates, respectively, of the corners of 
    // the profile.
-   double *profxs,*profys;
+   vector<double> profxs,profys;
    //This contains the number of corners the profile has.
    int profps;
    

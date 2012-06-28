@@ -73,7 +73,6 @@ private:
    //For opening files.
    Gtk::FileChooserDialog *filesaverdialog;
 
-   //This displays the cache size in terms of gigabytes, approximately.
    Gtk::Label *flightlinelistlabel;
    Gtk::SpinButton *flightlinesaveselect;
 
@@ -86,7 +85,17 @@ private:
    Gtk::Entry* scaleFactorEntryZ;
    Gtk::CheckButton* btnUseDefault;
 
+   // Threading
    SaveWorker* saveworker;
+
+   // Saving dialog
+   Gtk::Dialog* savedialog;
+   Gtk::ProgressBar* saveprogressbar;
+   Gtk::Button* savecancelbutton;
+   // Waveform
+   Gtk::Dialog* waveformdialog;
+   Gtk::ProgressBar* waveformprogressbar;
+   Gtk::Button* waveformcancelbutton;
 
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
@@ -94,7 +103,12 @@ private:
    void on_filesaverdialogresponse(int response_id);
    void on_usedefault_changed();
 
+   void on_progress();
    void files_saved();
+   void on_savecancelbutton_clicked();
+
+   void waveform_started();
+   void on_waveform_progress();
 };
 
 #endif

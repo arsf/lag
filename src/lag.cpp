@@ -31,6 +31,7 @@
 #include "ui/TwoDeeOverviewWindow.h"
 #include "ui/ProfileWindow.h"
 #include "ui/FileOpener.h"
+#include "ui/AdvancedLoadDialog.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
@@ -187,9 +188,12 @@ int main(int argc, char** argv)
 	TwoDeeOverviewWindow *tdow = new TwoDeeOverviewWindow(tdo, aow, fs,
 			overviewwindow, profilewindow, builder, eventboxtdo, profwin);
 
+	//This contains the widgets of advanced loading options window
+	AdvancedLoadDialog* ald = new AdvancedLoadDialog(builder);
+
 	//This contains the widgets of the file opener window.
 	FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,
-			eventboxtdo, eventboxprof, tdow);
+			eventboxtdo, eventboxprof, tdow, ald);
 
 	//In case of command-line commands
 	//fo->testfilename(argc,argv,true,false);
@@ -210,6 +214,7 @@ int main(int argc, char** argv)
 	delete rulerlabelover;
 	delete overviewwindow;
 	delete profilewindow;
+	delete ald;
 	if (tdo != NULL)
 		delete tdo;
 	if (prof != NULL)

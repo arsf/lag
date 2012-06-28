@@ -231,10 +231,10 @@ void TwoDeeOverviewWindow::on_quadtreemenu_activated()
 	{
 		Boundary* b;
 		b = qt->getBoundary();
-		double* xs = new double[4];
+		vector<double> xs(4);
 		xs[0] = xs[1] = b->minX;
 		xs[2] = xs[3] = b->maxX;
-		double* ys = new double[4];
+		vector<double> ys(4);
 		ys[0] = ys[1] = b->minY;
 		ys[2] = ys[3] = b->maxY;
 		vector<PointBucket*>* pointvector = NULL;
@@ -243,7 +243,7 @@ void TwoDeeOverviewWindow::on_quadtreemenu_activated()
 		{
 			pointvector = qt->advSubset(xs,ys,4);
 		}
-		catch(DescriptiveException e)
+		catch(DescriptiveException& e)
 		{
 			cout << "There has been an exception:" << endl;
 			cout << "What: " << e.what() << endl;
@@ -251,12 +251,10 @@ void TwoDeeOverviewWindow::on_quadtreemenu_activated()
 			cout << "No points returned." << endl;
 		}
 
-		delete[] xs;
-		delete[] ys;
-
 		if(pointvector == NULL || pointvector->size() == 0)
 		{
 			message << "No data found in the quandtree.";
+			delete b;
 		}
 		else
 		{

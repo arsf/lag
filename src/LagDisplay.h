@@ -268,7 +268,7 @@ protected:
 
    // Convenience method for getting a subset, catching any exception and 
    // determining whether there is useful data.
-   bool advsubsetproc(vector<PointBucket*>*& pointvector, double *xs,double *ys,int ps);
+   bool advsubsetproc(vector<PointBucket*>*& pointvector, vector<double> xs, vector<double> ys,int ps);
 
    //Convenience method for clearing the screen
    bool clearscreen();

@@ -67,20 +67,63 @@ Point* SelectionBox::getCorners()
    return points;
 }
 
-// TODO FIXME DELETE THESE ONE DAYS
-double* SelectionBox::getXs()
+std::vector<double> SelectionBox::getXs()
 {
-   double* returner = new double[4];
+   std::vector<double> returner(4);
    for (int i=0; i < 4; i++)
       returner[i] = points[i].getX();
    return returner;
 }
 
-double* SelectionBox::getYs()
+std::vector<double> SelectionBox::getYs()
 {
-   double* returner = new double[4];
+   std::vector<double> returner(4);
    for (int i=0; i < 4; i++) {
       returner[i] = points[i].getY();
    }
    return returner;
+}
+
+double SelectionBox::get_min_x()
+{
+	double x = points[0].getX();
+	for (int i = 1; i < 4; ++i)
+	{
+		if (points[i].getX() < x)
+			x = points[i].getX();
+	}
+	return x;
+}
+
+double SelectionBox::get_max_x()
+{
+	double x = points[0].getX();
+	for (int i = 1; i < 4; ++i)
+	{
+		if (points[i].getX() > x)
+			x = points[i].getX();
+	}
+	return x;
+}
+
+double SelectionBox::get_min_y()
+{
+	double y = points[0].getY();
+	for (int i = 1; i < 4; ++i)
+	{
+		if (points[i].getY() < y)
+			y = points[i].getY();
+	}
+	return y;
+}
+
+double SelectionBox::get_max_y()
+{
+	double y = points[0].getY();
+	for (int i = 1; i < 4; ++i)
+	{
+		if (points[i].getY() > y)
+			y = points[i].getY();
+	}
+	return y;
 }

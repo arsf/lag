@@ -233,8 +233,8 @@ void ProfileWindow::on_showprofilebutton_clicked()
 
    // These are NOT to be deleted here as the arrays they will point to 
    // will be managed by the TwoDeeOVerview object.
-   double* profxs = NULL;
-   double* profys = NULL;
+   vector<double> profxs;
+   vector<double> profys;
    int profps = 0;
 
    if(tdo->is_realized())
@@ -252,7 +252,7 @@ void ProfileWindow::on_showprofilebutton_clicked()
 	   }
    }
 
-   if(profxs!=NULL && profys!=NULL)
+   if(!profxs.empty()  && !profys.empty())
    {
 	  // Showprofile uses the getpoint() method, and that must never be used
       // by more than one thread at once.
@@ -631,13 +631,13 @@ bool ProfileWindow::on_profile_shift(GdkEventKey* event)
 
    // These are NOT to be deleted here as the arrays they will point to will 
    // be managed by the TwoDeeOVerview object.
-   double *profxs = NULL,*profys = NULL;
+   vector<double> profxs , profys;
    int profps = 0;
    if(tdo->is_realized())
       tdo->getprofile(profxs,profys,profps);
    // Changed centre x and y values etc. so that points in profile remain 
    // within the viewing box (i.e. the clipping planes).
-   if(profxs!=NULL&&profys!=NULL)
+   if(!profxs.empty()&&!profys.empty())
    {
       shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());
       if(!shifted)return shifted;

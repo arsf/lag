@@ -65,6 +65,19 @@
                         as there is still some GUI locking. Som of the code from loadProfile() could probably be moved
                         to ProfileWorker class. The drawing methods are a mess and need to be fixed at some point.
                         
+2012-06-28  Jan Holownia <jaho@pml.ac.uk>
+    * general:          Moved loading and saving of points to LAG from the quadtree. Added progress dialogs for loading
+                        and saving. Improved the layout of Load and Save dialogs. Added Advanced Load Dialog. Fixed some 
+                        more memory leaks (Profile::load_profile).
+    * FileOpener.cpp:   An AdvanceLoadDialog can now be opened which holds options for quadtree creation and allows to
+                        chose filters to be used when loading files. LASreadOpener.parse() function is used to create
+                        the filter and the arguments are held in new PointFilter object, a member of AdvancedLoadDialog
+                        which is then passed to LoadWorker and converted to char* [] argv for the parse() function.
+    * LoadWorker.cpp:   All loading functionality has now been moved here so the points are loaded using LASreader and
+                        then inserted directly into the quadtree. Projection conversion has also been implemented here.
+                        Similar changes have been made to SaveWorker.
+    * FileUtils.cpp:    Added to hold various generic functions used by both LoadWorker and SaveWorker.
+                        
     
     
 

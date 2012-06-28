@@ -29,7 +29,7 @@
 #include "FileOpener.h"
 
 FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
-           	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow)
+           	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow, AdvancedLoadDialog* ald)
 :
         lidardata		(NULL),
         tdo				(tdo),
@@ -37,12 +37,15 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
         tdow			(tdow),
         aow				(aow),
         fs				(fs),
+        ald				(ald),
         eventboxtdo		(eventboxtdo),
         eventboxprof	(eventboxprof),
         bucketlimit		(bucketlimit),
         loadworker		(NULL),
+        num_files_loading	(0),
         newQuadtree		(true),
         loadedanyfiles	(false)
+
 {
 	load_xml(builder);
 
@@ -93,6 +96,12 @@ FileOpener::~FileOpener()
    delete scaleFactorEntryZ;
    delete btnUseDefault;
    delete openbutton;
+   delete filelabel;
+   delete fileprogressbar;
+   delete totallabel;
+   delete totalprogressbar;
+   delete loadcancelbutton;
+   delete loaddialog;
    //Have to delete parent after children?
    delete filechooserdialog;
 }
@@ -114,6 +123,17 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("resbaseselect",resbaseselect);
 	builder->get_widget("resdepthselect",resdepthselect);
 	builder->get_widget("openbutton",openbutton);
+	builder->get_widget("loaddialog",loaddialog);
+	builder->get_widget("filelabel",filelabel);
+	builder->get_widget("fileprogressbar",fileprogressbar);
+	builder->get_widget("totallabel",totallabel);
+	builder->get_widget("totalprogressbar",totalprogressbar);
+	builder->get_widget("loadcancelbutton",loadcancelbutton);
+
+	// Advanced dialog
+	builder->get_widget("loadadvancedbutton",loadadvancedbutton);
+	builder->get_widget("loadadvanceddialog",loadadvanceddialog);
+	builder->get_widget("loadadvancedcancel",loadadvancedcancel);
 }
 
 void FileOpener::connect_signals()
@@ -125,6 +145,20 @@ void FileOpener::connect_signals()
 	cachesizeselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_cachesize_changed));
 	resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
     Gtk::Main::signal_quit().connect(sigc::mem_fun(*this, &FileOpener::on_quit));
+    loadcancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileOpener::on_loadcancelbutton_clicked));
+
+    loadadvancedbutton->signal_clicked().connect(sigc::mem_fun(*this, &FileOpener::on_loadadvancedbutton_clicked));
+    loadadvancedcancel->signal_clicked().connect(sigc::mem_fun(*this, &FileOpener::on_loadadvancedcancel_clicked));
+}
+
+void FileOpener::on_loadadvancedbutton_clicked()
+{
+	loadadvanceddialog->show_all();
+}
+
+void FileOpener::on_loadadvancedcancel_clicked()
+{
+	loadadvanceddialog->hide_all();
 }
 
 int FileOpener::on_quit()
@@ -139,9 +173,15 @@ int FileOpener::on_quit()
 		delete lidardata;
 	}
 
+	// Here check and delete temporary files left by LoadWorker
+	for (size_t i = 0; i < LoadWorker::point_data_paths.size(); ++i)
+	{
+		std::cout << "Removing temporary file: "
+				<< LoadWorker::point_data_paths[i].c_str() << std::endl;
+		remove(LoadWorker::point_data_paths[i].c_str());
+	}
+
 	return 0;
-
-
 }
 
 void FileOpener::on_usedefault_changed()
@@ -233,18 +273,31 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 		   create_new_quadtree = true;
 	   }
 
-	   // Launch LoadWorker thread
+	   // Create LoadWorker
 	   loadworker = new LoadWorker(this, pointskipselect->get_value_as_int(), names, create_new_quadtree, fenceusecheck->get_active(), resdepthselect->get_value_as_int(), resbaseselect->get_value_as_int(),
-	  	  	  	  	  	  	  	  	  	  bucketlevels, bucketlimit, cachelimit, btnUseDefault->get_active(), scale_factor, asciicodeentry->get_text(), fence);
+	  	  	  	  	  	  	  	  	  	  bucketlevels, bucketlimit, cachelimit, btnUseDefault->get_active(), scale_factor, asciicodeentry->get_text(), fence, ald->get_point_filter());
 
+	   // Show loading dialog
+	   loaddialog->show_all();
+	   num_files_loading = names.size();
+
+	   fileprogressbar->set_fraction(0);
+	   totalprogressbar->set_fraction(0);
+	   ostringstream o;
+	   o << "Loading file 1 of " << num_files_loading;
+	   filelabel->set_text(o.str());
+
+	   // Connect signals
 	   loadworker->sig_done.connect(sigc::mem_fun(*this, &FileOpener::files_loaded));
 	   loadworker->sig_message.connect(sigc::mem_fun(*this, &FileOpener::show_thread_message));
 	   loadworker->sig_file_loaded.connect(sigc::mem_fun(*this, &FileOpener::add_line));
 	   loadworker->sig_fail.connect(sigc::mem_fun(*this, &FileOpener::load_failed));
+	   loadworker->sig_progress.connect(sigc::mem_fun(*this, &FileOpener::on_progress));
 
+	   // Start thread
 	   loadworker->start();
 
-	   loadoutputlabel->set_text("Loading files...\n");
+	   loadoutputlabel->set_text("Loading files:\n");
 
 	   // Change cursor to busy
 	   GdkDisplay* display;
@@ -261,6 +314,20 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
    }
 }
 
+void FileOpener::on_progress()
+{
+	double file_progress = fileprogressbar->get_fraction() + 0.01;
+	double total_progress = totalprogressbar->get_fraction() + (0.01 / num_files_loading);
+
+	if (file_progress > 1.0)
+		file_progress = 1.0;
+	if (total_progress > 1.0)
+		total_progress = 1.0;
+
+	fileprogressbar->set_fraction(file_progress);
+	totalprogressbar->set_fraction(total_progress);
+}
+
 void FileOpener::show_thread_message()
 {
 	{
@@ -274,6 +341,11 @@ void FileOpener::show_thread_message()
 void FileOpener::add_line()
 {
 	++numlines;
+	ostringstream o;
+	o << "Loading file " << ((numlines + 1) > num_files_loading ? num_files_loading : (numlines + 1))
+			<< " of " << num_files_loading;
+	filelabel->set_text(o.str());
+	fileprogressbar->set_fraction(0);
 }
 
 void FileOpener::load_failed()
@@ -281,7 +353,9 @@ void FileOpener::load_failed()
 	delete loadworker;
 	loadworker = NULL;
 
-	loadoutputlabel->set_text(loadoutputlabel->get_text() + "Load failed." + "\n");
+	loaddialog->hide_all();
+
+	loadoutputlabel->set_text(loadoutputlabel->get_text() + "Loading aborted." + "\n");
 	Gdk::Window::process_all_updates();
 
 	// Set cursor back to normal
@@ -300,8 +374,12 @@ void FileOpener::load_failed()
 
 void FileOpener::files_loaded()
 {
+	fileprogressbar->set_fraction(1.0);
+
 	delete loadworker;
 	loadworker = NULL;
+
+	loaddialog->hide_all();
 
 	loadoutputlabel->set_text(loadoutputlabel->get_text() + "Done." + "\n");
 	Gdk::Window::process_all_updates();
@@ -328,7 +406,6 @@ void FileOpener::files_loaded()
 		prof->prepare_image();
 		prof->drawviewable(1);
 	}
-
 	// Otherwise, pack them into the vboxes and then show them, which will do
 	// as the above block does.
 	else
@@ -342,9 +419,16 @@ void FileOpener::files_loaded()
 	loadedanyfiles = true;
 	string flightline,list="";
 
-	for(int i = 0;i<numlines;i++)
+	for(int i = 0;i<numlines;++i)
 	{
-		flightline = lidardata->getFileName(i);
+		try
+		{
+			flightline = lidardata->getFileName(i);
+		} catch (DescriptiveException e)
+		{
+			std::cout << "Failed getting name for flightline number: " << i << "\n"
+					<< e.why() << std::endl;
+		}
 		ostringstream number;
 		number << i;
 		list += number.str() + ":  " + flightline + "\n";
@@ -390,4 +474,10 @@ void FileOpener::on_cachesize_changed()
 void FileOpener::on_openfilemenuactivated()
 {
    show(); 
+}
+
+void FileOpener::on_loadcancelbutton_clicked()
+{
+	if (loadworker)
+		loadworker->stop();
 }

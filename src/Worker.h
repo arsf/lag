@@ -18,14 +18,14 @@ class Worker
 public:
 	Worker() :
 		thread(0),
-		stop(false)
+		stopped(false)
 	{}
 
 	virtual ~Worker()
 	{
 		{
 			Glib::Mutex::Lock lock (mutex);
-			stop = true;
+			stopped = true;
 		}
 		if (thread)
 			thread->join();
@@ -43,7 +43,7 @@ protected:
 
 	Glib::Thread* thread;
 	Glib::Mutex mutex;
-	bool stop;
+	bool stopped;
 };
 
 

@@ -34,8 +34,7 @@
 Profile::Profile(string fontpath,
 		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit,
 		Gtk::Label *rulerlabel) :
-		LagDisplay(fontpath, config, bucketlimit), rulerlabel(rulerlabel), profxs(
-				NULL), profys(NULL), profps(0), drawpoints(true), drawmovingaverage(
+		LagDisplay(fontpath, config, bucketlimit), rulerlabel(rulerlabel), profps(0), drawpoints(true), drawmovingaverage(
 				false), imageexists(false), slanted(true), slantwidth(5), showheightscale(
 				false), totnumpoints(0), mavrgrange(5), linez(NULL), previewdetailmod(
 				0.3), flightlinepoints(NULL), samplemaxz(0), sampleminz(0), viewer(
@@ -89,8 +88,6 @@ Profile::Profile(string fontpath,
 
 Profile::~Profile()
 {
-	delete[] profxs;
-	delete[] profys;
 	delete[] flightlinepoints;
 	if (linez != NULL)
 	{
@@ -150,6 +147,8 @@ void Profile::resetview()
 	// the projection matrix should not be used for this and, if you DO use
 	// the projection matrix, everything will be reversed.
 	glMatrixMode(GL_MODELVIEW);
+
+
 	glLoadIdentity();
 
 	// Since viewerz is always 0, we are setting this so that the profile looks
@@ -320,7 +319,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
  * Draw the profile.
  *
  * */
-bool Profile::loadprofile(double* profxs, double* profys, int profps)
+bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
 	Glib::Mutex::Lock lock(mutex);
 
@@ -345,20 +344,18 @@ bool Profile::loadprofile(double* profxs, double* profys, int profps)
 	// of view of the fence (as cross-section) especially) contains the points
 	// to be classified.
 	this->profps = profps;
-	if (this->profxs != NULL)
-		delete[] this->profxs;
-	if (this->profys != NULL)
-		delete[] this->profys;
 
-	this->profxs = new double[this->profps];
-	this->profys = new double[this->profps];
-	// Please note that it is done this way and not simply assigned so that the
+	/*/ Please note that it is done this way and not simply assigned so that the
 	// profile never deletes attributes of the overview.
 	for (int i = 0; i < this->profps; ++i)
 	{
 		this->profxs[i] = profxs[i];
 		this->profys[i] = profys[i];
 	}
+	*/
+
+	this->profxs = profxs;
+	this->profys = profys;
 
 	vector<PointBucket*> *pointvector = NULL;
 	//Get data.
@@ -838,8 +835,8 @@ bool Profile::classify(uint8_t classification)
 	// Make temporary copies of these to send to showprofile to avoid the
 	// situation where showprofile deletes the arrays it is about to copy!
 	int tempps = profps;
-	double* tempxs = new double[tempps];
-	double* tempys = new double[tempps];
+	vector<double> tempxs(tempps);
+	vector<double> tempys(tempps);
 	for (int i = 0; i < tempps; ++i)
 	{
 		tempxs[i] = profxs[i];
@@ -850,8 +847,7 @@ bool Profile::classify(uint8_t classification)
 	// or resetting the fence etc..
 	loadprofile(tempxs, tempys, tempps);
 	//draw_profile(false);
-	delete[] tempxs;
-	delete[] tempys;
+
 	return true;
 }
 

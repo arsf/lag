@@ -18,14 +18,14 @@ class Profile;
 class ProfileWorker : public Worker
 {
 public:
-	ProfileWorker(Profile* prof, double* xs, double* ys, int ps);
+	ProfileWorker(Profile* prof, std::vector<double> xs, std::vector<double> ys, int ps);
 
 protected:
 	void run();
 
 	Profile* profile;
-	double* profxs;
-	double* profys;
+	std::vector<double> profxs;
+	std::vector<double> profys;
 	int profps;
 };
 

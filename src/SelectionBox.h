@@ -2,6 +2,8 @@
 #define _SELECTIONBOX_H_
 
 #include "Point.h"
+#include <vector>
+
 
 class SelectionBox
 {
@@ -20,14 +22,15 @@ public:
 
    Point getCorner(int);
    Point* getCorners();
-
-   // TODO FIXME
-   //
-   // Temp methods to return arrays containing x and y coords
-   // Which I'll fix once I get this compiling
-   double* getXs();
-   double* getYs();
    
+   std::vector<double> getXs();
+   std::vector<double> getYs();
+
+   double get_min_x();
+   double get_max_x();
+   double get_min_y();
+   double get_max_y();
+
    // Mutators for the whole SelectionBox
    void move(double, double, double);
    void translate(double, double, double);

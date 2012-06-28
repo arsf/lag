@@ -51,6 +51,12 @@ FileSaver::~FileSaver()
    delete scaleFactorEntryY;
    delete scaleFactorEntryZ;
    delete btnUseDefault;
+   delete savedialog;
+   delete saveprogressbar;
+   delete savecancelbutton;
+   delete waveformdialog;
+   delete waveformprogressbar;
+   delete waveformcancelbutton;
    //Have to delete parent after children?
    delete filesaverdialog;
 }
@@ -67,7 +73,12 @@ void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("btnUseDefault1", btnUseDefault);
 	builder->get_widget("utmselect", utmselect);
 	builder->get_widget("latlongselect", latlongselect);
-
+	builder->get_widget("savedialog", savedialog);
+	builder->get_widget("saveprogressbar", saveprogressbar);
+	builder->get_widget("savecancelbutton", savecancelbutton);
+	builder->get_widget("waveformdialog", waveformdialog);
+	builder->get_widget("waveformprogressbar", waveformprogressbar);
+	builder->get_widget("waveformcancelbutton", waveformcancelbutton);
 }
 
 void FileSaver::connect_signals()
@@ -75,6 +86,8 @@ void FileSaver::connect_signals()
 	filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
 	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
 	//flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
+	savecancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileSaver::on_savecancelbutton_clicked));
+	waveformcancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileSaver::on_savecancelbutton_clicked));
 }
 
 void FileSaver::on_usedefault_changed()
@@ -120,6 +133,13 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
       saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()), flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(), btnUseDefault->get_active(), scale_factor);
       saveworker->start();
       saveworker->sig_done.connect(sigc::mem_fun(*this, &FileSaver::files_saved));
+      saveworker->sig_progress.connect(sigc::mem_fun(*this, &FileSaver::on_progress));
+      saveworker->sig_waveform.connect(sigc::mem_fun(*this, &FileSaver::waveform_started));
+      saveworker->sig_waveform_progress.connect(sigc::mem_fun(*this, &FileSaver::on_waveform_progress));
+
+      // Show saving dialog
+      savedialog->show_all();
+      saveprogressbar->set_fraction(0);
 
 	  // Change cursor to busy
 	  GdkDisplay* display;
@@ -136,11 +156,31 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
    }
 }
 
+void FileSaver::on_progress()
+{
+	saveprogressbar->set_fraction((saveprogressbar->get_fraction() + 0.01) > 1 ? 1 : (saveprogressbar->get_fraction() + 0.01));
+}
+
+void FileSaver::waveform_started()
+{
+	waveformdialog->show_all();
+	waveformprogressbar->set_fraction(0);
+}
+
+void FileSaver::on_waveform_progress()
+{
+	waveformprogressbar->set_fraction((waveformprogressbar->get_fraction() + 0.01) > 1 ? 1 : (waveformprogressbar->get_fraction() + 0.01));
+}
 
 void FileSaver::files_saved()
 {
 	delete saveworker;
 	saveworker = NULL;
+
+	savedialog->hide_all();
+
+	if (waveformdialog->get_realized())
+		waveformdialog->hide_all();
 
 	// Set cursor back to normal
 	GdkDisplay* display;
@@ -154,6 +194,12 @@ void FileSaver::files_saved()
 	gdk_window_set_cursor(window, cursor);
 	gdk_display_sync(display);
 	gdk_cursor_unref(cursor);
+}
+
+void FileSaver::on_savecancelbutton_clicked()
+{
+	if (saveworker != NULL)
+		saveworker->stop();
 }
 
 

@@ -991,6 +991,9 @@ bool TwoDeeOverview::drawviewable(int imagetype)
 {
    guard_against_interaction_between_GL_areas();
 
+   if (lidardata == NULL)
+	   return false;
+
    // If there is an expose event while the image is already being drawn from 
    // scratch and the image has been drawn from scratch at least once then 
    // refresh the screen without interfering with the drawing from scratch:
@@ -1061,12 +1064,12 @@ bool TwoDeeOverview::drawviewable(int imagetype)
       double miny = centre.getY()+pixelsToImageUnits(get_height()/2);
       double maxy = centre.getY()-pixelsToImageUnits(get_height()/2);
 
-      double *xs = new double[4];
+      vector<double> xs(4);
       xs[0] = minx;
       xs[1] = minx;
       xs[2] = maxx;
       xs[3] = maxx;
-      double *ys = new double[4];
+      vector<double> ys(4);
       ys[0] = miny;
       ys[1] = maxy;
       ys[2] = maxy;
@@ -1076,8 +1079,6 @@ bool TwoDeeOverview::drawviewable(int imagetype)
 
       //Get data.
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);
-      delete[]xs;
-      delete[]ys;
 
       if(!gotdata)
       {
@@ -1129,12 +1130,12 @@ bool TwoDeeOverview::drawviewable(int imagetype)
       double maxx = centre.getX()+pixelsToImageUnits(get_width()/2);
       double miny = centre.getY()+pixelsToImageUnits(get_height()/2);
       double maxy = centre.getY()-pixelsToImageUnits(get_height()/2);
-      double *xs = new double[4];
+      vector<double> xs(4);
       xs[0] = minx;
       xs[1] = minx;
       xs[2] = maxx;
       xs[3] = maxx;
-      double *ys = new double[4];
+      vector<double> ys(4);
       ys[0] = miny;
       ys[1] = maxy;
       ys[2] = maxy;
@@ -1143,8 +1144,7 @@ bool TwoDeeOverview::drawviewable(int imagetype)
 
       //Get data.
       bool gotdata = advsubsetproc(pointvector,xs,ys,4);
-      delete[]xs;
-      delete[]ys;
+
       if(!gotdata)
       {
          if(pointvector==NULL)return clearscreen();
@@ -1257,12 +1257,12 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
    double maxx = centre.getX() + pixelsToImageUnits(pointeroffx + pointsize/2);
    double miny = centre.getY() - pixelsToImageUnits(pointeroffy + pointsize/2);
    double maxy = centre.getY() - pixelsToImageUnits(pointeroffy - pointsize/2);
-   double *xs = new double[4];
+   vector<double> xs(4);
    xs[0] = minx;
    xs[1] = minx;
    xs[2] = maxx;
    xs[3] = maxx;
-   double *ys = new double[4];
+   vector<double> ys(4);
    ys[0] = miny;
    ys[1] = maxy;
    ys[2] = maxy;
@@ -1461,9 +1461,6 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
    }
    delete pointvector;
 
-   //These are here because vetpoints needs to use them as well as advsubset.
-   delete[]xs;
-   delete[]ys;
    // This causes the event box containing the overview to grab the focus, 
    // and so to allow keyboard control of the overview (this is not done 
    // directly as that wuld cause expose events to be called when focus 

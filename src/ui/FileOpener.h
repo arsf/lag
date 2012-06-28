@@ -34,6 +34,7 @@
 #include "FileSaver.h"
 #include "TwoDeeOverviewWindow.h"
 #include "../LoadWorker.h"
+#include "AdvancedLoadDialog.h"
 
 class FileOpener
 {
@@ -46,7 +47,8 @@ public:
               int,
               Gtk::EventBox*,
               Gtk::EventBox*,
-              TwoDeeOverviewWindow*);
+              TwoDeeOverviewWindow*,
+              AdvancedLoadDialog*);
 
    ~FileOpener();
 
@@ -92,7 +94,7 @@ public:
 
    void set_thread_message(std::string message)
    {
-	   Glib::Mutex::Lock lock (mutex);
+	   // Glib::Mutex::Lock lock (mutex);
 	   this->thread_message = message;
    }
 
@@ -127,7 +129,6 @@ public:
    double minZ, maxZ;
    std::string utm_zone;
 
-
 private:
    Quadtree *lidardata;
    int numlines;
@@ -136,6 +137,7 @@ private:
    TwoDeeOverviewWindow *tdow;
    AdvancedOptionsWindow *aow;
    FileSaver *fs;
+   AdvancedLoadDialog* ald;
 
    //For opening files.
    Gtk::FileChooserDialog *filechooserdialog;
@@ -185,9 +187,23 @@ private:
    //How many points in each bucket, maximum.
    int bucketlimit;
 
+   // Advanced loading options
+   Gtk::Dialog* loadadvanceddialog;
+   Gtk::Button* loadadvancedbutton;
+   Gtk::Button* loadadvancedcancel;
+
    // Threading
    LoadWorker* loadworker;
    Glib::Mutex mutex;
+
+   // Loading dialog
+   Gtk::Dialog* loaddialog;
+   Gtk::Label* filelabel;
+   Gtk::ProgressBar* fileprogressbar;
+   Gtk::Label* totallabel;
+   Gtk::ProgressBar* totalprogressbar;
+   Gtk::Button* loadcancelbutton;
+   int num_files_loading;
 
    // Members accessed from other thread (need thread-safe get/set methods)
    bool newQuadtree;
@@ -217,6 +233,13 @@ private:
    void add_line();
    void files_loaded();
    void load_failed();
+   void on_progress();
+   void on_loadcancelbutton_clicked();
+
+   // Advanced dialog
+   void on_loadadvancedbutton_clicked();
+   void on_loadadvancedcancel_clicked();
+
 };
 
 #endif

@@ -21,7 +21,6 @@
  *
  * */
 #include <gtkmm.h>
-#include <vector>
 #include <iostream>
 #include <GL/gl.h>
 #include <GL/glu.h>

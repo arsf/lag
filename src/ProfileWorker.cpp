@@ -11,7 +11,7 @@
 #include "Profile.h"
 
 
-ProfileWorker::ProfileWorker(Profile* prof, double* xs, double* ys, int ps) : Worker(),
+ProfileWorker::ProfileWorker(Profile* prof, vector<double> xs, vector<double> ys, int ps) : Worker(),
 		profile		(prof),
 		profxs		(xs),
 		profys		(ys),

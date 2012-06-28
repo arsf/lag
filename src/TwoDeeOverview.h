@@ -149,7 +149,7 @@ public:
       return fencebox->getSelectionBox();
    }
 
-   void getprofile(double*& profxs, double*& profys, int& profps)
+   void getprofile(vector<double>& profxs, vector<double>& profys, int& profps)
    {
       profxs = profbox->getSelectionBox().getXs();
       profys = profbox->getSelectionBox().getYs();
