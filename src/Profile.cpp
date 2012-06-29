@@ -1543,9 +1543,11 @@ void Profile::makeZscale()
 			&origz3);
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_LINES);
+
 	//Vertical line.
 	glVertex3d(origx, origy, origz + padding);
 	glVertex3d(origx, origy, origz + padding + nummarks * order);
+
 	//Horizontal lines.
 	for (int i = 0; i <= nummarks; ++i)
 	{
@@ -1553,18 +1555,20 @@ void Profile::makeZscale()
 		glVertex3d(origx2, origy2, origz2 + padding + i * order);
 	}
 	glEnd();
+
+	GLuint fontlists = glGenLists(128);
+	Pango::FontDescription font_desc("courier 10");
+	Glib::RefPtr<Pango::Font> font = Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlists);
+	if (!font)
+		std::cerr << "Cannot load font!"<< std::endl;
+
 	char number[30];
 	for (int i = 0; i <= nummarks; ++i)
 	{
-		// Put correct number in the string
+		glRasterPos3d(origx3, origy3, origz3 + padding + i*order);
 		sprintf(number, "%.2f", origz3 + centre.getZ() + i * order + padding);
-		//Draw numbers by the horizontal lines.
-		glRasterPos3d(
-				origx3,
-				origy3,
-				origz3 + padding + i * order
-						- pixelsToImageUnits(0.5 * FONT_CHAR_HEIGHT));
-
+		glListBase(fontlists);
+		glCallLists(std::string(number).length(), GL_UNSIGNED_BYTE, number);
 	}
 }
 

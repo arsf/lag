@@ -62,7 +62,7 @@
     * LoadWorker.cpp:   Fixed a bug where Adding files to an existing quadtree would sometimes not work correctly. 
                         Improved handling of incorrect files and exceptions during loading.
     * ProfileWindow:    Added Glib::Mutex as a member to protect critical sections (drawProfile()). This could be
-                        as there is still some GUI locking. Som of the code from loadProfile() could probably be moved
+                        as there is still some GUI locking. Some of the code from loadProfile() could probably be moved
                         to ProfileWorker class. The drawing methods are a mess and need to be fixed at some point.
                         
 2012-06-28  Jan Holownia <jaho@pml.ac.uk>
@@ -77,6 +77,11 @@
                         then inserted directly into the quadtree. Projection conversion has also been implemented here.
                         Similar changes have been made to SaveWorker.
     * FileUtils.cpp:    Added to hold various generic functions used by both LoadWorker and SaveWorker.
+    
+2012-06-29  Jan Holownia <jaho@pml.ac.uk>
+    * Profile.cpp:      Fixed a problem with Z scale height labels not being displayed in the Profile window.
+    * LoadWorker.cpp:   Changed tmpnam() to mksptemp() to create temporary file, to avoid compiler warning about
+                        tmpname being unsafe.
                         
     
     
