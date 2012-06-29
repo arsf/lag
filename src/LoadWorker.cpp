@@ -527,6 +527,11 @@ void LoadWorker::run()
 		}
 	} catch (DescriptiveException& e)
 	{
+		if (reproject_quantizer)
+			delete reproject_quantizer;
+		if (saved_quantizer)
+			delete saved_quantizer;
+
 		std::cout << "LoadWorker: Error loading file.\n";
 		std::cout << e.what() << "\n" << e.why() << std::endl;
 		send_message(e.why());
