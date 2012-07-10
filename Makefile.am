@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = lag
-AM_CXXFLAGS=-Wall -Wextra -Werror -DLINUX
+AM_CXXFLAGS=-Wall -Wextra -DLINUX
 # allow automake to find any required extra m4 macros
 ACLOCAL_AMFLAGS = -I m4
 
@@ -12,7 +12,7 @@ src/BoxOverlay.cpp src/ui/FileSaver.cpp src/Profile.cpp \
 src/ui/TwoDeeOverviewWindow.cpp src/LagDisplay.cpp src/ui/ProfileWindow.cpp \
 src/Colour.cpp src/SelectionBox.cpp src/LoadWorker.cpp src/SaveWorker.cpp \
 src/ProfileWorker.cpp src/ClassifyWorker.cpp src/Worker.h src/FileUtils.cpp \
-src/ui/AdvancedLoadDialog.cpp
+src/ui/AdvancedLoadDialog.cpp src/geoprojectionconverter.cpp
 lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @libgeotiff_CFLAGS@ @lidarquadtree_CFLAGS@
 lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @lidarquadtree_LIBS@ -lboost_filesystem -lboost_system
 lagdir = $(prefix)/share/lag

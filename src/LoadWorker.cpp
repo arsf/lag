@@ -338,7 +338,7 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 		fclose(point_data_file);
 		delete[] point_data_array;
 
-	} catch (DescriptiveException e)
+	} catch (DescriptiveException& e)
 	{
 		std::cout << "An exception happend in load_points: " << e.why()
 				<< std::endl;

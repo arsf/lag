@@ -412,7 +412,7 @@ void SaveWorker::run()
 		if (stopped)
 			break;
 	}
-	save_points(counter, points);
+	(this->*save_points_fun)(counter, points);
 	close();
 
 	delete buckets;

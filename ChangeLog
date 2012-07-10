@@ -80,10 +80,13 @@
     
 2012-06-29  Jan Holownia <jaho@pml.ac.uk>
     * Profile.cpp:      Fixed a problem with Z scale height labels not being displayed in the Profile window.
-    * LoadWorker.cpp:   Changed tmpnam() to mksptemp() to create temporary file, to avoid compiler warning about
-                        tmpname being unsafe.
+    * LoadWorker.cpp:   Changed tmpnam() to mksptemp() for creation of temporary files, to get rid of the 
+                        compiler warning about tmpname() being unsafe.
+               
+2012-07-10  Jan Holownia <jaho@pml.ac.uk>
+    * geoprojectionconverter:   Added for projection conversions. Also there is a modified code at line 4665
+                                which redirects stderrr to /dev/null to suppress warning messages so if you
+                                want to get some spam on the screen, remove this line.
                         
-    
-    
 
 

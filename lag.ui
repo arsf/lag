@@ -1612,15 +1612,16 @@ Noise</property>
   </object>
   <object class="GtkAboutDialog" id="about">
     <property name="border_width">5</property>
-    <property name="title" translatable="yes">About Glade</property>
+    <property name="title" translatable="yes">About LAG</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-on-parent</property>
     <property name="icon">icons/lagicon_small.png</property>
     <property name="type_hint">dialog</property>
+    <property name="has_separator">True</property>
     <property name="program_name">LIDAR Analysis GUI (LAG)</property>
-    <property name="version">1.0.0</property>
-    <property name="copyright" translatable="yes">&#xA9;Plymouth Marine Laboratory 2009-2010</property>
+    <property name="version">1.3.37</property>
+    <property name="copyright" translatable="yes">&#xA9;Plymouth Marine Laboratory 2009-2012</property>
     <property name="comments" translatable="yes">Viewer for LIDAR files in the form .las or .txt.
 System requirements: GNU/Linux with GTK+, screen resolution of width greater than or equal to 900 pixels, OpenGL 1.4 or better (possibly 1.2 or better)</property>
     <property name="website">http://www.pml.ac.uk</property>
@@ -1872,12 +1873,11 @@ You should also get your employer (if you work as a programmer) or school, if an
 
 The GNU General Public License does not permit incorporating your program into proprietary programs. If your program is a subroutine library, you may consider it more useful to permit linking proprietary applications with the library. If this is what you want to do, use the GNU Lesser General Public License instead of this License. But first, please read &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
 </property>
-    <property name="authors">Haraldur Tristan Gunnarsson, using Christopher Finerty's LIDAR Quadtree library
-
-(Airborne Research and Survey Facility - Data Analysis Node,
-Remote Sensing Group (Sea From Space),
-Plymouth Marine Laboratory)</property>
-    <property name="documenters">Haraldur Tristan Gunnarsson</property>
+    <property name="authors">Jan Holownia
+Haraldur Tristan Gunnarsson</property>
+    <property name="documenters">Jan Holownia
+Haraldur Tristan Gunnarsson
+</property>
     <property name="artists">Haraldur Tristan Gunnarsson</property>
     <property name="logo">icons/lagicon_small.png</property>
     <property name="wrap_license">True</property>
@@ -2929,15 +2929,6 @@ Plymouth Marine Laboratory)</property>
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkHBox" id="hbox3">
                     <property name="visible">True</property>
                     <child>
@@ -2963,6 +2954,15 @@ Plymouth Marine Laboratory)</property>
                     <property name="top_attach">2</property>
                     <property name="bottom_attach">3</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
