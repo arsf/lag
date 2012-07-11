@@ -176,17 +176,8 @@ int LoadWorker::load_points(Quadtree* qt)
 
 			}
 
-			// Create temp_point
-			temp_point = LidarPoint(reader->point.get_x(),
-					reader->point.get_y(), reader->point.get_z(),
-					reader->point.gps_time, reader->point.intensity,
-					reader->point.classification, flightline_number,
-					reader->point.return_number,
-					reader->point.number_of_returns_of_given_pulse,
-					reader->point.scan_direction_flag,
-					reader->point.edge_of_flight_line,
-					reader->point.scan_angle_rank,
-					reader->point.point_source_ID, 0);
+			temp_point = reader->point;
+			temp_point.setFlightlineNumber(flightline_number);
 
 			++points_loaded;
 			skip_counter = 0;
@@ -300,27 +291,10 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 			}
 
 			// Create temp_point
-			temp_point = LidarPoint(reader->point.get_x(),
-					reader->point.get_y(), reader->point.get_z(),
-					reader->point.gps_time, reader->point.intensity,
-					reader->point.classification, flightline_number,
-					reader->point.return_number,
-					reader->point.number_of_returns_of_given_pulse,
-					reader->point.scan_direction_flag,
-					reader->point.edge_of_flight_line,
-					reader->point.scan_angle_rank,
-					reader->point.point_source_ID, 0);
+			temp_point = reader->point;
 
 			// 1.3 stuff
-			temp_data.wfDescriptorIndex =
-					reader->point.wavepacket.getIndex();
-			temp_data.wfOffset = reader->point.wavepacket.getOffset();
-			temp_data.wfPacketSize = reader->point.wavepacket.getSize();
-			temp_data.wfPointLocation =
-					reader->point.wavepacket.getLocation();
-			temp_data.xt = reader->point.wavepacket.getXt();
-			temp_data.yt = reader->point.wavepacket.getYt();
-			temp_data.zt = reader->point.wavepacket.getZt();
+			temp_data = reader->point.wavepacket;
 			temp_point.setDataindex(point_number.at(flightline_number));
 			++point_number.at(flightline_number);
 			point_data_array[points_loaded] = temp_data;
