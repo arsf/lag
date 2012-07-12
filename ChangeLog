@@ -87,6 +87,11 @@
     * geoprojectionconverter:   Added for projection conversions. Also there is a modified code at line 4665
                                 which redirects stderrr to /dev/null to suppress warning messages so if you
                                 want to get some spam on the screen, remove this line.
+                                
+2012-07-12  Jan Holownia <jan.holownia@gmail.com>
+    * general:          Replaced standard malloc with jemalloc for improved memory consumption. Fixed memory 
+                        fragmentation.
+    
                         
 
 

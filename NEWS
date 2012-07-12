@@ -1,11 +1,16 @@
-LAG 1.2.0 (2012-07-11)
+LAG 1.2.1 (2012-07-12)
+
+    * Improved memory consumption
+    * Possible performance improvements
+
+LAG 1.2.0 (2012-07-10)
     
     * Major GUI improvements (new layout, threads, progress bars)
     * Several new tools (vertical slicing, superzoom, average heights)
     * Loading filters
     * Support for latlong projection
     * Improved error handling
-    * Performance improvements
+    * Performance optimisations
     * bugfixes
 
 
