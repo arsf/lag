@@ -1,25 +1,29 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: FileSaver.h
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- * */
+===============================================================================
+
+ FileSaver.h
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
 
 #ifndef FILESAVER_H
 #define FILESAVER_H
@@ -27,12 +31,18 @@
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
-
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
-#include "LasSaver.h"
 #include "../SaveWorker.h"
 
+
+/*
+===============================================================================
+
+ FileSaver - a file chooser dialog for saving files.
+
+===============================================================================
+*/
 class FileSaver{
 public:
    FileSaver(TwoDeeOverview*,
@@ -63,6 +73,7 @@ public:
       this->lidardata = lidardata; 
    }
 
+   // Fix this (make private and add thread safe get/set methods)
    Quadtree *lidardata;
 
 private:
@@ -92,6 +103,7 @@ private:
    Gtk::Dialog* savedialog;
    Gtk::ProgressBar* saveprogressbar;
    Gtk::Button* savecancelbutton;
+
    // Waveform
    Gtk::Dialog* waveformdialog;
    Gtk::ProgressBar* waveformprogressbar;
@@ -99,14 +111,11 @@ private:
 
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
-
    void on_filesaverdialogresponse(int response_id);
    void on_usedefault_changed();
-
    void on_progress();
    void files_saved();
    void on_savecancelbutton_clicked();
-
    void waveform_started();
    void on_waveform_progress();
 };

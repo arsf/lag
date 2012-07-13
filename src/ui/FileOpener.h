@@ -1,25 +1,29 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: FileOpener.h
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- * */
+==================================
+
+ FileOpener.h
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+==================================
+*/
 
 #ifndef _FILEOPENER_H_
 #define _FILEOPENER_H_
@@ -36,6 +40,14 @@
 #include "../LoadWorker.h"
 #include "AdvancedLoadDialog.h"
 
+
+/*
+===============================================================================
+
+ FileOpener - a file chooser dialog for loading files.
+
+===============================================================================
+*/
 class FileOpener
 {
 public:
@@ -62,11 +74,13 @@ public:
 	   Glib::Mutex::Lock lock (mutex);
 	   this->lidardata=lidardata;
    }
+
    Quadtree* get_lidardata()
    {
 	   Glib::Mutex::Lock lock (mutex);
 	   return this->lidardata;
    }
+
    void delete_lidardata()
    {
 	   Glib::Mutex::Lock lock (mutex);
@@ -86,6 +100,7 @@ public:
 	   Glib::Mutex::Lock lock (mutex);
 	   this->loadedanyfiles = loaded;
    }
+
    bool get_loadedanyfiles()
    {
 	   Glib::Mutex::Lock lock (mutex);
@@ -103,6 +118,7 @@ public:
 	   Glib::Mutex::Lock lock (mutex);
 	   this->minZ = z;
    }
+
    double get_minZ()
    {
 	   Glib::Mutex::Lock lock (mutex);
@@ -114,6 +130,7 @@ public:
 	   Glib::Mutex::Lock lock (mutex);
    	   this->maxZ = z;
    }
+
    double get_maxZ()
    {
    	   Glib::Mutex::Lock lock (mutex);
@@ -215,11 +232,8 @@ private:
    bool loadedanyfiles;
 
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
-
    void connect_signals();
-
    void on_usedefault_changed();
-
    void on_filechooserdialogresponse(int response_id);
    void on_cachesize_changed();
    void on_resolutionbase_changed();
@@ -241,7 +255,6 @@ private:
    // Advanced dialog
    void on_loadadvancedbutton_clicked();
    void on_loadadvancedcancel_clicked();
-
 };
 
 #endif
