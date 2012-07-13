@@ -15,6 +15,11 @@
 #include "LidarPoint.h"
 #include "FileUtils.h"
 
+#define BOOST_FILESYSTEM_V3
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 /*
 ==================================
  SaveWorker::SaveWorker
@@ -121,12 +126,12 @@ void SaveWorker::save_points_wf(int n, LidarPoint* points)
 	point->init(&reader->header, reader->header.point_data_format, reader->header.point_data_record_length, &reader->header);
 
 	// waveform stuff
-	std::string data_filename;
+	fs::path data_filename;
 	FILE* datafile = 0;
 	char* buffer = 0;
 
 	// Get PointData file
-	tr1::unordered_map<uint8_t, std::string>::iterator it = LoadWorker::point_data_paths.find(flightline_number);
+	tr1::unordered_map<uint8_t, fs::path>::iterator it = LoadWorker::point_data_paths.find(flightline_number);
 	if (it != LoadWorker::point_data_paths.end())
 	{
 		data_filename = it->second;

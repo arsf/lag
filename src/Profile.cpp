@@ -31,7 +31,10 @@
 #include "Profile.h"
 #include "MathFuncs.h"
 
-Profile::Profile(string fontpath,
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
+Profile::Profile(boost::filesystem::path fontpath,
 		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit,
 		Gtk::Label *rulerlabel) :
 		LagDisplay(fontpath, config, bucketlimit), rulerlabel(rulerlabel), profps(0), drawpoints(true), drawmovingaverage(

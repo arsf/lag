@@ -18,6 +18,11 @@
 #include "laslib/lasdefinitions.hpp"
 #include "PointFilter.h"
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 class FileOpener;
 class Boundary;
 class Quadtree;
@@ -31,7 +36,7 @@ public:
 			int resolutiondepth, int resolutionbase, int bucketlevels,
 			int bucketlimit, int cachelimit, bool default_scale_factors,
 			double scale_factor[3], std::string ascii_code, SelectionBox fence,
-			PointFilter pf, std::string cache_path);
+			PointFilter pf, fs::path cache_path);
 
 	void stop();
 
@@ -40,7 +45,7 @@ public:
 	Glib::Dispatcher sig_fail;
 	Glib::Dispatcher sig_progress;
 
-	static std::tr1::unordered_map<uint8_t, std::string> point_data_paths;
+	static std::tr1::unordered_map<uint8_t, fs::path> point_data_paths;
 	static std::vector<int> point_number;
 
 protected:
@@ -68,7 +73,7 @@ protected:
 	std::string ascii_code;
 	SelectionBox fence;
 	PointFilter point_filter;
-	std::string cache_path;
+	fs::path cache_path;
 
 	bool latlong;
 	GeoProjectionConverter gpc;

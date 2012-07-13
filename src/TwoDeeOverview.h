@@ -32,10 +32,13 @@
 #include "SelectionBox.h"
 #include "BoxOverlay.h"
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
 class TwoDeeOverview : public LagDisplay
 {
 public:
-   TwoDeeOverview(string,
+   TwoDeeOverview(boost::filesystem::path fontpath,
 		   	   	  const Glib::RefPtr<const Gdk::GL::Config>& config,
                   int bucketlimit,
                   Gtk::Label *rulerlabelover);

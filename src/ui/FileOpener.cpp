@@ -28,6 +28,9 @@
 #include "../SelectionBox.h"
 #include "FileOpener.h"
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
 FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
            	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow, AdvancedLoadDialog* ald)
 :
@@ -187,7 +190,7 @@ int FileOpener::on_quit()
 	{
 		std::cout << "Removing temporary file: "
 				<< LoadWorker::point_data_paths[i].c_str() << std::endl;
-		remove(LoadWorker::point_data_paths[i].c_str());
+      boost::filesystem::remove(LoadWorker::point_data_paths[i]);
 	}
 
 	return 0;

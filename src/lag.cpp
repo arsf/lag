@@ -24,7 +24,10 @@
 
 #include <gtkmm.h>
 #include <gtkglmm.h>
+
+#define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
+
 #include "Quadtree.h"
 #include "TwoDeeOverview.h"
 #include "Profile.h"
@@ -46,13 +49,23 @@ bool glade_exists(fs::path const& filename)
 string findgladepath(char* programpath)
 {
 	// For lag installed in /usr/local/bin, /usr/local/share/lag
+   // EDIT: Now supporting similar windows layouts
+   //       i.e., C:\Program Files\PML\Lag\bin, now produces something
+   //             like C:\Program Files\PML\Lag\share\lag\lag.ui
 
 	string exepath;
 
-	// Find the path of the executable (linux only)
+	// Find the path of the executable
 	char buff[1024];
-	ssize_t len = readlink("/proc/self/exe", buff, sizeof(buff)-1);
-	if(len != -1)
+   ssize_t len;
+#ifdef _WIN32
+   // windows only
+   len = GetModuleFileName(NULL, buff, sizeof(buff)-1);
+#else
+   // linux only
+	len = readlink("/proc/self/exe", buff, sizeof(buff)-1);
+#endif
+	if(len > 0) // len = -1 for linux failure, 0 for windows failure
 	{
 		buff[len] = '\0';
 		exepath = string(buff);
@@ -60,7 +73,7 @@ string findgladepath(char* programpath)
 
 	fs::path gladepath(exepath);
 	gladepath = fs::system_complete(gladepath).remove_filename();
-	gladepath /= ("../share/lag/lag.ui");
+	gladepath /= ".." / "share" / "lag" / "lag.ui";
 
 	if (glade_exists(gladepath))
 	{

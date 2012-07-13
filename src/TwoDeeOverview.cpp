@@ -35,9 +35,12 @@
 #include "MathFuncs.h"
 #include "geoprojectionconverter.hpp"
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
 
-TwoDeeOverview::TwoDeeOverview(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config,
-							int bucketlimit, Gtk::Label *rulerlabel)
+TwoDeeOverview::TwoDeeOverview(  boost::filesystem::path fontpath,
+                           const Glib::RefPtr<const Gdk::GL::Config>& config,
+							      int bucketlimit, Gtk::Label *rulerlabel)
 :	LagDisplay(fontpath, config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
@@ -751,7 +754,13 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
          threadpause();
 
       if(threaddebug)cout << "Waiting for drawing." << endl;
+
+      // usleep doesn't work on windows
+#ifdef _WIN32
+      // TODO: Find some alternative here
+#else
       usleep(10);
+#endif
    }
    return true;
 }

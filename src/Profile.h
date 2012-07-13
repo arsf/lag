@@ -32,10 +32,14 @@
 #include <boost/bind.hpp>
 #include "LagDisplay.h"
 #include <list>
+
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
 class Profile : public LagDisplay
 {
 public:
-   Profile(string,
+   Profile(boost::filesystem::path fontpath,
 		   const Glib::RefPtr<const Gdk::GL::Config>& config,
            int bucketlimit,
            Gtk::Label *rulerlabel);

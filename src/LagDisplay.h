@@ -32,6 +32,9 @@
 #include "Colour.h"
 #include <GL/gl.h>
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
 // Constants for "fixed" font
 const unsigned int FONT_CHAR_WIDTH = 7;
 const unsigned int FONT_CHAR_HEIGHT = 12;
@@ -39,7 +42,9 @@ const unsigned int FONT_CHAR_HEIGHT = 12;
 class LagDisplay : public Gtk::GL::DrawingArea
 {
 public:
-   LagDisplay(string fontpath, const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit);
+   LagDisplay( boost::filesystem::path fontpath,
+               const Glib::RefPtr<const Gdk::GL::Config>& config,
+               int bucketlimit);
 
    ~LagDisplay();
 

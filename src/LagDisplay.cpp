@@ -32,7 +32,10 @@
 #include "MathFuncs.h"
 #include "LagDisplay.h"
 
-LagDisplay::LagDisplay(string fontpath,
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
+LagDisplay::LagDisplay(boost::filesystem::path fontpath,
 		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit) :
 		Gtk::GL::DrawingArea(config), zoomlevel(1), zoompower(0.5), lidardata(
 				NULL), bucketlimit(bucketlimit), maindetailmod(0), pointsize(1), ratio(
@@ -43,7 +46,7 @@ LagDisplay::LagDisplay(string fontpath,
 				NULL), brightnessheightarray(NULL), brightnessintensityarray(
 				NULL), red(0.0), green(0.0), blue(0.0), alpha(0.0)
 {
-	fontpath += "fonts/DejaVuSansMono.ttf";
+	fontpath /= "fonts" / "DejaVuSansMono.ttf";
 }
 
 LagDisplay::~LagDisplay()

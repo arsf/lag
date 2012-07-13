@@ -15,10 +15,14 @@
 #include "PointData.h"
 #include <cstdio>
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
 using namespace std;
+namespace fs = boost::filesystem;
 
 std::vector<int> LoadWorker::point_number;
-tr1::unordered_map<uint8_t, std::string> LoadWorker::point_data_paths;
+tr1::unordered_map<uint8_t, fs::path> LoadWorker::point_data_paths;
 
 
 /*
@@ -31,7 +35,7 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset,
 		int resolutiondepth, int resolutionbase, int bucketlevels,
 		int bucketlimit, int cachelimit, bool default_scale_factors,
 		double scale_factor[3], std::string ascii_code, SelectionBox fence,
-		PointFilter pf, std::string cache_path) :
+		PointFilter pf, fs::path cache_path) :
 		Worker(),
 		fileopener			(fo),
 		point_offset		(point_offset),
@@ -213,7 +217,7 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 	LidarPoint temp_point;
 	PointData temp_data;
 	PointData* point_data_array = NULL;
-	std::string point_data_path;
+   fs::path point_data_path;
 	FILE* point_data_file = NULL;
 
 	int skip_counter = 0;
@@ -226,22 +230,19 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 		point_data_array = new PointData[points_to_load];  // Fix this! 1048576
 
 		// Create temporary file for PointData or use one created already
-		tr1::unordered_map<uint8_t, std::string>::iterator it =
+		tr1::unordered_map<uint8_t, fs::path>::iterator it =
 				point_data_paths.find(flightline_number);
 		if (it == point_data_paths.end())
 		{
+         point_data_path = fs::path(cache_path) /
+                           fs::unique_path("lag-pointdata.%%%%%%");
 
-			char fname[255];
-			strcpy(fname, cache_path.c_str());
-			strcat(fname, "/lag-pointdata.XXXXXX");
-			mkstemp(fname);
-			point_data_path = std::string(fname);
 			point_data_paths.insert(
 					make_pair(flightline_number, point_data_path));
 			point_number.resize(flightline_number + 1);
 			point_number.at(flightline_number) = 0;
-			std::cout << "Creating PointData file at: " << point_data_path
-					<< std::endl;
+			cout  << "Creating PointData file at: " << point_data_path.c_str()
+			   	<< std::endl;
 		}
 		else
 		{
