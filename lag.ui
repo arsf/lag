@@ -4458,7 +4458,7 @@ One should note that the contiguous area surrounding the ASDF area of the home r
         <child>
           <object class="GtkTable" id="table7">
             <property name="visible">True</property>
-            <property name="n_rows">3</property>
+            <property name="n_rows">4</property>
             <property name="n_columns">3</property>
             <property name="column_spacing">5</property>
             <property name="row_spacing">3</property>
@@ -4526,8 +4526,8 @@ One should note that the contiguous area surrounding the ASDF area of the home r
                 <property name="label" translatable="yes">Points to hold in cache: </property>
               </object>
               <packing>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
               </packing>
             </child>
             <child>
@@ -4541,8 +4541,8 @@ One should note that the contiguous area surrounding the ASDF area of the home r
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
+                <property name="top_attach">2</property>
+                <property name="bottom_attach">3</property>
               </packing>
             </child>
             <child>
@@ -4553,9 +4553,35 @@ One should note that the contiguous area surrounding the ASDF area of the home r
               <packing>
                 <property name="left_attach">1</property>
                 <property name="right_attach">2</property>
-                <property name="top_attach">2</property>
-                <property name="bottom_attach">3</property>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
               </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label41">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Quadtree cache location:</property>
+              </object>
+              <packing>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFileChooserButton" id="cachefolderselect">
+                <property name="visible">True</property>
+                <property name="action">select-folder</property>
+                <property name="title" translatable="yes">Select Folder</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
@@ -4618,4 +4644,5 @@ One should note that the contiguous area surrounding the ASDF area of the home r
       <action-widget response="0">loadadvancedok</action-widget>
     </action-widgets>
   </object>
+  <object class="GtkFileFilter" id="filefilter1"/>
 </interface>

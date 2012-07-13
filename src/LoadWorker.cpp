@@ -31,7 +31,7 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset,
 		int resolutiondepth, int resolutionbase, int bucketlevels,
 		int bucketlimit, int cachelimit, bool default_scale_factors,
 		double scale_factor[3], std::string ascii_code, SelectionBox fence,
-		PointFilter pf) :
+		PointFilter pf, std::string cache_path) :
 		Worker(),
 		fileopener			(fo),
 		point_offset		(point_offset),
@@ -46,7 +46,8 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset,
 		use_default_scale_factors	(default_scale_factors),
 		ascii_code			(ascii_code),
 		fence				(fence),
-		point_filter		(pf)
+		point_filter		(pf),
+		cache_path			(cache_path)
 {
 	if (!use_default_scale_factors)
 	{
@@ -230,7 +231,9 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 		if (it == point_data_paths.end())
 		{
 
-			char fname[] = "/tmp/lag-pointdata.XXXXXX";
+			char fname[255];
+			strcpy(fname, cache_path.c_str());
+			strcat(fname, "/lag-pointdata.XXXXXX");
 			mkstemp(fname);
 			point_data_path = std::string(fname);
 			point_data_paths.insert(
@@ -427,13 +430,13 @@ void LoadWorker::run()
 
 					if (!usearea)
 						qt = new Quadtree(&boundary, bucketlimit, cachelimit,
-								bucketLevels, resolutionbase, resolutiondepth);
+								bucketLevels, resolutionbase, resolutiondepth, cache_path);
 					else
 					{
 						qt = new Quadtree(fence.get_min_x(), fence.get_min_y(),
 								fence.get_max_x(), fence.get_max_y(),
 								bucketlimit, cachelimit, bucketLevels,
-								resolutionbase, resolutiondepth);
+								resolutionbase, resolutiondepth, cache_path);
 					}
 
 					// Load points

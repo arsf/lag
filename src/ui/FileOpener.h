@@ -181,6 +181,8 @@ private:
    //Stringstream getting error messages from the quadtree.
    ostringstream *loaderrorstream;
 
+   Gtk::FileChooserButton* cache_folder_select;
+
    //How many points to hold in cache. 1 GB ~= 25000000 points.
    int cachelimit;
 

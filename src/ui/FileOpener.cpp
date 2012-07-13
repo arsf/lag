@@ -75,6 +75,11 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 
 	numlines = 0;
 
+	// Set folder for storing quadtree cache to OS tmp folder by default
+	// NOTE: this becomes available in boost version 1.46
+	// cache_folder_select->set_current_folder(fs::temp_directory_path());
+	cache_folder_select->set_current_folder("/tmp");
+
 	connect_signals();
 
 	on_cachesize_changed();
@@ -123,6 +128,8 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("resbaseselect",resbaseselect);
 	builder->get_widget("resdepthselect",resdepthselect);
 	builder->get_widget("openbutton",openbutton);
+
+	// Progress dialog
 	builder->get_widget("loaddialog",loaddialog);
 	builder->get_widget("filelabel",filelabel);
 	builder->get_widget("fileprogressbar",fileprogressbar);
@@ -134,6 +141,8 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("loadadvancedbutton",loadadvancedbutton);
 	builder->get_widget("loadadvanceddialog",loadadvanceddialog);
 	builder->get_widget("loadadvancedcancel",loadadvancedcancel);
+
+	builder->get_widget("cachefolderselect",cache_folder_select);
 }
 
 void FileOpener::connect_signals()
@@ -275,7 +284,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 
 	   // Create LoadWorker
 	   loadworker = new LoadWorker(this, pointskipselect->get_value_as_int(), names, create_new_quadtree, fenceusecheck->get_active(), resdepthselect->get_value_as_int(), resbaseselect->get_value_as_int(),
-	  	  	  	  	  	  	  	  	  	  bucketlevels, bucketlimit, cachelimit, btnUseDefault->get_active(), scale_factor, asciicodeentry->get_text(), fence, ald->get_point_filter());
+	  	  	  	  	  	  	  	  bucketlevels, bucketlimit, cachelimit, btnUseDefault->get_active(), scale_factor, asciicodeentry->get_text(), fence, ald->get_point_filter(), cache_folder_select->get_current_folder());
 
 	   // Show loading dialog
 	   loaddialog->show_all();

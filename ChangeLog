@@ -91,6 +91,8 @@
 2012-07-12  Jan Holownia <jan.holownia@gmail.com>
     * general:          Replaced standard malloc with jemalloc for improved memory consumption. Fixed memory 
                         fragmentation.
+    * FileOpener.cpp:   Added an option to AdvancedLoad dialog to allow setting location where quadtree cache 
+                        files will be stored.
     
                         
 

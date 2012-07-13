@@ -31,7 +31,7 @@ public:
 			int resolutiondepth, int resolutionbase, int bucketlevels,
 			int bucketlimit, int cachelimit, bool default_scale_factors,
 			double scale_factor[3], std::string ascii_code, SelectionBox fence,
-			PointFilter pf);
+			PointFilter pf, std::string cache_path);
 
 	void stop();
 
@@ -68,6 +68,7 @@ protected:
 	std::string ascii_code;
 	SelectionBox fence;
 	PointFilter point_filter;
+	std::string cache_path;
 
 	bool latlong;
 	GeoProjectionConverter gpc;
