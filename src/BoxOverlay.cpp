@@ -1,25 +1,30 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: BoxOverlay.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- * */
+===============================================================================
+
+ Colour.h
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include <gtkmm.h>
 #include <iostream>
 #include <GL/gl.h>
@@ -27,6 +32,12 @@
 #include "BoxOverlay.h"
 using namespace std;
 
+
+/*
+==================================
+ BoxOverlay::BoxOverlay
+==================================
+*/
 BoxOverlay::BoxOverlay(Gtk::Label *label, Colour majorc, Colour minorc)
 :
 		directional 	(false),
@@ -44,11 +55,22 @@ BoxOverlay::BoxOverlay(Gtk::Label *label, Colour majorc, Colour minorc)
 		directional = true;
 }
 
+/*
+==================================
+ BoxOverlay::~BoxOverlay
+==================================
+*/
 BoxOverlay::~BoxOverlay()
 {
 }
 
-// At the beginning, defines the start point and, for the moment, the end point.
+/*
+==================================
+ BoxOverlay::on_start
+
+ At the beginning, defines the start point and, for the moment, the end point.
+==================================
+*/
 void BoxOverlay::on_start(Point startPoint, double areawidth, double areaheight) 
 { 
    // 0 is set to the centre before scaling and adding the centre coordinate.
@@ -58,18 +80,30 @@ void BoxOverlay::on_start(Point startPoint, double areawidth, double areaheight)
    start = end;
 }
 
-// Updates the end point and then gets the vertical and horizontal differences 
-// between the start and end points.
+/*
+==================================
+ BoxOverlay::on_
+
+ Updates the end point and then gets the vertical and horizontal differences
+ between the start and end points.
+==================================
+*/
 void BoxOverlay::on_(Point endPoint, double areawidth, double areaheight)
 {
-   //0 is set to the centre before scaling and adding the centre coordinate.
+   // 0 is set to the centre before scaling and adding the centre coordinate.
    end.move(centre.getX() + ((endPoint.getX() - areawidth/2)*ratio/zoomlevel),
              centre.getY() - ((endPoint.getY() - areaheight/2)*ratio/zoomlevel), 0);
    drawinfo();
 }
 
-// Moves the box differently depending on slantedness and directionality 
-// using keyboard input.
+/*
+==================================
+ BoxOverlay::on_key
+
+ Moves the box differently depending on slantedness and directionality
+ using keyboard input.
+==================================
+*/
 bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift)
 {
    // If the user wants to scroll by a constant amount based on the thickness 
@@ -81,6 +115,7 @@ bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshi
    }
 
    double sameaxis = scrollspeed, diffaxis = 0;
+
    //If the overlays is slanted and there is a differently coloured line:
    if(directional && slantedshape)
    {
@@ -95,23 +130,24 @@ bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshi
       sameaxis = scrollspeed*breadth/length;
       diffaxis = -scrollspeed*height/length;
    }
-   switch(event->keyval){
+   switch(event->keyval)
+   {
       case GDK_W:
          start.translate(diffaxis, sameaxis, 0);
          end.translate(diffaxis, sameaxis, 0);
-         break;//Up or "forward".
+         break; //Up or "forward".
       case GDK_S:
          start.translate(-diffaxis, -sameaxis, 0);
          end.translate(-diffaxis, -sameaxis, 0);
-         break;//Down or "backward".
+         break; //Down or "backward".
       case GDK_A:
          start.translate(-sameaxis, diffaxis, 0);
          end.translate(-sameaxis, diffaxis, 0);
-         break;//Left or "left".
+         break; //Left or "left".
       case GDK_D:
          start.translate(sameaxis, -diffaxis, 0);
          end.translate(sameaxis, -diffaxis, 0);
-         break;//Right or "right".
+         break; //Right or "right".
       default:
          return false;
          break;
@@ -122,8 +158,14 @@ bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshi
    return true;
 }
 
-// Calculate the boundaries based on whether or not the box is orthogonal or 
-// slanted and the start and end points of the user's clicks and drags.
+/*
+==================================
+ BoxOverlay::makeboundaries
+
+ Calculate the boundaries based on whether or not the box is orthogonal or
+ slanted and the start and end points of the user's clicks and drags.
+==================================
+*/
 void BoxOverlay::makeboundaries()
 {
    if(slantedshape)
@@ -172,12 +214,17 @@ void BoxOverlay::makeboundaries()
    }
 }
 
-//This prints information about the coordinates of the box to the associated label.
+/*
+==================================
+ BoxOverlay::drawinfo
+
+ This prints information about the coordinates of the box to the associated label.
+==================================
+*/
 void BoxOverlay::drawinfo()
 {
    if(orthogonalshape)
    {
-      //double minx = start.getX(),maxx = end.getX(),miny = start.getY(),maxy = end.getY();
       Point min = start, max = end;
 
       if(start.getX()>end.getX())
@@ -226,8 +273,14 @@ void BoxOverlay::drawinfo()
    }
 }
 
-// This makes the box with one line of it possibly in a different colour to 
-// indicate, for example, the near clipping plane of a profile view.
+/*
+==================================
+ BoxOverlay::makebox
+
+ This makes the box with one line of it possibly in a different colour to
+ indicate, for example, the near clipping plane of a profile view.
+==================================
+*/
 void BoxOverlay::makebox(double rmaxz)
 {
    //This makes sure the overlay box is drawn on top of the flightlines.

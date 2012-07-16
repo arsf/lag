@@ -1,9 +1,38 @@
-/* Class to hold colour values, with the option of extending
- * functionality to do something more exciting
- */
+/*
+===============================================================================
+
+ Colour.cpp
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
 
 #include "Colour.h"
 
+
+/*
+==================================
+ Colour::Colour
+==================================
+*/
 Colour::Colour()
 {
    colourValues[0] = 0.0;
@@ -11,6 +40,11 @@ Colour::Colour()
    colourValues[2] = 0.0;
 }
 
+/*
+==================================
+ Colour::Colour
+==================================
+*/
 Colour::Colour(float r, float g, float b)
 {
    colourValues[0] = r;
@@ -18,30 +52,44 @@ Colour::Colour(float r, float g, float b)
    colourValues[2] = b;
 }
 
+/*
+==================================
+ Colour::Colour
+==================================
+*/
 Colour::Colour(const std::string& colourName)
 {
-   if (colourName == "red") {
+   if (colourName == "red")
+   {
       colourValues[0] = 1.0f;
       colourValues[1] = 0.0f;
       colourValues[2] = 0.0f;
    }
-   else if (colourName == "white") {
+   else if (colourName == "white")
+   {
       colourValues[0] = 1.0f;
       colourValues[1] = 1.0f;
       colourValues[2] = 1.0f;
    }
-   else if (colourName == "green") {
+   else if (colourName == "green")
+   {
       colourValues[0] = 0.0f;
       colourValues[1] = 1.0f;
       colourValues[2] = 0.0f;
    }
-   else if (colourName == "blue") {
+   else if (colourName == "blue")
+   {
       colourValues[0] = 0.0f;
       colourValues[1] = 0.0f;
       colourValues[2] = 1.0f;
    }
 }
 
+/*
+==================================
+ operator==
+==================================
+*/
 bool operator==(Colour& lhs, Colour& rhs)
 {
 	for(int i = 0; i < 3; ++i)
@@ -52,6 +100,11 @@ bool operator==(Colour& lhs, Colour& rhs)
 	return true;
 }
 
+/*
+==================================
+ operator!=
+==================================
+*/
 bool operator!=(Colour& lhs, Colour& rhs)
 {
 	if (lhs == rhs)
@@ -60,6 +113,11 @@ bool operator!=(Colour& lhs, Colour& rhs)
 		return true;
 }
 
+/*
+==================================
+ Colour::multiply
+==================================
+*/
 void Colour::multiply(Colour other)
 {
    colourValues[0] *= other.getR();
@@ -72,6 +130,11 @@ void Colour::multiply(Colour other)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::multiply
+==================================
+*/
 void Colour::multiply(float multiplicant)
 {
    colourValues[0] *= multiplicant;
@@ -84,6 +147,11 @@ void Colour::multiply(float multiplicant)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::multiply
+==================================
+*/
 void Colour::multiply(float r, float g, float b)
 {
    colourValues[0] *= r;
@@ -96,6 +164,11 @@ void Colour::multiply(float r, float g, float b)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::add
+==================================
+*/
 void Colour::add(Colour other)
 {
    colourValues[0] += other.getR();
@@ -108,6 +181,11 @@ void Colour::add(Colour other)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::add
+==================================
+*/
 void Colour::add(float numberToAdd)
 {
    colourValues[0] += numberToAdd;
@@ -120,6 +198,11 @@ void Colour::add(float numberToAdd)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::add
+==================================
+*/
 void Colour::add(float r, float g, float b)
 {
    colourValues[0] += r;
@@ -132,6 +215,11 @@ void Colour::add(float r, float g, float b)
    if (colourValues[2] > 1.0) colourValues[2] = 1.0;
 }
 
+/*
+==================================
+ Colour::subtract
+==================================
+*/
 void Colour::subtract(Colour other)
 {
    colourValues[0] -= other.getR();
@@ -144,6 +232,11 @@ void Colour::subtract(Colour other)
    if (colourValues[2] < 0.0) colourValues[2] = 0.0;
 }
 
+/*
+==================================
+ Colour::subtract
+==================================
+*/
 void Colour::subtract(float numberToSubtract)
 {
    colourValues[0] -= numberToSubtract;
@@ -156,6 +249,11 @@ void Colour::subtract(float numberToSubtract)
    if (colourValues[2] < 0.0) colourValues[2] = 0.0;
 }
 
+/*
+==================================
+ Colour::subtract
+==================================
+*/
 void Colour::subtract(float r, float g, float b)
 {
    colourValues[0] -= r;
@@ -167,6 +265,12 @@ void Colour::subtract(float r, float g, float b)
    colourValues[2] -= b;
    if (colourValues[2] < 0.0) colourValues[2] = 0.0;
 }
+
+/*
+==================================
+ Colour::~Colour
+==================================
+*/
 Colour::~Colour()
 {
 }
