@@ -1,27 +1,31 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: lag.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - June 2010
- *
- * */
-#include <iostream>
+==================================
 
+ lag.cpp
+
+ Written: November 2009 - July 2012
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+==================================
+*/
+
+#include <iostream>
 #include <gtkmm.h>
 #include <gtkglmm.h>
 
@@ -39,33 +43,47 @@
 using namespace std;
 namespace fs = boost::filesystem;
 
+
+/*
+==================================
+ glade_exists
+
+ Returns true if a file exists.
+==================================
+*/
 bool glade_exists(fs::path const& filename)
 {
 	return fs::exists(filename);
 }
 
-// Takes the path the executable was called with and uses it to find the 
-// .glade file needed to make the GUI.
+/*
+==================================
+ findgladepath
+
+ Takes the path the executable was called with and uses it to find the
+ .glade file needed to make the GUI.
+==================================
+*/
 string findgladepath(char* programpath)
 {
 	// For lag installed in /usr/local/bin, /usr/local/share/lag
-   // EDIT: Now supporting similar windows layouts
-   //       i.e., C:\Program Files\PML\Lag\bin, now produces something
-   //             like C:\Program Files\PML\Lag\share\lag\lag.ui
+	// EDIT: Now supporting similar windows layouts
+	//       i.e., C:\Program Files\PML\Lag\bin, now produces something
+	//             like C:\Program Files\PML\Lag\share\lag\lag.ui
 
 	string exepath;
 
 	// Find the path of the executable
 	char buff[1024];
-   ssize_t len;
+	ssize_t len;
 #ifdef _WIN32
-   // windows only
-   len = GetModuleFileName(NULL, buff, sizeof(buff)-1);
+	// windows only
+	len = GetModuleFileName(NULL, buff, sizeof(buff)-1);
 #else
-   // linux only
-	len = readlink("/proc/self/exe", buff, sizeof(buff)-1);
+	// linux only
+	len = readlink("/proc/self/exe", buff, sizeof(buff) - 1);
 #endif
-	if(len > 0) // len = -1 for linux failure, 0 for windows failure
+	if (len > 0) // len = -1 for linux failure, 0 for windows failure
 	{
 		buff[len] = '\0';
 		exepath = string(buff);
@@ -80,7 +98,7 @@ string findgladepath(char* programpath)
 		return gladepath.string();
 	}
 
-	// For lag not installed
+	// For lag not installed:
 
 	//The path of the executable.
 	fs::path mypath(programpath);
@@ -108,6 +126,13 @@ string findgladepath(char* programpath)
 	}
 }
 
+/*
+==================================
+
+ main
+
+==================================
+*/
 int main(int argc, char** argv)
 {
 	//This allows the creation and running of threads.
@@ -119,6 +144,7 @@ int main(int argc, char** argv)
 
 	//This will extract widgets from the glade file when directed.
 	const Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
+
 	try
 	{
 		builder->add_from_file(findgladepath(argv[0]));
@@ -207,9 +233,6 @@ int main(int argc, char** argv)
 	//This contains the widgets of the file opener window.
 	FileOpener *fo = new FileOpener(tdo, prof, builder, aow, fs, bucketlimit,
 			eventboxtdo, eventboxprof, tdow, ald);
-
-	//In case of command-line commands
-	//fo->testfilename(argc,argv,true,false);
 
 	gdk_threads_enter();
 

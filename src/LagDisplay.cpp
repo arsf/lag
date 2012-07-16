@@ -1,25 +1,30 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: LagDisplay.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: January - July 2010
- *
- * */
+==================================
+
+ LagDisplay.cpp
+
+ Created on: June-July 2010
+ Authors: Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+==================================
+*/
+
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
@@ -35,20 +40,52 @@
 #define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
 
+
+/*
+==================================
+ LagDisplay::LagDisplay
+==================================
+*/
 LagDisplay::LagDisplay(boost::filesystem::path fontpath,
 		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit) :
-		Gtk::GL::DrawingArea(config), zoomlevel(1), zoompower(0.5), lidardata(
-				NULL), bucketlimit(bucketlimit), maindetailmod(0), pointsize(1), ratio(
-				1.0), brightnessBy(brightnessByIntensity), colourBy(
-				colourByFlightline), cbmaxz(0), cbminz(0), cbmaxintensity(0), cbminintensity(
-				0), zoffset(0), zfloor(0), intensityoffset(0), intensityfloor(
-				0), rmaxz(0), rminz(0), rmaxintensity(0), rminintensity(0), colourheightarray(
-				NULL), brightnessheightarray(NULL), brightnessintensityarray(
-				NULL), red(0.0), green(0.0), blue(0.0), alpha(0.0)
+		Gtk::GL::DrawingArea(config),
+		zoomlevel			(1),
+		zoompower			(0.5),
+		lidardata			(NULL),
+		bucketlimit			(bucketlimit),
+		maindetailmod		(0),
+		pointsize			(1),
+		ratio				(1.0),
+		brightnessBy		(brightnessByIntensity),
+		colourBy			(colourByFlightline),
+		cbmaxz				(0),
+		cbminz				(0),
+		cbmaxintensity		(0),
+		cbminintensity		(0),
+		zoffset				(0),
+		zfloor				(0),
+		intensityoffset		(0),
+		intensityfloor		(0),
+		rmaxz				(0),
+		rminz				(0),
+		rmaxintensity		(0),
+		rminintensity		(0),
+		colourheightarray	(NULL),
+		brightnessheightarray	(NULL),
+		brightnessintensityarray(NULL),
+		red					(0.0),
+		green				(0.0),
+		blue				(0.0),
+		alpha				(0.0)
 {
 	fontpath /= "fonts" / "DejaVuSansMono.ttf";
 }
 
+/*
+==================================
+ LagDisplay::~LagDisplay
+==================================
+*/
 LagDisplay::~LagDisplay()
 {
 	delete[] colourheightarray;
@@ -56,7 +93,13 @@ LagDisplay::~LagDisplay()
 	delete[] brightnessintensityarray;
 }
 
-//Draw on expose.
+/*
+==================================
+ LagDisplay::on_expose_event
+
+ Draw on expose.
+==================================
+*/
 bool LagDisplay::on_expose_event(GdkEventExpose* event)
 {
 	if (event == 0)
@@ -66,15 +109,21 @@ bool LagDisplay::on_expose_event(GdkEventExpose* event)
 	return true;
 }
 
-// Please note that the Gtk::GL::DrawingArea::on_realize() method calls this 
-// event and is (by necessity) before the prepare_image() method, so it is 
-// necessary to be careful about what to put into this method as some things 
-// might crash if done before prepare_image().
-//
-// When the window is resized, the viewport is resized accordingly and so are 
-// the viewing properties. Please note that the expose event will be emitted 
-// right after the configure event, so the on_expose_event method will be 
-// called right after this one.
+/*
+==================================
+ LagDisplay::on_configure_event
+
+ Please note that the Gtk::GL::DrawingArea::on_realize() method calls this
+ event and is (by necessity) before the prepare_image() method, so it is
+ necessary to be careful about what to put into this method as some things
+ might crash if done before prepare_image().
+
+ When the window is resized, the viewport is resized accordingly and so are
+ the viewing properties. Please note that the expose event will be emitted
+ right after the configure event, so the on_expose_event method will be
+ called right after this one.
+==================================
+*/
 bool LagDisplay::on_configure_event(GdkEventConfigure* event)
 {
 	if (event == 0)
@@ -86,7 +135,13 @@ bool LagDisplay::on_configure_event(GdkEventConfigure* event)
 	return true;
 }
 
-//Prepares the arrays for looking up the colours and shades of the points.
+/*
+==================================
+ LagDisplay::coloursandshades
+
+ Prepares the arrays for looking up the colours and shades of the points.
+==================================
+*/
 void LagDisplay::coloursandshades(double maxz, double minz, int maxintensity,
 		int minintensity)
 {
@@ -146,17 +201,29 @@ void LagDisplay::coloursandshades(double maxz, double minz, int maxintensity,
 	}
 }
 
-//Prepare the image when the widget is first realised.
+/*
+==================================
+ LagDisplay::on_realize
+
+ Prepare the image when the widget is first realised.
+
+ Please note that the this method calls the configure event and is (by
+ necessity) before the prepare_image() method, so it is necessary to be
+ careful about what to put into the on_configure_event method as
+ some things might crash if done before prepare_image().
+==================================
+*/
 void LagDisplay::on_realize()
 {
-	// Please note that the this method calls the configure event and is (by
-	// necessity) before the prepare_image() method, so it is necessary to be
-	// careful about what to put into the on_configure_event method as
-	// some things might crash if done before prepare_image().
 	Gtk::GL::DrawingArea::on_realize();
 	prepare_image();
 }
 
+/*
+==================================
+ LagDisplay::getColourByFlightline
+==================================
+*/
 Colour LagDisplay::getColourByFlightline(int flightline)
 {
 	switch (flightline % 6)
@@ -178,6 +245,11 @@ Colour LagDisplay::getColourByFlightline(int flightline)
 	}
 }
 
+/*
+==================================
+ LagDisplay::getColourByReturn
+==================================
+*/
 Colour LagDisplay::getColourByReturn(int returnNumber)
 {
 	switch (returnNumber)
@@ -201,6 +273,11 @@ Colour LagDisplay::getColourByReturn(int returnNumber)
 	}
 }
 
+/*
+==================================
+ LagDisplay::getColourByClassification
+==================================
+*/
 Colour LagDisplay::getColourByClassification(int classification)
 {
 	switch (classification)
@@ -242,6 +319,11 @@ Colour LagDisplay::getColourByClassification(int classification)
 	}
 }
 
+/*
+==================================
+ LagDisplay::getColourByHeight
+==================================
+*/
 Colour LagDisplay::getColourByHeight(float height)
 {
 	return Colour(colourheightarray[3 * int(10 * (height - rminz))],
@@ -249,6 +331,11 @@ Colour LagDisplay::getColourByHeight(float height)
 			colourheightarray[3 * int(10 * (height - rminz)) + 2]);
 }
 
+/*
+==================================
+ LagDisplay::getColourByIntensity
+==================================
+*/
 Colour LagDisplay::getColourByIntensity(int intensity)
 {
 	double greyValue = double(intensity - cbminintensity)
@@ -256,12 +343,17 @@ Colour LagDisplay::getColourByIntensity(int intensity)
 	return Colour(greyValue, greyValue, greyValue);
 }
 
-// Given maximum and minimum values, find out the colour a certain value 
-// should be mapped to.
+/*
+==================================
+ LagDisplay::colour_by
+
+ Given maximum and minimum values, find out the colour a certain value
+ should be mapped to.
+==================================
+*/
 void LagDisplay::colour_by(double value, double maxvalue, double minvalue,
 		Colour& colour)
 {
-
 	double range = maxvalue - minvalue;
 	if (value <= minvalue + range / 6) //Green to Yellow:
 		colour.setRGB(6 * (value - minvalue) / range, 1.0, 0.0);
@@ -273,14 +365,18 @@ void LagDisplay::colour_by(double value, double maxvalue, double minvalue,
 		colour.setRGB(4.0 - 6 * (value - minvalue) / range, 0.0, 1.0);
 	else if (value <= minvalue + range * 5 / 6) //Blue to Cyan:
 		colour.setRGB(0.0, 6 * (value - minvalue) / range - 4.0, 1.0);
-	else
-		//Cyan to White:
+	else //Cyan to White:
 		colour.setRGB(6 * (value - minvalue) / range - 5.0, 1.0, 1.0);
-
 }
 
-// Given maximum and minimum values, find out the brightness a certain value
-// should be mapped to.
+/*
+==================================
+ LagDisplay::brightness_by
+
+ Given maximum and minimum values, find out the brightness a certain value
+ should be mapped to.
+==================================
+*/
 double LagDisplay::brightness_by(double value, double maxvalue, double minvalue,
 		double offsetvalue, double floorvalue)
 {
@@ -302,8 +398,14 @@ double LagDisplay::brightness_by(double value, double maxvalue, double minvalue,
 	return multiplier;
 }
 
-// Convenience code for getting a subset and checking to see if the data is 
-// valid/useful.
+/*
+==================================
+ LagDisplay::advsubsetproc
+
+ Convenience code for getting a subset and checking to see if the data is
+ valid/useful.
+==================================
+*/
 bool LagDisplay::advsubsetproc(vector<PointBucket*>*& pointvector, vector<double> xs,
 		vector<double> ys, int ps)
 {
@@ -313,7 +415,7 @@ bool LagDisplay::advsubsetproc(vector<PointBucket*>*& pointvector, vector<double
 	try
 	{
 		pointvector = lidardata->advSubset(xs, ys, ps);
-	} catch (DescriptiveException e)
+	} catch (DescriptiveException& e)
 	{
 		cout << "There has been an exception:" << endl;
 		cout << "What: " << e.what() << endl;
@@ -328,22 +430,43 @@ bool LagDisplay::advsubsetproc(vector<PointBucket*>*& pointvector, vector<double
 		return true;
 }
 
+/*
+==================================
+ LagDisplay::pixelsToImageUnits
+==================================
+*/
 double LagDisplay::pixelsToImageUnits(double pixels)
 {
 	return pixels * ratio / zoomlevel;
 }
 
+/*
+==================================
+ LagDisplay::imageUnitsToPixels
+==================================
+*/
 double LagDisplay::imageUnitsToPixels(double imageUnits)
 {
 	return imageUnits * zoomlevel / ratio;
 }
 
+/*
+==================================
+ LagDisplay::printString
+==================================
+*/
 void LagDisplay::printString(double x, double y, double z)
 {
 	glRasterPos3d(x, y, z);
 }
 
-//Convenience code for clearing the screen.
+/*
+==================================
+ LagDisplay::clearscreen
+
+ Convenience code for clearing the screen.
+==================================
+*/
 bool LagDisplay::clearscreen()
 {
 	Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
@@ -361,8 +484,14 @@ bool LagDisplay::clearscreen()
 	return true;
 }
 
-// Convenience code called so that graphical artefacts through changes of view
-// do not occur. This is because of being a multiwindow application.
+/*
+==================================
+ LagDisplay::guard_against_interaction_between_GL_areas
+
+ Convenience code called so that graphical artefacts through changes of view
+ do not occur. This is because of being a multiwindow application.
+==================================
+*/
 void LagDisplay::guard_against_interaction_between_GL_areas()
 {
 	// This line MUST come before the other ones for this purpose as otherwise
@@ -373,10 +502,16 @@ void LagDisplay::guard_against_interaction_between_GL_areas()
 	resetview();
 }
 
-// This method prepares the image for drawing and sets up OpenGl. It gets data 
-// from the quadtree in order to find the maximum and minimum height and 
-// intensity values and calls the coloursandshades() method to prepare the 
-// colouring of the points. It also sets up clearing and the initial view.
+/*
+==================================
+ LagDisplay::prepare_image
+
+ This method prepares the image for drawing and sets up OpenGl. It gets data
+ from the quadtree in order to find the maximum and minimum height and
+ intensity values and calls the coloursandshades() method to prepare the
+ colouring of the points. It also sets up clearing and the initial view.
+==================================
+*/
 void LagDisplay::prepare_image()
 {
 	//Subsetting:
@@ -417,6 +552,7 @@ void LagDisplay::prepare_image()
 			(*pointvector)[0]->getminZ();
 	int maxintensity = (*pointvector)[0]->getmaxintensity(), minintensity =
 			(*pointvector)[0]->getminintensity();
+
 	//Find the maximum and minimum values from the (*pointvector):
 	for (unsigned int i = 0; i < pointvector->size(); i++)
 	{
@@ -438,6 +574,7 @@ void LagDisplay::prepare_image()
 	rminz = minz;
 	rmaxintensity = maxintensity;
 	rminintensity = minintensity;
+
 	//Prepare colour and shading arrays.
 	coloursandshades(maxz, minz, maxintensity, minintensity);
 
@@ -448,6 +585,7 @@ void LagDisplay::prepare_image()
 	glClearColor(red, green, blue, alpha);
 	glClearDepth(1.0);
 	glPointSize(pointsize);
+
 	// Very important to include this! This allows us to see the things on
 	// the top above the things on the bottom!
 	glEnable(GL_DEPTH_TEST);
@@ -456,10 +594,16 @@ void LagDisplay::prepare_image()
 	glwindow->gl_end();
 	resetview();
 	delete pointvector;
+
 	//Set up initial view and draw it.
 	returntostart();
 }
 
+/*
+==================================
+ LagDisplay::set_background_colour
+==================================
+*/
 void LagDisplay::set_background_colour(float r, float g, float b, float a)
 {
 	red = r;
@@ -468,6 +612,11 @@ void LagDisplay::set_background_colour(float r, float g, float b, float a)
 	alpha = a;
 }
 
+/*
+==================================
+ LagDisplay::update_background_colour
+==================================
+*/
 void LagDisplay::update_background_colour()
 {
 	Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();

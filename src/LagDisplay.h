@@ -1,25 +1,29 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: LagDisplay.h
- * Author: Haraldur Tristan Gunnarsson
- * Written: January - July 2010
- *
- * */
+==================================
+
+ LagDisplay.h
+
+ Created on: June-July 2010
+ Authors: Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+==================================
+*/
 
 #ifndef DISPLAY_H
 #define DISPLAY_H
@@ -39,6 +43,14 @@
 const unsigned int FONT_CHAR_WIDTH = 7;
 const unsigned int FONT_CHAR_HEIGHT = 12;
 
+
+/*
+===============================================================================
+
+ LagDisplay - represents an OpenGL drawing area.
+
+===============================================================================
+*/
 class LagDisplay : public Gtk::GL::DrawingArea
 {
 public:
@@ -87,48 +99,50 @@ public:
    double zoomlevel;
 
    //Getters:
-   inline double getrmaxz()
+
+   double getrmaxz()
    {
       return rmaxz;
    }
 
-   inline double getrminz()
+   double getrminz()
    {
       return rminz;
    }
 
-   inline double getzoffset()
+   double getzoffset()
    {
       return zoffset;
    }
 
-   inline double getzfloor()
+   double getzfloor()
    {
       return zfloor;
    }
 
-   inline int getrmaxintensity()
+   int getrmaxintensity()
    {
       return rmaxintensity;
    }
 
-   inline int getrminintensity()
+   int getrminintensity()
    {
       return rminintensity;
    }
 
-   inline double getintensityoffset()
+   double getintensityoffset()
    {
       return intensityoffset;
    }
 
-   inline double getintensityfloor()
+   double getintensityfloor()
    {
       return intensityfloor;
    }
 
    //Setters:
-   inline void setlidardata(Quadtree* lidardata,int bucketlimit)
+
+   void setlidardata(Quadtree* lidardata,int bucketlimit)
    {
       this->lidardata=lidardata;
       this->bucketlimit=bucketlimit;
@@ -139,43 +153,43 @@ public:
 	   return this->lidardata;
    }
 
-   inline void setColourBy(colourBy_t colour)
+   void setColourBy(colourBy_t colour)
    {
       colourBy = colour;
    }
 
-   inline void setBrightnessBy(brightnessBy_t brightness)
+   void setBrightnessBy(brightnessBy_t brightness)
    {
       brightnessBy = brightness;
    }
 
-   inline void setpointwidth(double pointsize)
+   void setpointwidth(double pointsize)
    {
       this->pointsize=pointsize;
       //glPointSize(pointsize);
    }
 
-   inline void setmaindetail(double maindetailmod)
+   void setmaindetail(double maindetailmod)
    {
       this->maindetailmod=maindetailmod;
    }
 
-   inline void setzoffset(double zoffset)
+   void setzoffset(double zoffset)
    {
       this->zoffset = zoffset;
    }
 
-   inline void setzfloor(double zfloor)
+   void setzfloor(double zfloor)
    {
       this->zfloor = zfloor;
    }
 
-   inline void setintensityoffset(double intensityoffset)
+   void setintensityoffset(double intensityoffset)
    {
       this->intensityoffset = intensityoffset;
    }
 
-   inline void setintensityfloor(double intensityfloor)
+   void setintensityfloor(double intensityfloor)
    {
       this->intensityfloor = intensityfloor;
    }
@@ -292,7 +306,7 @@ protected:
    //Fonts
    //void initFont();
 
-   // Printfs a raster string at a certain position
+   // Prints a raster string at a certain position
    void printString(double, double, double);
  
    //Colouring and shading:
