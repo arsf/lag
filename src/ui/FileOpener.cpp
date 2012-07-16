@@ -32,6 +32,8 @@
 #include "../Profile.h"
 #include "../SelectionBox.h"
 #include "FileOpener.h"
+
+#define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
 
 
@@ -579,7 +581,7 @@ void FileOpener::on_cachesize_changed()
 
 /*
 ==================================
- AdvancedOptionsWindow::AdvancedOptionsWindow
+ FileOpener::on_openfilemenuactivated
 
  When selected from the menu, the file chooser opens.
 ==================================
@@ -591,7 +593,7 @@ void FileOpener::on_openfilemenuactivated()
 
 /*
 ==================================
- AdvancedOptionsWindow::AdvancedOptionsWindow
+ FileOpener::on_loadcancelbutton_clicked
 ==================================
 */
 void FileOpener::on_loadcancelbutton_clicked()
