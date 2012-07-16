@@ -30,6 +30,12 @@
 #include <vector>
 #include "TwoDeeOverviewWindow.h"
 
+
+/*
+==================================
+ TwoDeeOverviewWindow::TwoDeeOverviewWindow
+==================================
+*/
 TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo, AdvancedOptionsWindow *aow, FileSaver *fs, Gtk::Window *tdowin,
 		Gtk::Window *profilewindow, const Glib::RefPtr<Gtk::Builder>& builder, Gtk::EventBox *eventboxtdo, ProfileWindow *profwin)
 :
@@ -73,6 +79,11 @@ TwoDeeOverviewWindow::TwoDeeOverviewWindow(TwoDeeOverview *tdo, AdvancedOptionsW
 		   	   	   	   	   	   	   	 !colourbyreturnmenu->get_active());
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::~TwoDeeOverviewWindow
+==================================
+*/
 TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
 {
    delete raiselineselect;
@@ -122,9 +133,9 @@ TwoDeeOverviewWindow::~TwoDeeOverviewWindow()
 
 /*
 =============================================
-TwoDeeOverviewWindow::load_xml
+ TwoDeeOverviewWindow::load_xml
 
-Loads widgets from xml file.
+ Loads widgets from the glade file.
 =============================================
 */
 void TwoDeeOverviewWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
@@ -169,9 +180,9 @@ void TwoDeeOverviewWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 
 /*
 ================================================
-TwoDeeOverviewWindow::connect_signals
+ TwoDeeOverviewWindow::connect_signals
 
-Connects signals to widgets
+ Connects signals to signal handlers.
 ================================================
 */
 void TwoDeeOverviewWindow::connect_signals()
@@ -215,12 +226,28 @@ void TwoDeeOverviewWindow::connect_signals()
     uselatlongcheck->signal_activate().connect(sigc::mem_fun(this, &TwoDeeOverviewWindow::on_uselatlongcheck));
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_uselatlongcheck
+
+ Displays coordinates in latlong rather then UTM
+ if projection information is available.
+==================================
+*/
 void TwoDeeOverviewWindow::on_uselatlongcheck()
 {
 	tdo->set_latlong(uselatlongcheck->get_active());
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_quadtreemenu_activated
 
+ Displays information about the quadtree: number of points,
+ number of buckets, bucket size, cache size, points in cache
+ boundary and projection information.
+==================================
+*/
 void TwoDeeOverviewWindow::on_quadtreemenu_activated()
 {
 	Gtk::MessageDialog dialog("Quadtree information\t", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
@@ -308,6 +335,13 @@ void TwoDeeOverviewWindow::on_quadtreemenu_activated()
 	dialog.run();
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_slicebuttontoggled
+
+ Enables/Disables vertical slicing.
+==================================
+*/
 void TwoDeeOverviewWindow::on_slicebuttontoggled()
 {
 	if (slicebutton->get_active())
@@ -323,6 +357,11 @@ void TwoDeeOverviewWindow::on_slicebuttontoggled()
 	tdo->drawviewable(1);
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_zminvaluechanged
+==================================
+*/
 void TwoDeeOverviewWindow::on_zminvaluechanged()
 {
 	if (slicebutton->get_active())
@@ -332,6 +371,11 @@ void TwoDeeOverviewWindow::on_zminvaluechanged()
 	}
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_zmaxvaluechanged
+==================================
+*/
 void TwoDeeOverviewWindow::on_zmaxvaluechanged()
 {
 	if (slicebutton->get_active())
@@ -341,6 +385,11 @@ void TwoDeeOverviewWindow::on_zmaxvaluechanged()
 	}
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::set_slice_range
+==================================
+*/
 void TwoDeeOverviewWindow::set_slice_range(double min, double max)
 {
    zminselect->set_range(min, max);
@@ -349,12 +398,22 @@ void TwoDeeOverviewWindow::set_slice_range(double min, double max)
    zmaxselect->set_value(max);
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_refreshbuttonclicked
+==================================
+*/
 void TwoDeeOverviewWindow::on_refreshbuttonclicked()
 {
 	if (tdo->get_realized())
 		tdo->drawviewable(1);
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::on_superzoomclicked
+==================================
+*/
 void TwoDeeOverviewWindow::on_superzoomclicked()
 {
 	if (superzoombutton->get_active())
@@ -365,7 +424,13 @@ void TwoDeeOverviewWindow::on_superzoomclicked()
 	tdo->set_superzoom(superzoombutton->get_active());
 }
 
-//When toggled, the distance scale is shown on the 2d overview.
+/*
+==================================
+ TwoDeeOverviewWindow::on_showdistancescalecheck
+
+ When toggled, the distance scale is shown on the 2d overview.
+==================================
+*/
 void TwoDeeOverviewWindow::on_showdistancescalecheck()
 {
    tdo->setshowdistancescale(showdistancescalecheck->get_active());
@@ -373,7 +438,13 @@ void TwoDeeOverviewWindow::on_showdistancescalecheck()
       tdo->drawviewable(2);
 }
 
-//When toggled, the legend is shown on the 2d overview.
+/*
+==================================
+ TwoDeeOverviewWindow::on_showlegendcheck
+
+ When toggled, the legend is shown on the 2d overview.
+==================================
+*/
 void TwoDeeOverviewWindow::on_showlegendcheck()
 {
    tdo->setshowlegend(showlegendcheck->get_active());
@@ -381,7 +452,13 @@ void TwoDeeOverviewWindow::on_showlegendcheck()
       tdo->drawviewable(2);
 }
 
-//When toggled, the heights are reversed on the 2d overview.
+/*
+==================================
+ TwoDeeOverviewWindow::on_reverseheightcheck
+
+ When toggled, the heights are reversed on the 2d overview.
+==================================
+*/
 void TwoDeeOverviewWindow::on_reverseheightcheck()
 {
    tdo->setreversez(reverseheightcheck->get_active());
@@ -389,9 +466,15 @@ void TwoDeeOverviewWindow::on_reverseheightcheck()
       tdo->drawviewable(1);
 }
 
-// If one of the colour radio menu items is selected (and, therefore, the 
-// others deselected) then set the values of the colour control variables 
-// in the overview to the values of the corresponding radio menu items.
+/*
+==================================
+ TwoDeeOverviewWindow::on_colouractivated
+
+ If one of the colour radio menu items is selected (and, therefore, the
+ others deselected) then set the values of the colour control variables
+ in the overview to the values of the corresponding radio menu items.
+==================================
+*/
 void TwoDeeOverviewWindow::on_colouractivated()
 {
    if (colourbyintensitymenu->get_active())
@@ -406,12 +489,6 @@ void TwoDeeOverviewWindow::on_colouractivated()
       tdo->setColourBy(tdo->colourByReturn);
    else
       tdo->setColourBy(tdo->colourByNone);
- 
-//   tdo->setintensitycolour(colourbyintensitymenu->get_active());
-//   tdo->setheightcolour(colourbyheightmenu->get_active());
-//   tdo->setlinecolour(colourbyflightlinemenu->get_active());
-//   tdo->setclasscolour(colourbyclassificationmenu->get_active());
-//   tdo->setreturncolour(colourbyreturnmenu->get_active());
 
    // This is to help prevent confusion when the user decides to show the 
    // legend and nothing happens because of there being no legend when 
@@ -430,10 +507,16 @@ void TwoDeeOverviewWindow::on_colouractivated()
       tdo->drawviewable(1);
 }
 
-// If one of the brightness radio menu items is selected (and, therefore, 
-// the others deselected) then set the values of the brightness control 
-// variables in the overview to the values of the corresponding radio 
-// menu items.
+/*
+==================================
+ TwoDeeOverviewWindow::on_brightnessactivated
+
+ If one of the brightness radio menu items is selected (and, therefore,
+ the others deselected) then set the values of the brightness control
+ variables in the overview to the values of the corresponding radio
+ menu items.
+==================================
+*/
 void TwoDeeOverviewWindow::on_brightnessactivated()
 {
 
@@ -444,9 +527,6 @@ void TwoDeeOverviewWindow::on_brightnessactivated()
    else
       tdo->setBrightnessBy(tdo->brightnessByNone);
 
-//   tdo->setintensitybrightness(brightnessbyintensitymenu->get_active());
-//   tdo->setheightbrightness(brightnessbyheightmenu->get_active());
-
    // As the signal handler is called twice (each time a radio button is 
    // toggle or untoggled, and toggling one automatically untoggles another), 
    // and we only want to draw (which is slow when caching) once, draw half 
@@ -456,7 +536,13 @@ void TwoDeeOverviewWindow::on_brightnessactivated()
 	   tdo->drawviewable(1);
 }
 
-//This returns the overview to its original position.
+/*
+==================================
+ TwoDeeOverviewWindow::on_returnbutton_clicked
+
+ This returns the overview to its original position.
+==================================
+*/
 void TwoDeeOverviewWindow::on_returnbutton_clicked()
 {
 	pointwidthselect->set_value(1.0);
@@ -469,7 +555,13 @@ void TwoDeeOverviewWindow::on_returnbutton_clicked()
 		tdo->returntostart();
 }
 
-//This changes the width of the points in pixels.
+/*
+==================================
+ TwoDeeOverviewWindow::on_pointwidthselected
+
+ This changes the width of the points in pixels.
+==================================
+*/
 void TwoDeeOverviewWindow::on_pointwidthselected()
 {
    tdo->setpointwidth(pointwidthselect->get_value());
@@ -477,8 +569,14 @@ void TwoDeeOverviewWindow::on_pointwidthselected()
       tdo->drawviewable(1);
 }
  
-// When toggled, the profile view goes into rulering mode. When untoggled, 
-// rulering mode ends.
+/*
+==================================
+ TwoDeeOverviewWindow::on_rulertoggleover
+
+ When toggled, the profile view goes into rulering mode. When untoggled,
+ rulering mode ends.
+==================================
+*/
 void TwoDeeOverviewWindow::on_rulertoggleover()
 {
    if(rulertoggleover->get_active())
@@ -501,8 +599,15 @@ void TwoDeeOverviewWindow::on_rulertoggleover()
          tdo->drawviewable(2);
    }
 }
-// Toggles whether clicking and dragging will select the fence in the 
-// overview.
+
+/*
+==================================
+ TwoDeeOverviewWindow::on_fencetoggle
+
+ Toggles whether clicking and dragging will select the fence in the
+ overview.
+==================================
+*/
 void TwoDeeOverviewWindow::on_fencetoggle()
 {
    if(fencetoggle->get_active())
@@ -525,9 +630,16 @@ void TwoDeeOverviewWindow::on_fencetoggle()
          tdo->drawviewable(2);
    }
 }
-// When toggled, the 2d overview goes into profile selection mode. When 
-// untoggled, 2d overview goes out of profile selection mode and the profile 
-// parameters are sent to the profile area.
+
+/*
+==================================
+ TwoDeeOverviewWindow::on_profiletoggle
+
+ When toggled, the 2d overview goes into profile selection mode. When
+ untoggled, 2d overview goes out of profile selection mode and the profile
+ parameters are sent to the profile area.
+==================================
+*/
 void TwoDeeOverviewWindow::on_profiletoggle()
 {
    if(profiletoggle->get_active())
@@ -554,10 +666,16 @@ void TwoDeeOverviewWindow::on_profiletoggle()
    }
 }
 
-// When toggled, this makes sure that the orthogonal toggle is in the opposite 
-// state and then sets the slanted shape on the overview and makes new profile 
-// and fence boundaries before redrawing the overview, possibly with the new 
-// boundaries for profile and/or fence displayed.
+/*
+==================================
+ TwoDeeOverviewWindow::on_slantedrectshapetoggle
+
+ When toggled, this makes sure that the orthogonal toggle is in the opposite
+ state and then sets the slanted shape on the overview and makes new profile
+ and fence boundaries before redrawing the overview, possibly with the new
+ boundaries for profile and/or fence displayed.
+==================================
+*/
 void TwoDeeOverviewWindow::on_slantedrectshapetoggle()
 {
 	tdo->getprofbox()->setorthogonalshape(!slantedrectshapetoggle->get_active());
@@ -569,11 +687,17 @@ void TwoDeeOverviewWindow::on_slantedrectshapetoggle()
 	if(tdo->is_realized())tdo->drawviewable(2);
 }
 
-// When the value in the spinbutton for slanted shape width is changed, tell the 
-// 2d overview, then make the new slanted box and then draw it. This does NOT 
-// update the profile itself (or, at least, not yet) if the slanted box is for 
-// a profile. To update the profile after the width has been satisfactorily 
-// adjusted, the profiletoggle must be toggled and then untoggled.
+/*
+==================================
+ TwoDeeOverviewWindow::on_slantwidthselected
+
+ When the value in the spinbutton for slanted shape width is changed, tell the
+ 2d overview, then make the new slanted box and then draw it. This does NOT
+ update the profile itself (or, at least, not yet) if the slanted box is for
+ a profile. To update the profile after the width has been satisfactorily
+ adjusted, the profiletoggle must be toggled and then untoggled.
+==================================
+*/
 void TwoDeeOverviewWindow::on_slantwidthselected()
 {
    tdo->getprofbox()->
@@ -590,19 +714,37 @@ void TwoDeeOverviewWindow::on_slantwidthselected()
       tdo->drawviewable(2);
 }
 
-//Opens the advanced options dialog.
+/*
+==================================
+ TwoDeeOverviewWindow::on_advancedbutton_clicked
+
+ Opens the advanced options dialog.
+==================================
+*/
 void TwoDeeOverviewWindow::on_advancedbutton_clicked()
 {
    aow->show(); 
 }
 
-//Show the help dialog when respective menu item activated.
+/*
+==================================
+ TwoDeeOverviewWindow::on_helpmenuactivated
+
+ Show the help dialog when respective menu item activated.
+==================================
+*/
 void TwoDeeOverviewWindow::on_helpmenuactivated()
 {
    help->present(); 
 }
 
-//Hide the help dialog when close button activated.
+/*
+==================================
+ TwoDeeOverviewWindow::on_helpresponse
+
+ Hide the help dialog when close button activated.
+==================================
+*/
 void TwoDeeOverviewWindow::on_helpresponse(int response_id)
 {
    if(response_id==0)
@@ -611,13 +753,25 @@ void TwoDeeOverviewWindow::on_helpresponse(int response_id)
    help->hide(); 
 }
 
-//Show the about dialog when respective menu item activated.
+/*
+==================================
+ TwoDeeOverviewWindow::on_aboutmenuactivated
+
+ Show the about dialog when respective menu item activated.
+==================================
+*/
 void TwoDeeOverviewWindow::on_aboutmenuactivated()
 {
    about->present(); 
 }
 
-//Hide the about dialog when close button activated.
+/*
+==================================
+ TwoDeeOverviewWindow::on_aboutresponse
+
+ Hide the about dialog when close button activated.
+==================================
+*/
 void TwoDeeOverviewWindow::on_aboutresponse(int response_id)
 {
    if(response_id==0)
@@ -626,7 +780,13 @@ void TwoDeeOverviewWindow::on_aboutresponse(int response_id)
    about->hide(); 
 }
 
-//When selected from the menu, the file saver opens.
+/*
+==================================
+ TwoDeeOverviewWindow::on_savefilemenuactivated
+
+ When selected from the menu, the file saver opens.
+==================================
+*/
 void TwoDeeOverviewWindow::on_savefilemenuactivated()
 {
    if(tdo->is_realized())
@@ -637,7 +797,13 @@ void TwoDeeOverviewWindow::on_savefilemenuactivated()
    fs->on_flightlinesaveselected();
 }
 
-//Interprets the keybaord signals from the EventBox.
+/*
+==================================
+ TwoDeeOverviewWindow::on_tdo_key_press
+
+ Interprets the keybaord signals from the EventBox.
+==================================
+*/
 bool TwoDeeOverviewWindow::on_tdo_key_press(GdkEventKey* event)
 {
    if(!tdo->is_realized())
@@ -724,7 +890,13 @@ bool TwoDeeOverviewWindow::on_tdo_key_press(GdkEventKey* event)
    return false;
 }
 
-//Determines which line is to be raised above the rest on the overview.
+/*
+==================================
+ TwoDeeOverviewWindow::on_raiselineselected
+
+ Determines which line is to be raised above the rest on the overview.
+==================================
+*/
 void TwoDeeOverviewWindow::on_raiselineselected()
 {
    tdo->setlinetoraise(raiselineselect->get_value_as_int());
@@ -734,7 +906,13 @@ void TwoDeeOverviewWindow::on_raiselineselected()
          tdo->drawviewable(1);
 }
 
-//Determines whether a line is to be raised.
+/*
+==================================
+ TwoDeeOverviewWindow::on_raiselinecheckmenu
+
+ Determines whether a line is to be raised.
+==================================
+*/
 void TwoDeeOverviewWindow::on_raiselinecheckmenu()
 {
    tdo->setraiseline(raiselinecheckmenu->get_active());
@@ -742,11 +920,21 @@ void TwoDeeOverviewWindow::on_raiselinecheckmenu()
       tdo->drawviewable(1);
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::get_profilewindow
+==================================
+*/
 Gtk::Window* TwoDeeOverviewWindow::get_profilewindow()
 {
 	return profilewindow;
 }
 
+/*
+==================================
+ TwoDeeOverviewWindow::set_utm_zone
+==================================
+*/
 void TwoDeeOverviewWindow::set_utm_zone(std::string zone)
 {
 	tdo->set_utm_zone(zone);

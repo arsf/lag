@@ -30,6 +30,12 @@
 #include <vector>
 #include "ProfileWindow.h"
 
+
+/*
+==================================
+ ProfileWindow::ProfileWindow
+==================================
+*/
 ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *profilewindow, Gtk::Window *overviewwindow,
 							 Gtk::EventBox *eventboxprof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow)
 :
@@ -68,6 +74,11 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 	prof->setslanted(slantedprof->get_active());
 }
 
+/*
+==================================
+ ProfileWindow::~ProfileWindow
+==================================
+*/
 ProfileWindow::~ProfileWindow()
 {
    delete classificationselect;
@@ -93,6 +104,11 @@ ProfileWindow::~ProfileWindow()
    delete heightsexcludenoise;
 }
 
+/*
+==================================
+ ProfileWindow::load_xml
+==================================
+*/
 void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
 	builder->get_widget("showheightscalecheck", 			showheightscalecheck);
@@ -123,6 +139,11 @@ void ProfileWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("heightsexcludenoise",		        heightsexcludenoise);
 }
 
+/*
+==================================
+ ProfileWindow::connect_signals
+==================================
+*/
 void ProfileWindow::connect_signals()
 {
 	eventboxprof->signal_key_press_event().connect(sigc::mem_fun(*this,&ProfileWindow::on_prof_key_press));
@@ -151,11 +172,21 @@ void ProfileWindow::connect_signals()
 	heightsbuttonprof->signal_clicked().connect(sigc::mem_fun(*this,&ProfileWindow::on_heightsbuttonprof_clicked));
 }
 
+/*
+==================================
+ ProfileWindow::on_refreshbutton_clicked
+==================================
+*/
 void ProfileWindow::on_refreshbutton_clicked()
 {
 	if (prof->get_realized()) prof->drawviewable(1);
 }
 
+/*
+==================================
+ ProfileWindow::on_heightsbuttonprof_clicked
+==================================
+*/
 void ProfileWindow::on_heightsbuttonprof_clicked()
 {
 	Gtk::MessageDialog dialog("Average heights for flightlines", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
@@ -187,13 +218,26 @@ void ProfileWindow::on_heightsbuttonprof_clicked()
 	dialog.run();
 }
 
-//When toggled, the height scale is shown on the profile.
+/*
+==================================
+ ProfileWindow::on_showheightscalecheck
+
+ When toggled, the height scale is shown on the profile.
+==================================
+*/
 void ProfileWindow::on_showheightscalecheck()
 {
    prof->setshowheightscale(showheightscalecheck->get_active());
    if(prof->is_realized())prof->drawviewable(2);
 }
-//Does the same as on_colouractivated, except for the profile.
+
+/*
+==================================
+ ProfileWindow::on_colouractivatedprof
+
+ Does the same as on_colouractivated, except for the profile.
+==================================
+*/
 void ProfileWindow::on_colouractivatedprof()
 {
    if (colourbyintensitymenuprof->get_active())
@@ -212,7 +256,14 @@ void ProfileWindow::on_colouractivatedprof()
    if(prof->is_realized())
 	   prof->drawviewable(1);
 }
-//Does the same as on_brightnessactivated, except for the profile.
+
+/*
+==================================
+ ProfileWindow::on_brightnessactivatedprof
+
+ Does the same as on_brightnessactivated, except for the profile.
+==================================
+*/
 void ProfileWindow::on_brightnessactivatedprof()
 {
    if (brightnessbyintensitymenuprof->get_active())
@@ -225,7 +276,13 @@ void ProfileWindow::on_brightnessactivatedprof()
    if(prof->is_realized())prof->drawviewable(1);
 }
 
-//This grabs the profile from the overview.
+/*
+==================================
+ ProfileWindow::on_showprofilebutton_clicked
+
+ This grabs the profile from the overview.
+==================================
+*/
 void ProfileWindow::on_showprofilebutton_clicked()
 {
    if(tdo->is_realized())
@@ -273,6 +330,11 @@ void ProfileWindow::on_showprofilebutton_clicked()
    }
 }
 
+/*
+==================================
+ ProfileWindow::profile_loaded
+==================================
+*/
 void ProfileWindow::profile_loaded()
 {
 	delete profileworker;
@@ -287,6 +349,11 @@ void ProfileWindow::profile_loaded()
     prof->draw_profile(true);
 }
 
+/*
+==================================
+ ProfileWindow::make_busy_cursor
+==================================
+*/
 void ProfileWindow::make_busy_cursor(bool busy)
 {
 	{
@@ -319,14 +386,26 @@ void ProfileWindow::make_busy_cursor(bool busy)
 	}
 }
 
-//This returns the profile to its original position.
+/*
+==================================
+ ProfileWindow::on_returnbuttonprof_clicked
+
+ This returns the profile to its original position.
+==================================
+*/
 void ProfileWindow::on_returnbuttonprof_clicked()
 {
    if(prof->is_realized())
 	   prof->returntostart();
 }
 
-//Does the same as on_pointwidthselected, except for the profile.
+/*
+==================================
+ ProfileWindow::on_pointwidthselectedprof
+
+ Does the same as on_pointwidthselected, except for the profile.
+==================================
+*/
 void ProfileWindow::on_pointwidthselectedprof()
 {
    prof->setpointwidth(pointwidthselectprof->get_value());
@@ -334,7 +413,13 @@ void ProfileWindow::on_pointwidthselectedprof()
 	   prof->drawviewable(2);
 }
 
-//Determines whether to display the points on the profile.
+/*
+==================================
+ ProfileWindow::on_pointshowtoggle
+
+ Determines whether to display the points on the profile.
+==================================
+*/
 void ProfileWindow::on_pointshowtoggle()
 {
    prof->setdrawpoints(pointshowtoggle->get_active());
@@ -342,7 +427,13 @@ void ProfileWindow::on_pointshowtoggle()
 	   prof->drawviewable(1);
 }
 
-//Determines whether to display the (best fit) lines on the profile.
+/*
+==================================
+ ProfileWindow::on_lineshowtoggle
+
+ Determines whether to display the (best fit) lines on the profile.
+==================================
+*/
 void ProfileWindow::on_lineshowtoggle()
 {
    prof->setdrawmovingaverage(lineshowtoggle->get_active());
@@ -350,8 +441,14 @@ void ProfileWindow::on_lineshowtoggle()
 	   prof->drawviewable(1);
 }
 
-// The best fit is a moving average, and this changes the range, and 
-// therefore the shape of the line.
+/*
+==================================
+ ProfileWindow::on_movingaveragerangeselect
+
+ The best fit is a moving average, and this changes the range, and
+ therefore the shape of the line.
+==================================
+*/
 void ProfileWindow::on_movingaveragerangeselect()
 {
    prof->setmavrgrange(movingaveragerangeselect->get_value());
@@ -360,7 +457,13 @@ void ProfileWindow::on_movingaveragerangeselect()
 	   prof->drawviewable(1);
 }
 
-//This classifies the points surrounded by the fence.
+/*
+==================================
+ ProfileWindow::on_classbutton_clicked
+
+ This classifies the points surrounded by the fence.
+==================================
+*/
 void ProfileWindow::on_classbutton_clicked()
 {
 	if (classifyworker != NULL)
@@ -385,6 +488,11 @@ void ProfileWindow::on_classbutton_clicked()
 	}
 }
 
+/*
+==================================
+ ProfileWindow::points_classified
+==================================
+*/
 void ProfileWindow::points_classified()
 {
 	delete classifyworker;
@@ -407,7 +515,13 @@ void ProfileWindow::set_statusbar_label(std::string text)
 	profstatuslabel->set_text(text);
 }
 
-//Toggles whether clicking and dragging will select the fence in the profile.
+/*
+==================================
+ ProfileWindow::on_fencetoggleprof
+
+ Toggles whether clicking and dragging will select the fence in the profile.
+==================================
+*/
 void ProfileWindow::on_fencetoggleprof()
 {
    if(fencetoggleprof->get_active())
@@ -428,12 +542,22 @@ void ProfileWindow::on_fencetoggleprof()
    }
 }
 
+/*
+==================================
+ ProfileWindow::on_slantwidthselectedprof
+==================================
+*/
 void ProfileWindow::on_slantwidthselectedprof()
 {
    prof->setslantwidth(slantwidthselectprof->get_value());
    if(prof->is_realized())prof->drawviewable(1);
 }
 
+/*
+==================================
+ ProfileWindow::on_slantedprof
+==================================
+*/
 void ProfileWindow::on_slantedprof()
 {
 
@@ -443,8 +567,14 @@ void ProfileWindow::on_slantedprof()
       prof->drawviewable(1);
 }
 
-// When toggled, the profile view goes into rulering mode. When untoggled, 
-// rulering mode ends.
+/*
+==================================
+ ProfileWindow::on_rulertoggle
+
+ When toggled, the profile view goes into rulering mode. When untoggled,
+ rulering mode ends.
+==================================
+*/
 void ProfileWindow::on_rulertoggle()
 {
    if(rulertoggle->get_active())
@@ -466,13 +596,24 @@ void ProfileWindow::on_rulertoggle()
    }
 }
 
+/*
+==================================
+ ProfileWindow::set_classification
+==================================
+*/
 void ProfileWindow::set_classification(double classification)
 {
 	classificationselect->set_value(classification);
 }
 
-// This takes keyboard input from the event box around the profile area and 
-// interprets it.
+/*
+==================================
+ ProfileWindow::on_prof_key_press
+
+ This takes keyboard input from the event box around the profile area and
+ interprets it.
+==================================
+*/
 bool ProfileWindow::on_prof_key_press(GdkEventKey* event)
 {
    // Do nothing unless the overview and profile are realized, otherwise 
@@ -599,6 +740,11 @@ bool ProfileWindow::on_prof_key_press(GdkEventKey* event)
    }
 }
 
+/*
+==================================
+ ProfileWindow::on_profile_shift
+==================================
+*/
 bool ProfileWindow::on_profile_shift(GdkEventKey* event)
 {
    //Translate signal to be compatible with called methods.
@@ -640,12 +786,14 @@ bool ProfileWindow::on_profile_shift(GdkEventKey* event)
    int profps = 0;
    if(tdo->is_realized())
       tdo->getprofile(profxs,profys,profps);
+
    // Changed centre x and y values etc. so that points in profile remain 
    // within the viewing box (i.e. the clipping planes).
    if(!profxs.empty()&&!profys.empty())
    {
       shifted = prof->shift_viewing_parameters(event,aow->getmovespeed());
       if(!shifted)return shifted;
+
       // Showprofile uses the getpoint() method, and that must never be used 
       // by more than one thread at once.
       tdo->setpausethread(true);
