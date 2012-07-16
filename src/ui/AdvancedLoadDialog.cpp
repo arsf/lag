@@ -1,14 +1,38 @@
 /*
- ==================================
+===============================================================================
+
  AdvancedLoadDialog.cpp
 
  Created on: 25 Jun 2012
- Author: jaho
- ==================================
- */
+ Authors: Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
 
 #include "AdvancedLoadDialog.h"
 
+
+/*
+==================================
+ AdvancedLoadDialog::AdvancedLoadDialog
+==================================
+*/
 AdvancedLoadDialog::AdvancedLoadDialog(const Glib::RefPtr<Gtk::Builder>& builder) :
 	point_filter	()
 {
@@ -17,6 +41,11 @@ AdvancedLoadDialog::AdvancedLoadDialog(const Glib::RefPtr<Gtk::Builder>& builder
 	connect_signals();
 }
 
+/*
+==================================
+ AdvancedLoadDialog::~AdvancedLoadDialog
+==================================
+*/
 AdvancedLoadDialog::~AdvancedLoadDialog()
 {
 	delete inside_rectangle_cb;
@@ -67,6 +96,11 @@ AdvancedLoadDialog::~AdvancedLoadDialog()
 	delete advanced_load_dialog;
 }
 
+/*
+==================================
+ AdvancedLoadDialog::load_xml
+==================================
+*/
 void AdvancedLoadDialog::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
 	builder->get_widget("loadadvanceddialog", advanced_load_dialog);
@@ -121,6 +155,11 @@ void AdvancedLoadDialog::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("loadadvancedok", ok_btn);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::connect_signals
+==================================
+*/
 void AdvancedLoadDialog::connect_signals()
 {
 	inside_rectangle_cb->signal_toggled().connect(sigc::mem_fun(*this,&AdvancedLoadDialog::on_inside_rectangle_cb_toggled));
@@ -140,6 +179,11 @@ void AdvancedLoadDialog::connect_signals()
 	ok_btn->signal_clicked().connect(sigc::mem_fun(*this,&AdvancedLoadDialog::on_ok_btn_clicked));
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_inside_rectangle_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_inside_rectangle_cb_toggled()
 {
 	bool toggled = inside_rectangle_cb->get_active();
@@ -149,6 +193,11 @@ void AdvancedLoadDialog::on_inside_rectangle_cb_toggled()
 	inside_rectangle_max_y->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_inside_box_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_inside_box_cb_toggled()
 {
 	bool toggled = inside_box_cb->get_active();
@@ -160,6 +209,11 @@ void AdvancedLoadDialog::on_inside_box_cb_toggled()
 	inside_box_max_z->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_inside_circle_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_inside_circle_cb_toggled()
 {
 	bool toggled = inside_circle_cb->get_active();
@@ -168,6 +222,11 @@ void AdvancedLoadDialog::on_inside_circle_cb_toggled()
 	inside_circle_radius->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_clip_x_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_clip_x_cb_toggled()
 {
 	bool toggled = clip_x_cb->get_active();
@@ -175,6 +234,11 @@ void AdvancedLoadDialog::on_clip_x_cb_toggled()
 	clip_x_below->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_clip_y_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_clip_y_cb_toggled()
 {
 	bool toggled = clip_y_cb->get_active();
@@ -183,6 +247,11 @@ void AdvancedLoadDialog::on_clip_y_cb_toggled()
 	clip_y_below->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_clip_z_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_clip_z_cb_toggled()
 {
 	bool toggled = clip_z_cb->get_active();
@@ -190,6 +259,11 @@ void AdvancedLoadDialog::on_clip_z_cb_toggled()
 	clip_z_below->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_return_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_return_cb_toggled()
 {
 	bool toggled = return_cb->get_active();
@@ -197,6 +271,11 @@ void AdvancedLoadDialog::on_return_cb_toggled()
 	return_drop_btn->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_intensity_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_intensity_cb_toggled()
 {
 	bool toggled = intensity_cb->get_active();
@@ -205,6 +284,11 @@ void AdvancedLoadDialog::on_intensity_cb_toggled()
 	intensity_drop_btn->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_classification_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_classification_cb_toggled()
 {
 	bool toggled = classification_cb->get_active();
@@ -212,6 +296,11 @@ void AdvancedLoadDialog::on_classification_cb_toggled()
 	classification_drop_btn->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_gps_time_cb_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_gps_time_cb_toggled()
 {
 	bool toggled = gps_time_cb->get_active();
@@ -220,6 +309,11 @@ void AdvancedLoadDialog::on_gps_time_cb_toggled()
 	gps_time_drop_btn->set_sensitive(toggled);
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_return_drop_btn_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_return_drop_btn_toggled()
 {
 	if (return_drop_btn->get_active())
@@ -228,6 +322,11 @@ void AdvancedLoadDialog::on_return_drop_btn_toggled()
 		return_drop_btn->set_label("Keep");
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_intensity_drop_btn_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_intensity_drop_btn_toggled()
 {
 	if (intensity_drop_btn->get_active())
@@ -236,6 +335,11 @@ void AdvancedLoadDialog::on_intensity_drop_btn_toggled()
 			intensity_drop_btn->set_label("Keep");
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_classification_drop_btn_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_classification_drop_btn_toggled()
 {
 	if (classification_drop_btn->get_active())
@@ -244,6 +348,11 @@ void AdvancedLoadDialog::on_classification_drop_btn_toggled()
 			classification_drop_btn->set_label("Keep");
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_gps_time_drop_btn_toggled
+==================================
+*/
 void AdvancedLoadDialog::on_gps_time_drop_btn_toggled()
 {
 	if (gps_time_drop_btn->get_active())
@@ -252,6 +361,15 @@ void AdvancedLoadDialog::on_gps_time_drop_btn_toggled()
 			gps_time_drop_btn->set_label("Keep");
 }
 
+/*
+==================================
+ AdvancedLoadDialog::on_ok_btn_clicked
+
+ This function builds a commandline-like string for
+ a PointFilter, which is then passed to LASfilter.parse()
+ method. If filters have not been set PointFilter::argc = 0.
+==================================
+*/
 void AdvancedLoadDialog::on_ok_btn_clicked()
 {
 	point_filter.args.clear();

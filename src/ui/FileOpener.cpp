@@ -1,25 +1,30 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: FileOpener.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- * */
+===============================================================================
+
+ FileOpener.cpp
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
@@ -27,10 +32,14 @@
 #include "../Profile.h"
 #include "../SelectionBox.h"
 #include "FileOpener.h"
-
-#define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
 
+
+/*
+==================================
+ FileOpener::FileOpener
+==================================
+*/
 FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder, AdvancedOptionsWindow *aow, FileSaver *fs,
            	   	   	   int bucketlimit, Gtk::EventBox *eventboxtdo, Gtk::EventBox *eventboxprof, TwoDeeOverviewWindow *tdow, AdvancedLoadDialog* ald)
 :
@@ -64,14 +73,12 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	cachelimit = 35000000;
 
 	cachesizeselect->set_range(10e6,10e11);
-
 	cachesizeselect->set_value(350e5);
 	cachesizeselect->set_increments(10e5,10e5);
 
 	resbaseselect->set_range(2,1000);
 	resbaseselect->set_value(5);
 	resbaseselect->set_increments(1,1);
-
 	resdepthselect->set_range(1,10);
 	resdepthselect->set_value(4);
 	resdepthselect->set_increments(1,1);
@@ -93,7 +100,11 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	on_usedefault_changed();
 }
 
-
+/*
+==================================
+ FileOpener::~FileOpener
+==================================
+*/
 FileOpener::~FileOpener()
 {
    delete loadoutputlabel;
@@ -114,10 +125,14 @@ FileOpener::~FileOpener()
    delete totalprogressbar;
    delete loadcancelbutton;
    delete loaddialog;
-   //Have to delete parent after children?
    delete filechooserdialog;
 }
 
+/*
+==================================
+ FileOpener::load_xml
+==================================
+*/
 void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
 	builder->get_widget("openfilemenuitem",openfilemenuitem);
@@ -148,10 +163,14 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("loadadvancedbutton",loadadvancedbutton);
 	builder->get_widget("loadadvanceddialog",loadadvanceddialog);
 	builder->get_widget("loadadvancedcancel",loadadvancedcancel);
-
 	builder->get_widget("cachefolderselect",cache_folder_select);
 }
 
+/*
+==================================
+ FileOpener::connect_signals
+==================================
+*/
 void FileOpener::connect_signals()
 {
 	openfilemenuitem->signal_activate().connect(sigc::mem_fun(*this,&FileOpener::on_openfilemenuactivated));
@@ -162,21 +181,35 @@ void FileOpener::connect_signals()
 	resbaseselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileOpener::on_resolutionbase_changed));
     Gtk::Main::signal_quit().connect(sigc::mem_fun(*this, &FileOpener::on_quit));
     loadcancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileOpener::on_loadcancelbutton_clicked));
-
     loadadvancedbutton->signal_clicked().connect(sigc::mem_fun(*this, &FileOpener::on_loadadvancedbutton_clicked));
     loadadvancedcancel->signal_clicked().connect(sigc::mem_fun(*this, &FileOpener::on_loadadvancedcancel_clicked));
 }
 
+/*
+==================================
+ FileOpener::on_loadadvancedbutton_clicked
+==================================
+*/
 void FileOpener::on_loadadvancedbutton_clicked()
 {
 	loadadvanceddialog->show_all();
 }
 
+/*
+==================================
+ FileOpener::on_loadadvancedcancel_clicked
+==================================
+*/
 void FileOpener::on_loadadvancedcancel_clicked()
 {
 	loadadvanceddialog->hide_all();
 }
 
+/*
+==================================
+ FileOpener::on_quit
+==================================
+*/
 int FileOpener::on_quit()
 {
 	Gtk::Window* profw = tdow->get_profilewindow();
@@ -194,12 +227,17 @@ int FileOpener::on_quit()
 	{
 		std::cout << "Removing temporary file: "
 				<< LoadWorker::point_data_paths[i].c_str() << std::endl;
-      boost::filesystem::remove(LoadWorker::point_data_paths[i]);
+		remove(LoadWorker::point_data_paths[i].c_str());
 	}
 
 	return 0;
 }
 
+/*
+==================================
+ FileOpener::on_usedefault_changed
+==================================
+*/
 void FileOpener::on_usedefault_changed()
 {
 	bool temp = !(btnUseDefault->get_active());
@@ -209,7 +247,11 @@ void FileOpener::on_usedefault_changed()
 	scaleFactorEntryZ->set_sensitive(temp);
 }
 
-
+/*
+==================================
+ FileOpener::on_resolutionbase_changed
+==================================
+*/
 void FileOpener::on_resolutionbase_changed()
 {
    //This is absolutely vital to prevent an overflow.
@@ -299,7 +341,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
                         btnUseDefault->get_active(), scale_factor,
                         asciicodeentry->get_text(), fence,
                         ald->get_point_filter(),
-                        fs::path(cache_folder_select->get_current_folder()));
+                        boost::filesystem::path(cache_folder_select->get_current_folder()));
 
 	   // Show loading dialog
 	   loaddialog->show_all();
@@ -338,6 +380,13 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
    }
 }
 
+/*
+==================================
+ FileOpener::on_progress
+
+ Moves the progress bar by 1%.
+==================================
+*/
 void FileOpener::on_progress()
 {
 	double file_progress = fileprogressbar->get_fraction() + 0.01;
@@ -352,6 +401,13 @@ void FileOpener::on_progress()
 	totalprogressbar->set_fraction(total_progress);
 }
 
+/*
+==================================
+ FileOpener::show_thread_message
+
+ Displays thread_message in the load output area.
+==================================
+*/
 void FileOpener::show_thread_message()
 {
 	{
@@ -362,6 +418,13 @@ void FileOpener::show_thread_message()
 	Gdk::Window::process_all_updates();
 }
 
+/*
+==================================
+ FileOpener::add_line
+
+ Increases the number of loaded lines by one. Used on saving.
+==================================
+*/
 void FileOpener::add_line()
 {
 	++numlines;
@@ -372,6 +435,13 @@ void FileOpener::add_line()
 	fileprogressbar->set_fraction(0);
 }
 
+/*
+==================================
+ FileOpener::load_failed
+
+ Gets called if the loading has failed.
+==================================
+*/
 void FileOpener::load_failed()
 {
 	delete loadworker;
@@ -396,6 +466,13 @@ void FileOpener::load_failed()
 	gdk_cursor_unref(cursor);
 }
 
+/*
+==================================
+ FileOpener::files_loaded
+
+ Gets called after files have been loaded.
+==================================
+*/
 void FileOpener::files_loaded()
 {
 	fileprogressbar->set_fraction(1.0);
@@ -448,7 +525,7 @@ void FileOpener::files_loaded()
 		try
 		{
 			flightline = lidardata->getFileName(i);
-		} catch (DescriptiveException e)
+		} catch (DescriptiveException& e)
 		{
 			std::cout << "Failed getting name for flightline number: " << i << "\n"
 					<< e.why() << std::endl;
@@ -484,8 +561,14 @@ void FileOpener::files_loaded()
 	gdk_cursor_unref(cursor);
 }
 
-// When the cachesize (in points) is changed, this outputs the value in 
-// Gigabytes (NOT Gibibytes) to a label next to it.
+/*
+==================================
+ FileOpener::on_cachesize_changed
+
+ When the cachesize (in points) is changed, this outputs the value in
+ Gigabytes to a label next to it.
+==================================
+*/
 void FileOpener::on_cachesize_changed()
 {
    ostringstream GB;
@@ -494,12 +577,23 @@ void FileOpener::on_cachesize_changed()
    cachesizeGBlabel->set_text(labelstring);
 }
 
-//When selected from the menu, the file chooser opens.
+/*
+==================================
+ AdvancedOptionsWindow::AdvancedOptionsWindow
+
+ When selected from the menu, the file chooser opens.
+==================================
+*/
 void FileOpener::on_openfilemenuactivated()
 {
    show(); 
 }
 
+/*
+==================================
+ AdvancedOptionsWindow::AdvancedOptionsWindow
+==================================
+*/
 void FileOpener::on_loadcancelbutton_clicked()
 {
 	if (loadworker)

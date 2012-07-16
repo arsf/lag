@@ -1,25 +1,29 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: AdvancedOptionsWindow.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- */
+===============================================================================
+
+ AdvancedLoadDialog.h
+
+ Created on: 25 Jun 2012
+ Authors: Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
 
 #include <gtkmm.h>
 #include <gtkglmm.h>
@@ -28,27 +32,36 @@
 #include "../Profile.h"
 #include "AdvancedOptionsWindow.h"
 
+
+/*
+==================================
+ AdvancedOptionsWindow::AdvancedOptionsWindow
+==================================
+*/
 AdvancedOptionsWindow::AdvancedOptionsWindow(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder)
 :
 		tdo		(tdo),
 		prof	(prof)
 {
 	load_xml(builder);
+	connect_signals();
 
 	movespeedselect->set_value(10.00);
     maindetailselect->set_value(1.50);
     previewdetailselectprof->set_value(2.0);
-
-    connect_signals();
 
     tdo->setmaindetail(maindetailselect->get_value());
     prof->setmaindetail(maindetailselectprof->get_value());
     prof->setpreviewdetail(previewdetailselectprof->get_value());
 }
 
+/*
+==================================
+ AdvancedOptionsWindow::~AdvancedOptionsWindow
+==================================
+*/
 AdvancedOptionsWindow::~AdvancedOptionsWindow()
 {
-   // Really a deleting the parent will clean up the children
    delete fullrefreshonpanning;
    delete backgroundcolorbutton;
    delete classcheckbutton0;
@@ -79,6 +92,11 @@ AdvancedOptionsWindow::~AdvancedOptionsWindow()
    delete advancedoptionsdialog;
 }
 
+/*
+==================================
+ AdvancedOptionsWindow::load_xml
+==================================
+*/
 void AdvancedOptionsWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
 	builder->get_widget("advancedoptionsdialog",advancedoptionsdialog);
@@ -115,6 +133,11 @@ void AdvancedOptionsWindow::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("backgroundcolorbutton", backgroundcolorbutton);
 }
 
+/*
+==================================
+ AdvancedOptionsWindow::connect_signals
+==================================
+*/
 void AdvancedOptionsWindow::connect_signals()
 {
 	advancedoptionsdialog->signal_response().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_advancedoptionsdialog_response));
@@ -149,16 +172,19 @@ void AdvancedOptionsWindow::connect_signals()
 	backgroundcolorbutton->signal_color_set().connect(sigc::mem_fun(*this,&AdvancedOptionsWindow::on_backgroundcolor_changed));
 }
 
-// Callback functions
+/*
+==================================
+ AdvancedOptionsWindow::on_advancedoptionsdialog_response
 
-//Closes the advanced options dialog.
+ Closes the advanced options dialog.
+==================================
+*/
 void AdvancedOptionsWindow::on_advancedoptionsdialog_response(int response_id)
 {
    response_id=0;
    advancedoptionsdialog->hide(); 
 }
 
-//The checkbuttons and their activations:
 void AdvancedOptionsWindow::on_fullrefresh_toggled()
 {
 	if(fullrefreshonpanning->get_active())
@@ -254,10 +280,13 @@ void AdvancedOptionsWindow::on_tdo_noise_toggle()
    tdo->toggleNoise();
 }
 
-//The drawing settings:
+// The drawing settings:
+// =====================
+
 void AdvancedOptionsWindow::changecoloursandshades()
 {
-   /* Please note that there is a reason why the profile is updated before the 
+   /*
+    * Please note that there is a reason why the profile is updated before the
     * overview: if it is the other way around then the overview's drawing 
     * thread would be running so it will be unpredictable which part will 
     * execute opengl code first, which can sometimes mean that the overview 
@@ -391,10 +420,12 @@ bool AdvancedOptionsWindow::on_intensityscrollbar_scrolled(Gtk::ScrollType scrol
    }
 
    if(new_value + intensityscrollbar->get_adjustment()->get_page_size() > intensityscrollbar->get_adjustment()->get_upper())
-      // New upper value (new_value plus page size) must not exceed the maximum 
+   {
+	  // New upper value (new_value plus page size) must not exceed the maximum
       // possible value, otherwise it might mess things up when used to set the 
       // ranges, below.
       new_value = intensityscrollbar->get_adjustment()->get_upper() - intensityscrollbar->get_adjustment()->get_page_size();
+   }
 
    if(new_value == intensityminselect->get_value())
       return true;
@@ -431,9 +462,15 @@ void AdvancedOptionsWindow::on_intensityfloorselect_changed()
    changecoloursandshades();
 }
 
-// This resets the advanced colouring and shading options to the values 
-//  indicated by the drawing objects.
+/*
+==================================
+ AdvancedOptionsWindow::on_drawingresetbutton_clicked
  
+ Draws as a result of the other callbacks, and only does so once because of
+ threading, so it may be prudent to change this in the future so
+ that there is only ever one call.
+==================================
+*/
 void AdvancedOptionsWindow::on_drawingresetbutton_clicked()
 {
    heightmaxselect->set_range(tdo->getrminz()+0.01,tdo->getrmaxz());
@@ -456,15 +493,17 @@ void AdvancedOptionsWindow::on_drawingresetbutton_clicked()
    intensityscrollbar->set_increments(1,tdo->getrmaxintensity() - tdo->getrminintensity());
    intensityoffsetselect->set_value(0);
    intensityfloorselect->set_value(0);
-
-   // Draws as a result of the other callbacks, and only does so once because of
-   // threading, so it may be prudent to change this in the future so 
-   // that there is only ever one call.
 }
 
-// This indirectly determines how many points are skipped when viewing the 
-// main overview image. I.e. this affects it as well as the number of 
-// visible buckets.
+/*
+==================================
+ AdvancedOptionsWindow::on_maindetailselected
+
+ This indirectly determines how many points are skipped when viewing the
+ main overview image. I.e. this affects it as well as the number of
+ visible buckets.
+==================================
+*/
 void AdvancedOptionsWindow::on_maindetailselected()
 {
    tdo->setmaindetail(maindetailselect->get_value());
@@ -472,7 +511,13 @@ void AdvancedOptionsWindow::on_maindetailselected()
       tdo->drawviewable(1);
 }
 
-// Does the same as on_maindetailselected, except for the profile.
+/*
+==================================
+ AdvancedOptionsWindow::on_maindetailselectedprof
+
+ Does the same as on_maindetailselected, except for the profile.
+==================================
+*/
 void AdvancedOptionsWindow::on_maindetailselectedprof()
 {
    prof->setmaindetail(maindetailselectprof->get_value());
@@ -480,8 +525,14 @@ void AdvancedOptionsWindow::on_maindetailselectedprof()
       prof->drawviewable(1);
 }
 
-// Does the same as on_maindetailselectedprof, except for the preview of the 
-// profile.
+/*
+==================================
+ AdvancedOptionsWindow::on_previewdetailselectedprof
+
+ Does the same as on_maindetailselectedprof, except for the preview of the
+ profile.
+==================================
+*/
 void AdvancedOptionsWindow::on_previewdetailselectedprof()
 {
    prof->setpreviewdetail(previewdetailselectprof->get_value());
@@ -489,6 +540,13 @@ void AdvancedOptionsWindow::on_previewdetailselectedprof()
       prof->drawviewable(2);
 }
 
+/*
+==================================
+ AdvancedOptionsWindow::on_backgroundcolor_changed
+
+ Sets the background colour for profile and the overview.
+==================================
+*/
 void AdvancedOptionsWindow::on_backgroundcolor_changed()
 {
 	Gdk::Color c = backgroundcolorbutton->get_color();

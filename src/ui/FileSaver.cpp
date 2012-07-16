@@ -1,25 +1,30 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: FileSaver.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: June-July 2010
- *
- * */
+===============================================================================
+
+ FileSaver.cpp
+
+ Created on: June-July 2010
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <vector>
@@ -27,6 +32,12 @@
 #include "../Profile.h"
 #include "FileSaver.h"
 
+
+/*
+==================================
+ FileSaver::FileSaver
+==================================
+*/
 FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder)
 :
 		lidardata	(NULL),
@@ -40,6 +51,11 @@ FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk:
   utmselect->set_active(true);
 }
 
+/*
+==================================
+ FileSaver::~FileSaver
+==================================
+*/
 FileSaver::~FileSaver()
 {
    delete flightlinelistlabel;
@@ -57,10 +73,14 @@ FileSaver::~FileSaver()
    delete waveformdialog;
    delete waveformprogressbar;
    delete waveformcancelbutton;
-   //Have to delete parent after children?
    delete filesaverdialog;
 }
 
+/*
+==================================
+ FileSaver::load_xml
+==================================
+*/
 void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
 	builder->get_widget("filesaverdialog",filesaverdialog);
@@ -81,6 +101,11 @@ void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("waveformcancelbutton", waveformcancelbutton);
 }
 
+/*
+==================================
+ FileSaver::connect_signals
+==================================
+*/
 void FileSaver::connect_signals()
 {
 	filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
@@ -90,6 +115,13 @@ void FileSaver::connect_signals()
 	waveformcancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileSaver::on_savecancelbutton_clicked));
 }
 
+/*
+==================================
+ FileSaver::on_usedefault_changed
+
+ Whether library deafult scale factor values should be used.
+==================================
+*/
 void FileSaver::on_usedefault_changed()
 {
 	bool temp = !(btnUseDefault->get_active());
@@ -99,6 +131,14 @@ void FileSaver::on_usedefault_changed()
 	scaleFactorEntryZ->set_sensitive(temp);
 }
 
+/*
+==================================
+ FileSaver::on_filesaverdialogresponse
+
+ If Save button has been pressed creates a SaveWorker which
+ saves selected flightline.
+==================================
+*/
 void FileSaver::on_filesaverdialogresponse(int response_id)
 {
    if(response_id == Gtk::RESPONSE_CLOSE)
@@ -156,22 +196,51 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
    }
 }
 
+/*
+==================================
+ FileSaver::on_progress
+
+ Moves saving progress bar by 1%.
+==================================
+*/
 void FileSaver::on_progress()
 {
 	saveprogressbar->set_fraction((saveprogressbar->get_fraction() + 0.01) > 1 ? 1 : (saveprogressbar->get_fraction() + 0.01));
 }
 
+/*
+==================================
+ FileSaver::waveform_started
+
+ Displays a dialog showing progress for copying
+ full waveform data.
+==================================
+*/
 void FileSaver::waveform_started()
 {
 	waveformdialog->show_all();
 	waveformprogressbar->set_fraction(0);
 }
 
+/*
+==================================
+ FileSaver::on_waveform_progress
+
+ Moves waveform progress bar by 1%.
+==================================
+*/
 void FileSaver::on_waveform_progress()
 {
 	waveformprogressbar->set_fraction((waveformprogressbar->get_fraction() + 0.01) > 1 ? 1 : (waveformprogressbar->get_fraction() + 0.01));
 }
 
+/*
+==================================
+ FileSaver::files_saved
+
+ Called once the files has been saved.
+==================================
+*/
 void FileSaver::files_saved()
 {
 	delete saveworker;
@@ -196,13 +265,26 @@ void FileSaver::files_saved()
 	gdk_cursor_unref(cursor);
 }
 
+/*
+==================================
+ FileSaver::on_savecancelbutton_clicked
+
+ Stops saving.
+==================================
+*/
 void FileSaver::on_savecancelbutton_clicked()
 {
 	if (saveworker != NULL)
 		saveworker->stop();
 }
 
+/*
+==================================
+ FileSaver::on_flightlinesaveselected
 
+ Not used?
+==================================
+*/
 void FileSaver::on_flightlinesaveselected()
 {
    if(lidardata!=NULL)

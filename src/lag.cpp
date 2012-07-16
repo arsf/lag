@@ -73,7 +73,7 @@ string findgladepath(char* programpath)
 
 	fs::path gladepath(exepath);
 	gladepath = fs::system_complete(gladepath).remove_filename();
-	gladepath /= ".." / "share" / "lag" / "lag.ui";
+	gladepath /= "../share/lag/lag.ui";
 
 	if (glade_exists(gladepath))
 	{
