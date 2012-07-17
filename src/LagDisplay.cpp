@@ -31,6 +31,9 @@
 #include <iostream>
 #include "Quadtree.h"
 #include "PointBucket.h"
+#ifdef __WIN32 // glx.h uses EXTERN everywhere for __WIN32, breaking things
+#define EXTERN extern
+#endif
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -78,7 +81,7 @@ LagDisplay::LagDisplay(boost::filesystem::path fontpath,
 		blue				(0.0),
 		alpha				(0.0)
 {
-	fontpath /= "fonts" / "DejaVuSansMono.ttf";
+   fontpath = fontpath / "fonts/DejaVuSansMono.ttf";
 }
 
 /*

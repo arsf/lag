@@ -40,6 +40,10 @@
 #include "ui/FileOpener.h"
 #include "ui/AdvancedLoadDialog.h"
 
+#ifdef __WIN32
+#include <winbase.h>
+#endif
+
 using namespace std;
 namespace fs = boost::filesystem;
 
@@ -76,7 +80,7 @@ string findgladepath(char* programpath)
 	// Find the path of the executable
 	char buff[1024];
 	ssize_t len;
-#ifdef _WIN32
+#ifdef __WIN32
 	// windows only
 	len = GetModuleFileName(NULL, buff, sizeof(buff)-1);
 #else
@@ -91,6 +95,7 @@ string findgladepath(char* programpath)
 
 	fs::path gladepath(exepath);
 	gladepath = fs::system_complete(gladepath).remove_filename();
+   // TODO: Check this works on windows
 	gladepath /= "../share/lag/lag.ui";
 
 	if (glade_exists(gladepath))

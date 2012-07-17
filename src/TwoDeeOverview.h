@@ -35,11 +35,15 @@
 #define BOOST_FILESYSTEM_VERSION 3
 #include <boost/filesystem.hpp>
 
+#ifdef __WIN32
+#include <winbase.h>
+#endif
+
 class TwoDeeOverview : public LagDisplay
 {
 public:
    TwoDeeOverview(boost::filesystem::path fontpath,
-		   	   	  const Glib::RefPtr<const Gdk::GL::Config>& config,
+		   	   	const Glib::RefPtr<const Gdk::GL::Config>& config,
                   int bucketlimit,
                   Gtk::Label *rulerlabelover);
 
@@ -59,7 +63,13 @@ public:
    {
       while(thread_running)
       {
+#ifdef __WIN32
+         // this is a compromise, ideally the code should behave in the
+         // same way on all operating systems
+         Sleep(1);
+#else
          usleep(10);
+#endif
       }
    }
 

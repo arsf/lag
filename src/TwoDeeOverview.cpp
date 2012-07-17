@@ -27,6 +27,7 @@
 #include <gtkglmm.h>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include "Quadtree.h"
 #include "PointBucket.h"
 #include <GL/gl.h>
@@ -353,7 +354,11 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 
    while(thread_existsthread)
    {
+#ifdef __WIN32
+      Sleep(1);
+#else
 	   usleep(100);
+#endif
    }
 
    if(threaddebug)cout << "***Finished waiting." << endl;
@@ -532,7 +537,11 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             // drawing_to_GL is already false.
             if(pausethread)
                threadpause();
+#ifdef __WIN32
+            Sleep(1);
+#else
             usleep(10);
+#endif
          }
 
          if(threaddebug)cout << "Not drawing (anymore)." << endl;
@@ -755,9 +764,8 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 
       if(threaddebug)cout << "Waiting for drawing." << endl;
 
-      // usleep doesn't work on windows
-#ifdef _WIN32
-      // TODO: Find some alternative here
+#ifdef __WIN32
+      Sleep(1);
 #else
       usleep(10);
 #endif
@@ -819,7 +827,12 @@ void TwoDeeOverview::threadpause()
                            program access to point data. Waiting until \
                            thread is allowed to unpause." << endl;
 
-   while(pausethread){usleep(10);}
+   while(pausethread)
+#ifdef __WIN32
+      Sleep(1);
+#else
+      usleep(10);
+#endif
 
    if(threaddebug)cout << "Yippee! Can go now! Depriving the rest of the \
                            program of resources again!" << endl;
@@ -1388,22 +1401,18 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
             glwindow->gl_end();
          }
          //Returns the filepath.
-         string flightline = lidardata->getFileName((*pointvector)[bucketno]-> getPoint(pointno,0).getFlightline());
+         boost::filesystem::path flightline(lidardata->
+            getFileName((*pointvector)[bucketno]->
+            getPoint(pointno,0).getFlightline()));
 
-         //Only the filename is desired, not the filepath.
-         size_t index = flightline.rfind("/");
-         if(index==string::npos)
-            index=0;
-         else 
-            index++;
-         flightline = flightline.substr(index);
+         flightline = flightline.filename();
 
          ostringstream x,y,z,time,intensity,classification,
                        rnumber,flightlinenumber;
-         x << setprecision(12);
-         y << setprecision(12);
-         z << setprecision(12);
-         time << setprecision(12);
+         x    << std::setprecision(12);
+         y    << std::setprecision(12);
+         z    << std::setprecision(12);
+         time << std::setprecision(12);
 
 
          if (!latlong)
@@ -1439,7 +1448,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
                          ", Time: " + time.str() + 
               ",\n" + "Intensity: " + intensity.str() + 
                ", Classification: " + classification.str() + 
-             ",\n" + "Flightline: " + flightline + 
+             ",\n" + "Flightline: " + flightline.string() + 
                              " (" + flightlinenumber.str() + 
                 "), Return number: " + rnumber.str() + ".";
 
