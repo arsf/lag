@@ -1,10 +1,28 @@
 /*
-==================================
+===============================================================================
+
  SaveWorker.cpp
 
-  Created on: 10 May 2012
-      Author: jaho
-==================================
+ Created on: 10 May 2012
+ Author: Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
 */
 
 #include "SaveWorker.h"
@@ -15,17 +33,16 @@
 #include "LidarPoint.h"
 #include "FileUtils.h"
 
-#define BOOST_FILESYSTEM_V3
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
 
 /*
 ==================================
  SaveWorker::SaveWorker
 ==================================
 */
-SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein, int flightline, std::string parse_string, bool use_latlong, bool use_default_scalefactor, double scale_factor[3]) : Worker(),
+SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein,
+		int flightline, std::string parse_string, bool use_latlong,
+		bool use_default_scalefactor, double scale_factor[3]) :
+		Worker(),
 		filesaver			(fs),
 		filename			(filename),
 		source_filename		(filein),
@@ -131,7 +148,7 @@ void SaveWorker::save_points_wf(int n, LidarPoint* points)
 	char* buffer = 0;
 
 	// Get PointData file
-	tr1::unordered_map<uint8_t, fs::path>::iterator it = LoadWorker::point_data_paths.find(flightline_number);
+	tr1::unordered_map<uint8_t, std::string>::iterator it = LoadWorker::point_data_paths.find(flightline_number);
 	if (it != LoadWorker::point_data_paths.end())
 	{
 		data_filename = it->second;
@@ -387,8 +404,9 @@ void SaveWorker::run()
 
 
 	PointBucket *current;
-	// go through the point buckets until you have enough point
-	// then save them to the file, start again with the next point
+
+	// Go through the point buckets until you have enough point
+	// then save them to the file, start again with the next point.
 	for (unsigned int k = 0; k < buckets->size(); ++k)
 	{
 		current = buckets->at(k);

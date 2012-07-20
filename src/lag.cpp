@@ -193,7 +193,7 @@ int main(int argc, char** argv)
 	builder->get_widget("rulerlabelover", rulerlabelover);
 
 	//The 2d overview.
-	TwoDeeOverview *tdo = new TwoDeeOverview(argv[0], glconfig, bucketlimit,
+	TwoDeeOverview *tdo = new TwoDeeOverview(glconfig, bucketlimit,
 			rulerlabelover);
 
 	// Label displaying the distance along the ruler, in all dimensions
@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 	builder->get_widget("rulerlabel", rulerlabel);
 
 	//The profile.
-	Profile *prof = new Profile(argv[0], glconfig, bucketlimit, rulerlabel);
+	Profile *prof = new Profile(glconfig, bucketlimit, rulerlabel);
 
 	//This contains the widgets of the advanced options window.
 	AdvancedOptionsWindow *aow = new AdvancedOptionsWindow(tdo, prof, builder);

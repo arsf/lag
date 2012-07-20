@@ -25,11 +25,6 @@
 ===============================================================================
 */
 
-#include <gtkmm.h>
-#include <gtkglmm.h>
-#include <vector>
-#include "../TwoDeeOverview.h"
-#include "../Profile.h"
 #include "FileSaver.h"
 
 

@@ -1,48 +1,66 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: Profile.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - July 2010
- *
- * */
-#include <gtkmm.h>
-#include <gtkglmm.h>
-#include <vector>
+===============================================================================
+
+ Profile.cpp
+
+ Created on: December 2009
+ Author: Haraldur Tristan Gunnarsson
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include <iostream>
-#include "Quadtree.h"
-#include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "Profile.h"
 #include "MathFuncs.h"
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
 
-Profile::Profile(boost::filesystem::path fontpath,
-		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit,
-		Gtk::Label *rulerlabel) :
-		LagDisplay(fontpath, config, bucketlimit), rulerlabel(rulerlabel), profps(0), drawpoints(true), drawmovingaverage(
-				false), imageexists(false), slanted(true), slantwidth(5), showheightscale(
-				false), totnumpoints(0), mavrgrange(5), linez(NULL), previewdetailmod(
-				0.3), flightlinepoints(NULL), samplemaxz(0), sampleminz(0), viewer(
-				Point(0, 0, 0)), width(0), rulering(false), rulerwidth(3), fencing(
-				false), hideProfNoise(false)
+
+/*
+==================================
+ Profile::Profile
+==================================
+*/
+Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit,
+		Gtk::Label *rulerlabel) : LagDisplay(config, bucketlimit),
+		rulerlabel			(rulerlabel),
+		profps				(0),
+		drawpoints			(true),
+		drawmovingaverage	(false),
+		imageexists			(false),
+		slanted				(true),
+		slantwidth			(5),
+		showheightscale		(false),
+		totnumpoints		(0),
+		mavrgrange			(5),
+		linez				(NULL),
+		previewdetailmod	(0.3),
+		flightlinepoints	(NULL),
+		samplemaxz			(0),
+		sampleminz			(0),
+		viewer				(Point(0, 0, 0)),
+		width				(0),
+		rulering			(false),
+		rulerwidth			(3),
+		fencing				(false),
+		hideProfNoise		(false)
 {
 	brightnessBy = brightnessByNone;
 	zoompower = 0.7;
@@ -89,6 +107,11 @@ Profile::Profile(boost::filesystem::path fontpath,
 	sigfenceend.block();
 }
 
+/*
+==================================
+ Profile::~Profile
+==================================
+*/
 Profile::~Profile()
 {
 	delete[] flightlinepoints;
@@ -102,14 +125,20 @@ Profile::~Profile()
 	}
 }
 
-// Firstly, this determines the boundary of the viewable area in world 
-// coordinates (for use by the drawing method(s)). It then sets the active 
-// matrix to that of projection and makes it the identity matrix, and then 
-// defines the limits of the viewing area from the dimensions of the window. 
-// *ratio*zoomlevel is there to convert screen dimensions to image dimensions. 
-// gluLookAt is then used so that the viewpoint is that of seeing the centre 
-// from a position to the right of the profile, when looking from the start 
-// to the end of it.
+/*
+==================================
+ Profile::resetview
+
+ Firstly, this determines the boundary of the viewable area in world
+ coordinates (for use by the drawing method(s)). It then sets the active
+ matrix to that of projection and makes it the identity matrix, and then
+ defines the limits of the viewing area from the dimensions of the window.
+ *ratio*zoomlevel is there to convert screen dimensions to image dimensions.
+ gluLookAt is then used so that the viewpoint is that of seeing the centre
+ from a position to the right of the profile, when looking from the start
+ to the end of it.
+==================================
+*/
 void Profile::resetview()
 {
 	double breadth = end.getX() - start.getX();
@@ -157,16 +186,22 @@ void Profile::resetview()
 	// Since viewerz is always 0, we are setting this so that the profile looks
 	// from the right hand side of the profile (if seen from start to end) to
 	// the centre Also, the Z direction is "up".
-	gluLookAt(viewer.getX(), viewer.getY(), viewer.getZ(), // Eye point
-			0, 0, 0, // Centre point
-			0, 0, 1); // Up direction
+	gluLookAt(viewer.getX(), viewer.getY(), viewer.getZ(), 	// Eye point
+			0, 0, 0, 										// Centre point
+			0, 0, 1); 										// Up direction
 }
 
-// Depending on the imagetype requested, this sets the detail level and then 
-// calls one of the image methods, which actually draws the data to the screen. 
-// The passed value should be 1 for the main image, 2 for the preview and 3 
-// for the expose event (which is the same as the preview). Note that if the 
-// imagetype is anything other than 1, 2 or 3 then all points will be drawn.
+/*
+==================================
+ Profile::drawviewable
+
+ Depending on the imagetype requested, this sets the detail level and then
+ calls one of the image methods, which actually draws the data to the screen.
+ The passed value should be 1 for the main image, 2 for the preview and 3
+ for the expose event (which is the same as the preview). Note that if the
+ imagetype is anything other than 1, 2 or 3 then all points will be drawn.
+==================================
+*/
 bool Profile::drawviewable(int imagetype)
 {
 	// If there is an attempt to draw with no data, the program will
@@ -184,6 +219,7 @@ bool Profile::drawviewable(int imagetype)
 
 	//This determines how many points are skipped between reads.
 	int detail = 1;
+
 	// If there are very few points on the screen, show them all (note that if
 	// the imagetype is anything other than 1, 2 or 3 then all points will be drawn):
 	if (imagetype == 1)
@@ -198,11 +234,17 @@ bool Profile::drawviewable(int imagetype)
 	return true;
 }
 
-// This is called by a "reset button". It returns the view to the initial one. 
-// It sets the centre of the screen to the centre of the profile and then sets 
-// the viewer position and the ratio of world coordinates to window coordinates 
-// so that all of the porifle is visible before resetting the view and then 
-// drawing.
+/*
+==================================
+ Profile::returntostart
+
+ This is called by a "reset button". It returns the view to the initial one.
+ It sets the centre of the screen to the centre of the profile and then sets
+ the viewer position and the ratio of world coordinates to window coordinates
+ so that all of the profile is visible before resetting the view and then
+ drawing.
+==================================
+*/
 bool Profile::returntostart()
 {
 	//This way, all of the profile should be on-screen.
@@ -234,8 +276,14 @@ bool Profile::returntostart()
 	return drawviewable(1);
 }
 
-// This shifts the centre and fence coordinates so that they stay the same 
-// relative to the profile when the profile is moved with the keyboard.
+/*
+==================================
+ Profile::shift_viewing_parameters
+
+ This shifts the centre and fence coordinates so that they stay the same
+ relative to the profile when the profile is moved with the keyboard.
+==================================
+*/
 bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 {
 	// The 0.1 is in there because the profile itself will also have moded
@@ -277,51 +325,56 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 		return false;
 		break;
 	}
+
 	//Now change the view settings using some of the values just changed.
 	resetview();
 	return true;
 }
 
-// This method prepares the profile for drawing and then draws. It first 
-// defines the parameters of the new profile and then grabs a subset of the 
-// quadtree of which some of the points may be in the profile. After that it 
-// determines what flightlines are in the profile and then adds all 
-// appropriate points to the profile by flightline before sorting them by 
-// flightline so that it can then constuct the moving averages of the 
-// flightlines. It then draws the profile. changeview should be true when 
-// the profile area has changed and false when it has not, such as when the 
-// classification (only) has been changed. If changeview is true then the view 
-// is reset and the fence is removed, otherwise not. The fence is removed to 
-// prevent accidental classification.
 /*
- * Define profile parameters.
- * Get subset.
- * If subset is empty or NULL, delete subset and make so nothing will be drawn. 
- *    Return.
- * For every cached bucket:
- *    For every point within the profile and within the cached bucket:
- *       If the flightline is not already recorded, record it.
- * For every uncached bucket:
- *    For every point within the profile and within the uncached bucket:
- *       If the flightline is not already recorded, record it.
- * For every recorded flightline:
- *    For every cached bucket:
- *       For every point within the profile and the flightline and the cached 
- *       bucket:
- *          Add the point to the profile.
- *          Update the minimum and maximum heights.
- *    For every uncached bucket:
- *       For every point within the profile and the flightline and the 
- *       uncached bucket:
- *          Add the point to the profile.
- *          Update the minimum and maximum heights.
- *    Sort the points in the flightline.
- * If there are no points in the profile, make so nothing will be drawn. 
- * Return.
- * Make the moving averages.
- * Draw the profile.
- *
- * */
+==================================
+ Profile::loadprofile
+
+ This method prepares the profile for drawing and then draws. It first
+ defines the parameters of the new profile and then grabs a subset of the
+ quadtree of which some of the points may be in the profile. After that it
+ determines what flightlines are in the profile and then adds all
+ appropriate points to the profile by flightline before sorting them by
+ flightline so that it can then constuct the moving averages of the
+ flightlines. It then draws the profile. changeview should be true when
+ the profile area has changed and false when it has not, such as when the
+ classification (only) has been changed. If changeview is true then the view
+ is reset and the fence is removed, otherwise not. The fence is removed to
+ prevent accidental classification.
+
+ Define profile parameters.
+ Get subset.
+ If subset is empty or NULL, delete subset and make so nothing will be drawn.
+    Return.
+ For every cached bucket:
+    For every point within the profile and within the cached bucket:
+       If the flightline is not already recorded, record it.
+ For every uncached bucket:
+    For every point within the profile and within the uncached bucket:
+       If the flightline is not already recorded, record it.
+ For every recorded flightline:
+    For every cached bucket:
+       For every point within the profile and the flightline and the cached
+       bucket:
+          Add the point to the profile.
+          Update the minimum and maximum heights.
+    For every uncached bucket:
+       For every point within the profile and the flightline and the
+       uncached bucket:
+          Add the point to the profile.
+          Update the minimum and maximum heights.
+    Sort the points in the flightline.
+ If there are no points in the profile, make so nothing will be drawn.
+ Return.
+ Make the moving averages.
+ Draw the profile.
+==================================
+*/
 bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
 	Glib::Mutex::Lock lock(mutex);
@@ -347,22 +400,14 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	// of view of the fence (as cross-section) especially) contains the points
 	// to be classified.
 	this->profps = profps;
-
-	/*/ Please note that it is done this way and not simply assigned so that the
-	// profile never deletes attributes of the overview.
-	for (int i = 0; i < this->profps; ++i)
-	{
-		this->profxs[i] = profxs[i];
-		this->profys[i] = profys[i];
-	}
-	*/
-
 	this->profxs = profxs;
 	this->profys = profys;
 
 	vector<PointBucket*> *pointvector = NULL;
+
 	//Get data.
 	imageexists = advsubsetproc(pointvector, profxs, profys, profps);
+
 	// Drawing from a null vector would be bad, and a zero vector pointless.
 	// imageexists being false will prevent drawing.
 	if (!imageexists)
@@ -566,6 +611,11 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 
 }
 
+/*
+==================================
+ Profile::draw_profile
+==================================
+*/
 bool Profile::draw_profile(bool changeview)
 {
 	// If there are no points within the profile area, even if there were in the
@@ -577,7 +627,7 @@ bool Profile::draw_profile(bool changeview)
 		return false;
 	}
 
-	//Make now the lines to be drawn when the user elects to draw them.
+	// Make now the lines to be drawn when the user elects to draw them.
 	make_moving_average();
 
 	// If an attempt to draw is made when the widget is not yet attached to the
@@ -605,10 +655,16 @@ bool Profile::draw_profile(bool changeview)
 		return false;
 }
 
-// This determines which points in the bucket (bucket) fit both in the profile 
-// (from the correctpoints pointer passed in) and in the fence (the xs,ys,zs 
-// pointers and numcorners passed in) and classifies those that do (with the 
-// classification passed in).
+/*
+==================================
+ Profile::classify_bucket
+
+ This determines which points in the bucket (bucket) fit both in the profile
+ (from the correctpoints pointer passed in) and in the fence (the xs,ys,zs
+ pointers and numcorners passed in) and classifies those that do (with the
+ classification passed in).
+==================================
+*/
 void Profile::classify_bucket(double *xs, double *ys, double *zs,
 		int numcorners, bool *correctpoints, PointBucket* bucket,
 		uint8_t classification)
@@ -648,8 +704,7 @@ void Profile::classify_bucket(double *xs, double *ys, double *zs,
 					// and be the same height (z) as the point it is to be compared
 					// against. This allows comparison to see whether the point is
 					// within the box or not.
-					pnt.move(
-							xs[j]
+					pnt.move(xs[j]
 									+ ((bucket->getPoint(i, 0).getZ() - zs[j])
 											/ (zs[lastcorner] - zs[j]))
 											* (xs[lastcorner] - xs[j]),
@@ -677,11 +732,17 @@ void Profile::classify_bucket(double *xs, double *ys, double *zs,
 	}
 }
 
-// This takes the points selected by the fence and then classifies them as 
-// the type sent.
+/*
+==================================
+ Profile::classify
+
+ This takes the points selected by the fence and then classifies them as
+ the type sent.
+==================================
+*/
 bool Profile::classify(uint8_t classification)
 {
-	// If there should not be any points there or if the fence coveres no
+	// If there should not be any points there or if the fence covers no
 	// area/volume, do nothing. Otherwise get a divide by zero error in the i
 	// latter case.
 	if (!imageexists || fenceStart == fenceEnd)
@@ -691,6 +752,7 @@ bool Profile::classify(uint8_t classification)
 
 	//Get data using profile parameters.
 	bool gotdata = advsubsetproc(pointvector, profxs, profys, profps);
+
 	//Obviously if no data is retrieved then nothing more must be attempted.
 	if (!gotdata)
 	{
@@ -700,6 +762,7 @@ bool Profile::classify(uint8_t classification)
 	}
 
 	int numbuckets = pointvector->size();
+
 	// This stores, for each point in each bucket, whether the point is inside
 	// the boundaries of the profile and, therefore, whether the point should
 	// classified.
@@ -849,17 +912,22 @@ bool Profile::classify(uint8_t classification)
 	// Reload the modified points from the quadtree without changing the view
 	// or resetting the fence etc..
 	loadprofile(tempxs, tempys, tempps);
-	//draw_profile(false);
 
 	return true;
 }
 
-// This method is used by sort() and get_closest_element_position(). It projects
-// the points onto a plane defined by the z axis and the other line 
-// perpendicular to the viewing direction. It then returns whether the first 
-// point is "further along" the plane than the second one, with one of the edges 
-// of the plane being defined as the "start" (the left edge as the user sees 
-// it). Essentially, if a is to the right of b it returns true, otherwise false.
+/*
+==================================
+ Profile::linecomp
+
+ This method is used by sort() and get_closest_element_position(). It projects
+ the points onto a plane defined by the z axis and the other line
+ perpendicular to the viewing direction. It then returns whether the first
+ point is "further along" the plane than the second one, with one of the edges
+ of the plane being defined as the "start" (the left edge as the user sees
+ it). Essentially, if a is to the right of b it returns true, otherwise false.
+==================================
+*/
 bool Profile::linecomp(LidarPoint a, LidarPoint b)
 {
 	const double xa = a.getX();
@@ -924,7 +992,7 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 		double widgradboxb = multy * (yb - minPlan.getY())
 				- (multx * (xb - minPlan.getX()) * widgradbox);
 
-		/* // Identify the points of intercept for each point-to-profile line and
+		 /* Identify the points of intercept for each point-to-profile line and
 		 // the profile line and find the distance along the profile line:{
 		 //
 		 //  0 (adjusted origin)
@@ -934,9 +1002,9 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 		 //      \  ____/
 		 //    ___\/P
 		 //   /    \
-      //         \
-      //          \
-      //                                
+      	 //         \
+         //          \
+         //
 		 //    For point p:
 		 //       x of P is interxp
 		 //       y of P is interyp
@@ -975,14 +1043,20 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 	return alongprofa > alongprofb;
 }
 
-// This returns the index (in the vector of points in a flightline) of the 
-// nearest point "before" the position along the horizontal line (from the 
-// viewable plane) of the point passed in. It is used for determining which 
-// points to draw by passing separately as "points" the coordinates of the 
-// limits of the viewable plane. It needs to be passed a "point" because the 
-// linecomp function, which it uses, only accepts points because it was 
-// originally made just for sorting points. Fundamentally, it works similarly 
-// to a BINARY SEARCH algorithm.
+/*
+==================================
+ Profile::get_closest_element_position
+
+ This returns the index (in the vector of points in a flightline) of the
+ nearest point "before" the position along the horizontal line (from the
+ viewable plane) of the point passed in. It is used for determining which
+ points to draw by passing separately as "points" the coordinates of the
+ limits of the viewable plane. It needs to be passed a "point" because the
+ linecomp function, which it uses, only accepts points because it was
+ originally made just for sorting points. Fundamentally, it works similarly
+ to a BINARY SEARCH algorithm.
+==================================
+*/
 int Profile::get_closest_element_position(LidarPoint value,
 		vector<LidarPoint>::iterator first, vector<LidarPoint>::iterator last)
 {
@@ -1023,8 +1097,14 @@ int Profile::get_closest_element_position(LidarPoint value,
 	}
 }
 
-// On a left click, this prepares for panning by storing the initial position 
-// of the cursor.
+/*
+==================================
+ Profile::on_pan_start
+
+ On a left click, this prepares for panning by storing the initial position
+ of the cursor.
+==================================
+*/
 bool Profile::on_pan_start(GdkEventButton* event)
 {
 	if (event->button == 1 || event->button == 2)
@@ -1042,13 +1122,19 @@ bool Profile::on_pan_start(GdkEventButton* event)
 		return false;
 }
 
-// As the cursor moves while the left button is depressed, the image is dragged 
-// along as a preview (with fewer points) to reduce lag. The centre point is 
-// modified by the negative of the distance (in image units, hence the 
-// ratio/zoomlevel mention) the cursor has moved to make a dragging effect and 
-// then the current position of the cursor is taken to be the starting 
-// position for the next drag (if there is one). The view is then refreshed 
-// and then the image is drawn (as a preview).
+/*
+==================================
+ Profile::on_pan
+
+ As the cursor moves while the left button is depressed, the image is dragged
+ along as a preview (with fewer points) to reduce lag. The centre point is
+ modified by the negative of the distance (in image units, hence the
+ ratio/zoomlevel mention) the cursor has moved to make a dragging effect and
+ then the current position of the cursor is taken to be the starting
+ position for the next drag (if there is one). The view is then refreshed
+ and then the image is drawn (as a preview).
+==================================
+*/
 bool Profile::on_pan(GdkEventMotion* event)
 {
 	if ((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK
@@ -1075,7 +1161,13 @@ bool Profile::on_pan(GdkEventMotion* event)
 		return false;
 }
 
-//At the end of the pan draw the full image.
+/*
+==================================
+ Profile::on_pan_end
+
+ At the end of the pan draw the full image.
+==================================
+*/
 bool Profile::on_pan_end(GdkEventButton* event)
 {
 	if (event->button == 1 || event->button == 2)
@@ -1084,7 +1176,13 @@ bool Profile::on_pan_end(GdkEventButton* event)
 		return false;
 }
 
-//Moves the view depending on the keyboard signals.
+/*
+==================================
+ Profile::on_pan_key
+
+ Moves the view depending on the keyboard signals.
+==================================
+*/
 bool Profile::on_pan_key(GdkEventKey *event, double scrollspeed)
 {
 	double breadth = end.getX() - start.getX();
@@ -1126,7 +1224,13 @@ bool Profile::on_pan_key(GdkEventKey *event, double scrollspeed)
 	return false;
 }
 
-//Find the starting coordinates of the fence and draw.
+/*
+==================================
+ Profile::on_fence_start
+
+ Find the starting coordinates of the fence and draw.
+==================================
+*/
 bool Profile::on_fence_start(GdkEventButton* event)
 {
 	if (event->button == 1)
@@ -1160,15 +1264,23 @@ bool Profile::on_fence_start(GdkEventButton* event)
 		return false;
 }
 
-//Update the fence with new ending coordinates and draw.
+/*
+==================================
+ Profile::on_fence
+
+ Update the fence with new ending coordinates and draw.
+==================================
+*/
 bool Profile::on_fence(GdkEventMotion* event)
 {
 	if ((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
 	{
 		double breadth = end.getX() - start.getX();
 		double height = end.getY() - start.getY();
+
 		//Right triangle.
 		double length = sqrt(breadth * breadth + height * height);
+
 		//The horizontal distance is a combination of x and y so:
 		double hypotenuse = pixelsToImageUnits(event->x - get_width() / 2);
 		fenceEnd.move(
@@ -1184,8 +1296,14 @@ bool Profile::on_fence(GdkEventMotion* event)
 		return false;
 }
 
-// Draw again. This is for if/when the on_fence() method calls 
-// drawviewable(2) rather than drawviewable(1).
+/*
+==================================
+ Profile::on_fence_end
+
+ Draw again. This is for if/when the on_fence() method calls
+ drawviewable(2) rather than drawviewable(1).
+==================================
+*/
 bool Profile::on_fence_end(GdkEventButton* event)
 {
 	if (event->button == 1)
@@ -1196,7 +1314,13 @@ bool Profile::on_fence_end(GdkEventButton* event)
 		return false;
 }
 
-//Moves the fence depending on keyboard commands.
+/*
+==================================
+ Profile::on_fence_key
+
+ Moves the fence depending on keyboard commands.
+==================================
+*/
 bool Profile::on_fence_key(GdkEventKey *event, double scrollspeed)
 {
 	double breadth = end.getX() - start.getX();
@@ -1241,7 +1365,11 @@ bool Profile::on_fence_key(GdkEventKey *event, double scrollspeed)
 	return drawviewable(2);
 }
 
-//Make the fence.
+/*
+==================================
+ Profile::makefencebox
+==================================
+*/
 void Profile::makefencebox()
 {
 	glColor3f(0.0, 0.0, 1.0);
@@ -1327,15 +1455,23 @@ void Profile::makefencebox()
 	}
 }
 
-//Find the starting coordinates of the ruler and set the label values to zero.
+/*
+==================================
+ Profile::on_ruler_start
+
+ Find the starting coordinates of the ruler and set the label values to zero.
+==================================
+*/
 bool Profile::on_ruler_start(GdkEventButton* event)
 {
 	if (event->button == 1)
 	{
 		double breadth = end.getX() - start.getX();
 		double height = end.getY() - start.getY();
+
 		//Right triangle.
 		double length = sqrt(breadth * breadth + height * height);
+
 		//The horizontal distance is a combination of x and y so:
 		double hypotenuse = pixelsToImageUnits(event->x - get_width() / 2);
 
@@ -1352,6 +1488,7 @@ bool Profile::on_ruler_start(GdkEventButton* event)
 				"Distance: 0\nX: 0\nY: 0\nHoriz: \
                             0\nZ: 0 Pos: "
 						+ zpos.str());
+
 		// This causes the event box containing the profile to grab the focus,
 		// and so to allow keyboard control of the profile (this is not done
 		// directly as that would cause expose events to be called when focus
@@ -1365,17 +1502,25 @@ bool Profile::on_ruler_start(GdkEventButton* event)
 		return false;
 }
 
-// Find the current cursor coordinates in image terms (as opposed to 
-// window/screen terms) and then update the label with the distances. 
-// Then draw the ruler.
+/*
+==================================
+ Profile::on_ruler
+
+ Find the current cursor coordinates in image terms (as opposed to
+ window/screen terms) and then update the label with the distances.
+ Then draw the ruler.
+==================================
+*/
 bool Profile::on_ruler(GdkEventMotion* event)
 {
 	if ((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
 	{
 		double breadth = end.getX() - start.getX();
 		double height = end.getY() - start.getY();
+
 		//Right triangle.
 		double length = sqrt(breadth * breadth + height * height);
+
 		//The horizontal distance is a combination of x and y so:
 		double hypotenuse = pixelsToImageUnits(event->x - get_width() / 2);
 
@@ -1389,8 +1534,10 @@ bool Profile::on_ruler(GdkEventMotion* event)
 		xd = abs(rulerEnd.getX() - rulerStart.getX());
 		yd = abs(rulerEnd.getY() - rulerStart.getY());
 		zd = abs(rulerEnd.getZ() - rulerStart.getZ());
+
 		//Combined horizontal distance.
 		hd = sqrt(xd * xd + yd * yd);
+
 		//Combined horizontal and vertical distance.
 		d = sqrt(hd * hd + zd * zd);
 		ostringstream dist, xdist, ydist, horizdist, zdist, zpos;
@@ -1413,8 +1560,14 @@ bool Profile::on_ruler(GdkEventMotion* event)
 		return false;
 }
 
-// Draw again. This is for if/when the on_ruler() method calls drawviewable(2) 
-// rather than drawviewable(1).
+/*
+==================================
+ Profile::on_ruler_end
+
+ Draw again. This is for if/when the on_ruler() method calls drawviewable(2)
+ rather than drawviewable(1).
+==================================
+*/
 bool Profile::on_ruler_end(GdkEventButton* event)
 {
 	if (event->button == 1)
@@ -1425,36 +1578,17 @@ bool Profile::on_ruler_end(GdkEventButton* event)
 		return false;
 }
 
-//Make the ruler as a thick line.
+/*
+==================================
+ Profile::makerulerbox
+
+ Make the ruler as a thick line.
+==================================
+*/
 void Profile::makerulerbox()
 {
 	glColor3f(1.0, 1.0, 1.0);
 	glLineWidth(rulerwidth);
-
-///////////////////////////////////////////////////
-// Print the coordinates of the ends of the ruler.
-//
-//   glRasterPos3d( rulerStart.getX()-centre.getX(),
-//                  rulerStart.getY()-centre.getY(),
-//                  rulerStart.getZ()-centre.getZ());
-//
-//   char coordString[30];
-//
-//   sprintf(coordString, "(%.2f,%.2f,%.2f)", 
-//                        rulerStart.getX(), 
-//                        rulerStart.getY(), 
-//                        rulerStart.getZ());
-//   printString(coordString);
-//   sprintf(coordString, "(%.2f,%.2f,%.2f)", 
-//                        rulerEnd.getX(), 
-//                        rulerEnd.getY(), 
-//                        rulerEnd.getZ());
-//   glRasterPos3d( rulerEnd.getX()-centre.getX(),
-//                  rulerEnd.getY()-centre.getY(),
-//                  rulerEnd.getZ()-centre.getZ());
-//
-//   printString(coordString);
-///////////////////////////////////////////////////
 
 	// Draw the Ruler
 	glBegin(GL_LINES);
@@ -1467,8 +1601,14 @@ void Profile::makerulerbox()
 	glLineWidth(1);
 }
 
-// Draw the appropriate overlays when other drawing is already happening 
-// (i.e. the flushing or swapping of buffers must be done elsewhere).
+/*
+==================================
+ Profile::drawoverlays
+
+ Draw the appropriate overlays when other drawing is already happening
+ (i.e. the flushing or swapping of buffers must be done elsewhere).
+==================================
+*/
 void Profile::drawoverlays()
 {
 	if (rulering)
@@ -1479,11 +1619,17 @@ void Profile::drawoverlays()
 		makeZscale();
 }
 
-// This draws a scale. It works out what order of magnitude to use for the 
-// scale and the number of intervals to have in it and then modifies these 
-// if there would be too few or too many intervals. It then draws the vertical 
-// line and the small horizontal markers before setting up the font settings 
-// and then drawing the numbers by the markers.
+/*
+==================================
+ Profile::makeZscale
+
+ This draws a scale. It works out what order of magnitude to use for the
+ scale and the number of intervals to have in it and then modifies these
+ if there would be too few or too many intervals. It then draws the vertical
+ line and the small horizontal markers before setting up the font settings
+ and then drawing the numbers by the markers.
+==================================
+*/
 void Profile::makeZscale()
 {
 	double rheight = pixelsToImageUnits(get_height());
@@ -1575,12 +1721,18 @@ void Profile::makeZscale()
 	}
 }
 
-// First, the distance between the centre of the window and the window position 
-// of the event is converted to image coordinates and added to the image centre.
-// This is analogous to moving the centre to where the event occured. Then, 
-// depending on the direction of the scroll, the zoomlevel is increased or 
-// decreased. Then the centre is moved to where the centre of the window will 
-// now lie. The image is then drawn.
+/*
+==================================
+ Profile::on_zoom
+
+ First, the distance between the centre of the window and the window position
+ of the event is converted to image coordinates and added to the image centre.
+ This is analogous to moving the centre to where the event occured. Then,
+ depending on the direction of the scroll, the zoomlevel is increased or
+ decreased. Then the centre is moved to where the centre of the window will
+ now lie. The image is then drawn.
+==================================
+*/
 bool Profile::on_zoom(GdkEventScroll* event)
 {
 	double breadth = end.getX() - start.getX();
@@ -1624,6 +1776,7 @@ bool Profile::on_zoom(GdkEventScroll* event)
 			pixelsToImageUnits(event->y - get_height() / 2));
 
 	resetview();
+
 	// This causes the event box containing the profile to grab the focus,
 	// and so to allow keyboard control of the profile (this is not done
 	// directly as that wuld cause expose events to be called when focus
@@ -1632,7 +1785,13 @@ bool Profile::on_zoom(GdkEventScroll* event)
 	return drawviewable(1);
 }
 
-//Zooms depending on keyboard commands.
+/*
+==================================
+ Profile::on_zoom_key
+
+ Zooms depending on keyboard commands.
+==================================
+*/
 bool Profile::on_zoom_key(GdkEventKey* event)
 {
 	if (zoomlevel >= 1)
@@ -1694,6 +1853,13 @@ bool Profile::on_zoom_key(GdkEventKey* event)
 	return drawviewable(1);
 }
 
+/*
+==================================
+ Profile::get_averages
+
+ Calculates average elevation for each flightline in the profile.
+==================================
+*/
 std::vector<double> Profile::get_averages(bool exclude_noise)
 {
 	int lines = flightlinestot.size();
@@ -1730,9 +1896,15 @@ std::vector<double> Profile::get_averages(bool exclude_noise)
 	return avgs;
 }
 
-// This creates an array of z values for the points in the profile that are 
-// derived from the real z values through a moving average. This results in 
-// a smoothed line.
+/*
+==================================
+ Profile::make_moving_average
+
+ This creates an array of z values for the points in the profile that are
+ derived from the real z values through a moving average. This results in
+ a smoothed line.
+==================================
+*/
 void Profile::make_moving_average()
 {
 	if (linez != NULL)
@@ -1754,6 +1926,7 @@ void Profile::make_moving_average()
 		for (int j = 0; j < numofpoints; ++j)
 		{
 			double z = 0, zcount = 0;
+
 			// For (up to) the range (depending on how close to the edge the
 			// point is) add up the points...
 			for (int k = -mavrgrange; k <= mavrgrange; k++)
@@ -1762,6 +1935,7 @@ void Profile::make_moving_average()
 					z += flightlinepoints[i][j + k].getZ();
 					zcount++;
 				}
+
 			// ... and divide by the number of them to get the moving average
 			// at that point.
 			z /= zcount;
@@ -1770,20 +1944,26 @@ void Profile::make_moving_average()
 	}
 }
 
-// This method draws the main image. First, the gl_window is acquired for 
-// drawing. It is then cleared, otherwise the method would just draw over 
-// the previous image and, since this image will probably have gaps in it, 
-// the old image would be somewhat visible. Then:
-//
-//   for every bucket:
-//      for every point:
-//         determine colour and brightness of point
-//         place point
-//      end for
-//      draw all points in bucket
-//   end for
-//
-// Then the profiling box, fence box and ruler are drawn if they exist.
+/*
+==================================
+ Profile::mainimage
+
+ This method draws the main image. First, the gl_window is acquired for
+ drawing. It is then cleared, otherwise the method would just draw over
+ the previous image and, since this image will probably have gaps in it,
+ the old image would be somewhat visible. Then:
+
+   for every bucket:
+      for every point:
+         determine colour and brightness of point
+         place point
+      end for
+      draw all points in bucket
+   end for
+
+ Then the profiling box, fence box and ruler are drawn if they exist.
+==================================
+*/
 bool Profile::mainimage(int detail)
 {
 	Glib::Mutex::Lock lock(mutex);
@@ -1973,6 +2153,11 @@ bool Profile::mainimage(int detail)
 
 }
 
+/*
+==================================
+ Profile::toggleNoise
+==================================
+*/
 void Profile::toggleNoise()
 {
 	hideProfNoise = !hideProfNoise;

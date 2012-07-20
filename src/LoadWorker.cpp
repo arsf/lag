@@ -1,11 +1,29 @@
 /*
- ==================================
+===============================================================================
+
  LoadWorker.cpp
 
  Created on: 24 Apr 2012
- Author: jaho
- ==================================
- */
+ Author: Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
 
 #include "LoadWorker.h"
 #include "FileUtils.h"
@@ -15,27 +33,24 @@
 #include "PointData.h"
 #include <cstdio>
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 using namespace std;
 namespace fs = boost::filesystem;
 
 std::vector<int> LoadWorker::point_number;
-tr1::unordered_map<uint8_t, fs::path> LoadWorker::point_data_paths;
+tr1::unordered_map<uint8_t, std::string> LoadWorker::point_data_paths;
 
 
 /*
- ==================================
+==================================
  LoadWorker::LoadWorker
- ==================================
- */
+==================================
+*/
 LoadWorker::LoadWorker(FileOpener* fo, int point_offset,
 		std::vector<std::string> filenames, bool create_new, bool usearea,
 		int resolutiondepth, int resolutionbase, int bucketlevels,
 		int bucketlimit, int cachelimit, bool default_scale_factors,
 		double scale_factor[3], std::string ascii_code, SelectionBox fence,
-		PointFilter pf, fs::path cache_path) :
+		PointFilter pf, std::string cache_path) :
 		Worker(),
 		fileopener			(fo),
 		point_offset		(point_offset),
@@ -65,18 +80,18 @@ LoadWorker::LoadWorker(FileOpener* fo, int point_offset,
 				0;
 	}
 	latlong = false;
-	reproject_quantizer = 0;
-	saved_quantizer = 0;
+	reproject_quantizer = NULL;
+	saved_quantizer = NULL;
 }
 
 /*
- ==================================
+==================================
  LoadWorker::send_message
 
  Passes a message to the main GUI thread.
  set_thread_message() method has to be thread safe.
- ==================================
- */
+==================================
+*/
 void LoadWorker::send_message(std::string message)
 {
 	fileopener->set_thread_message(message);
@@ -84,12 +99,12 @@ void LoadWorker::send_message(std::string message)
 }
 
 /*
- ==================================
+==================================
  LoadWorker::get_boundary
 
  Returns a boundary object with min-max x,y values provided a LASreader.
- ==================================
- */
+==================================
+*/
 Boundary LoadWorker::get_boundary()
 {
 	Boundary newboundary;
@@ -124,12 +139,12 @@ Boundary LoadWorker::get_boundary()
 }
 
 /*
- ==================================
+==================================
  LoadWorker::load_points
 
  Loads points from the file and inserts them into the quadtree.
- ==================================
- */
+==================================
+*/
 int LoadWorker::load_points(Quadtree* qt)
 {
 	int points_loaded = 0;
@@ -189,7 +204,7 @@ int LoadWorker::load_points(Quadtree* qt)
 
 			qt->insert(temp_point);
 		}
-	} catch (DescriptiveException e)
+	} catch (DescriptiveException& e)
 	{
 		std::cout << "An exception happened in LoadWorker::load_points(): "
 				<< e.why() << std::endl;
@@ -199,14 +214,14 @@ int LoadWorker::load_points(Quadtree* qt)
 }
 
 /*
- ==================================
+==================================
  LoadWorker::load_points_wf
 
  Loads points from the file and inserts them into the quadtree.
  Creates a temporary file to store additional, waveform related,
  attributes from 1.3 files.
- ==================================
- */
+==================================
+*/
 int LoadWorker::load_points_wf(Quadtree* qt)
 {
 	int points_loaded = 0;
@@ -217,7 +232,7 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 	LidarPoint temp_point;
 	PointData temp_data;
 	PointData* point_data_array = NULL;
-   fs::path point_data_path;
+	std::string point_data_path;
 	FILE* point_data_file = NULL;
 
 	int skip_counter = 0;
@@ -230,19 +245,19 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 		point_data_array = new PointData[points_to_load];  // Fix this! 1048576
 
 		// Create temporary file for PointData or use one created already
-		tr1::unordered_map<uint8_t, fs::path>::iterator it =
+		tr1::unordered_map<uint8_t, std::string>::iterator it =
 				point_data_paths.find(flightline_number);
 		if (it == point_data_paths.end())
 		{
-         point_data_path = fs::path(cache_path) /
-                           fs::unique_path("lag-pointdata.%%%%%%");
-
+			char fname[] = "/tmp/lag-pointdata.XXXXXX";
+			mkstemp(fname);
+			point_data_path = std::string(fname);
 			point_data_paths.insert(
 					make_pair(flightline_number, point_data_path));
 			point_number.resize(flightline_number + 1);
 			point_number.at(flightline_number) = 0;
-			cout  << "Creating PointData file at: " << point_data_path.c_str()
-			   	<< std::endl;
+			std::cout << "Creating PointData file at: " << point_data_path
+					<< std::endl;
 		}
 		else
 		{
@@ -326,12 +341,12 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 }
 
 /*
- ==================================
+==================================
  LoadWorker::run()
 
  Starts the worker.
- ==================================
- */
+==================================
+*/
 void LoadWorker::run()
 {
 	int num_files = filenames.size();
@@ -412,8 +427,6 @@ void LoadWorker::run()
 
 				// Get file boundary
 				Boundary boundary = get_boundary();
-
-				// std::cout << "Boundary: " << boundary.minX << " - " << boundary.maxX << ", " << boundary.minY << " - " << boundary.maxY << std::endl;
 
 				fileopener->set_utm_zone(get_utm_zone());
 
@@ -536,12 +549,12 @@ void LoadWorker::run()
 }
 
 /*
- ==================================
+==================================
  LoadWorker::stop
 
  Stops loading files.
- ==================================
- */
+==================================
+*/
 void LoadWorker::stop()
 {
 	Glib::Mutex::Lock lock(mutex);
@@ -549,12 +562,12 @@ void LoadWorker::stop()
 }
 
 /*
- ==================================
+==================================
  LoadWorker::convert_projection
 
  Converts UTM to latlong.
- ==================================
- */
+==================================
+*/
 void LoadWorker::convert_projection()
 {
 	char tmp[256];
@@ -617,13 +630,13 @@ void LoadWorker::convert_projection()
 }
 
 /*
- ==================================
+==================================
  LoadWorker::get_utm_zone
 
  Tries to find out UTM zone from VLR geo keys. Returns a string with zone name.
  Note that zone information is in the wrong place in files produced by alspp.
- ==================================
- */
+==================================
+*/
 std::string LoadWorker::get_utm_zone()
 {
 	std::stringstream zone;

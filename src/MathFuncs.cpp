@@ -1,30 +1,42 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: MathFuncs.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: December 2009 - July 2010
- *
- * */
+===============================================================================
+
+ MathFuncs.h
+
+ Created on: December 2009
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include "MathFuncs.h"
 
-// Returns the value of the given percentile of a dataset. Makes a histogram 
-// of the dataset and goes along it until it gets a total count corresponding 
-// with the percentile.
+
+/*
+==================================
+ percentilevalue
+
+ Returns the value of the given percentile of a dataset. Makes a histogram
+ of the dataset and goes along it until it gets a total count corresponding
+ with the percentile.
+==================================
+*/
 double percentilevalue(double* data, int datasize, double percentile,
 		double minval, double maxval)
 {
@@ -42,7 +54,8 @@ double percentilevalue(double* data, int datasize, double percentile,
 
 	int temp = 0, index = 0;
 	do
-	{ //Determine value of percentile.
+	{
+		//Determine value of percentile.
 		temp += histogram[index];
 		index++;
 	} while (temp < (percentile * (double) datasize) / 100.0);
@@ -52,17 +65,25 @@ double percentilevalue(double* data, int datasize, double percentile,
 	return percval;
 }
 
-//Determines whether the points in the sent bucket fit within the profile area.
-//If "hide noise points in profile" is ticket in advanced options, these are not sent to the
-//profile
+/*
+==================================
+ vetpoints
 
+ Determines whether the points in the sent bucket fit within the profile area.
+ If "hide noise points in profile" is ticket in advanced options, these are not sent to the
+ profile
+==================================
+*/
 bool* vetpoints(PointBucket* points, vector<double> xs, vector<double> ys, int numberofcorners, bool hideNoise)
 {
 	bool* correctpoints = new bool[points->getNumberOfPoints(0)];
+
 	//Determines whether the point is within the boundary.
 	bool pointinboundary;
+
 	//These define the edge being considered.
 	int lastcorner, currentcorner;
+
 	//For every point:
 	if (!hideNoise)
 	{
@@ -71,8 +92,10 @@ bool* vetpoints(PointBucket* points, vector<double> xs, vector<double> ys, int n
 			// Zero is an even number, so if the point is to the right of an edge
 			// of the boundary zero times, it cannot be within it.
 			pointinboundary = false;
+
 			//Initially the last corner is looped back.
 			lastcorner = numberofcorners - 1;
+
 			//For every edge:
 			for (currentcorner = 0; currentcorner < numberofcorners;
 					++currentcorner)
@@ -111,8 +134,10 @@ bool* vetpoints(PointBucket* points, vector<double> xs, vector<double> ys, int n
 			// Zero is an even number, so if the point is to the right of an edge
 			// of the boundary zero times, it cannot be within it.
 			pointinboundary = false;
+
 			//Initially the last corner is looped back.
 			lastcorner = numberofcorners - 1;
+
 			//For every edge:
 			for (currentcorner = 0; currentcorner < numberofcorners;
 					++currentcorner)
@@ -150,14 +175,24 @@ bool* vetpoints(PointBucket* points, vector<double> xs, vector<double> ys, int n
 	return correctpoints;
 }
 
+/*
+==================================
+ LoadWorker::LoadWorker
+
+ As above, but also takes min-max z values.
+==================================
+*/
 bool* vetpoints_slice(PointBucket* points, vector<double> xs, vector<double> ys,
 		int numberofcorners, bool hideNoise, double minz, double maxz)
 {
 	bool* correctpoints = new bool[points->getNumberOfPoints(0)];
+
 	//Determines whether the point is within the boundary.
 	bool pointinboundary;
+
 	//These define the edge being considered.
 	int lastcorner, currentcorner;
+
 	//For every point:
 	if (!hideNoise)
 	{
@@ -166,8 +201,10 @@ bool* vetpoints_slice(PointBucket* points, vector<double> xs, vector<double> ys,
 			// Zero is an even number, so if the point is to the right of an edge
 			// of the boundary zero times, it cannot be within it.
 			pointinboundary = false;
+
 			//Initially the last corner is looped back.
 			lastcorner = numberofcorners - 1;
+
 			//For every edge:
 			for (currentcorner = 0; currentcorner < numberofcorners;
 					++currentcorner)
@@ -208,8 +245,10 @@ bool* vetpoints_slice(PointBucket* points, vector<double> xs, vector<double> ys,
 			// Zero is an even number, so if the point is to the right of an edge
 			// of the boundary zero times, it cannot be within it.
 			pointinboundary = false;
+
 			//Initially the last corner is looped back.
 			lastcorner = numberofcorners - 1;
+
 			//For every edge:
 			for (currentcorner = 0; currentcorner < numberofcorners;
 					++currentcorner)

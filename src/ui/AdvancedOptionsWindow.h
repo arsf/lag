@@ -1,13 +1,13 @@
 /*
 ===============================================================================
 
- AdvancedLoadDialog.cpp
+ AdvancedOptionsWindow.h
 
  Created on: June-July 2010
  Authors: Haraldur Tristan Gunnarsson, Jan Holownia
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@
 #define ADVANCEDOPTIONSWINDOW_H
 
 #include <gtkmm.h>
-#include <gtkglmm.h>
 #include <vector>
 #include "../TwoDeeOverview.h"
 #include "../Profile.h"
@@ -167,7 +166,6 @@ private:
 
    void on_fullrefresh_toggled();
    void on_backgroundcolor_changed();
-
    void on_advancedoptionsdialog_response(int response_id);
 
    void on_classcheckbutton0_toggled();
@@ -183,9 +181,7 @@ private:
    void on_classcheckbuttonA_toggled();
 
    void on_profile_noise_toggle();
-
    void on_tdo_noise_toggle();
-
    void changecoloursandshades();
 
    void on_heightmaxselect_changed();

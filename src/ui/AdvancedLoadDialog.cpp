@@ -4,10 +4,10 @@
  AdvancedLoadDialog.cpp
 
  Created on: 25 Jun 2012
- Authors: Jan Holownia
+ Author: Jan Holownia
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

@@ -7,7 +7,7 @@
  Authors: Haraldur Tristan Gunnarsson, Jan Holownia
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,16 +25,8 @@
 ===============================================================================
 */
 
-#include <gtkmm.h>
-#include <gtkglmm.h>
-#include <vector>
-#include "../TwoDeeOverview.h"
-#include "../Profile.h"
-#include "../SelectionBox.h"
 #include "FileOpener.h"
-
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
+#include "../SelectionBox.h"
 
 
 /*
@@ -62,13 +54,6 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 
 {
 	load_xml(builder);
-
-	time_t starttime = time(NULL);
-
-	char meh[80];
-	strftime(meh, 80, "%Y.%m.%d(%j).%H-%M-%S.%Z", localtime(&starttime));
-	ostringstream bleh;
-	bleh << meh;
 
 	loaderrorstream = new ostringstream();
 	loadedanyfiles = false;
@@ -343,7 +328,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
                         btnUseDefault->get_active(), scale_factor,
                         asciicodeentry->get_text(), fence,
                         ald->get_point_filter(),
-                        boost::filesystem::path(std::string(cache_folder_select->get_current_folder())));
+                        cache_folder_select->get_current_folder());
 
 	   // Show loading dialog
 	   loaddialog->show_all();

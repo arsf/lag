@@ -7,7 +7,7 @@
  Authors: Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -40,17 +40,13 @@
 #include "MathFuncs.h"
 #include "LagDisplay.h"
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 
 /*
 ==================================
  LagDisplay::LagDisplay
 ==================================
 */
-LagDisplay::LagDisplay(boost::filesystem::path fontpath,
-		const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit) :
+LagDisplay::LagDisplay(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketlimit) :
 		Gtk::GL::DrawingArea(config),
 		zoomlevel			(1),
 		zoompower			(0.5),
@@ -81,7 +77,6 @@ LagDisplay::LagDisplay(boost::filesystem::path fontpath,
 		blue				(0.0),
 		alpha				(0.0)
 {
-   fontpath = fontpath / "fonts/DejaVuSansMono.ttf";
 }
 
 /*

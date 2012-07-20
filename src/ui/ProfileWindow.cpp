@@ -3,7 +3,7 @@
 
  ProfileWindow.cpp
 
- Created on: June-July 2010
+ Created on: June-July 2012
  Authors: Haraldur Tristan Gunnarsson, Jan Holownia
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
@@ -25,9 +25,6 @@
 ===============================================================================
 */
 
-#include <gtkmm.h>
-#include <gtkglmm.h>
-#include <vector>
 #include "ProfileWindow.h"
 
 

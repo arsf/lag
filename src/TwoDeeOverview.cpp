@@ -1,48 +1,47 @@
 /*
- * LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
- * Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * File: TwoDeeOverview.cpp
- * Author: Haraldur Tristan Gunnarsson
- * Written: November 2009 - July 2010
- *
- * WARNING! THIS IS A THREADED ENVIRONMENT. CARELESSNESS WILL BE REWARDED 
- * WITH EXTREME PREJUDICE (YES, YOU READ THAT CORRECTLY)!
- *
- * */
-#include <gtkmm.h>
-#include <gtkglmm.h>
-#include <vector>
+===============================================================================
+
+ TwoDeeOverview.h
+
+ Created on: Nov 2009
+ Author: Haraldur Tristan Gunnarsson, Jan Holownia
+
+ LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
+ Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+===============================================================================
+*/
+
 #include <iostream>
 #include <iomanip>
-#include "Quadtree.h"
-#include "PointBucket.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "TwoDeeOverview.h"
 #include "MathFuncs.h"
 #include "geoprojectionconverter.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
 
-TwoDeeOverview::TwoDeeOverview(  boost::filesystem::path fontpath,
-                           const Glib::RefPtr<const Gdk::GL::Config>& config,
+/*
+==================================
+ TwoDeeOverview::TwoDeeOverview
+==================================
+*/
+TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
 							      int bucketlimit, Gtk::Label *rulerlabel)
-:	LagDisplay(fontpath, config, bucketlimit),
+:	LagDisplay(config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
 		drawnsofarmaxx		(1),
@@ -165,12 +164,24 @@ TwoDeeOverview::TwoDeeOverview(  boost::filesystem::path fontpath,
    signal_extraDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::extraDraw));
 }
 
+/*
+==================================
+ TwoDeeOverview::~TwoDeeOverview
+==================================
+*/
 TwoDeeOverview::~TwoDeeOverview()
 {
 	delete fencebox;
 	delete profbox;
 }
 
+/*
+==================================
+ TwoDeeOverview::convert_to_latlong
+
+ Given point coordinates in UTM converts them to latlong.
+==================================
+*/
 void TwoDeeOverview::convert_to_latlong(double* point)
 {
 	GeoProjectionConverter gpc;
@@ -180,7 +191,14 @@ void TwoDeeOverview::convert_to_latlong(double* point)
 	gpc.to_target(point);
 }
 
-//Prepare the appropriate overlays for flushing to the screen.
+/*
+==================================
+ TwoDeeOverview::drawoverlays
+
+ Prepare the appropriate overlays for flushing to the screen.
+==================================
+*/
+
 void TwoDeeOverview::drawoverlays()
 {
    //Draw the profile box if profile mode is on.
@@ -204,10 +222,15 @@ void TwoDeeOverview::drawoverlays()
       makecolourlegend();
 }
 
-// Dispatcher handlers
-// This handler prepares OpenGL for drawing the buckets, by "beginning" OpenGL 
-// and then clearing the buffers. It also then draws any profile or fencing 
-// boxes or the ruler.
+/*
+==================================
+ TwoDeeOverview::InitGlDraw
+
+ This handler prepares OpenGL for drawing the buckets, by "beginning" OpenGL
+ and then clearing the buffers. It also then draws any profile or fencing
+ boxes or the ruler.
+==================================
+*/
 void TwoDeeOverview::InitGLDraw()
 {
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
@@ -223,16 +246,22 @@ void TwoDeeOverview::InitGLDraw()
    initialising_GL_draw = false;
 }
 
-// This handler draws the contents of the arrays vertices and colours to the 
-// framebuffer. Note that the reason the OpenGL vertex array stuff is in here 
-// is because, apparently, the glDisableClientState() calls try to access the 
-// arrays, and this caused valgrind to squeal. It would make the program 
-// marginally faster to add a boolean variable "ending_GL_draw" so that 
-// EndGLDraw could end the vertex array enablement (and InitGLDraw could start 
-// it), but is it worth the global variable and the extra effort? Also, it is 
-// not certain, but it seems that since the vertex array stuff has moved here 
-// the missing bucket problem has gone, and it is also now very very difficult 
-// to make the thread cause a crash.
+/*
+==================================
+ TwoDeeOverview::DrawGLToCard
+
+ This handler draws the contents of the arrays vertices and colours to the
+ framebuffer. Note that the reason the OpenGL vertex array stuff is in here
+ is because, apparently, the glDisableClientState() calls try to access the
+ arrays, and this caused valgrind to squeal. It would make the program
+ marginally faster to add a boolean variable "ending_GL_draw" so that
+ EndGLDraw could end the vertex array enablement (and InitGLDraw could start
+ it), but is it worth the global variable and the extra effort? Also, it is
+ not certain, but it seems that since the vertex array stuff has moved here
+ the missing bucket problem has gone, and it is also now very very difficult
+ to make the thread cause a crash.
+==================================
+*/
 void TwoDeeOverview::DrawGLToCard()
 {
    if(threaddebug) cout << "Boo!" << endl;
@@ -264,11 +293,17 @@ void TwoDeeOverview::DrawGLToCard()
    drawing_to_GL = false;
 }
 
-// This handler exists so that flushing of the framebuffer can be done 
-// independently of drawing to it. This allows an arbitrary frequency of 
-// flushes to be easily set, to compromise between showing the user things 
-// are happening and the desire to reduce the flicker and the fact that more 
-// flushes will make drawing slower.
+/*
+==================================
+ TwoDeeOverview::FlushGLToScreen
+
+ This handler exists so that flushing of the framebuffer can be done
+ independently of drawing to it. This allows an arbitrary frequency of
+ flushes to be easily set, to compromise between showing the user things
+ are happening and the desire to reduce the flicker and the fact that more
+ flushes will make drawing slower.
+==================================
+*/
 void TwoDeeOverview::FlushGLToScreen()
 {
    if(threaddebug)cout << "Lalalalalaaa!" << endl;
@@ -286,36 +321,47 @@ void TwoDeeOverview::FlushGLToScreen()
    flushing = false;
 }
 
-// This cleans up when a drawing thread is ending/has ended. It flushes once 
-// more so that everything is visible on the screen, draws the overlays, ends 
-// the OpenGL session and then records that new threads may be made.
+/*
+==================================
+ TwoDeeOverview::EndGLDraw
+
+ This cleans up when a drawing thread is ending/has ended. It flushes once
+ more so that everything is visible on the screen, draws the overlays, ends
+ the OpenGL session and then records that new threads may be made.
+==================================
+*/
 void TwoDeeOverview::EndGLDraw()
 {
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
 
-//   EXPERIMENTAL
-//   glDisable(GL_DEPTH_TEST);
-//   drawoverlays();
    if (glwindow->is_double_buffered())
       glwindow->swap_buffers();
    else 
       glFlush();
 
    glReadBuffer(GL_BACK);
+
    //Overlays go on top and should not be preserved otherwise you get shadowing.
    glDrawBuffer(GL_FRONT);
    drawoverlays();
    glFlush();
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
+
    //This tells the main thread that it can now produce a new drawing thread.
    thread_existsmain = false;
 }
 
-// This tells the main thread to draw the main image again after all its tasks 
-// currently in its queue are complete.
+/*
+==================================
+ TwoDeeOverview::extraDraw
+
+ This tells the main thread to draw the main image again after all its tasks
+ currently in its queue are complete.
+==================================
+*/
 void TwoDeeOverview::extraDraw()
 {
    // Now any subsequent calls to drawiewable, including the one immediately 
@@ -326,25 +372,29 @@ void TwoDeeOverview::extraDraw()
    drawviewable(1);
 }
 
-// THREADS! BE AFRAID, BE VERY AFRAID.
-// This method draws the main image. Note that redundancy (from this method 
-// and drawpointsfrombuckets()) in telling the main thread what to do is 
-// because the main thread's execution of the signals it receives is not 
-// deterministic because of the possibility of user interference.
-//
-//   Wait until all other drawing threads have ended.
-//   Tell any new threads that are created to wait until this one is finished 
-//   if this one still exists.
-//   Tell the main thread not to create any more threads until the OpenGL has 
-//   been initialised.
-//   Signal main thread to initialise OpenGL for drawing.
-//   Prepare for determining the boundary of the rectangle that just 
-//   encompasses all the buckets being drawn so far.
-//   Draw the initially cached buckets.
-//   If this completes without interruption, draw the initially uncached 
-//   buckets.
-//   End the thread.
-//
+/*
+==================================
+ TwoDeeOverview::mainimage
+
+ This method draws the main image. Note that redundancy (from this method
+ and drawpointsfrombuckets()) in telling the main thread what to do is
+ because the main thread's execution of the signals it receives is not
+ deterministic because of the possibility of user interference.
+
+   Wait until all other drawing threads have ended.
+   Tell any new threads that are created to wait until this one is finished
+   if this one still exists.
+   Tell the main thread not to create any more threads until the OpenGL has
+   been initialised.
+   Signal main thread to initialise OpenGL for drawing.
+   Prepare for determining the boundary of the rectangle that just
+   encompasses all the buckets being drawn so far.
+   Draw the initially cached buckets.
+   If this completes without interruption, draw the initially uncached
+   buckets.
+   End the thread.
+==================================
+*/
 void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 {
    if(threaddebug)cout << "Wait?" << endl;
@@ -437,42 +487,49 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 
    return;
 }
-// This draws either the initially cached or the initially uncached buckets to 
-// the screen. Which to draw is determined by the value of cachedonly.
-//   FOR every bucket:
-//      Determine resolutionindex
-//      IF cachedonly==true && bucket is cached for resolutionindex && 
-//         bucket is not yet drawn|| cachedonly==false && 
-//         bucket is not yet drawn:
-//         Wait until the main thread has finished drawing to the framebuffer.
-//         IF the thread is being interrupted:
-//            Delete data array.
-//            Signal main thread to clear up the OpenGL settings for drawing.
-//            Tell the main thread that this thread is no longer 
-//            (significantly) running.
-//            Delete vertices and colours arrays.
-//            Set it so that subsequent threads will not be interrupted 
-//            immediately.
-//            Allow subsequent threads to act.
-//            End thread (return).
-//         Determine the boundary of the rectangle that just encompasses all 
-//         the buckets being drawn so far.
-//         FOR every point:
-//            determine colour and brightness of point
-//            IF any classifications are selected for increased prominence, 
-//            set the z coordinate of the point to be higher than any 
-//            other points.
-//            place point
-//         IF the thread is not being interrupted:
-//            Tell the main thread not to create any more threads until the 
-//            current bucket has been drawn to the framebuffer.
-//            Signal the main thread to draw the current bucket to the 
-//            framebuffer.
-//            Every Nth bucket (currently 10th):
-//               Tell main thread not to create any more threads until the 
-//               framebuffer has been flushed to the screen.
-//               Signal the main thread to flush the framebuffer to the screen.
-//   Wait until the main thread has finished drawing to the framebuffer.
+
+/*
+==================================
+ TwoDeeOverview::drawpointsfrombuckets
+
+ This draws either the initially cached or the initially uncached buckets to
+ the screen. Which to draw is determined by the value of cachedonly.
+   FOR every bucket:
+      Determine resolutionindex
+      IF cachedonly==true && bucket is cached for resolutionindex &&
+         bucket is not yet drawn|| cachedonly==false &&
+         bucket is not yet drawn:
+         Wait until the main thread has finished drawing to the framebuffer.
+         IF the thread is being interrupted:
+            Delete data array.
+            Signal main thread to clear up the OpenGL settings for drawing.
+            Tell the main thread that this thread is no longer
+           (significantly) running.
+            Delete vertices and colours arrays.
+            Set it so that subsequent threads will not be interrupted
+            immediately.
+            Allow subsequent threads to act.
+            End thread (return).
+         Determine the boundary of the rectangle that just encompasses all
+         the buckets being drawn so far.
+         FOR every point:
+            determine colour and brightness of point
+            IF any classifications are selected for increased prominence,
+            set the z coordinate of the point to be higher than any
+            other points.
+            place point
+         IF the thread is not being interrupted:
+            Tell the main thread not to create any more threads until the
+            current bucket has been drawn to the framebuffer.
+            Signal the main thread to draw the current bucket to the
+            framebuffer.
+            Every Nth bucket (currently 10th):
+               Tell main thread not to create any more threads until the
+               framebuffer has been flushed to the screen.
+               Signal the main thread to flush the framebuffer to the screen.
+   Wait until the main thread has finished drawing to the framebuffer.
+==================================
+*/
 bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                       bool *drawnbucketsarray, bool cachedonly)
 {
@@ -773,15 +830,20 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
    return true;
 }
 
-// 	  This clears up after and ends a drawing thread. It works like this:
-//    Tell the main thread that this thread is no longer (significantly) 
-//    running.
-//    Delete data array.
-//    Signal main thread to clear up the OpenGL settings for drawing.
-//    Delete vertices and colours arrays.
-//    Set it so that subsequent threads will not be interrupted immediately.
-//    Allow subsequent threads to act.
-//
+/*
+==================================
+ TwoDeeOverview::threadend
+
+ This clears up after and ends a drawing thread. It works like this:
+ Tell the main thread that this thread is no longer (significantly)
+ running.
+ Delete data array.
+ Signal main thread to clear up the OpenGL settings for drawing.
+ Delete vertices and colours arrays.
+ Set it so that subsequent threads will not be interrupted immediately.
+ Allow subsequent threads to act.
+==================================
+*/
 void TwoDeeOverview::threadend(PointBucket** buckets)
 {
    if(threaddebug)
@@ -818,7 +880,13 @@ void TwoDeeOverview::threadend(PointBucket** buckets)
    if(threaddebug)cout << "*********Finished thread!" << endl;
 }
 
-//Pauses the thread and waits for the unpause signal to resume.
+/*
+==================================
+ TwoDeeOverview::threadpause
+
+ Pauses the thread and waits for the unpause signal to resume.
+==================================
+*/
 void TwoDeeOverview::threadpause()
 {
    thread_running = false;
@@ -840,24 +908,29 @@ void TwoDeeOverview::threadpause()
    thread_running = true;
 }
 
-// This method draws a preview version of the image for any situations where 
-// it must be drawn quickly. It does this by first electing to draw directly 
-// to the front buffer and to flush it, rather than using double buffering 
-// and the swap_buffers() command. It then clears the front buffer using 
-// glClear() and then builds the profile box, the ruler or the fence box in 
-// the event that one of them is active. The method then copies from the back 
-// buffer to the front buffer a region of pixels that corresponds with a 
-// rectangle that just covers all of the buckets drawn before. This way, if 
-// the entire image is loaded then the user sees it all moving, perfectly. If 
-// some of the image is "off the edge of the screen" then when it moves the 
-// uncovered areas will show the "skeleton" of the buckets. The user will also 
-// see the "skeleton" of the buckets if they elect to do something that will 
-// cause a preview to be drawn before the main image is complete, as only the 
-// complete portions will be drawn. The drawing buffer is then set back to the 
-// back. The method is ordered so that the top-most things are drawn first. 
-// This is because it is thought that having previously-drawn things obscure 
-// latterly-drawn things will reduce flicker.
-//
+/*
+==================================
+ TwoDeeOverview::drawbuckets
+
+ This method draws a preview version of the image for any situations where
+ it must be drawn quickly. It does this by first electing to draw directly
+ to the front buffer and to flush it, rather than using double buffering
+ and the swap_buffers() command. It then clears the front buffer using
+ glClear() and then builds the profile box, the ruler or the fence box in
+ the event that one of them is active. The method then copies from the back
+ buffer to the front buffer a region of pixels that corresponds with a
+ rectangle that just covers all of the buckets drawn before. This way, if
+ the entire image is loaded then the user sees it all moving, perfectly. If
+ some of the image is "off the edge of the screen" then when it moves the
+ uncovered areas will show the "skeleton" of the buckets. The user will also
+ see the "skeleton" of the buckets if they elect to do something that will
+ cause a preview to be drawn before the main image is complete, as only the
+ complete portions will be drawn. The drawing buffer is then set back to the
+ back. The method is ordered so that the top-most things are drawn first.
+ This is because it is thought that having previously-drawn things obscure
+ latterly-drawn things will reduce flicker.
+==================================
+*/
 bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets)
 {
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
@@ -1000,15 +1073,21 @@ bool TwoDeeOverview::drawbuckets(PointBucket** buckets,int numbuckets)
    return true;
 }
 
-// Gets the limits of the viewable area and passes them to the subsetting 
-// method of the quadtree to get the relevant data. It then converts from 
-// a vector to a pointer array to make data extraction faster. Then, 
-// depending on the imagetype requested, it either sets the detail level 
-// and then creates a thread for drawing the main image (imagetype==1) or 
-// calls drawbuckets in order to give a preview of the data when panning etc. 
-// (imagetype==2). When this is called from the expose event (imagetype==3) 
-// it draws the main image (drawing speed is not so urgent now that it is 
-// threaded).
+/*
+==================================
+ TwoDeeOverview::drawviewable
+
+ Gets the limits of the viewable area and passes them to the subsetting
+ method of the quadtree to get the relevant data. It then converts from
+ a vector to a pointer array to make data extraction faster. Then,
+ depending on the imagetype requested, it either sets the detail level
+ and then creates a thread for drawing the main image (imagetype==1) or
+ calls drawbuckets in order to give a preview of the data when panning etc.
+ (imagetype==2). When this is called from the expose event (imagetype==3)
+ it draws the main image (drawing speed is not so urgent now that it is
+ threaded).
+==================================
+*/
 bool TwoDeeOverview::drawviewable(int imagetype)
 {
    guard_against_interaction_between_GL_areas();
@@ -1195,7 +1274,13 @@ bool TwoDeeOverview::drawviewable(int imagetype)
    return true;
 }
 
-//Return to initial viewing position.
+/*
+==================================
+ TwoDeeOverview::returntostart
+
+ Return to initial viewing position.
+==================================
+*/
 bool TwoDeeOverview::returntostart()
 {
    Boundary* lidarboundary = lidardata->getBoundary();
@@ -1229,11 +1314,17 @@ bool TwoDeeOverview::returntostart()
    return drawviewable(1);
 }
 
-// This determines what part of the image is displayed with orthographic 
-// projection. It sets the active matrix to that of projection and makes 
-// it the identity matrix, and then defines the limits of the viewing area 
-// from the dimensions of the window. *ratio/zoomlevel is there to convert 
-// window coordinates to world coordinates.
+/*
+==================================
+ TwoDeeOverview::resetview
+
+ This determines what part of the image is displayed with orthographic
+ projection. It sets the active matrix to that of projection and makes
+ it the identity matrix, and then defines the limits of the viewing area
+ from the dimensions of the window. *ratio/zoomlevel is there to convert
+ window coordinates to world coordinates.
+==================================
+*/
 void TwoDeeOverview::resetview()
 {
    //Extra space to work with is good.
@@ -1246,39 +1337,48 @@ void TwoDeeOverview::resetview()
            -pixelsToImageUnits(get_height()/2),
            +pixelsToImageUnits(get_height()/2),
            -5*altitude,-5*depth);
-   //Missing this causes nothing to be visible (???).
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 }
 
-// This method causes the label below the toolbar to display information about 
-// a point that has been selected (using the right mouse button). It starts by 
-// setting the label to 0 0 0. It then determines the world coordinates 
-// selected from the window coordinates and calls a subset for that. 
-// However, assuming that any points are returned at all, an entire bucket's 
-// worth of points will be returned. These points are then narrowed down to one 
-// point firstly by calling the vetpoints() function to only get the points 
-// that lie in or overlap the square defined by the point's position and the 
-// pointsize and zoom position (i.e. the size of the point on the screen). 
-// After that, all remaining points are compared and the one on top, the one 
-// with the largest z, which would likely be the one the user sees or sees 
-// mostly, is selected as THE point. Data about the point is extracted from 
-// it, with a referral to the quadtree to get the filename. The information 
-// displayed is the following: X, Y and Z values; the time; the intensity; 
-// the classification; the filename of the file the point is from and the 
-// return number.
+/*
+==================================
+ TwoDeeOverview::pointinfo
+
+ This method causes the label below the toolbar to display information about
+ a point that has been selected (using the right mouse button). It starts by
+ setting the label to 0 0 0. It then determines the world coordinates
+ selected from the window coordinates and calls a subset for that.
+ However, assuming that any points are returned at all, an entire bucket's
+ worth of points will be returned. These points are then narrowed down to one
+ point firstly by calling the vetpoints() function to only get the points
+ that lie in or overlap the square defined by the point's position and the
+ pointsize and zoom position (i.e. the size of the point on the screen).
+ After that, all remaining points are compared and the one on top, the one
+ with the largest z, which would likely be the one the user sees or sees
+ mostly, is selected as THE point. Data about the point is extracted from
+ it, with a referral to the quadtree to get the filename. The information
+ displayed is the following: X, Y and Z values; the time; the intensity;
+ the classification; the filename of the file the point is from and the
+ return number.
+==================================
+*/
 bool TwoDeeOverview::pointinfo(double eventx,double eventy)
 {
    string meh = "0\n0\n0";
+
    //This offset exists because, in world coordinates, 0 is the centre.
    double pointeroffx = eventx - get_width()/2;
+
    //...and the same for this one.
    double pointeroffy = eventy - get_height()/2;
+
    //Define an area of equal size to that of the points on the screen.
    double minx = centre.getX() + pixelsToImageUnits(pointeroffx - pointsize/2);
    double maxx = centre.getX() + pixelsToImageUnits(pointeroffx + pointsize/2);
    double miny = centre.getY() - pixelsToImageUnits(pointeroffy + pointsize/2);
    double maxy = centre.getY() - pixelsToImageUnits(pointeroffy - pointsize/2);
+
    vector<double> xs(4);
    xs[0] = minx;
    xs[1] = minx;
@@ -1289,9 +1389,12 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
    ys[1] = maxy;
    ys[2] = maxy;
    ys[3] = miny;
+
    vector<PointBucket*> *pointvector = NULL;
+
    //Get data.
    bool gotdata = advsubsetproc(pointvector,xs,ys,4);
+
    //If there aren't any points, don't bother.
    if(gotdata)
    {
@@ -1487,37 +1590,50 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
    return true;
 }
 
-// This draws a legend on the screen that explains what the colours represent. 
-// It draws different legends depending on the colouring mode except that it 
-// draws nothing when the colouring mode is by none or by flightline (the 
-// latter because flightline numbering is arbitrary, discrete and of 
-// potentially unlimited number). 
+/*
+==================================
+ TwoDeeOverview::makecolourlegend
+
+ This draws a legend on the screen that explains what the colours represent.
+ It draws different legends depending on the colouring mode except that it
+ draws nothing when the colouring mode is by none or by flightline (the
+ latter because flightline numbering is arbitrary, discrete and of
+ potentially unlimited number).
+==================================
+*/
 void TwoDeeOverview::makecolourlegend()
 {
    //The height of the area in world coordinates.
    double rheight = pixelsToImageUnits(get_height());
    double padding = 0.05*rheight;
+
    //This makes sure the scale is drawn on top of the flightlines.
    double altitude = rmaxz+1000;
+
    //This is the gap between the legend and the right edge of the screen.
    double hoffset = 10;
+
    //This is the width of the coloured "key" part.
    double hwidth = 20;
+
    // This is the distance between the end of the text and the beginning 
    // of the key.
    double hgap = 5;
    GLint viewport[4];
    GLdouble modelview[16];
    GLdouble projection[16];
+
    //The world coordinates of the top right corner of the window.
    GLdouble cornx,corny,cornz;
    glGetDoublev(GL_MODELVIEW_MATRIX,modelview);
    glGetDoublev(GL_PROJECTION_MATRIX,projection);
    glGetIntegerv(GL_VIEWPORT,viewport);
+
    //Get the world coordinates of the top-right corner.
    gluUnProject(get_width(), get_height() ,0 ,
                 modelview, projection, viewport,
                 &cornx, &corny, &cornz);
+
    //White text and lines.
    glColor3d(1.0,1.0,1.0);
    double stringwidth = 0;
@@ -1675,11 +1791,17 @@ void TwoDeeOverview::makecolourlegend()
    }
 }
 
-// This draws a scale. It works out what order of magnitude to use for the 
-// scale and the number of intervals to have in it and then modifies these 
-// if there would be too few or too many intervals. It then draws the 
-// vertical line and the small horizontal markers before setting up the font 
-// settings and then drawing the numbers by the markers.
+/*
+==================================
+ TwoDeeOverview::makedistancescale
+
+ This draws a scale. It works out what order of magnitude to use for the
+ scale and the number of intervals to have in it and then modifies these
+ if there would be too few or too many intervals. It then draws the
+ vertical line and the small horizontal markers before setting up the font
+ settings and then drawing the numbers by the markers.
+==================================
+*/
 void TwoDeeOverview::makedistancescale()
 {
    double rheight = pixelsToImageUnits(get_height());
@@ -1757,14 +1879,21 @@ void TwoDeeOverview::makedistancescale()
                     origy + padding + i*order - pixelsToImageUnits(0.5*FONT_CHAR_HEIGHT),altitude);
    }
 }
-   
-// On a left click, this prepares for panning by storing the initial i
-// position of the cursor.
+
+/*
+==================================
+ TwoDeeOverview::on_pan_start
+
+ On a left click, this prepares for panning by storing the initial i
+ position of the cursor.
+==================================
+*/
 bool TwoDeeOverview::on_pan_start(GdkEventButton* event)
 {
    if(event->button==1 || event->button==2)
    {
       panStart.move(event->x, event->y, 0);
+
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that would cause expose events to be called when focus
@@ -1776,13 +1905,19 @@ bool TwoDeeOverview::on_pan_start(GdkEventButton* event)
    else return false;
 }
 
-// As the cursor moves while the left button is depressed, the image is 
-// dragged along as a preview to reduce lag. The centre point is modified 
-// by the negative of the distance  
-// the cursor has moved to make a dragging effect and then the 
-// current position of the cursor is taken to be the starting position for 
-// the next drag (if there is one). The view is then refreshed and then the 
-// image is drawn (as a preview).
+/*
+==================================
+ TwoDeeOverview::on_pan
+
+ As the cursor moves while the left button is depressed, the image is
+ dragged along as a preview to reduce lag. The centre point is modified
+ by the negative of the distance
+ the cursor has moved to make a dragging effect and then the
+ current position of the cursor is taken to be the starting position for
+ the next drag (if there is one). The view is then refreshed and then the
+ image is drawn (as a preview).
+==================================
+*/
 bool TwoDeeOverview::on_pan(GdkEventMotion* event)
 {
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK || (event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)
@@ -1799,7 +1934,13 @@ bool TwoDeeOverview::on_pan(GdkEventMotion* event)
       return false;
 }
 
-//At the end of the pan draw the full image.
+/*
+==================================
+ TwoDeeOverview::on_pan_end
+
+ At the end of the pan draw the full image.
+==================================
+*/
 bool TwoDeeOverview::on_pan_end(GdkEventButton* event)
 {
    if(event->button==1 || event->button==2)
@@ -1808,7 +1949,13 @@ bool TwoDeeOverview::on_pan_end(GdkEventButton* event)
       return false;
 }
 
-//Moves view depending on keyboard commands.
+/*
+==================================
+ TwoDeeOverview::on_pan_key
+
+ Moves view depending on keyboard commands.
+==================================
+*/
 bool TwoDeeOverview::on_pan_key(GdkEventKey* event,double scrollspeed)
 {
    switch(event->keyval)
@@ -1843,14 +1990,21 @@ bool TwoDeeOverview::on_pan_key(GdkEventKey* event,double scrollspeed)
    }
 }
 
-// At the beginning of profiling, defines the start point and, for the 
-// moment, the end point of the profile, Prepares the profile box for 
-// drawing and then calls the drawing method.
+/*
+==================================
+ TwoDeeOverview::on_prof_start
+
+ At the beginning of profiling, defines the start point and, for the
+ moment, the end point of the profile, Prepares the profile box for
+ drawing and then calls the drawing method.
+==================================
+*/
 bool TwoDeeOverview::on_prof_start(GdkEventButton* event)
 {
    if(event->button==1)
    {
       profbox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
+
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that would cause expose events to be called when focus
@@ -1865,10 +2019,17 @@ bool TwoDeeOverview::on_prof_start(GdkEventButton* event)
    else 
       return false;
 }
-// Updates the end point of the profile and then gets the vertical and 
-// horizontal differences betweent the start and end points. These are used 
-// to determine the length of the profile and hence the positions of the 
-// vertices of the profile rectangle. Then the drawing method is called.
+
+/*
+==================================
+ TwoDeeOverview::on_prof
+
+ Updates the end point of the profile and then gets the vertical and
+ horizontal differences betweent the start and end points. These are used
+ to determine the length of the profile and hence the positions of the
+ vertices of the profile rectangle. Then the drawing method is called.
+==================================
+*/
 bool TwoDeeOverview::on_prof(GdkEventMotion* event)
 {
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
@@ -1883,7 +2044,13 @@ bool TwoDeeOverview::on_prof(GdkEventMotion* event)
    else return false;
 }
 
-//Draw the full image at the end of selecting a profile.
+/*
+==================================
+ TwoDeeOverview::on_prof_end
+
+ Draw the full image at the end of selecting a profile.
+==================================
+*/
 bool TwoDeeOverview::on_prof_end(GdkEventButton* event)
 {
    if(event->button==1)
@@ -1897,7 +2064,13 @@ bool TwoDeeOverview::on_prof_end(GdkEventButton* event)
       return false;
 }
 
-//Moves the profile depending on keyboard commands.
+/*
+==================================
+ TwoDeeOverview::on_prof_key
+
+ Moves the profile depending on keyboard commands.
+==================================
+*/
 bool TwoDeeOverview::on_prof_key(GdkEventKey* event,double scrollspeed,bool fractionalshift)
 {
    //5 means 0.5 etc. as fraction.
@@ -1914,12 +2087,19 @@ bool TwoDeeOverview::on_prof_key(GdkEventKey* event,double scrollspeed,bool frac
       drawviewable(2);
 }
 
-//Initialises the coordinates of the fence and then draws preview.
+/*
+==================================
+ TwoDeeOverview::on_fence_start
+
+ Initialises the coordinates of the fence and then draws preview.
+==================================
+*/
 bool TwoDeeOverview::on_fence_start(GdkEventButton* event)
 {
    if(event->button==1)
    {
       fencebox->on_start(Point(event->x, event->y, 0),get_width(),get_height());
+
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that would cause expose events to be called when focus
@@ -1935,7 +2115,13 @@ bool TwoDeeOverview::on_fence_start(GdkEventButton* event)
       return false;
 }
 
-//Updates end coordinates of the fence and then draws preview.
+/*
+==================================
+ TwoDeeOverview::on_fence
+
+ Updates end coordinates of the fence and then draws preview.
+==================================
+*/
 bool TwoDeeOverview::on_fence(GdkEventMotion* event)
 {
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
@@ -1951,7 +2137,13 @@ bool TwoDeeOverview::on_fence(GdkEventMotion* event)
    else return false;
 }
 
-//Draws the main image one more.
+/*
+==================================
+ TwoDeeOverview::on_fence_end
+
+ Draws the main image once more.
+==================================
+*/
 bool TwoDeeOverview::on_fence_end(GdkEventButton* event)
 {
    if(event->button==1)
@@ -1965,7 +2157,13 @@ bool TwoDeeOverview::on_fence_end(GdkEventButton* event)
       return false;
 }
 
-//Moves the fence depending on keyboard commands.
+/*
+==================================
+ TwoDeeOverview::on_fence_key
+
+ Moves the fence depending on keyboard commands.
+==================================
+*/
 bool TwoDeeOverview::on_fence_key(GdkEventKey* event,double scrollspeed)
 {
    bool moved = fencebox->on_key(event,pixelsToImageUnits(scrollspeed),false);
@@ -1976,7 +2174,13 @@ bool TwoDeeOverview::on_fence_key(GdkEventKey* event,double scrollspeed)
    return drawviewable(2);
 }
 
-//Find the starting coordinates of the ruler and set the label values to zero.
+/*
+==================================
+ TwoDeeOverview::on_ruler_start
+
+ Find the starting coordinates of the ruler and set the label values to zero.
+==================================
+*/
 bool TwoDeeOverview::on_ruler_start(GdkEventButton* event)
 {
    if(event->button==1)
@@ -1992,6 +2196,7 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event)
                                       "\nY: 0 Pos: " + ypos.str());
 
       rulerEventStart = Point(event->x, event->y);
+
       // This causes the event box containing the overview to grab the focus, 
       // and so to allow keyboard control of the overview (this is not done 
       // directly as that wuld cause expose events to be called when focus 
@@ -2007,9 +2212,15 @@ bool TwoDeeOverview::on_ruler_start(GdkEventButton* event)
       return false;
 }
 
-// Find the current cursor coordinates in image terms (as opposed to 
-// window/screen terms) and then update the label with the distances. 
-// Then draw the ruler.
+/*
+==================================
+ TwoDeeOverview::on_ruler
+
+ Find the current cursor coordinates in image terms (as opposed to
+ window/screen terms) and then update the label with the distances.
+ Then draw the ruler.
+==================================
+*/
 bool TwoDeeOverview::on_ruler(GdkEventMotion* event)
 {
    if((event->state & Gdk::BUTTON1_MASK) == Gdk::BUTTON1_MASK)
@@ -2043,7 +2254,13 @@ bool TwoDeeOverview::on_ruler(GdkEventMotion* event)
    else return false;
 }
 
-//Draw again.
+/*
+==================================
+ TwoDeeOverview::on_ruler_end
+
+ Draw again.
+==================================
+*/
 bool TwoDeeOverview::on_ruler_end(GdkEventButton* event)
 {
    if(event->button==1)
@@ -2054,7 +2271,13 @@ bool TwoDeeOverview::on_ruler_end(GdkEventButton* event)
       return false;
 }
 
-//Make the ruler as a thick line.
+/*
+==================================
+ TwoDeeOverview::makerulerbox
+
+ Make the ruler as a thick line.
+==================================
+*/
 void TwoDeeOverview::makerulerbox()
 {
    //This makes sure the ruler is drawn on top of the flightlines.
@@ -2068,13 +2291,20 @@ void TwoDeeOverview::makerulerbox()
    glLineWidth(1);
 }
 
-// (Anything that happens for centrex is reversed for centrey). First, 
-// half the distance between the centre of the window and the window 
-// position of the event is converted to image coordinates and added to 
-// the image centre. This is analogous to moving the centre to where the 
-// event occured. Then, depending on the direction of the scroll, the 
-// zoomlevel is increased or decreased. Then the centre is moved to where 
-// the centre of the window will now lie. The image is then drawn.
+/*
+==================================
+  TwoDeeOverview::on_zoom
+
+ First, half the distance between the centre of the window and the window
+ position of the event is converted to image coordinates and added to
+ the image centre. This is analogous to moving the centre to where the
+ event occured. Then, depending on the direction of the scroll, the
+ zoomlevel is increased or decreased. Then the centre is moved to where
+ the centre of the window will now lie. The image is then drawn.
+
+ (Anything that happens for centrex is reversed for centrey).
+==================================
+*/
 bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
 {
 	double factor = 2;
@@ -2121,7 +2351,13 @@ bool TwoDeeOverview::on_zoom(GdkEventScroll* event)
    return drawviewable(1);
 }
 
-//Zooms depending on keybaord signals.
+/*
+==================================
+ TwoDeeOverview::on_zoom_key
+
+ Zooms depending on keyboard signals.
+==================================
+*/
 bool TwoDeeOverview::on_zoom_key(GdkEventKey* event)
 {
    if(zoomlevel>=1)
@@ -2183,12 +2419,27 @@ bool TwoDeeOverview::on_zoom_key(GdkEventKey* event)
    return drawviewable(1);
 }
 
+/*
+==================================
+ TwoDeeOverview::toggleNoise
+
+ Hides noisy points (classification 7).
+==================================
+*/
 void TwoDeeOverview::toggleNoise()
 {
    tdoDisplayNoise = !tdoDisplayNoise;
    drawviewable(1);
 }
 
+/*
+==================================
+ TwoDeeOverview::set_superzoom
+
+ Increases the sensitivity of the mouse wheel so the zooming is much faster.
+ Also increases the point size.
+==================================
+*/
 void TwoDeeOverview::set_superzoom(bool zoom)
 {
 	superzoom = zoom;
