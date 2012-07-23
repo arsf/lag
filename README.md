@@ -13,7 +13,7 @@ LAG is a software for visualisation, analysis and processing of LiDAR data. It h
 been initially created at Airborne Reasearch and Survey faciliy in Plymouth Marine
 Laboratory to help with data processing.  
 
-For more information see: http://arsf.github.com/lag
+For more information see: http://arsf.github.com/lag  
 For user's guide see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide  
 If you are a developer see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq  
 
