@@ -33,9 +33,6 @@
 #include "PointData.h"
 #include <cstdio>
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 using namespace std;
 namespace fs = boost::filesystem;
 

@@ -262,13 +262,6 @@ protected:
    // vectors).
    vector<LidarPoint>* flightlinepoints;
 
-   // Arrays for openGL input
-   float* vertices;
-   float* colours;
-
-   // Largest known flightline size, used for assigning memory correctly
-   int vertex_limit;
-
    //Store the maximum and minimum heights of the profile sample.
    double samplemaxz,sampleminz;
 
@@ -321,7 +314,7 @@ protected:
    //Determines whether or not the fence should be drawn.
    bool fencing;
 
-   Glib::Mutex profile_mainimage_mutex;
+   Glib::Mutex mutex;
  
    //Signal handlers:
 

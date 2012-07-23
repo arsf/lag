@@ -33,72 +33,62 @@
 #include "MathFuncs.h"
 #include "geoprojectionconverter.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
-// define for thread debugging
-//#define THREAD_DEBUG
-
 
 /*
 ==================================
  TwoDeeOverview::TwoDeeOverview
 ==================================
 */
-TwoDeeOverview::TwoDeeOverview(
-         const Glib::RefPtr<const Gdk::GL::Config>& config,
-		   int bucketlimit, Gtk::Label *rulerlabel)
+TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
+							      int bucketlimit, Gtk::Label *rulerlabel)
 :	LagDisplay(config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
 		drawnsofarmaxx		(1),
 		drawnsofarmaxy		(1),
 		resolutionbase		(1),
-		resolutiondepth	(1),
+		resolutiondepth		(1),
 		numbuckets			(0),
 		raiseline			(false),
 		linetoraise			(0),
 		drawnsinceload		(false),
-		reversez		   	(false),
+		reversez			(false),
 		showlegend			(false),
 		showdistancescale	(false),
-		drawneverything	(false),
+		drawneverything		(false),
 		pointcount			(0),
-		vertices			   (NULL),
+		vertices			(NULL),
 		colours				(NULL),
-		tdoDisplayNoise	(true),
+		tdoDisplayNoise		(true),
 		rulerlabel			(rulerlabel),
 		profiling			(false),
 		showprofile			(false),
 		fencing				(false),
 		showfence			(false),
 		rulerwidth			(2),
-		rulering			   (false),
+		rulering			(false),
 		heightenNonC		(false),
 		heightenGround		(false),
 		heightenLowVeg		(false),
 		heightenMedVeg		(false),
-		heightenHighVeg	(false),
+		heightenHighVeg		(false),
 		heightenBuildings	(false),
 		heightenNoise		(false),
 		heightenMass		(false),
 		heightenWater		(false),
-		heightenOverlap	(false),
+		heightenOverlap		(false),
 		heightenUndefined	(false),
 		panningRefresh		(1),
 		slicing				(false),
 		latlong				(false),
 		superzoom			(false)
 {
-   // Arrays for openGL input
-   vertices = new float[3*bucketlimit];
-   colours  = new float[3*bucketlimit];
-
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
 
    // Threading:
+   threaddebug = false;
    thread_existsmain = false;
    thread_existsthread = false;
    interruptthread = false;
@@ -181,9 +171,6 @@ TwoDeeOverview::TwoDeeOverview(
 */
 TwoDeeOverview::~TwoDeeOverview()
 {
-   delete[] vertices;
-   delete[] colours;
-
 	delete fencebox;
 	delete profbox;
 }
@@ -277,9 +264,7 @@ void TwoDeeOverview::InitGLDraw()
 */
 void TwoDeeOverview::DrawGLToCard()
 {
-#ifdef THREAD_DEBUG
-   cout << "DrawGLToCard called" << endl;
-#endif
+   if(threaddebug) cout << "Boo!" << endl;
 
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
 
@@ -321,9 +306,7 @@ void TwoDeeOverview::DrawGLToCard()
 */
 void TwoDeeOverview::FlushGLToScreen()
 {
-#ifdef THREAD_DEBUG
-   cout << "FlushGLToScreen called" << endl;
-#endif
+   if(threaddebug)cout << "Lalalalalaaa!" << endl;
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
@@ -414,9 +397,7 @@ void TwoDeeOverview::extraDraw()
 */
 void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 {
-#ifdef THREAD_DEBUG
-   cout << "mainimage called, awaiting signal to run" << endl;
-#endif
+   if(threaddebug)cout << "Wait?" << endl;
 
    // If another thread still exists (i.e. it has not cleared itself up yet) 
    // then wait until it is cleared.
@@ -430,9 +411,7 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 #endif
    }
 
-#ifdef THREAD_DEBUG
-   cout << "mainimage call running" << endl;
-#endif
+   if(threaddebug)cout << "***Finished waiting." << endl;
 
    // Any subsequent threads must wait until this becomes false again.
    thread_existsthread = true;
@@ -445,6 +424,11 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    // change while this thread is running, while the originals might.
    centreSafe.move(centre.getX(), centre.getY(), 0);
 
+   if(threaddebug)cout << "First array" << endl;
+   vertices = new float[3*bucketlimit];
+   if(threaddebug)cout << "Second array" << endl;
+   colours = new float[3*bucketlimit];
+   if(threaddebug)cout << "Initialise GL drawing." << endl;
    drawneverything = false;
 
    // The main thread must not create any new threads like this while also 
@@ -471,33 +455,31 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    //Draw the points from the initially cached buckets.
    bool completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, true);
 
-#ifdef THREAD_DEBUG
    if(!completed)
-    	cout << "Pass of cached interrupted. Stopping!" << endl;
-   else
-#endif
-
-   if (completed)
    {
-#ifdef THREAD_DEBUG
-    	cout << "Finished pass of cached." << endl;
-#endif
+      if(threaddebug)
+    	  cout << "Pass of cached interrupted. Stopping!" << endl;
+   }
+   else
+   {
+      if(threaddebug)
+    	  cout << "Finished pass of cached." << endl;
 
       //Draw the points from the initially uncached buckets.
       completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, false);
 
-#ifdef THREAD_DEBUG
       if(!completed)
-         cout << "Pass of uncached interrupted. Stopping!" << endl;
-      else
-#endif
-      if (completed)
       {
+         if(threaddebug)
+            cout << "Pass of uncached interrupted. Stopping!" << endl;}
+      else
+      {
+         if(threaddebug)
+        	 cout << "Finished pass of uncached." << endl;
          if(numbuckets > 0)
             drawneverything = true;
-#ifdef THREAD_DEBUG
-        	cout << "Finished pass of uncached, thread completed." << endl;
-#endif
+         if(threaddebug)
+        	 cout << "Thread completed." << endl;
       }
    }
    delete[]drawnbucketsarray;
@@ -560,6 +542,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
    //For every bucket:
    for(int i=0;i<numbuckets;++i)
    {
+      if(threaddebug)cout << "Calculating resolution index." << endl;
       double bucketscreenwidth = imageUnitsToPixels(buckets[i]->getmaxX() - buckets[i]->getminX());
       double bucketscreenheight = imageUnitsToPixels(buckets[i]->getmaxY() - buckets[i]->getminY());
       double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
@@ -582,6 +565,9 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       if(resolutionindex > resolutiondepth - 1)
          resolutionindex = resolutiondepth - 1;
 
+      if(threaddebug)
+         cout << "Resolution index is: " << resolutionindex << "." << endl;
+
       // If cachedonly is true, then will proceed if the bucket has not been 
       // loaded before (which at this point should be all of them) and if the 
       // bucket is cached. If cachedonly is false, then will proceed if the 
@@ -592,6 +578,9 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly))
       {
          drawnbucketsarray[i] = true;
+         if(threaddebug)cout << i << " " << numbuckets << endl;
+         if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
+         if(threaddebug)cout << "If drawing, pause." << endl;
 
          // Under no circumstances may the arrays be modified until their 
          // contents have been sent to the framebuffer.
@@ -612,15 +601,19 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 #endif
          }
 
+         if(threaddebug)cout << "Not drawing (anymore)." << endl;
+
          // If paused, the thread releases pointbucket::getpoint(), waits and 
          // then grabs it again.
          if(pausethread)
             threadpause();
+         if(threaddebug)cout << "Interrupt?" << endl;
 
          // Do not pass go, do not collect 200 dollars. The parent method will 
          // handle the fallout, just STOP!
          if(interruptthread)
             return false;
+         if(threaddebug)cout << "No interrupt." << endl;
 
          // This is needed for putting values in the right indices for the 
          // vertices and colours arrays and for drawing them properly with 
@@ -778,51 +771,41 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                pointcount++;
             }
          }
-
-#ifdef DEBUG_THREAD
-         cout << pointcount << endl;
-         cout << vertices[3*pointcount/2] << endl;
-#endif
+         if(threaddebug)cout << pointcount << endl;
+         if(threaddebug)cout << vertices[3*pointcount/2] << endl;
+         if(threaddebug)cout << "Draw if not interrupted." << endl;
 
          if(!interruptthread)
          {
-#ifdef DEBUG_THREAD
-            cout << "Commencing draw" << endl;
-#endif
+            if(threaddebug)cout << "Yes!" << endl;
 
             // Main thread must not attempt to create a new thread like this 
             // while this is waiting for a draw to the framebuffer.
             drawing_to_GL = true;
-#ifdef DEBUG_THREAD
-            cout << "Sending draw signal." << endl;
-#endif
+            if(threaddebug)cout << "Sending draw signal." << endl;
 
             signal_DrawGLToCard();
+
+            if(threaddebug)cout << "Flush?" << endl;
 
             // Main thread must not attempt to create a new thread like this 
             // while flushing has yet to occur.
             if(i >= (numbuckets-1) || numbuckets > 10)
                if( (i + 1) % 10  == 0)
                {
-                  flushing = true;
+               flushing = true;
 
-#ifdef DEBUG_THREAD
-                  cout << "Sending flush signal." << endl;
-#endif
+               if(threaddebug)cout << "Sending flush signal." << endl;
 
-                  signal_FlushGLToScreen();
+               signal_FlushGLToScreen();
                }
          }
-#ifdef DEBUG_THREAD
          else
-            cout << "Draw interrupted." << endl;
-#endif
+        	 if(threaddebug)cout << "Draw interrupted." << endl;
       }
    }
-#ifdef DEBUG_THREAD
-   cout << "Checking for drawing to make sure there is no \
+   if(threaddebug)cout << "Checking for drawing to make sure there is no \
                            deadlock. Might wait." << endl;
-#endif
 
    // Under no circumstances may the arrays be modified until their contents 
    // have been sent to the framebuffer.
@@ -836,9 +819,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       if(pausethread)
          threadpause();
 
-#ifdef DEBUG_THREAD
-      cout << "Waiting for drawing." << endl;
-#endif
+      if(threaddebug)cout << "Waiting for drawing." << endl;
 
 #ifdef __WIN32
       Sleep(1);
@@ -865,25 +846,38 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 */
 void TwoDeeOverview::threadend(PointBucket** buckets)
 {
+   if(threaddebug)
+      cout << "Allowing main thread to start new thread... DANGER!" << endl;
+
    //This thread will not use pointbucket::getpoint() again.
    thread_running = false;
 
+   if(threaddebug)cout << "Delete data array." << endl;
+
    //This is up here so that buckets is deleted before it is newed again.
    delete[] buckets;
+
+   if(threaddebug)cout << "End drawing" << endl;
 
    // For the sake of neatness, clear up. This comes before allowing the main 
    // thread to create another thread like this to ensure that this signal is 
    // processed before, say, a signal to prepare OpenGL for drawing again.
    signal_EndGLDraw();
+   if(threaddebug)cout << "Delete vertex array." << endl;
+
+   // These are here, before a new thread like this is allowed to do anything, 
+   // so that they are deleted before they are newed again.
+   delete[] vertices;
+   if(threaddebug)cout << "Delete colour array." << endl;
+   delete[] colours;
+   if(threaddebug)cout << "Booleans." << endl;
 
    //New threads like this will now not be interrupted.
    interruptthread = false;
 
    //New threads like this will now be allowed to act.
    thread_existsthread = false;
-#ifdef THREAD_DEBUG
-   cout << "Thread terminating" << endl;
-#endif
+   if(threaddebug)cout << "*********Finished thread!" << endl;
 }
 
 /*
@@ -897,11 +891,9 @@ void TwoDeeOverview::threadpause()
 {
    thread_running = false;
 
-#ifdef THREAD_DEBUG
-   cout << "Pausing thread. Allowing the rest of the \
+   if(threaddebug)cout << "Pausing thread. Allowing the rest of the \
                            program access to point data. Waiting until \
                            thread is allowed to unpause." << endl;
-#endif
 
    while(pausethread)
 #ifdef __WIN32
@@ -910,10 +902,8 @@ void TwoDeeOverview::threadpause()
       usleep(10);
 #endif
 
-#ifdef THREAD_DEBUG
-   cout << "Yippee! Can go now! Depriving the rest of the \
+   if(threaddebug)cout << "Yippee! Can go now! Depriving the rest of the \
                            program of resources again!" << endl;
-#endif
 
    thread_running = true;
 }
@@ -1135,35 +1125,32 @@ bool TwoDeeOverview::drawviewable(int imagetype)
          thread_existsthread||
          thread_existsmain)
       {
-#ifdef THREAD_DEBUG
-         cout << "Help! Am stalling!";
-         if(drawing_to_GL)cout << " Stalling because drawing to OpenGL.";
-         if(initialising_GL_draw)cout << " Stalling because initialising \
-                                           OpenGL drawing.";
-         if(flushing)cout << " Stalling because flushing.";
-         if(thread_existsthread)cout << " Stalling because drawing thread \
-                                         exists according to drawing \
-                                         thread.";
-         if(thread_existsmain)cout << " Stalling because drawing thread \
-                                       exists according to main thread.";
-         cout << endl;
-#endif
+         if(threaddebug)
+         {
+            cout << "Help! Am stalling!";
+            if(drawing_to_GL)cout << " Stalling because drawing to OpenGL.";
+            if(initialising_GL_draw)cout << " Stalling because initialising \
+                                              OpenGL drawing.";
+            if(flushing)cout << " Stalling because flushing.";
+            if(thread_existsthread)cout << " Stalling because drawing thread \
+                                            exists according to drawing \
+                                            thread.";
+            if(thread_existsmain)cout << " Stalling because drawing thread \
+                                          exists according to main thread.";
+            cout << endl;
+         }
          // If not doing so already, prepare to draw again after the 
          // interrupt.
          if(!extraDrawing)
          {
             extraDrawing = true;
-#ifdef THREAD_DEBUG
-            cout << "Trying to draw again." << endl;
-#endif
+            if(threaddebug)cout << "Trying to draw again." << endl;
             signal_extraDraw();
          }
          return true;
       }
-#ifdef THREAD_DEBUG
-      cout << "Am fluid" << endl;
-      cout << "Changed offsets." << endl;
-#endif
+      if(threaddebug)cout << "Am fluid" << endl;
+      if(threaddebug)cout << "Changed offsets." << endl;
 
       // Expose events draw the image from scratch at least once so that the 
       // image will be shown immediately after loading a file for the first 

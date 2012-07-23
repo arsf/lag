@@ -115,10 +115,6 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 Profile::~Profile()
 {
 	delete[] flightlinepoints;
-
-   delete[] vertices;
-   delete[] colours;
-
 	if (linez != NULL)
 	{
 		for (int i = 0; i < linezsize; ++i)
@@ -381,7 +377,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 */
 bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
-	Glib::Mutex::Lock lock(profile_mainimage_mutex);
+	Glib::Mutex::Lock lock(mutex);
 
 	//Defining profile parameters (used elsewhere only)
 	start.move((profxs[0] + profxs[1]) / 2, (profys[0] + profys[1]) / 2, 0);
@@ -401,7 +397,7 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	// precisely a monoclinic or parallelogram prism as only the fence
 	// parallelogram can be non-rectangular), which, when the fence is not
 	// "slanted", will also be a cuboid. This paralleogram prism (from the point
-	// of view of the fence (as cross-sectioprofile_mainimage_n) especially) contains the points
+	// of view of the fence (as cross-section) especially) contains the points
 	// to be classified.
 	this->profps = profps;
 	this->profxs = profxs;
@@ -511,9 +507,6 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	flightlinepoints = new vector<LidarPoint> [flightlinestot.size()];
 	totnumpoints = 0;
 
-   // Refresh largest known flightline size
-   vertex_limit = 0;
-
 	//These are for the minimum and maximum heights of the points in the profile
 	samplemaxz = rminz;
 	sampleminz = rmaxz;
@@ -606,19 +599,7 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 		// elects to draw lines they will get a chaotic scribble.
 		sort(flightlinepoints[i].begin(), flightlinepoints[i].end(),
 				boost::bind(&Profile::linecomp, this, _1, _2));
-
-      // Update the vertex_limit, makes sure it's at least as large as
-      // the largest flightline
-      if ( (int) flightlinepoints[i].size() > vertex_limit )
-         vertex_limit = (int) flightlinepoints[i].size();
 	}
-
-   // Allocates memory to store OpenGL input, now that the size required
-   // is known
-   delete[] vertices;
-   delete[] colours;
-   vertices = new float[3 * vertex_limit];
-   colours  = new float[3 * vertex_limit];
 
 	delete[] queriedbucketsarray;
 	delete pointvector;
@@ -1011,27 +992,27 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 		double widgradboxb = multy * (yb - minPlan.getY())
 				- (multx * (xb - minPlan.getX()) * widgradbox);
 
-		// Identify the points of intercept for each point-to-profile line and
-		// the profile line and find the distance along the profile line:{
-		//
-		//  0 (adjusted origin)
-		//   \ Profile line       ____/p
-		//    \              ____/ Point line
-		//     \        ____/
-		//      \  ____/
-		//    ___\/P
-		//   /    \
-      //         \
-      //          \
-      //
-		//    For point p:
-		//       x of P is interxp
-		//       y of P is interyp
-		//       z is ignored (or "swept along")
-		//       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
-		//       find distance along the profile i.e distance from the adjusted
-		//       origin.
-		//
+		 /* Identify the points of intercept for each point-to-profile line and
+		 // the profile line and find the distance along the profile line:{
+		 //
+		 //  0 (adjusted origin)
+		 //   \ Profile line       ____/p
+		 //    \              ____/ Point line
+		 //     \        ____/
+		 //      \  ____/
+		 //    ___\/P
+		 //   /    \
+      	 //         \
+         //          \
+         //
+		 //    For point p:
+		 //       x of P is interxp
+		 //       y of P is interyp
+		 //       z is ignored (or "swept along")
+		 //       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
+		 //       find distance along the profile i.e distance from the adjusted
+		 //       origin.
+		 // */
 
 		double interxa, interxb, interya, interyb;
 
@@ -1985,7 +1966,7 @@ void Profile::make_moving_average()
 */
 bool Profile::mainimage(int detail)
 {
-	Glib::Mutex::Lock lock(profile_mainimage_mutex);
+	Glib::Mutex::Lock lock(mutex);
 
 	// Values of less than 1 would cause infinite loops (though negative
 	// value would eventually stop due to overflow.
@@ -2002,6 +1983,19 @@ bool Profile::mainimage(int detail)
 	Colour tempColour;
 	float z;
 	int intensity;
+	int limit = 0;
+
+	// The size of the vertex and colour arrays should be the same as that
+	// of the largest group of points, by flightline.
+	for (int i = 0; i < (int) flightlinestot.size(); ++i)
+	{
+		if ((int) flightlinepoints[i].size() > limit)
+			limit = (int) flightlinepoints[i].size();
+	}
+
+	//Needed for the glDrawArrays() call further down.
+	float* vertices = new float[3 * limit];
+	float* colours = new float[3 * limit];
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -2153,6 +2147,8 @@ bool Profile::mainimage(int detail)
 	glDisableClientState(GL_COLOR_ARRAY);
 	glwindow->gl_end();
 
+	delete[] vertices;
+	delete[] colours;
 	return true;
 
 }
