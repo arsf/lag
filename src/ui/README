@@ -1,0 +1,26 @@
+#############
+#### Regarding the UI for lag.
+############
+
+The UI for lag is produced in Glade and can be edited by using "Glade Interface Designer".
+
+I have converted the UI from libglade to GTKBuilder which means the XML file
+can be parsed without the need for seperate libraries.
+
+Note that because LAG is written in C++, the function connect_all_signals() (Or
+something that resembles that name) is not available - which is a shame, and means
+that these .cpp files have had to be created to connect the UI to signal handlers,
+rather than this being all handled by the XML.
+
+This is probably subject to change and should be monitored by whoever is maintaining LAG.
+
+The addition of this functionality would probably mean that the UI could be completely
+handled by an XML file - which consequently would mean that changes to the UI would not
+require recompilation (except perhaps adding handlers in callbacks.cpp).
+
+***
+Due to a current bug in Glade, spin buttons cannot have their default value set in Glade, 
+because when saving the XML it puts the "value" and "upper" tags in the wrong order.
+
+To counteract this, there are button->set_value() calls in various places in the UI code.
+An update to Glade should fix this in the near future.
