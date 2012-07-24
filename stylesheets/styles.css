@@ -150,7 +150,8 @@ img {
 }*/
 div.img
   {
-  margin:10px 0 10px 0;  
+  margin:5px;
+  padding:5px;
   border:1px solid #ccc;
   height:auto;
   width:auto;
@@ -161,7 +162,7 @@ div.img img
   {
   display:inline;
   padding: 1px;
-  margin: 2px;
+  margin: 1px;
   border: 1px solid #ffffff;
   }
 div.img a:hover img
