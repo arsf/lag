@@ -154,7 +154,7 @@ div.img {
   max-width: 210px;
   padding: 5px;
   margin: 10px 0 10px 0;
-  border: 1px solid #ccc;  
+  border: 1px solid #000000;  
   text-align:center;
   }
 div.img img {
@@ -163,7 +163,7 @@ div.img img {
   border:1px solid #ccc;
   }
 div.img a:hover img {
-  border:1px solid #ffffff;
+  border:1px solid #ccc;
   }
 div.desc {
  text-align:center;
