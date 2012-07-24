@@ -143,12 +143,12 @@ hr {
 div.img {
   display: inline-block; 
   max-width: 650px;
-  padding: 4px;
+  padding: 2px;
   margin: 5px 0 5px 0;
   border: 1px solid #ffffff;  
 }
 div.img img {
-  padding: 3px;
+  padding: 2px;
   border: 1px solid #ccc;
 }
 div.desc {
