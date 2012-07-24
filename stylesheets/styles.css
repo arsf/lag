@@ -147,8 +147,17 @@ img {
   padding: 5px;
   margin: 10px 0 10px 0;
   border: 1px solid #ccc;
+  text-align:center;
 }
-
+img a:hover img {
+  border: 2px solid #ccc
+}
+div desc {
+ text-align:center;
+ font-weight:normal;
+ width:120px;
+ margin:2px;
+}
 
 /* Code blocks */
 
