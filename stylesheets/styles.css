@@ -150,11 +150,11 @@ img {
 }*/
 div.img
   { 
-  margin: 0 auto;
-  max-width: 650px;
-  padding: 1px;
-  margin: 5px;
-  border: 1px solid #ccc;  
+  margin:2px;
+  border:1px solid #ccc;
+  height:auto;
+  width:auto;
+  float:left;
   }
 div.img img
   {
