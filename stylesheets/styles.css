@@ -149,8 +149,7 @@ img {
   border: 1px solid #ccc;  
 }*/
 div.img
-  {
-  position: relative;
+  {  
   margin:2px;
   border:1px solid #ffffff;
   padding: 1px;
@@ -175,8 +174,8 @@ div.desc
   text-align:center;
   font-weight:normal;
   font-size:80%;
-  width:180px;
-  margin:2px;
+  width:190px;
+  margin:1px;
   }
 
 /* Code blocks */
