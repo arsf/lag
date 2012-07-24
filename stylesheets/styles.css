@@ -147,6 +147,13 @@ div.img {
   margin: 10px 0 5px 0;
   border: 1px solid #ccc;  
 }
+div.desc {
+  text-align:center;
+  font-weight:normal;
+  font-size:80%;
+  width:196px;
+  margin:2px;
+}
 
 
 /* Code blocks */
