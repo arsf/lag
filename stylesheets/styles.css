@@ -150,8 +150,7 @@ img {
 }*/
 div.img
   {
-  margin:5px;
-  padding:5px;
+  margin:5px; 
   border:1px solid #ccc;
   height:auto;
   width:auto;
