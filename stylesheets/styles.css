@@ -158,6 +158,7 @@ div.img {
   }
 div.img img {
   display:inline;
+  padding:1px;
   margin:2px;
   border:1px solid #ffffff;
   }
