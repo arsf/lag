@@ -149,7 +149,10 @@ img {
   border: 1px solid #ccc;  
 }*/
 div.img {
-  margin:2px;
+  position:relative;
+  max-width:650px;
+  padding 5px;
+  margin:2px auto;
   border:1px solid #0000ff;
   height:auto;
   width:auto;
