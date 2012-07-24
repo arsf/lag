@@ -146,13 +146,25 @@ img {
   max-width: 650px;
   padding: 5px;
   margin: 10px 0 10px 0;
-  border: 1px solid #ccc;
-  text-align:center;
+  border: 1px solid #ccc;  
 }
-img a:hover img {
-  border: 2px solid #ccc
+div.img {
+ margin:2px;
+ border:1px solid #0000ff;
+ height:auto;
+ width:auto;
+ float:left;
+ text-align:center;
 }
-div desc {
+div.img img {
+ display:inline;
+ margin:3px;
+ border:1px solid #ffffff;
+}
+div.img a:hover img {
+  border: 2px solid #0000ff;
+}
+div.desc {
  text-align:center;
  font-weight:normal;
  width:120px;
