@@ -163,9 +163,12 @@ div.img
   }
 div.img img
   {
-  display:inline;
-  margin:3px;
-  border:1px solid #ffffff;
+  position: relative;
+  margin: 0 auto;
+  max-width: 650px;
+  padding: 5px;
+  margin: 10px 0 10px 0;
+  border: 1px solid #ccc;
   }
 div.img a:hover img
   {
