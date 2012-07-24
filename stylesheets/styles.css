@@ -165,13 +165,13 @@ div.img img
   }
 div.img a:hover img
   {
-  border:1px solid #ccc;
+  border:2px solid #ccc;
   }
 div.desc
   {
   text-align:center;
   font-weight:normal;
-  font-size:80%
+  font-size:80%;
   width:180px;
   margin:2px;
   }
