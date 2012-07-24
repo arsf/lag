@@ -141,7 +141,7 @@ hr {
 /* Images */
 
 div.img {
-  display: inline; 
+  display: inline-block; 
   max-width: 650px;
   padding: 5px;
   margin: 10px 0 5px 0;
