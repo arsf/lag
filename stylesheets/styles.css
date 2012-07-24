@@ -152,7 +152,7 @@ div.img
   {
   position: relative;
   margin:2px;
-  border:1px solid #0000ff;
+  border:1px solid #ffffff;
   height:auto;
   width:auto;
   float:left;
@@ -162,11 +162,12 @@ div.img img
   {
   display:inline;
   margin:3px;
-  border:1px solid #ffffff;
+  padding:2px;
+  border:1px solid #ccc;
   }
-div.img a:hover img
+div.img:hover
   {
-  border:1px solid #0000ff;
+  border:1px solid #ccc;
   }
 div.desc
   {
