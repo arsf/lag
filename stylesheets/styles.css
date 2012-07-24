@@ -151,16 +151,16 @@ img {
 div.img {
   position: relative;
   margin: 0 auto;
-  max-width: 210px;
+  max-width: 650px;
   padding: 5px;
   margin: 10px 0 10px 0;
-  border: 1px solid #000000;  
+  border: 1px solid #ccc;  
   text-align:center;
   }
 div.img img {
   display:inline;
   margin:2px;
-  border:1px solid #ccc;
+  border:1px solid #ffffff;
   }
 div.img a:hover img {
   border:1px solid #ccc;
