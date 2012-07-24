@@ -151,7 +151,7 @@ img {
 div.img
   {
   margin:2px;
-  border:1px solid #0000ff;
+  border:1px solid #ccc;
   height:auto;
   width:auto;
   float:left;
@@ -165,13 +165,14 @@ div.img img
   }
 div.img a:hover img
   {
-  border:1px solid #0000ff;
+  border:1px solid #ccc;
   }
 div.desc
   {
   text-align:center;
   font-weight:normal;
-  width:120px;
+  font-size:80%
+  width:180px;
   margin:2px;
   }
 
