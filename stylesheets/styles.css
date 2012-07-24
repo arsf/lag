@@ -140,7 +140,7 @@ hr {
 
 /* Images */
 
-img {
+div.img {
   position: relative;
   margin: 0 auto;
   max-width: 650px;
