@@ -155,10 +155,7 @@ div.img
   max-width: 650px;
   padding: 5px;
   margin: 10px 0 10px 0;
-  border: 1px solid #ccc; 
-  height:auto;
-  width:auto; 
-  float:left;
+  border: 1px solid #ccc;  
   }
 div.img img
   {
