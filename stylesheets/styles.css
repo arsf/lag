@@ -160,16 +160,16 @@ div.img {
 div.img img {
   display:inline;
   margin:3px;
-  border:1px solid #ffffff;
+  border:1px solid #ccc;
   }
 div.img a:hover img {
-  border:1px solid #0000ff;
+  border:1px solid #ffffff;
   }
 div.desc {
  text-align:center;
  font-weight:normal;
  font-size:80%;
- width:120px;
+ width:200px;
  margin:2px;
 }
 
