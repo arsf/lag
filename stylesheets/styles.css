@@ -149,32 +149,30 @@ img {
   border: 1px solid #ccc;  
 }*/
 div.img
-  { 
+  {
   margin:2px;
-  border:1px solid #ccc;
+  border:1px solid #0000ff;
   height:auto;
   width:auto;
   float:left;
-  text-align:center;    
+  text-align:center;
   }
 div.img img
   {
   display:inline;
-  padding: 1px;
-  margin: 2px;
-  border: 1px solid #ffffff;
+  margin:3px;
+  border:1px solid #ffffff;
   }
 div.img a:hover img
   {
-  border:1px solid #ccc;
+  border:1px solid #0000ff;
   }
 div.desc
   {
   text-align:center;
   font-weight:normal;
-  font-size:80%;
-  width:195px;
-  margin:1px;
+  width:120px;
+  margin:2px;
   }
 
 /* Code blocks */
