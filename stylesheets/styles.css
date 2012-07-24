@@ -140,14 +140,14 @@ hr {
 
 /* Images */
 
-img {
+/* img {
   position: relative;
   margin: 0 auto;
   max-width: 650px;
   padding: 5px;
   margin: 10px 0 10px 0;
   border: 1px solid #ccc;  
-}
+} */
 div.img {
  margin:2px;
  border:1px solid #0000ff;
