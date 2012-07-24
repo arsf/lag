@@ -149,8 +149,7 @@ img {
   border: 1px solid #ccc;  
 }*/
 div.img
-  {
-  position: relative;
+  { 
   margin: 0 auto;
   max-width: 650px;
   padding: 1px;
