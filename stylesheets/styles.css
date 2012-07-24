@@ -149,15 +149,12 @@ img {
   border: 1px solid #ccc;  
 }*/
 div.img {
-  position:relative;
-  max-width:650px;
-  padding 5px;
-  margin:2px auto;
-  border:1px solid #0000ff;
-  height:auto;
-  width:auto;
-  float:left;
-  text-align:center;
+  position: relative;
+  margin: 0 auto;
+  max-width: 650px;
+  padding: 5px;
+  margin: 10px 0 10px 0;
+  border: 1px solid #ccc;  
   }
 div.img img {
   display:inline;
@@ -170,6 +167,7 @@ div.img a:hover img {
 div.desc {
  text-align:center;
  font-weight:normal;
+ font-size:80%;
  width:120px;
  margin:2px;
 }
