@@ -160,16 +160,13 @@ div.img
 div.img img
   {
   display:inline;
-  position: relative;
-  margin: 0 auto;
-  max-width: 650px;
-  padding: 5px;
-  margin: 10px 0 10px 0;
+  padding: 1px;
+  margin: 2px;
   border: 1px solid #ccc;
   }
 div.img a:hover img
   {
-  border:1px solid #ccc;
+  border:1px solid #000000;
   }
 div.desc
   {
