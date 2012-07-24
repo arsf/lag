@@ -153,6 +153,7 @@ div.img
   position: relative;
   margin:2px;
   border:1px solid #ffffff;
+  padding: 1px;
   height:auto;
   width:auto;
   float:left;
