@@ -150,7 +150,7 @@ img {
 }*/
 div.img
   {
-  margin:2px;
+  margin:10px 0 10px 0;  
   border:1px solid #ccc;
   height:auto;
   width:auto;
@@ -173,7 +173,7 @@ div.desc
   text-align:center;
   font-weight:normal;
   font-size:80%;
-  width:180px;
+  width:197px;
   margin:1px;
   }
 
