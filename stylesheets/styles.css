@@ -150,12 +150,14 @@ img {
 }*/
 div.img
   { 
+  position: relative;
   margin: 0 auto;
+  max-width: 650px;
   padding: 5px;
-  border:1px solid #ccc;
-  height:auto;
-  width:auto;
   margin: 10px 0 10px 0;
+  border: 1px solid #ccc; 
+  height:auto;
+  width:auto; 
   float:left;
   }
 div.img img
