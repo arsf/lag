@@ -150,13 +150,11 @@ img {
 }*/
 div.img
   { 
-  position: relative;
-  margin: 0 auto;
+  position: relative;  
   max-width: 650px;
-  padding: 1px;
-  margin: 2px 0 2px 0;
-  border: 1px solid #ccc;  
-   
+  padding: 5px;
+  margin: 10px 0 10px 0;
+  border: 1px solid #ccc;      
   }
 div.img img
   {
