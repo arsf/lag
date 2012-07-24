@@ -162,11 +162,11 @@ div.img img
   display:inline;
   padding: 1px;
   margin: 2px;
-  border: 1px solid #ccc;
+  border: 1px solid #ffffff;
   }
 div.img a:hover img
   {
-  border:1px solid #000000;
+  border:1px solid #ccc;
   }
 div.desc
   {
@@ -174,7 +174,7 @@ div.desc
   font-weight:normal;
   font-size:80%;
   width:180px;
-  margin:2px;
+  margin:1px;
   }
 
 /* Code blocks */
