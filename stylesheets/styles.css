@@ -148,6 +148,10 @@ img {
   margin: 10px 0 10px 0;
   border: 1px solid #ccc;  
 }*/
+div.screenshots
+{
+ margin:0 0 22px;	
+}
 div.img
   {
   margin:2px;
@@ -348,7 +352,7 @@ footer {
   float:left;
   position:fixed;
   bottom:10px;
-	padding-left: 50px;
+  padding-left: 50px;
 }
 
 @media print, screen and (max-width: 960px) {
