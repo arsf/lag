@@ -143,8 +143,8 @@ hr {
 div.img {
   display: inline-block; 
   max-width: 650px;
-  padding: 5px;
-  margin: 10px 0 5px 0;
+  padding: 4px;
+  margin: 5px 0 5px 0;
   border: 1px solid #ffffff;  
 }
 div.img img {
