@@ -150,7 +150,7 @@ img {
 }*/
 div.img
   { 
-  margin:2px;
+  margin: 0 auto;
   border:1px solid #ccc;
   height:auto;
   width:auto;
