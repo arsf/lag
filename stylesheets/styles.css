@@ -139,7 +139,7 @@ hr {
 }
 
 /* Images */
-/*
+
 img {
   position: relative;
   margin: 0 auto;
@@ -147,32 +147,8 @@ img {
   padding: 5px;
   margin: 10px 0 10px 0;
   border: 1px solid #ccc;  
-}*/
-div.img
-  {  
-  margin:2px;
-  border:1px solid #ffffff;
-  padding: 1px;
-  }
-div.img img
-  {
-  display:inline;
-  margin:1px;
-  padding:2px;
-  border:1px solid #ccc;
-  }
-div.img:hover
-  {
-  border:1px solid #ccc;
-  }
-div.desc
-  {
-  text-align:center;
-  font-weight:normal;
-  font-size:80%;
-  width:190px;
-  margin:1px;
-  }
+}
+
 
 /* Code blocks */
 
