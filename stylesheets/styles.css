@@ -160,12 +160,12 @@ div.img
 div.img img
   {
   display:inline;
-  margin:3px;
+  margin:2px;
   border:1px solid #ffffff;
   }
 div.img a:hover img
   {
-  border:2px solid #ccc;
+  border:1px solid #ccc;
   }
 div.desc
   {
