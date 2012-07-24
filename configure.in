@@ -1,0 +1,41 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT([LiDAR Analysis GUI], [1.0] , [mark1@pml.ac.uk])
+AC_CONFIG_SRCDIR([src])
+AM_INIT_AUTOMAKE([1.10 -Wall no-define])
+AC_CONFIG_HEADERS([config.h])
+# use some not always publicly available autoconf magic
+AC_CONFIG_MACRO_DIR([m4])
+
+# we want things to break quickly
+: ${CXXFLAGS="-O3"}
+
+# Checks for programs.
+AC_PROG_CXX
+#AC_PROG_INSTALL
+
+# Checks for libraries using pkg-config
+#PKG_CHECK_MODULES([DEPS], [gtkmm-2.4 gtkglextmm-1.2 gthread-2.0 libgeotiff lidarquadtree] )
+PKG_CHECK_MODULES([GTKmm], [gtkmm-2.4])
+#PKG_CHECK_MODULES([GTKmm], [gtkmm-3.0])
+PKG_CHECK_MODULES([GTKGLextmm], [gtkglextmm-1.2])
+PKG_CHECK_MODULES([GThread], [gthread-2.0])
+PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
+# strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
+# and fails silently in the makefile.  This makes it explicit
+PKG_CHECK_MODULES([laslib], [laslib])
+PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree])
+
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([stdint.h stdlib.h string.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+# Checks for library functions.
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
