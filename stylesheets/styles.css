@@ -148,30 +148,32 @@ img {
   margin: 10px 0 10px 0;
   border: 1px solid #ccc;  
 }*/
-div.img {
-  position: relative;
-  margin: 0 auto;
-  max-width: 650px;
-  padding: 5px;
-  margin: 10px 0 10px 0;
-  border: 1px solid #ccc;  
-  }
-div.img img {
-  display:inline;
-  padding:1px;
+div.img
+  {
   margin:2px;
+  border:1px solid #0000ff;
+  height:auto;
+  width:auto;
+  float:left;
+  text-align:center;
+  }
+div.img img
+  {
+  display:inline;
+  margin:3px;
   border:1px solid #ffffff;
   }
-div.img a:hover img {
-  border:1px solid #ccc;
+div.img a:hover img
+  {
+  border:1px solid #0000ff;
   }
-div.desc {
- text-align:center;
- font-weight:normal;
- font-size:80%;
- width:200px;
- margin:2px;
-}
+div.desc
+  {
+  text-align:center;
+  font-weight:normal;
+  width:120px;
+  margin:2px;
+  }
 
 /* Code blocks */
 
