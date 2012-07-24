@@ -150,11 +150,12 @@ img {
 }*/
 div.img
   { 
-  position: relative;  
-  max-width: 650px;
-  padding: 5px;
-  margin: 10px 0 10px 0;
-  border: 1px solid #ccc;      
+  margin:2px;
+  border:1px solid #ccc;
+  height:auto;
+  width:auto;
+  float:left;
+  text-align:center;    
   }
 div.img img
   {
@@ -172,7 +173,7 @@ div.desc
   text-align:center;
   font-weight:normal;
   font-size:80%;
-  width:197px;
+  width:195px;
   margin:1px;
   }
 
