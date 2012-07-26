@@ -14,8 +14,8 @@ been initially created at Airborne Reasearch and Survey faciliy in Plymouth Mari
 Laboratory to help with data processing.  
 
 For more information see: http://arsf.github.com/lag  
-For user's guide see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide  
-If you are a developer see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq  
+For user's guide see: https://github.com/arsf/lag/wiki/Lag-User-Guide 
+If you are a developer see: https://github.com/arsf/lag/wiki/Developers-FAQ  
 
 INSTALLATION
 ============
