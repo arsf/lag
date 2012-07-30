@@ -377,7 +377,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 */
 bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
-	Glib::Mutex::Lock lock(mutex);
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
 
 	//Defining profile parameters (used elsewhere only)
 	start.move((profxs[0] + profxs[1]) / 2, (profys[0] + profys[1]) / 2, 0);
@@ -397,7 +397,7 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	// precisely a monoclinic or parallelogram prism as only the fence
 	// parallelogram can be non-rectangular), which, when the fence is not
 	// "slanted", will also be a cuboid. This paralleogram prism (from the point
-	// of view of the fence (as cross-section) especially) contains the points
+	// of view of the fence (as cross-sectioprofile_mainimage_n) especially) contains the points
 	// to be classified.
 	this->profps = profps;
 	this->profxs = profxs;
@@ -992,27 +992,27 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 		double widgradboxb = multy * (yb - minPlan.getY())
 				- (multx * (xb - minPlan.getX()) * widgradbox);
 
-		 /* Identify the points of intercept for each point-to-profile line and
-		 // the profile line and find the distance along the profile line:{
-		 //
-		 //  0 (adjusted origin)
-		 //   \ Profile line       ____/p
-		 //    \              ____/ Point line
-		 //     \        ____/
-		 //      \  ____/
-		 //    ___\/P
-		 //   /    \
-      	 //         \
-         //          \
-         //
-		 //    For point p:
-		 //       x of P is interxp
-		 //       y of P is interyp
-		 //       z is ignored (or "swept along")
-		 //       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
-		 //       find distance along the profile i.e distance from the adjusted
-		 //       origin.
-		 // */
+		// Identify the points of intercept for each point-to-profile line and
+		// the profile line and find the distance along the profile line:{
+		//
+		//  0 (adjusted origin)
+		//   \ Profile line       ____/p
+		//    \              ____/ Point line
+		//     \        ____/
+		//      \  ____/
+		//    ___\/P
+		//   /    \
+      //         \
+      //          \
+      //
+		//    For point p:
+		//       x of P is interxp
+		//       y of P is interyp
+		//       z is ignored (or "swept along")
+		//       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
+		//       find distance along the profile i.e distance from the adjusted
+		//       origin.
+		//
 
 		double interxa, interxb, interya, interyb;
 
@@ -1966,7 +1966,7 @@ void Profile::make_moving_average()
 */
 bool Profile::mainimage(int detail)
 {
-	Glib::Mutex::Lock lock(mutex);
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
 
 	// Values of less than 1 would cause infinite loops (though negative
 	// value would eventually stop due to overflow.

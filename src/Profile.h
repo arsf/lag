@@ -314,7 +314,7 @@ protected:
    //Determines whether or not the fence should be drawn.
    bool fencing;
 
-   Glib::Mutex mutex;
+   Glib::Mutex profile_mainimage_mutex;
  
    //Signal handlers:
 
