@@ -393,11 +393,6 @@ protected:
    // current bucket.
    float* colours;
 
-   //Drawing thread interaction variables:
-   // If true, this causes a huge amount of spam to spew from the program 
-   // whenever the drawing thread is in use, for debugging purposes.
-   bool threaddebug;
-
    // This indicates whether a drawing thread currently exists as recorded 
    // by the main thread.
    bool thread_existsmain;
