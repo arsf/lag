@@ -45,8 +45,9 @@
  TwoDeeOverview::TwoDeeOverview
 ==================================
 */
-TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
-							      int bucketlimit, Gtk::Label *rulerlabel)
+TwoDeeOverview::TwoDeeOverview(
+         const Glib::RefPtr<const Gdk::GL::Config>& config,
+		   int bucketlimit, Gtk::Label *rulerlabel)
 :	LagDisplay(config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
@@ -89,6 +90,10 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
 		latlong				(false),
 		superzoom			(false)
 {
+   // Arrays for openGL input
+   vertices = new float[3*bucketlimit];
+   colours  = new float[3*bucketlimit];
+
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
@@ -176,6 +181,9 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
 */
 TwoDeeOverview::~TwoDeeOverview()
 {
+   delete[] vertices;
+   delete[] colours;
+
 	delete fencebox;
 	delete profbox;
 }
@@ -436,9 +444,6 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    // These are "safe" versions of the centre coordinates, as they will not 
    // change while this thread is running, while the originals might.
    centreSafe.move(centre.getX(), centre.getY(), 0);
-
-   vertices = new float[3*bucketlimit];
-   colours  = new float[3*bucketlimit];
 
    drawneverything = false;
 
@@ -870,11 +875,6 @@ void TwoDeeOverview::threadend(PointBucket** buckets)
    // thread to create another thread like this to ensure that this signal is 
    // processed before, say, a signal to prepare OpenGL for drawing again.
    signal_EndGLDraw();
-
-   // These are here, before a new thread like this is allowed to do anything, 
-   // so that they are deleted before they are newed again.
-   delete[] vertices;
-   delete[] colours;
 
    //New threads like this will now not be interrupted.
    interruptthread = false;

@@ -262,6 +262,13 @@ protected:
    // vectors).
    vector<LidarPoint>* flightlinepoints;
 
+   // Arrays for openGL input
+   float* vertices;
+   float* colours;
+
+   // Largest known flightline size, used for assigning memory correctly
+   int vertex_limit;
+
    //Store the maximum and minimum heights of the profile sample.
    double samplemaxz,sampleminz;
 

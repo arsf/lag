@@ -115,6 +115,10 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 Profile::~Profile()
 {
 	delete[] flightlinepoints;
+
+   delete[] vertices;
+   delete[] colours;
+
 	if (linez != NULL)
 	{
 		for (int i = 0; i < linezsize; ++i)
@@ -507,6 +511,9 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	flightlinepoints = new vector<LidarPoint> [flightlinestot.size()];
 	totnumpoints = 0;
 
+   // Refresh largest known flightline size
+   vertex_limit = 0;
+
 	//These are for the minimum and maximum heights of the points in the profile
 	samplemaxz = rminz;
 	sampleminz = rmaxz;
@@ -599,7 +606,19 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 		// elects to draw lines they will get a chaotic scribble.
 		sort(flightlinepoints[i].begin(), flightlinepoints[i].end(),
 				boost::bind(&Profile::linecomp, this, _1, _2));
+
+      // Update the vertex_limit, makes sure it's at least as large as
+      // the largest flightline
+      if ( (int) flightlinepoints[i].size() > vertex_limit )
+         vertex_limit = (int) flightlinepoints[i].size();
 	}
+
+   // Allocates memory to store OpenGL input, now that the size required
+   // is known
+   delete[] vertices;
+   delete[] colours;
+   vertices = new float[3 * vertex_limit];
+   colours  = new float[3 * vertex_limit];
 
 	delete[] queriedbucketsarray;
 	delete pointvector;
@@ -1983,19 +2002,6 @@ bool Profile::mainimage(int detail)
 	Colour tempColour;
 	float z;
 	int intensity;
-	int limit = 0;
-
-	// The size of the vertex and colour arrays should be the same as that
-	// of the largest group of points, by flightline.
-	for (int i = 0; i < (int) flightlinestot.size(); ++i)
-	{
-		if ((int) flightlinepoints[i].size() > limit)
-			limit = (int) flightlinepoints[i].size();
-	}
-
-	//Needed for the glDrawArrays() call further down.
-	float* vertices = new float[3 * limit];
-	float* colours = new float[3 * limit];
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -2147,8 +2153,6 @@ bool Profile::mainimage(int detail)
 	glDisableClientState(GL_COLOR_ARRAY);
 	glwindow->gl_end();
 
-	delete[] vertices;
-	delete[] colours;
 	return true;
 
 }
