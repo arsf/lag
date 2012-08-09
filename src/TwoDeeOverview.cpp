@@ -4,7 +4,7 @@
  TwoDeeOverview.h
 
  Created on: Nov 2009
- Author: Haraldur Tristan Gunnarsson, Jan Holownia
+ Author: Haraldur Tristan Gunnarsson, Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -33,71 +33,70 @@
 #include "MathFuncs.h"
 #include "geoprojectionconverter.hpp"
 
+#define BOOST_FILESYSTEM_VERSION 3
+#include <boost/filesystem.hpp>
+
+// define for thread debugging
+//#define THREAD_DEBUG
+
 
 /*
 ==================================
  TwoDeeOverview::TwoDeeOverview
 ==================================
 */
-TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config,
-							      int bucketlimit, Gtk::Label *rulerlabel)
+TwoDeeOverview::TwoDeeOverview(
+         const Glib::RefPtr<const Gdk::GL::Config>& config,
+		   int bucketlimit, Gtk::Label *rulerlabel)
 :	LagDisplay(config, bucketlimit),
 		drawnsofarminx		(0),
 		drawnsofarminy		(0),
 		drawnsofarmaxx		(1),
 		drawnsofarmaxy		(1),
 		resolutionbase		(1),
-		resolutiondepth		(1),
+		resolutiondepth	(1),
 		numbuckets			(0),
 		raiseline			(false),
 		linetoraise			(0),
 		drawnsinceload		(false),
-		reversez			(false),
+		reversez		   	(false),
 		showlegend			(false),
 		showdistancescale	(false),
-		drawneverything		(false),
+		drawneverything	(false),
 		pointcount			(0),
-		vertices			(NULL),
+		vertices			   (NULL),
 		colours				(NULL),
-		tdoDisplayNoise		(true),
+		tdoDisplayNoise	(true),
 		rulerlabel			(rulerlabel),
 		profiling			(false),
 		showprofile			(false),
 		fencing				(false),
 		showfence			(false),
 		rulerwidth			(2),
-		rulering			(false),
+		rulering			   (false),
 		heightenNonC		(false),
 		heightenGround		(false),
 		heightenLowVeg		(false),
 		heightenMedVeg		(false),
-		heightenHighVeg		(false),
+		heightenHighVeg	(false),
 		heightenBuildings	(false),
 		heightenNoise		(false),
 		heightenMass		(false),
 		heightenWater		(false),
-		heightenOverlap		(false),
+		heightenOverlap	(false),
 		heightenUndefined	(false),
 		panningRefresh		(1),
 		slicing				(false),
 		latlong				(false),
 		superzoom			(false)
 {
+   // Arrays for openGL input
+   vertices = new float[3*bucketlimit];
+   colours  = new float[3*bucketlimit];
+
    //Control:
    zoompower = 0.5;
    maindetailmod = 0.01;
-
-   // Threading:
-   threaddebug = false;
-   thread_existsmain = false;
-   thread_existsthread = false;
-   interruptthread = false;
-   drawing_to_GL = false;
-   initialising_GL_draw = false;
-   flushing = false;
-   extraDrawing = false;
-   pausethread = false;
-   thread_running = false;
 
    //Profiling:
    Colour red = Colour("red");
@@ -161,7 +160,6 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
    signal_DrawGLToCard.connect(sigc::mem_fun(this,&TwoDeeOverview::DrawGLToCard));
    signal_FlushGLToScreen.connect(sigc::mem_fun(this,&TwoDeeOverview::FlushGLToScreen));
    signal_EndGLDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::EndGLDraw));
-   signal_extraDraw.connect(sigc::mem_fun(this,&TwoDeeOverview::extraDraw));
 }
 
 /*
@@ -171,8 +169,13 @@ TwoDeeOverview::TwoDeeOverview(const Glib::RefPtr<const Gdk::GL::Config>& config
 */
 TwoDeeOverview::~TwoDeeOverview()
 {
+   delete[] vertices;
+   delete[] colours;
+
 	delete fencebox;
 	delete profbox;
+
+   //this->~LagDisplay();
 }
 
 /*
@@ -241,9 +244,16 @@ void TwoDeeOverview::InitGLDraw()
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glwindow->gl_end();
 
-   // The drawing thread running mainimage() may now continue. Also, new 
-   // drawing threads may now be started.
-   initialising_GL_draw = false;
+   // The GL extension is now ready for use
+   {
+      Glib::Mutex::Lock lock (GL_action);
+
+      GL_data_impede = false;
+      GL_control_impede = false;
+
+      GL_data_condition.signal();
+      GL_control_condition.signal();
+   }
 }
 
 /*
@@ -264,7 +274,9 @@ void TwoDeeOverview::InitGLDraw()
 */
 void TwoDeeOverview::DrawGLToCard()
 {
-   if(threaddebug) cout << "Boo!" << endl;
+#ifdef THREAD_DEBUG
+   cout << "DrawGLToCard called" << endl;
+#endif
 
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
 
@@ -288,9 +300,13 @@ void TwoDeeOverview::DrawGLToCard()
    glDisableClientState(GL_COLOR_ARRAY);
    glwindow->gl_end();
 
-   // The drawing thread running mainimage() may now continue. Also, new drawing 
-   // threads may now be started.
-   drawing_to_GL = false;
+   // The GL data arrays may now be used again
+   {
+      Glib::Mutex::Lock lock (GL_action);
+
+      GL_data_impede = false;
+      GL_data_condition.signal();
+   }
 }
 
 /*
@@ -306,7 +322,9 @@ void TwoDeeOverview::DrawGLToCard()
 */
 void TwoDeeOverview::FlushGLToScreen()
 {
-   if(threaddebug)cout << "Lalalalalaaa!" << endl;
+#ifdef THREAD_DEBUG
+   cout << "FlushGLToScreen called" << endl;
+#endif
    Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
    if (!glwindow->gl_begin(get_gl_context()))
       return;
@@ -317,8 +335,13 @@ void TwoDeeOverview::FlushGLToScreen()
    else glFlush();
    glwindow->gl_end();
 
-   //The main thread may now create new drawing threads.
-   flushing = false;
+   // The GL extension may now be used again
+   {
+      Glib::Mutex::Lock lock (GL_action);
+
+      GL_control_impede = false;
+      GL_control_condition.signal();
+   }
 }
 
 /*
@@ -350,26 +373,14 @@ void TwoDeeOverview::EndGLDraw()
    glDrawBuffer(GL_BACK);
    glwindow->gl_end();
 
-   //This tells the main thread that it can now produce a new drawing thread.
-   thread_existsmain = false;
-}
+   // The GL extension may now be used again
+   {
+      Glib::Mutex::Lock lock (GL_action);
 
-/*
-==================================
- TwoDeeOverview::extraDraw
+      GL_control_impede = false;
 
- This tells the main thread to draw the main image again after all its tasks
- currently in its queue are complete.
-==================================
-*/
-void TwoDeeOverview::extraDraw()
-{
-   // Now any subsequent calls to drawiewable, including the one immediately 
-   // below this line, may trigger another extraDraw() if interrupted by the 
-   // fact that the drawing thread is waiting for this (the main) thread to 
-   // carry out OpenGL operations.
-   extraDrawing = false;
-   drawviewable(1);
+      GL_control_condition.signal();
+   }
 }
 
 /*
@@ -397,46 +408,23 @@ void TwoDeeOverview::extraDraw()
 */
 void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 {
-   if(threaddebug)cout << "Wait?" << endl;
-
-   // If another thread still exists (i.e. it has not cleared itself up yet) 
-   // then wait until it is cleared.
-
-   while(thread_existsthread)
-   {
-#ifdef __WIN32
-      Sleep(1);
-#else
-	   usleep(100);
+#ifdef THREAD_DEBUG
+   cout << "mainimage called" << endl;
 #endif
-   }
-
-   if(threaddebug)cout << "***Finished waiting." << endl;
-
-   // Any subsequent threads must wait until this becomes false again.
-   thread_existsthread = true;
-
-   // The thread now reserves the "right" to use the pointbucket::getpoint() 
-   // method.
-   thread_running = true;
 
    // These are "safe" versions of the centre coordinates, as they will not 
    // change while this thread is running, while the originals might.
    centreSafe.move(centre.getX(), centre.getY(), 0);
 
-   if(threaddebug)cout << "First array" << endl;
-   vertices = new float[3*bucketlimit];
-   if(threaddebug)cout << "Second array" << endl;
-   colours = new float[3*bucketlimit];
-   if(threaddebug)cout << "Initialise GL drawing." << endl;
    drawneverything = false;
 
-   // The main thread must not create any new threads like this while also 
-   // being told to initialise OpenGL for drawing.
-   initialising_GL_draw = true;
-
    //Prepare OpenGL.
+
+   if (awaitClearGLData(true) || awaitClearGLControl(true))
+      return;
+
    signal_InitGLDraw();
+
    Boundary* lidarboundary = lidardata->getBoundary();
 
    //Preparing to extract boundaries of drawn area.
@@ -455,31 +443,33 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    //Draw the points from the initially cached buckets.
    bool completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, true);
 
+#ifdef THREAD_DEBUG
    if(!completed)
-   {
-      if(threaddebug)
-    	  cout << "Pass of cached interrupted. Stopping!" << endl;
-   }
+    	cout << "Pass of cached interrupted. Stopping!" << endl;
    else
+#endif
+
+   if (completed)
    {
-      if(threaddebug)
-    	  cout << "Finished pass of cached." << endl;
+#ifdef THREAD_DEBUG
+    	cout << "Finished pass of cached." << endl;
+#endif
 
       //Draw the points from the initially uncached buckets.
       completed = drawpointsfrombuckets(buckets, numbuckets, drawnbucketsarray, false);
 
+#ifdef THREAD_DEBUG
       if(!completed)
-      {
-         if(threaddebug)
-            cout << "Pass of uncached interrupted. Stopping!" << endl;}
+         cout << "Pass of uncached interrupted. Stopping!" << endl;
       else
+#endif
+      if (completed)
       {
-         if(threaddebug)
-        	 cout << "Finished pass of uncached." << endl;
          if(numbuckets > 0)
             drawneverything = true;
-         if(threaddebug)
-        	 cout << "Thread completed." << endl;
+#ifdef THREAD_DEBUG
+        	cout << "Finished pass of uncached, thread completed." << endl;
+#endif
       }
    }
    delete[]drawnbucketsarray;
@@ -542,7 +532,8 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
    //For every bucket:
    for(int i=0;i<numbuckets;++i)
    {
-      if(threaddebug)cout << "Calculating resolution index." << endl;
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
       double bucketscreenwidth = imageUnitsToPixels(buckets[i]->getmaxX() - buckets[i]->getminX());
       double bucketscreenheight = imageUnitsToPixels(buckets[i]->getmaxY() - buckets[i]->getminY());
       double bucketpixelcount = bucketscreenwidth*bucketscreenheight;
@@ -565,9 +556,6 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       if(resolutionindex > resolutiondepth - 1)
          resolutionindex = resolutiondepth - 1;
 
-      if(threaddebug)
-         cout << "Resolution index is: " << resolutionindex << "." << endl;
-
       // If cachedonly is true, then will proceed if the bucket has not been 
       // loaded before (which at this point should be all of them) and if the 
       // bucket is cached. If cachedonly is false, then will proceed if the 
@@ -578,42 +566,22 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
       if(drawnbucketsarray[i] == false && (!cachedonly || buckets[i]->getIncacheList()[resolutionindex] == cachedonly))
       {
          drawnbucketsarray[i] = true;
-         if(threaddebug)cout << i << " " << numbuckets << endl;
-         if(threaddebug)cout << buckets[i]->getNumberOfPoints(0) << endl;
-         if(threaddebug)cout << "If drawing, pause." << endl;
 
-         // Under no circumstances may the arrays be modified until their 
-         // contents have been sent to the framebuffer.
-         while(drawing_to_GL)
-         {
-            // If paused, the thread releases pointbucket::getpoint(), waits 
-            // and then grabs it again. Is here so that if there are multiple 
-            // calls to pointinfo() in quick succession then there will not be 
-            // a deadlock (as they would further delay the condition of 
-            // drawing_to_GL becoming false). Is below as well for if 
-            // drawing_to_GL is already false.
-            if(pausethread)
-               threadpause();
-#ifdef __WIN32
-            Sleep(1);
-#else
-            usleep(10);
-#endif
-         }
-
-         if(threaddebug)cout << "Not drawing (anymore)." << endl;
-
-         // If paused, the thread releases pointbucket::getpoint(), waits and 
-         // then grabs it again.
-         if(pausethread)
-            threadpause();
-         if(threaddebug)cout << "Interrupt?" << endl;
+         // Yield pointbucket lock
+         // And also wait for GL data to be safe to modify
+         pbkt_lock.release();
 
          // Do not pass go, do not collect 200 dollars. The parent method will 
          // handle the fallout, just STOP!
-         if(interruptthread)
+         if(awaitClearGLData(true))
+         {
+#ifdef THREAD_DEBUG
+            cout << "Draw interrupted" << endl;
+#endif
             return false;
-         if(threaddebug)cout << "No interrupt." << endl;
+         }
+         else
+            pbkt_lock.acquire();
 
          // This is needed for putting values in the right indices for the 
          // vertices and colours arrays and for drawing them properly with 
@@ -771,62 +739,51 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                pointcount++;
             }
          }
-         if(threaddebug)cout << pointcount << endl;
-         if(threaddebug)cout << vertices[3*pointcount/2] << endl;
-         if(threaddebug)cout << "Draw if not interrupted." << endl;
+         pbkt_lock.release();
 
-         if(!interruptthread)
+#ifdef DEBUG_THREAD
+         cout << pointcount << endl;
+         cout << vertices[3*pointcount/2] << endl;
+#endif
+
+         if(!interrupt_drawing)
          {
-            if(threaddebug)cout << "Yes!" << endl;
-
-            // Main thread must not attempt to create a new thread like this 
-            // while this is waiting for a draw to the framebuffer.
-            drawing_to_GL = true;
-            if(threaddebug)cout << "Sending draw signal." << endl;
+#ifdef DEBUG_THREAD
+            cout << "Sending draw signal." << endl;
+#endif
 
             signal_DrawGLToCard();
-
-            if(threaddebug)cout << "Flush?" << endl;
 
             // Main thread must not attempt to create a new thread like this 
             // while flushing has yet to occur.
             if(i >= (numbuckets-1) || numbuckets > 10)
                if( (i + 1) % 10  == 0)
                {
-               flushing = true;
-
-               if(threaddebug)cout << "Sending flush signal." << endl;
-
-               signal_FlushGLToScreen();
+#ifdef DEBUG_THREAD
+                  cout << "Sending flush signal." << endl;
+#endif
+                  if (awaitClearGLControl(true))
+                     return false;
+                  signal_FlushGLToScreen();
                }
          }
+#ifdef DEBUG_THREAD
          else
-        	 if(threaddebug)cout << "Draw interrupted." << endl;
+         {
+            cout << "Draw interrupted." << endl;
+         }
+#endif
       }
    }
-   if(threaddebug)cout << "Checking for drawing to make sure there is no \
+#ifdef DEBUG_THREAD
+   cout << "Checking for drawing to make sure there is no \
                            deadlock. Might wait." << endl;
-
-   // Under no circumstances may the arrays be modified until their contents 
-   // have been sent to the framebuffer.
-   while(drawing_to_GL)
-   {
-      // If paused, the thread releases pointbucket::getpoint(), waits and then 
-      // grabs it again. Is here so that if there are multiple calls to 
-      // pointinfo() in quick succession then there will not be a deadlock 
-      // (as they would further delay the condition of drawing_to_GL becoming 
-      // false).
-      if(pausethread)
-         threadpause();
-
-      if(threaddebug)cout << "Waiting for drawing." << endl;
-
-#ifdef __WIN32
-      Sleep(1);
-#else
-      usleep(10);
 #endif
-   }
+
+   // Asserts that GL is finished sending data
+   if (awaitClearGLData(false))
+      return false;
+
    return true;
 }
 
@@ -846,66 +803,19 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 */
 void TwoDeeOverview::threadend(PointBucket** buckets)
 {
-   if(threaddebug)
-      cout << "Allowing main thread to start new thread... DANGER!" << endl;
-
-   //This thread will not use pointbucket::getpoint() again.
-   thread_running = false;
-
-   if(threaddebug)cout << "Delete data array." << endl;
-
    //This is up here so that buckets is deleted before it is newed again.
    delete[] buckets;
-
-   if(threaddebug)cout << "End drawing" << endl;
 
    // For the sake of neatness, clear up. This comes before allowing the main 
    // thread to create another thread like this to ensure that this signal is 
    // processed before, say, a signal to prepare OpenGL for drawing again.
+   if (awaitClearGLControl(true))
+      return;
    signal_EndGLDraw();
-   if(threaddebug)cout << "Delete vertex array." << endl;
 
-   // These are here, before a new thread like this is allowed to do anything, 
-   // so that they are deleted before they are newed again.
-   delete[] vertices;
-   if(threaddebug)cout << "Delete colour array." << endl;
-   delete[] colours;
-   if(threaddebug)cout << "Booleans." << endl;
-
-   //New threads like this will now not be interrupted.
-   interruptthread = false;
-
-   //New threads like this will now be allowed to act.
-   thread_existsthread = false;
-   if(threaddebug)cout << "*********Finished thread!" << endl;
-}
-
-/*
-==================================
- TwoDeeOverview::threadpause
-
- Pauses the thread and waits for the unpause signal to resume.
-==================================
-*/
-void TwoDeeOverview::threadpause()
-{
-   thread_running = false;
-
-   if(threaddebug)cout << "Pausing thread. Allowing the rest of the \
-                           program access to point data. Waiting until \
-                           thread is allowed to unpause." << endl;
-
-   while(pausethread)
-#ifdef __WIN32
-      Sleep(1);
-#else
-      usleep(10);
+#ifdef THREAD_DEBUG
+   cout << "Drawing thread cycle ending" << endl;
 #endif
-
-   if(threaddebug)cout << "Yippee! Can go now! Depriving the rest of the \
-                           program of resources again!" << endl;
-
-   thread_running = true;
 }
 
 /*
@@ -1095,10 +1005,17 @@ bool TwoDeeOverview::drawviewable(int imagetype)
    if (lidardata == NULL)
 	   return false;
 
+   if (drawing_thread == NULL)
+   {
+      drawing_thread = new DrawWorker(this);
+
+      drawing_thread->start();
+   }
+
    // If there is an expose event while the image is already being drawn from 
    // scratch and the image has been drawn from scratch at least once then 
    // refresh the screen without interfering with the drawing from scratch:
-   if(thread_running && imagetype == 3 && drawnsinceload)
+   if(drawing_thread->isDrawing() && imagetype == 3 && drawnsinceload)
    {
       Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
       if (!glwindow->gl_begin(get_gl_context()))
@@ -1111,46 +1028,22 @@ bool TwoDeeOverview::drawviewable(int imagetype)
       return true;
    }
 
-   //This causes any existing drawing thread to stop.
-   interruptthread = true;
+   // This causes any call to ::mainimage to stop
+   /*if (drawing_thread->isDrawing())
+   {
+      abortFrame(false);
 
-   //Draw the main image.
+      awaitClearGLControl(true);
+      signal_FlushGLToScreen();
+   }*/
+
+   // Draw the main image.
    if(imagetype==1 || (!drawnsinceload && imagetype == 3))
    {
-      // If any of these conditions are true and a new thread is created now, 
-      // deadlock is possible.
-      if(drawing_to_GL||
-         initialising_GL_draw||
-         flushing||
-         thread_existsthread||
-         thread_existsmain)
-      {
-         if(threaddebug)
-         {
-            cout << "Help! Am stalling!";
-            if(drawing_to_GL)cout << " Stalling because drawing to OpenGL.";
-            if(initialising_GL_draw)cout << " Stalling because initialising \
-                                              OpenGL drawing.";
-            if(flushing)cout << " Stalling because flushing.";
-            if(thread_existsthread)cout << " Stalling because drawing thread \
-                                            exists according to drawing \
-                                            thread.";
-            if(thread_existsmain)cout << " Stalling because drawing thread \
-                                          exists according to main thread.";
-            cout << endl;
-         }
-         // If not doing so already, prepare to draw again after the 
-         // interrupt.
-         if(!extraDrawing)
-         {
-            extraDrawing = true;
-            if(threaddebug)cout << "Trying to draw again." << endl;
-            signal_extraDraw();
-         }
-         return true;
-      }
-      if(threaddebug)cout << "Am fluid" << endl;
-      if(threaddebug)cout << "Changed offsets." << endl;
+#ifdef THREAD_DEBUG
+      cout << "Am fluid" << endl;
+      cout << "Changed offsets." << endl;
+#endif
 
       // Expose events draw the image from scratch at least once so that the 
       // image will be shown immediately after loading a file for the first 
@@ -1210,21 +1103,15 @@ bool TwoDeeOverview::drawviewable(int imagetype)
          buckets[i]=(*pointvector)[i];
       }
 
-      //New threads should not be immediately interrupted.
-      interruptthread = false;
-
-      //No more threads should be made for now.
-      thread_existsmain = true;
-      Glib::Thread* data_former_thread;
-
       // This thread will interpret the data before telling the main 
       // thread to draw.
-      data_former_thread = Glib::Thread::create(sigc::bind(sigc::mem_fun(this,&TwoDeeOverview::mainimage),buckets,numbuckets),false);
+      drawing_thread->draw(buckets, numbuckets);
 
       delete pointvector;
    }
    //Draw the preview.
-   else if(imagetype==2||(imagetype==3 && !thread_running && drawnsinceload))
+   else if(imagetype==2||(imagetype==3 && !drawing_thread->isDrawing()
+         && drawnsinceload))
    {
       //Limits of viewable area:
       double minx = centre.getX()-pixelsToImageUnits(get_width()/2);
@@ -1403,10 +1290,9 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       bool anypoint = false;
       int bucketno=0;
       int pointno=0;
-      //Wants exclusive access to pointbucket::getpoint(). 
-      pausethread = true;
-      //Will sulk until gets such access.
-      waitforpause();
+      //Wants exclusive access to pointbucket::getpoint().
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
       // For every bucket, in case of the uncommon instances where more than 
       // one bucket is returned. 
       for(unsigned int i=0;i<pointvector->size();i++)
@@ -1451,58 +1337,65 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       }
       if(anypoint)
       {
-         if(drawing_to_GL ||
-            initialising_GL_draw ||
-            flushing ||
-            thread_existsthread ||
-            thread_existsmain);
-         else
-         {
-            drawviewable(2);
-            Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-            if (!glwindow->gl_begin(get_gl_context()))
-               return false;
+         // NOTE: This functionality has been retired for the time being, as it
+         // seemed fairly pointless and used the old boolean race-condition
+         // solving system. In future reimplementations, consider expanding
+         // the selection from 2x2 pixels, as the 2x2 pixels are barely visible
+         // (which warranted retiring this functionality in the first place)
 
-            // This makes sure the highlight is drawn over the top of the 
-            // flightlines.
-            double altitude = rmaxz+1000;
-            glReadBuffer(GL_BACK);
-            glDrawBuffer(GL_FRONT);
-            glColor3f(1.0,1.0,1.0);
-            glBegin(GL_LINE_LOOP);
-               glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).getX()-centre.getX() -
-                           0.5*pixelsToImageUnits(pointsize),
-                           (*pointvector)[bucketno]->
-                           getPoint(pointno,0).getY()-centre.getY() -
-                           0.5*pixelsToImageUnits(pointsize),
-                           altitude);
-               glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).getX()-centre.getX() -
-                           0.5*pixelsToImageUnits(pointsize),
-                           (*pointvector)[bucketno]->
-                           getPoint(pointno,0).getY()-centre.getY() +
-                           0.5*pixelsToImageUnits(pointsize),
-                           altitude);
-               glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).getX()-centre.getX() +
-                           0.5*pixelsToImageUnits(pointsize),
-                           (*pointvector)[bucketno]->
-                           getPoint(pointno,0).getY()-centre.getY() +
-                           0.5*pixelsToImageUnits(pointsize),
-                           altitude);
-               glVertex3d((*pointvector)[bucketno]->
-                           getPoint(pointno,0).getX()-centre.getX() +
-                           0.5*pixelsToImageUnits(pointsize),
-                           (*pointvector)[bucketno]->
-                           getPoint(pointno,0).getY()-centre.getY() - 
-                           0.5*pixelsToImageUnits(pointsize),
-                           altitude);
-            glEnd();
-            glDrawBuffer(GL_BACK);
-            glFlush();
-            glwindow->gl_end();
-         }
+         //if(drawing_to_GL ||
+         //   initialising_GL_draw ||
+         //   flushing ||
+         //   thread_existsthread ||
+         //   thread_existsmain);
+         //else
+         //{
+         //   drawviewable(2);
+         //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
+         //   if (!glwindow->gl_begin(get_gl_context()))
+         //      return false;
+
+         //   // This makes sure the highlight is drawn over the top of the 
+         //   // flightlines.
+         //   double altitude = rmaxz+1000;
+         //   glReadBuffer(GL_BACK);
+         //   glDrawBuffer(GL_FRONT);
+         //   glColor3f(1.0,1.0,1.0);
+         //   glBegin(GL_LINE_LOOP);
+         //      glVertex3d((*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getX()-centre.getX() -
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  (*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getY()-centre.getY() -
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  altitude);
+         //      glVertex3d((*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getX()-centre.getX() -
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  (*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getY()-centre.getY() +
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  altitude);
+         //      glVertex3d((*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getX()-centre.getX() +
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  (*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getY()-centre.getY() +
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  altitude);
+         //      glVertex3d((*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getX()-centre.getX() +
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  (*pointvector)[bucketno]->
+         //                  getPoint(pointno,0).getY()-centre.getY() - 
+         //                  0.5*pixelsToImageUnits(pointsize),
+         //                  altitude);
+         //   glEnd();
+         //   glDrawBuffer(GL_BACK);
+         //   glFlush();
+         //   glwindow->gl_end();
+         //}
+
          //Returns the filepath.
          boost::filesystem::path flightline(lidardata->
             getFileName((*pointvector)[bucketno]->
@@ -1520,21 +1413,21 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
 
          if (!latlong)
          {
-        	 x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
-        	 y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
-        	 z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
+            x << (*pointvector)[bucketno]->getPoint(pointno,0).getX();
+            y << (*pointvector)[bucketno]->getPoint(pointno,0).getY();
+            z << (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
          }
          else
          {
-        	 double point[3];
-        	 point[0] = (*pointvector)[bucketno]->getPoint(pointno,0).getX();
-        	 point[1] = (*pointvector)[bucketno]->getPoint(pointno,0).getY();
-        	 point[2] = (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
-        	 convert_to_latlong(point);
+            double point[3];
+            point[0] = (*pointvector)[bucketno]->getPoint(pointno,0).getX();
+            point[1] = (*pointvector)[bucketno]->getPoint(pointno,0).getY();
+            point[2] = (*pointvector)[bucketno]->getPoint(pointno,0).getZ();
+            convert_to_latlong(point);
 
-        	 x << point[0];
-        	 y << point[1];
-        	 z << point[2];
+            x << point[0];
+            y << point[1];
+            z << point[2];
          }
 
          time << (*pointvector)[bucketno]->getPoint(pointno,0).getTime();
@@ -1543,42 +1436,38 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          rnumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).getReturn());
          flightlinenumber << (int)((*pointvector)[bucketno]->getPoint(pointno,0).getFlightline());
 
-         //Is bored with pointbucket::getpoint(), now.
-         pausethread = false;
          string pointstring = "X: " + x.str() + 
                             ", Y: " + y.str() + 
-                            ", Z:" + z.str() + 
+                            ", Z: " + z.str() + 
                          ", Time: " + time.str() + 
               ",\n" + "Intensity: " + intensity.str() + 
                ", Classification: " + classification.str() + 
              ",\n" + "Flightline: " + flightline.string() + 
-                             " (" + flightlinenumber.str() + 
-                "), Return number: " + rnumber.str() + ".";
+                               " (" + flightlinenumber.str() + 
+               "), Return number: " + rnumber.str() + ".";
 
          rulerlabel->set_text(pointstring);
       }
       else
       {
          rulerlabel->set_text(meh);
-         if(drawing_to_GL ||
-            initialising_GL_draw ||
-            flushing ||
-            thread_existsthread ||
-            thread_existsmain);
-         else drawviewable(2);
+         //if(drawing_to_GL ||
+         //   initialising_GL_draw ||
+         //   flushing ||
+         //   thread_existsthread ||
+         //   thread_existsmain);
+         //else drawviewable(2);
       }
-      //Is bored with pointbucket::getpoint(), now.
-      pausethread = false;
    }
    else
    {
       rulerlabel->set_text(meh);
-      if(drawing_to_GL ||
-         initialising_GL_draw ||
-         flushing ||
-         thread_existsthread ||
-         thread_existsmain);
-      else drawviewable(2);
+      //if(drawing_to_GL ||
+      //   initialising_GL_draw ||
+      //   flushing ||
+      //   thread_existsthread ||
+      //   thread_existsmain);
+      //else drawviewable(2);
    }
    delete pointvector;
 

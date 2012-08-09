@@ -4,7 +4,7 @@
  SaveWorker.cpp
 
  Created on: 10 May 2012
- Author: Jan Holownia
+ Authors: Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -40,21 +40,23 @@
 ==================================
 */
 SaveWorker::SaveWorker(FileSaver* fs, std::string filename, std::string filein,
-		int flightline, std::string parse_string, bool use_latlong,
-		bool use_default_scalefactor, double scale_factor[3]) :
+   		int flightline, std::string parse_string, bool use_latlong,
+	   	bool use_default_scalefactor, double scale_factor[3],
+         Glib::Mutex* pointbucket_mutex) :
 		Worker(),
-		filesaver			(fs),
-		filename			(filename),
-		source_filename		(filein),
-		flightline_number	(flightline),
-		parse_string		(parse_string),
-		latlong_output		(use_latlong),
-		latlong_input		(false),
+		filesaver               (fs),
+		filename                (filename),
+		source_filename         (filein),
+		flightline_number       (flightline),
+		parse_string            (parse_string),
+		latlong_output          (use_latlong),
+		latlong_input           (false),
 		use_default_scalefactor	(use_default_scalefactor),
-		reader				(0),
-		writer				(0),
-		reproject_quantizer	(0),
-		saved_quantizer		(0)
+		reader                  (0),
+		writer                  (0),
+		reproject_quantizer     (0),
+		saved_quantizer         (0),
+      pointbucket_mutex       (pointbucket_mutex)
 {
 	if (!this->use_default_scalefactor)
 	{
@@ -402,39 +404,43 @@ void SaveWorker::run()
 	else
 		save_points_fun = &SaveWorker::save_points;
 
+   // exclusive access to pointbuckets
+   {
+      PointBucket *current;
+      Glib::Mutex::Lock lock (*pointbucket_mutex);
 
-	PointBucket *current;
+      // Go through the point buckets until you have enough point
+      // then save them to the file, start again with the next point.
+      for (unsigned int k = 0; k < buckets->size(); ++k)
+      {
+         current = buckets->at(k);
 
-	// Go through the point buckets until you have enough point
-	// then save them to the file, start again with the next point.
-	for (unsigned int k = 0; k < buckets->size(); ++k)
-	{
-		current = buckets->at(k);
+         for (int i = 0; i < current->getNumberOfPoints(0); ++i)
+         {
+            // only use points from the specified flightline
+            if (current->getPoint(i, 0).getFlightline() == flightline_number)
+            {
+               points[counter] = current->getPoint(i, 0);
+               counter++;
+               if (counter == 1048576)
+               {
+                  (this->*save_points_fun)(counter, points);
+                  counter = 0;
+               }
+            }
+         }
 
-		for (int i = 0; i < current->getNumberOfPoints(0); ++i)
-		{
-			// only use points from the specified flightline
-			if (current->getPoint(i, 0).getFlightline() == flightline_number)
-			{
-				points[counter] = current->getPoint(i, 0);
-				counter++;
-				if (counter == 1048576)
-				{
-					(this->*save_points_fun)(counter, points);
-					counter = 0;
-				}
-			}
-		}
+         if (progress_step == ++progress_counter)
+         {
+            sig_progress();
+            progress_counter = 0;
+         }
 
-		if (progress_step == ++progress_counter)
-		{
-			sig_progress();
-			progress_counter = 0;
-		}
+         if (stopped)
+            break;
+      }
+   }
 
-		if (stopped)
-			break;
-	}
 	(this->*save_points_fun)(counter, points);
 	close();
 

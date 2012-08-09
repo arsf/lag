@@ -4,7 +4,7 @@
  Profile.h
 
  Created on: December 2009
- Author: Haraldur Tristan Gunnarsson
+ Authors: Haraldur Tristan Gunnarsson, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -262,6 +262,13 @@ protected:
    // vectors).
    vector<LidarPoint>* flightlinepoints;
 
+   // Arrays for openGL input
+   float* vertices;
+   float* colours;
+
+   // Largest known flightline size, used for assigning memory correctly
+   int vertex_limit;
+
    //Store the maximum and minimum heights of the profile sample.
    double samplemaxz,sampleminz;
 
@@ -314,7 +321,7 @@ protected:
    //Determines whether or not the fence should be drawn.
    bool fencing;
 
-   Glib::Mutex mutex;
+   Glib::Mutex profile_mainimage_mutex;
  
    //Signal handlers:
 
@@ -347,6 +354,13 @@ protected:
 
    //Draw the main image
    bool mainimage(int detail);
+
+   // Satisfy the compiler with a dummy function
+   // TODO: This is temporary. Really, mainimage should be a universal way to
+   // draw images in LagDisplay
+   void mainimage(PointBucket** buckets, int numbuckets)
+   {
+   }
 
    // This takes a point (usually artificial) and then returns the point whose 
    // "distance along the viewing plane" value is the cloeset to it or, more 

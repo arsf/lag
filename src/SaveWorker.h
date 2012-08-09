@@ -4,7 +4,7 @@
  SaveWorker.h
 
  Created on: 10 May 2012
- Author: Jan Holownia
+ Authors: Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -50,7 +50,8 @@ class SaveWorker: public Worker
 public:
 	SaveWorker(FileSaver* fs, std::string filename, std::string filein,
 			int flightline, std::string parse_string, bool use_latlong,
-			bool use_default_scalefactor, double scale_factor[3]);
+			bool use_default_scalefactor, double scale_factor[3],
+         Glib::Mutex* pointbucket_mutex);
 	void stop();
 
 	Glib::Dispatcher sig_progress;			// Signals that 1% of saving has completed
@@ -63,6 +64,8 @@ protected:
 	void save_points_wf(int n, LidarPoint* points);
 	void close();
 	void convert_projection();
+
+   Glib::Mutex* pointbucket_mutex;
 
 	FileSaver* filesaver;
 	std::string filename;
