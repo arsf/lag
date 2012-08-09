@@ -638,6 +638,11 @@ void LagDisplay::update_background_colour()
  LagDisplay::abortFrame
 
  Instructs this object to abort any frames being presently drawn
+
+ Parameters:
+   forceGL  - Whether calls to awaitClearGLData and awaitClearGLMutex should
+              terminate at once (and will terminate when they are ready
+              otherwise)
 ================================================================================
 */
 void LagDisplay::abortFrame(bool forceGL)

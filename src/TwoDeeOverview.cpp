@@ -1029,13 +1029,15 @@ bool TwoDeeOverview::drawviewable(int imagetype)
    }
 
    // This causes any call to ::mainimage to stop
-   /*if (drawing_thread->isDrawing())
-   {
-      abortFrame(false);
+   // Disabled as a result of drawings completely failing to render
+   // TODO: Fix for performance on slow computers
+   //if (drawing_thread->isDrawing())
+   //{
+   //   abortFrame(true);
 
-      awaitClearGLControl(true);
-      signal_FlushGLToScreen();
-   }*/
+   //   //awaitClearGLControl(true);
+   //   //signal_FlushGLToScreen();
+   //}
 
    // Draw the main image.
    if(imagetype==1 || (!drawnsinceload && imagetype == 3))
