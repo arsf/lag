@@ -31,6 +31,9 @@
 /*
 ================================================================================
  DrawWorker::DrawWorker
+
+ Parameters:
+   disp  - The LagDisplay object that this thread is to be associated with
 ================================================================================
 */
 DrawWorker::DrawWorker(LagDisplay* disp) : Worker(),
@@ -58,6 +61,9 @@ DrawWorker::~DrawWorker()
 /*
 ================================================================================
  DrawWorker::stop
+
+ Stops this drawing thread from executing as soon as possible, and may wake
+ it up to do so.
 ================================================================================
 */
 void DrawWorker::stop()
@@ -76,6 +82,9 @@ void DrawWorker::stop()
 /*
 ================================================================================
  DrawWorker::run
+
+ Used internally by all Worker objects, main function of execution, thread
+ terminates on completion.
 ================================================================================
 */
 void DrawWorker::run()
@@ -102,6 +111,8 @@ void DrawWorker::run()
       copyof_buckets    = internal_buckets;
       copyof_numbuckets = internal_numbuckets;
 
+      // aborting is now futile, since buckets and numbuckets are as up-to-date
+      // as they can be
       display->clear_abortFrame();
 
       if (!stopFlag)
@@ -120,6 +131,13 @@ void DrawWorker::run()
 /*
 ================================================================================
  DrawWorker::draw
+
+ Notes down what values to draw when the next frame happens (which can be any
+ time in the future), and may trigger the next frame, but not necessarily
+
+ Parameters:
+   buckets     - Buckets to draw the main image with
+   numbuckets  - Count of buckets in given array
 ================================================================================
 */
 void DrawWorker::draw(PointBucket** buckets, int numbuckets)
@@ -137,6 +155,7 @@ void DrawWorker::draw(PointBucket** buckets, int numbuckets)
 /*
 ================================================================================
  DrawWorker::isDrawing
+
  Returns whether or not the thread is presently drawing. Accurate at exactly
  the moment of use, but only for an undefined period of time (due to threading
  policies in the kernel) - use sparingly if at all.
