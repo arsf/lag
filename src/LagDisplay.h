@@ -4,7 +4,8 @@
  LagDisplay.h
 
  Created on: June-July 2010
- Authors: Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors:   Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia,
+            Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -35,6 +36,7 @@
 #include "Colour.h"
 #include "Quadtree.h"
 #include "PointBucket.h"
+#include "DrawWorker.h"
 
 // Constants for "fixed" font
 const unsigned int FONT_CHAR_WIDTH = 7;
@@ -65,6 +67,25 @@ public:
 
    //Draw the viewable part of the data.
    virtual bool drawviewable(int imagetype) = 0;
+
+   // Intensive backend of the image drawing process
+   // TODO: Move me into this class
+   virtual void mainimage(PointBucket**, int) = 0;
+
+   // Aborts drawing viewable data (avoid outdated frames, close quicker, etc)
+   void abortFrame(bool forceGL);
+
+   void abortFrame()
+   {
+      abortFrame(false);
+   }
+
+   void clear_abortFrame();
+
+   // Thread control functions
+   void stopDrawingThread();
+   bool awaitClearGLData   (bool reserves);
+   bool awaitClearGLControl(bool reserves);
 
    // Reads from subset of quadtree and prepares variables for 
    // colouring etc..
@@ -136,6 +157,11 @@ public:
       return intensityfloor;
    }
 
+   Glib::Mutex* getPointBucketMutex()
+   {
+      return global_pointbucket_mutex;
+   }
+
    //Setters:
 
    void setlidardata(Quadtree* lidardata,int bucketlimit)
@@ -143,6 +169,15 @@ public:
       this->lidardata=lidardata;
       this->bucketlimit=bucketlimit;
    } 
+
+   void setlidardata(Quadtree* lidardata, int bucketlimit,
+                  Glib::Mutex* pbkt_mutex)
+   {
+      this->lidardata=lidardata;
+      this->bucketlimit=bucketlimit;
+
+      global_pointbucket_mutex = pbkt_mutex;
+   }
    
    Quadtree* getlidatdata()
    {
@@ -329,5 +364,25 @@ protected:
    //Handles resizing of the window. Calls resetview().
    bool on_configure_event(GdkEventConfigure* event);
 
+   //-----------//
+   // Threading //
+   //-----------//
+
+   // Reference to the drawing thread
+   DrawWorker* drawing_thread;
+
+   // Controls ::mainimage drawing
+   bool interrupt_drawing;
+
+   // Mutex for lidar pointbuckets (as those are not threadsafe)
+   Glib::Mutex* global_pointbucket_mutex;
+
+   // GL signal management
+   Glib::Mutex GL_action;
+   Glib::Cond GL_control_condition;
+   Glib::Cond GL_data_condition;
+
+   bool GL_control_impede;
+   bool GL_data_impede;
 };
 #endif

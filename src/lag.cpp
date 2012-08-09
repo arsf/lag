@@ -4,7 +4,7 @@
  lag.cpp
 
  Written: November 2009 - July 2012
- Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
@@ -244,6 +244,9 @@ int main(int argc, char** argv)
 	gtkmain.run(*overviewwindow);
 
 	gdk_threads_leave();
+
+   tdo->stopDrawingThread();
+   prof->stopDrawingThread();
 
 	delete tdow;
 	delete profwin;

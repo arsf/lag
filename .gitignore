@@ -1,0 +1,8 @@
+# SVN stuff is undesirable
+*.svn/
+
+# Compiled object files
+*.o
+
+# Compiled executable
+lag

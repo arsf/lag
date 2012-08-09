@@ -4,7 +4,7 @@
  Worker.h
 
  Created on: 24 Apr 2012
- Author: Jan Holownia
+ Authors: Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -31,7 +31,6 @@
 
 #include <gtkmm.h>
 
-
 /*
 ===============================================================================
 
@@ -53,14 +52,19 @@ public:
 			Glib::Mutex::Lock lock (mutex);
 			stopped = true;
 		}
-		if (thread)
-			thread->join();
+      this->join();
 	}
 
 	void start()
 	{
 		thread = Glib::Thread::create(sigc::mem_fun(*this, &Worker::run), true);
 	}
+
+   void join()
+   {
+      if (thread)
+         thread->join();
+   }
 
 	Glib::Dispatcher sig_done;
 
