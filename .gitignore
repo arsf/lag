@@ -3,6 +3,19 @@
 
 # Compiled object files
 *.o
+*.lo
+
+# Automake junk
+*.deps/
+*Makefile
+*Makefile.in
+config.*
+configure
+*.m4
+*autom4te.cache/
+depcomp
+*install-sh
+*ltmain.sh
 
 # Compiled executable
 lag
