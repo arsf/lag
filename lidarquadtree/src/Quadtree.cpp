@@ -90,7 +90,7 @@ void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 	guessBucket_ = NULL;
    
 	// assuming the OS provides a suitable unique path
-	fs::create_directory(cacheFolder / fs::unique_path("lag_%%%%-%%%%"));
+	//fs::create_directory(cacheFolder / fs::unique_path("lag_%%%%-%%%%"));
 
 	MCP_ = new CacheMinder(cacheSize);
 	flightLineNumber_ = 0;
