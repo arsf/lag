@@ -4,7 +4,7 @@
  FileOpener.cpp
 
  Created on: June-July 2010
- Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -27,7 +27,6 @@
 
 #include "FileOpener.h"
 #include "../SelectionBox.h"
-
 
 /*
 ==================================
@@ -113,6 +112,8 @@ FileOpener::~FileOpener()
    delete loadcancelbutton;
    delete loaddialog;
    delete filechooserdialog;
+
+   delete tdo->getPointBucketMutex();
 }
 
 /*
@@ -462,6 +463,8 @@ void FileOpener::load_failed()
 */
 void FileOpener::files_loaded()
 {
+   Glib::Mutex* pointbucket_mutex;
+
 	fileprogressbar->set_fraction(1.0);
 
 	delete loadworker;
@@ -473,8 +476,11 @@ void FileOpener::files_loaded()
 	Gdk::Window::process_all_updates();
 
 	//Provide the drawing objects access to the quadtree:
-	tdo->setlidardata(lidardata,bucketlimit);
-	prof->setlidardata(lidardata,bucketlimit);
+   pointbucket_mutex = new Glib::Mutex ();
+   delete tdo->getPointBucketMutex();  // tdo and prof should have identical
+                                       // pointbucket mutex pointers
+	tdo->setlidardata (lidardata, bucketlimit, pointbucket_mutex);
+	prof->setlidardata(lidardata, bucketlimit, pointbucket_mutex);
 
 	if(newQuadtree)
 	{

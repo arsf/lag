@@ -4,7 +4,7 @@
  FileSaver.cpp
 
  Created on: June-July 2010
- Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
@@ -165,7 +165,10 @@ void FileSaver::on_filesaverdialogresponse(int response_id)
     	  scale_factor[0] = scale_factor[1] = scale_factor[2] = 0;
       }
 
-      saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()), flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(), btnUseDefault->get_active(), scale_factor);
+      // tdo and prof should have the same pointbucket mutex
+      Glib::Mutex* pbkt_mutex = tdo->getPointBucketMutex();
+
+      saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()), flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(), btnUseDefault->get_active(), scale_factor, pbkt_mutex);
       saveworker->start();
       saveworker->sig_done.connect(sigc::mem_fun(*this, &FileSaver::files_saved));
       saveworker->sig_progress.connect(sigc::mem_fun(*this, &FileSaver::on_progress));
