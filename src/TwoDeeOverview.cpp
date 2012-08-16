@@ -761,20 +761,34 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
             cout << "Sending draw signal." << endl;
 #endif
 
-         signal_DrawGLToCard();
+         if (interrupt_drawing)
+         {
+            Glib::Mutex::Lock lock (GL_action);
 
-         // Main thread must not attempt to create a new thread like this 
-         // while flushing has yet to occur.
-         if(i >= (numbuckets-1) || numbuckets > 10)
-            if( (i + 1) % 10  == 0)
-            {
+            // release access to GL data
+            GL_data_impede = false;
+            GL_data_condition.signal();
+
+            return false;
+         }
+         
+         else
+         {
+            signal_DrawGLToCard();
+
+            // Main thread must not attempt to create a new thread like this 
+            // while flushing has yet to occur.
+            if(i >= (numbuckets-1) || numbuckets > 10)
+               if( (i + 1) % 10  == 0)
+               {
 #ifdef DEBUG_THREAD
-               cout << "Sending flush signal." << endl;
+                  cout << "Sending flush signal." << endl;
 #endif
-               if (awaitClearGLControl(true))
-                  return false;
-               signal_FlushGLToScreen();
-            }
+                  if (awaitClearGLControl(true))
+                     return false;
+                  signal_FlushGLToScreen();
+               }
+         }
 
 #ifdef DEBUG_THREAD
          else
