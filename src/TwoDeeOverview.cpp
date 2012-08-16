@@ -420,8 +420,19 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
 
    //Prepare OpenGL.
 
-   if (awaitClearGLData(true) || awaitClearGLControl(true))
+   if (awaitClearGLData(true))
       return;
+
+   // grabbed one but not the other, make sure both are released
+   if (awaitClearGLControl(true))
+   {
+      Glib::Mutex::Lock lock (GL_action);
+
+      GL_data_impede = false;
+      GL_data_condition.signal();
+
+      return;
+   }
 
    signal_InitGLDraw();
 
@@ -781,8 +792,8 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 #endif
 
    // Asserts that GL is finished sending data
-   if (awaitClearGLData(false))
-      return false;
+   //if (awaitClearGLData(false))
+   //   return false;
 
    return true;
 }
@@ -1089,6 +1100,11 @@ bool TwoDeeOverview::drawviewable(int imagetype)
          }
          else return drawviewable(2);
       }
+
+      // Earliest time in the function call that it is definitely known
+      // drawing_thread->draw will occur, so abort any currently drawing frames
+      if (drawing_thread->isDrawing())
+         abortFrame(true);
 
       numbuckets = pointvector->size();
 
