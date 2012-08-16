@@ -12,6 +12,9 @@ AC_CONFIG_MACRO_DIR([m4])
 # we want things to break quickly
 : ${CXXFLAGS="-O3"}
 
+# Debugging purposes
+#: ${CXXFLAGS="-g"}
+
 # Checks for programs.
 AC_PROG_CXX
 #AC_PROG_INSTALL
