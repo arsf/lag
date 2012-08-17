@@ -4,7 +4,7 @@
  Profile.cpp
 
  Created on: December 2009
- Author: Haraldur Tristan Gunnarsson
+ Authors: Haraldur Tristan Gunnarsson, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -115,6 +115,10 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 Profile::~Profile()
 {
 	delete[] flightlinepoints;
+
+   delete[] vertices;
+   delete[] colours;
+
 	if (linez != NULL)
 	{
 		for (int i = 0; i < linezsize; ++i)
@@ -377,7 +381,7 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 */
 bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
-	Glib::Mutex::Lock lock(mutex);
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
 
 	//Defining profile parameters (used elsewhere only)
 	start.move((profxs[0] + profxs[1]) / 2, (profys[0] + profys[1]) / 2, 0);
@@ -436,6 +440,8 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	//For every cached bucket:
 	for (int i = 0; i < numbuckets; ++i)
 	{
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
 		if ((*pointvector)[i]->getIncacheList()[0])
 		{
 			queriedbucketsarray[i] = true; //Record as cached.
@@ -468,6 +474,8 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	//For every bucket not originally cached:
 	for (int i = 0; i < numbuckets; ++i)
 	{
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
 		if (!queriedbucketsarray[i])
 		{
 			//Determine whether the points in this bucket are within the profile.
@@ -500,12 +508,14 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 
 	// Add appropriate points into the profile by flightline and sort for each
 	// flightline
-	if (flightlinepoints != NULL)
-		delete[] flightlinepoints;
+	delete[] flightlinepoints;
 
 	//This pointer array of vectors will contain all the points in the profile.
 	flightlinepoints = new vector<LidarPoint> [flightlinestot.size()];
 	totnumpoints = 0;
+
+   // Refresh largest known flightline size
+   vertex_limit = 0;
 
 	//These are for the minimum and maximum heights of the points in the profile
 	samplemaxz = rminz;
@@ -514,6 +524,8 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	//For every flightline:
 	for (int i = 0; i < (int) flightlinestot.size(); ++i)
 	{
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
 		//Reset this so it can be properly used again.
 		for (int j = 0; j < numbuckets; j++)
 			queriedbucketsarray[j] = false;
@@ -599,7 +611,19 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 		// elects to draw lines they will get a chaotic scribble.
 		sort(flightlinepoints[i].begin(), flightlinepoints[i].end(),
 				boost::bind(&Profile::linecomp, this, _1, _2));
+
+      // Update the vertex_limit, makes sure it's at least as large as
+      // the largest flightline
+      if ( (int) flightlinepoints[i].size() > vertex_limit )
+         vertex_limit = (int) flightlinepoints[i].size();
 	}
+
+   // Allocates memory to store OpenGL input, now that the size required
+   // is known
+   delete[] vertices;
+   delete[] colours;
+   vertices = new float[3 * vertex_limit];
+   colours  = new float[3 * vertex_limit];
 
 	delete[] queriedbucketsarray;
 	delete pointvector;
@@ -669,6 +693,8 @@ void Profile::classify_bucket(double *xs, double *ys, double *zs,
 		int numcorners, bool *correctpoints, PointBucket* bucket,
 		uint8_t classification)
 {
+   Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+
 	//Determines whether the point is within the boundary.
 	bool pointinboundary;
 
@@ -716,6 +742,8 @@ void Profile::classify_bucket(double *xs, double *ys, double *zs,
 					// If the point is to the right of (i.e. further along than) the
 					// line defined by the corners (and segmented by the above if
 					// statement), i.e. the edge, then change the truth value of this
+               // Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+               //
 					// boolean. If this is done an odd number of times then the point
 					// must be within the shape, otherwise without.
 					if (linecomp(bucket->getPoint(i, 0), pnt))
@@ -768,17 +796,20 @@ bool Profile::classify(uint8_t classification)
 	// classified.
 	bool** correctpointsbuckets = new bool*[numbuckets];
 
-	for (int i = 0; i < numbuckets; ++i)
-	{
-		// Store whether the points in the buckets are inside the boundaries of
-		// the profile.
-		if (!slicing)
-			correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
-					profys, profps, hideProfNoise);
-		else
-			correctpointsbuckets[i] = vetpoints_slice((*pointvector)[i], profxs,
-					profys, profps, hideProfNoise, minz, maxz);
-	}
+   {
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+      for (int i = 0; i < numbuckets; ++i)
+      {
+         // Store whether the points in the buckets are inside the boundaries of
+         // the profile.
+         if (!slicing)
+            correctpointsbuckets[i] = vetpoints((*pointvector)[i], profxs,
+                  profys, profps, hideProfNoise);
+         else
+            correctpointsbuckets[i] = vetpoints_slice((*pointvector)[i], profxs,
+                  profys, profps, hideProfNoise, minz, maxz);
+      }
+   }
 
 	//These will contain the corner coordinates of the fence.
 	double *xs, *ys, *zs;
@@ -992,27 +1023,27 @@ bool Profile::linecomp(LidarPoint a, LidarPoint b)
 		double widgradboxb = multy * (yb - minPlan.getY())
 				- (multx * (xb - minPlan.getX()) * widgradbox);
 
-		 /* Identify the points of intercept for each point-to-profile line and
-		 // the profile line and find the distance along the profile line:{
-		 //
-		 //  0 (adjusted origin)
-		 //   \ Profile line       ____/p
-		 //    \              ____/ Point line
-		 //     \        ____/
-		 //      \  ____/
-		 //    ___\/P
-		 //   /    \
-      	 //         \
-         //          \
-         //
-		 //    For point p:
-		 //       x of P is interxp
-		 //       y of P is interyp
-		 //       z is ignored (or "swept along")
-		 //       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
-		 //       find distance along the profile i.e distance from the adjusted
-		 //       origin.
-		 // */
+		// Identify the points of intercept for each point-to-profile line and
+		// the profile line and find the distance along the profile line:{
+		//
+		//  0 (adjusted origin)
+		//   \ Profile line       ____/p
+		//    \              ____/ Point line
+		//     \        ____/
+		//      \  ____/
+		//    ___\/P
+		//   /    \
+      //         \
+      //          \
+      //
+		//    For point p:
+		//       x of P is interxp
+		//       y of P is interyp
+		//       z is ignored (or "swept along")
+		//       alongprofp is sqrt(interxp^2 + interyp^2), i.e. Pythagoras to
+		//       find distance along the profile i.e distance from the adjusted
+		//       origin.
+		//
 
 		double interxa, interxb, interya, interyb;
 
@@ -1966,7 +1997,7 @@ void Profile::make_moving_average()
 */
 bool Profile::mainimage(int detail)
 {
-	Glib::Mutex::Lock lock(mutex);
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
 
 	// Values of less than 1 would cause infinite loops (though negative
 	// value would eventually stop due to overflow.
@@ -1983,19 +2014,6 @@ bool Profile::mainimage(int detail)
 	Colour tempColour;
 	float z;
 	int intensity;
-	int limit = 0;
-
-	// The size of the vertex and colour arrays should be the same as that
-	// of the largest group of points, by flightline.
-	for (int i = 0; i < (int) flightlinestot.size(); ++i)
-	{
-		if ((int) flightlinepoints[i].size() > limit)
-			limit = (int) flightlinepoints[i].size();
-	}
-
-	//Needed for the glDrawArrays() call further down.
-	float* vertices = new float[3 * limit];
-	float* colours = new float[3 * limit];
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -2147,8 +2165,6 @@ bool Profile::mainimage(int detail)
 	glDisableClientState(GL_COLOR_ARRAY);
 	glwindow->gl_end();
 
-	delete[] vertices;
-	delete[] colours;
 	return true;
 
 }

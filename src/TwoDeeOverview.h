@@ -4,7 +4,7 @@
  TwoDeeOverview.h
 
  Created on: Nov 2009
- Author: Haraldur Tristan Gunnarsson
+ Authors: Haraldur Tristan Gunnarsson, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -65,21 +65,6 @@ public:
 
    //Handles keyboard input for zooming.
    bool on_zoom_key(GdkEventKey* event);
-
-   //Method that waits until the drawing thread has paused.
-   void waitforpause()
-   {
-      while(thread_running)
-      {
-#ifdef __WIN32
-         // this is a compromise, ideally the code should behave in the
-         // same way on all operating systems
-         Sleep(1);
-#else
-         usleep(10);
-#endif
-      }
-   }
 
    //Returns to the initial view.
    bool returntostart();
@@ -178,16 +163,6 @@ public:
       profps = 4;
    }
 
-   bool getpausethread()
-   {
-      return pausethread; 
-   }
-
-   bool getthread_running()
-   {
-      return thread_running; 
-   }
-
    BoxOverlay* getfencebox()
    {
       return fencebox; 
@@ -207,11 +182,6 @@ public:
    void setshowlegend(double showlegend)
    {
       this->showlegend = showlegend;
-   }
-
-   void setpausethread(bool pausethread)
-   {
-      this->pausethread = pausethread; 
    }
 
    void setreversez(bool reversez)
@@ -393,51 +363,6 @@ protected:
    // current bucket.
    float* colours;
 
-   //Drawing thread interaction variables:
-   // If true, this causes a huge amount of spam to spew from the program 
-   // whenever the drawing thread is in use, for debugging purposes.
-   bool threaddebug;
-
-   // This indicates whether a drawing thread currently exists as recorded 
-   // by the main thread.
-   bool thread_existsmain;
-
-   // This indicates whether a drawing thread currently exists as recored by 
-   // the drawing thread.
-   bool thread_existsthread;
-
-   // This indicates that the thread is running, and so will be using the 
-   // pointbucket::getpoint() method often.
-   bool thread_running;
-
-   // If this is true, the data manipulation thread will pause until it is set
-   // to false. This pausing is done because pointbucket::getpoint() is 
-   // not threadsafe.
-   bool pausethread;
-
-   //This indicates whether to interrupt the current drawing thread.
-   bool interruptthread;
-
-   // This indicates whether the main thread is/should/will be busy setting up 
-   // OpenGL for drawing. If so, the drawing thread should pause.
-   bool initialising_GL_draw;
-
-   // This indicates whether the main thread is/should/will be busy drawing the 
-   // contents of the arrays vertices and colours to the framebuffer. If so, 
-   // the drawing thread should pause.
-   bool drawing_to_GL;
-
-   // This indicates whether the main thread is/should/will be busy flushing 
-   // the contents of the framebuffer to the screen. If so, no new thread must 
-   // be made before flushing is complete.
-   bool flushing;
-
-   // This indicates whether an extra draw signal, caused by a previous draw 
-   // signal being blocked to avoid deadlock or race conditions, has been 
-   // sent by the main thread to itself. If so, the main thread should not 
-   // send any more until the current one is resolved.
-   bool extraDrawing;
-
    //Signal dispatchers:
 
    // Signal dispatcher from the drawing thread to the main thread to set up 
@@ -455,12 +380,6 @@ protected:
    // Signal dispatcher from the drawing thread to the main thread to flush the 
    // contents of the framebuffer to the screen.
    Glib::Dispatcher signal_FlushGLToScreen;
-
-   // Signal dispatcher from the main thread to itself to draw the points yet 
-   // another time. This method is used as getting direct access to the 
-   // variables affecting the main (GTK) thread would likely be very messy.
-   Glib::Dispatcher signal_extraDraw;
-
 
    bool tdoDisplayNoise;
    //Position variables:
@@ -581,17 +500,8 @@ protected:
                               bool *drawnbucketsarray,
                               bool cachedonly);
 
-   // Called by the drawing thread when it is told to pause. Should ONLY be 
-   // called the the drawing thread. It frees up resources for the main 
-   // thread to use and waits until the drawing thread can unpause.
-   void threadpause();
-
    //Clears up after the thread is told to/decides to end.
    void threadend(PointBucket** buckets);
-
-   // Draw the points once again because a previous draw was blocked to 
-   // avoid deadlocks and race conditions.
-   void extraDraw();
 
    //Set up OpenGL for drawing.
    void InitGLDraw();

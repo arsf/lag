@@ -4,7 +4,8 @@
  LagDisplay.cpp
 
  Created on: June-July 2010
- Authors: Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors:   Andy Chambers, Haraldur Tristan Gunnarsson, Jan Holownia,
+            Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2012 Plymouth Marine Laboratory (PML)
@@ -54,28 +55,33 @@ LagDisplay::LagDisplay(const Glib::RefPtr<const Gdk::GL::Config>& config, int bu
 		bucketlimit			(bucketlimit),
 		maindetailmod		(0),
 		pointsize			(1),
-		ratio				(1.0),
+		ratio		   		(1.0),
 		brightnessBy		(brightnessByIntensity),
-		colourBy			(colourByFlightline),
+		colourBy		   	(colourByFlightline),
 		cbmaxz				(0),
 		cbminz				(0),
 		cbmaxintensity		(0),
 		cbminintensity		(0),
 		zoffset				(0),
 		zfloor				(0),
-		intensityoffset		(0),
+		intensityoffset	(0),
 		intensityfloor		(0),
-		rmaxz				(0),
-		rminz				(0),
+		rmaxz				   (0),
+		rminz				   (0),
 		rmaxintensity		(0),
 		rminintensity		(0),
 		colourheightarray	(NULL),
 		brightnessheightarray	(NULL),
 		brightnessintensityarray(NULL),
 		red					(0.0),
-		green				(0.0),
-		blue				(0.0),
-		alpha				(0.0)
+		green 				(0.0),
+		blue	   			(0.0),
+		alpha		   		(0.0),
+      interrupt_drawing (false),
+      GL_data_impede    (false),
+      GL_control_impede (false),
+      global_pointbucket_mutex   (NULL),
+      drawing_thread    (NULL)
 {
 }
 
@@ -89,6 +95,9 @@ LagDisplay::~LagDisplay()
 	delete[] colourheightarray;
 	delete[] brightnessheightarray;
 	delete[] brightnessintensityarray;
+
+   delete drawing_thread;
+   drawing_thread = NULL;
 }
 
 /*
@@ -622,4 +631,108 @@ void LagDisplay::update_background_colour()
 		return;
 	glClearColor(red, green, blue, alpha);
 	glClearDepth(1.0);
+}
+
+/*
+================================================================================
+ LagDisplay::abortFrame
+
+ Instructs this object to abort any frames being presently drawn
+
+ Parameters:
+   forceGL  - Whether calls to awaitClearGLData and awaitClearGLMutex should
+              terminate at once (and will terminate when they are ready
+              otherwise)
+================================================================================
+*/
+void LagDisplay::abortFrame(bool forceGL)
+{
+   Glib::Mutex::Lock lock (GL_action);
+   interrupt_drawing = true;
+
+   if (forceGL)
+   {
+      GL_control_condition.signal();
+      GL_data_condition.signal();
+   }
+}
+
+/*
+================================================================================
+ LagDisplay::clear_abortFrame
+
+ Notes that the present frame has ended and should no longer be aborted
+================================================================================
+*/
+void LagDisplay::clear_abortFrame()
+{
+   Glib::Mutex::Lock lock (GL_action);
+   interrupt_drawing = false;
+}
+
+/*
+================================================================================
+ LagDisplay::stopDrawingThread
+
+ Stops the drawing thread and blocks until it is finished
+================================================================================
+*/
+void LagDisplay::stopDrawingThread()
+{
+   if (drawing_thread)
+   {
+      drawing_thread->stop();
+      drawing_thread->join();
+   }
+}
+
+/*
+================================================================================
+ LagDisplay::awaitClearGLData
+
+ Blocks until the thread is interrupted, or the GL data arrays become available
+
+ Parameters:
+   reserves - whether to reserve exclusive access to the GL data
+ Returns: whether it was interrupted or not, interrupted calls do not receive
+          exclusive access
+================================================================================
+*/
+bool LagDisplay::awaitClearGLData(bool reserves)
+{
+   Glib::Mutex::Lock lock (GL_action);
+
+   while (GL_data_impede && !interrupt_drawing)
+      GL_data_condition.wait(GL_action);
+
+   if (!interrupt_drawing)
+      GL_data_impede = reserves;
+
+   return interrupt_drawing;
+}
+
+/*
+================================================================================
+ LagDisplay::awaitClearGLControl
+
+ Blocks until the thread is interrupted, or GL is available to accept more
+ instruction
+
+ Parameters:
+   reserves - whether to reserve exclusive access to GL control
+ Returns: whether it was interrupted or not, interrupted calls do not receive
+          exclusive access
+================================================================================
+*/
+bool LagDisplay::awaitClearGLControl(bool reserves)
+{
+   Glib::Mutex::Lock lock (GL_action);
+
+   while (GL_control_impede && !interrupt_drawing)
+      GL_control_condition.wait(GL_action);
+
+   if (!interrupt_drawing)
+      GL_control_impede = reserves;
+
+   return interrupt_drawing;
 }

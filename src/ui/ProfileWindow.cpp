@@ -4,7 +4,7 @@
  ProfileWindow.cpp
 
  Created on: June-July 2012
- Authors: Haraldur Tristan Gunnarsson, Jan Holownia
+ Authors: Haraldur Tristan Gunnarsson, Jan Holownia, Berin Smaldon
 
  LIDAR Analysis GUI (LAG), viewer for LIDAR files in .LAS or ASCII format
  Copyright (C) 2009-2010 Plymouth Marine Laboratory (PML)
@@ -313,11 +313,6 @@ void ProfileWindow::on_showprofilebutton_clicked()
 
    if(!profxs.empty()  && !profys.empty())
    {
-	  // Showprofile uses the getpoint() method, and that must never be used
-      // by more than one thread at once.
-      tdo->setpausethread(true);
-      tdo->waitforpause();
-
       profileworker = new ProfileWorker(this->prof, profxs, profys, profps);
       profileworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::profile_loaded));
       profileworker->start();
@@ -336,14 +331,11 @@ void ProfileWindow::profile_loaded()
 {
 	delete profileworker;
 	profileworker = NULL;
-
-	tdo->setpausethread(false);
-
 	make_busy_cursor(false);
 
 	set_statusbar_label("");
 
-    prof->draw_profile(true);
+   prof->draw_profile(true);
 }
 
 /*
@@ -468,12 +460,6 @@ void ProfileWindow::on_classbutton_clicked()
 
 	set_statusbar_label("Classifying...");
 
-	// Nothing else must read the points (or indeed write to them!)
-	// while the classifier is writing to them. Also, it uses the
-	// getpoint() method.
-	tdo->setpausethread(true);
-	tdo->waitforpause();
-
 	if(prof->is_realized())
 	{
 		//prof->classify(classificationselect->get_value_as_int());
@@ -502,7 +488,6 @@ void ProfileWindow::points_classified()
 
 	set_statusbar_label("");
 
-	tdo->setpausethread(false);
 	tdo->drawviewable(1);
 }
 
@@ -793,11 +778,8 @@ bool ProfileWindow::on_profile_shift(GdkEventKey* event)
 
       // Showprofile uses the getpoint() method, and that must never be used 
       // by more than one thread at once.
-      tdo->setpausethread(true);
-      tdo->waitforpause();
       prof->loadprofile(profxs,profys,profps);
       prof->draw_profile(false);
-      tdo->setpausethread(false);
       return true;
    }
    return false;
