@@ -56,6 +56,10 @@ public:
    void translate(double, double, double);
    void move(double, double, double);
 
+   // Arithmetic operators
+   const Point operator+ (Point& other) const;
+   const Point operator- (Point& other) const;
+
    // Getter methods
    double getX();
    double getY();

@@ -635,6 +635,53 @@ void LagDisplay::update_background_colour()
 
 /*
 ================================================================================
+ LagDisplay::overlayBox
+
+ Overlays a box onto the image
+================================================================================
+*/
+bool LagDisplay::overlayBox(Colour major, Colour minor,
+      Point corner, Point length, Point breadth)
+{
+   if (drawing_thread)
+   {
+      // Note: Previous implementations would silently stop here if the drawing
+      // thread were active, this implementation skips that step
+      double altitude = rmaxz + 1000;
+      Point far = (breadth - corner) + length;
+
+      if (awaitClearGL(GLCONTROL, true))
+         return false;
+
+      glBegin(GL_LINE_LOOP);
+
+         // minor colour side
+         glColor3fv(minor.getRGB());
+
+         glVertex3d(corner.getX(), corner.getY(), altitude);
+         glVertex3d(length.getX(), length.getY(), altitude);
+
+         glColor3fv(major.getRGB());
+
+         // inherent (far) corner
+         glVertex3d(far.getX(), far.getY(), altitude);
+         
+         // and close loop
+         glVertex3d(breadth.getX(), breadth.getY(), altitude);
+         glVertex3d( corner.getX(),  corner.getY(), altitude);
+
+      glEnd();
+
+      clearGL(GLCONTROL);
+   }
+}
+
+/******************************************************************************\
+ * THREADING Control Methods                                                  *
+\******************************************************************************/
+
+/*
+================================================================================
  LagDisplay::abortFrame
 
  Instructs this object to abort any frames being presently drawn
@@ -688,51 +735,72 @@ void LagDisplay::stopDrawingThread()
 
 /*
 ================================================================================
- LagDisplay::awaitClearGLData
+ LagDisplay::awaitClearGL
 
- Blocks until the thread is interrupted, or the GL data arrays become available
+ Blocks until the thread is interrupted or the requested rights to parts of GL
+ are acquired
 
  Parameters:
-   reserves - whether to reserve exclusive access to the GL data
- Returns: whether it was interrupted or not, interrupted calls do not receive
-          exclusive access
+   what     - Which components to wait for
+   reserves - Whether to reserve the requested components or not
+ Returns:
+   Whether the call was interrupted or not
 ================================================================================
 */
-bool LagDisplay::awaitClearGLData(bool reserves)
+bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
 {
    Glib::Mutex::Lock lock (GL_action);
 
-   while (GL_data_impede && !interrupt_drawing)
+   // locks control first
+   while (!interrupt_drawing && (what & GLCONTROL) && GL_control_impede)
+      GL_control_condition.wait(GL_action);
+
+   // locks iff all of the conditions apply
+   //    1) not interrupted
+   //    2) reserves is true
+   //    3) what includes the GLCONTROL bit
+   if (!interrupt_drawing)
+      GL_control_impede = reserves && (what & GLCONTROL);
+   
+   while (!interrupt_drawing && (what & GLDATA) && GL_data_impede)
       GL_data_condition.wait(GL_action);
 
-   if (!interrupt_drawing)
-      GL_data_impede = reserves;
+   // locks iff all of the conditions apply
+   //    1) not interrupted
+   //    2) reserves is true
+   //    3) what includes the GLDATA bit
+   // otherwise unlocks any previously locked rights
+   if (interrupt_drawing && (what & GLCONTROL) && reserves)
+      GL_control_impede = false;
+   else if (!interrupt_drawing)
+      GL_data_impede = reserves && (what & GLDATA);
 
    return interrupt_drawing;
 }
 
 /*
 ================================================================================
- LagDisplay::awaitClearGLControl
+ LagDisplay::clearGL
 
- Blocks until the thread is interrupted, or GL is available to accept more
- instruction
-
+ Clears either/both of the GL locks in place
+ 
  Parameters:
-   reserves - whether to reserve exclusive access to GL control
- Returns: whether it was interrupted or not, interrupted calls do not receive
-          exclusive access
+   data    - whether to clear the rights to manipulate GL data
+   control - whether to clear the rights to control GL
 ================================================================================
 */
-bool LagDisplay::awaitClearGLControl(bool reserves)
+void LagDisplay::clearGL(LagDisplayGLbits clears)
 {
    Glib::Mutex::Lock lock (GL_action);
 
-   while (GL_control_impede && !interrupt_drawing)
-      GL_control_condition.wait(GL_action);
-
-   if (!interrupt_drawing)
-      GL_control_impede = reserves;
-
-   return interrupt_drawing;
+   if (clears & GLDATA)
+   {
+      GL_data_impede = false;
+      GL_data_condition.signal();
+   }
+   if (clears & GLCONTROL)
+   {
+      GL_control_impede = false;
+      GL_control_condition.signal();
+   }
 }

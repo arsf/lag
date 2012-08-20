@@ -29,7 +29,7 @@ PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
 # strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
 # and fails silently in the makefile.  This makes it explicit
 PKG_CHECK_MODULES([laslib], [laslib])
-PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.1])
+PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.2])
 
 
 # Checks for header files.
