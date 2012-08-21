@@ -31,7 +31,6 @@ PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
 PKG_CHECK_MODULES([laslib], [laslib])
 PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.2])
 
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdint.h stdlib.h string.h])

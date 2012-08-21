@@ -401,7 +401,7 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	// precisely a monoclinic or parallelogram prism as only the fence
 	// parallelogram can be non-rectangular), which, when the fence is not
 	// "slanted", will also be a cuboid. This paralleogram prism (from the point
-	// of view of the fence (as cross-sectioprofile_mainimage_n) especially) contains the points
+	// of view of the fence (as cross-section) especially) contains the points
 	// to be classified.
 	this->profps = profps;
 	this->profxs = profxs;

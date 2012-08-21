@@ -14,6 +14,7 @@ src/Colour.cpp src/SelectionBox.cpp src/LoadWorker.cpp src/SaveWorker.cpp \
 src/ProfileWorker.cpp src/ClassifyWorker.cpp src/Worker.h src/FileUtils.cpp \
 src/ui/AdvancedLoadDialog.cpp src/geoprojectionconverter.cpp \
 src/DrawWorker.cpp
+
 lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @libgeotiff_CFLAGS@ @lidarquadtree_CFLAGS@
 lag_LDFLAGS = @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @libgeotiff_LIBS@ @lidarquadtree_LIBS@ -lboost_filesystem -lboost_system -ljemalloc
 lagdir = $(prefix)/share/lag

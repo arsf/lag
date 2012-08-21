@@ -331,7 +331,6 @@ void ProfileWindow::profile_loaded()
 {
 	delete profileworker;
 	profileworker = NULL;
-
 	make_busy_cursor(false);
 
 	set_statusbar_label("");

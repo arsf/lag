@@ -39,7 +39,6 @@
 // define for thread debugging
 //#define THREAD_DEBUG
 
-
 /*
 ==================================
  TwoDeeOverview::TwoDeeOverview
@@ -174,8 +173,6 @@ TwoDeeOverview::~TwoDeeOverview()
 
 	delete fencebox;
 	delete profbox;
-
-   //this->~LagDisplay();
 }
 
 /*
