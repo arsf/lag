@@ -1324,66 +1324,9 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          topright.translate( boxoffset, -boxoffset, 0);
           botleft.translate(-boxoffset,  boxoffset, 0);
 
-         overlayBox(white, white, topleft, topright, botleft);
+         overlayBox(white, white, topleft, topright, botleft);]
 
-         // NOTE: This functionality has been retired for the time being, as it
-         // seemed fairly pointless and used the old boolean race-condition
-         // solving system. In future reimplementations, consider expanding
-         // the selection from 2x2 pixels, as the 2x2 pixels are barely visible
-         // (which warranted retiring this functionality in the first place)
-
-         //if(drawing_to_GL ||
-         //   initialising_GL_draw ||
-         //   flushing ||
-         //   thread_existsthread ||
-         //   thread_existsmain);
-         //else
-         //{
-         //   drawviewable(2);
-         //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-         //   if (!glwindow->gl_begin(get_gl_context()))
-         //      return false;
-
-         //   // This makes sure the highlight is drawn over the top of the 
-         //   // flightlines.
-         //   double altitude = rmaxz+1000;
-         //   glReadBuffer(GL_BACK);
-         //   glDrawBuffer(GL_FRONT);
-         //   glColor3f(1.0,1.0,1.0);
-         //   glBegin(GL_LINE_LOOP);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() - 
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //   glEnd();
-         //   glDrawBuffer(GL_BACK);
-         //   glFlush();
-         //   glwindow->gl_end();
-         //}
+         // Box is now overlayed, now set up text label
 
          //Returns the filepath.
          boost::filesystem::path flightline(lidardata->

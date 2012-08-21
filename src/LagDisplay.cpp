@@ -807,6 +807,7 @@ bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
  Clears either/both of the GL locks in place
  
  Parameters:
+   clears   - Which components to clear the rights to
 ================================================================================
 */
 void LagDisplay::clearGL(LagDisplayGLbits clears)
