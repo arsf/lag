@@ -395,7 +395,8 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    drawneverything = false;
 
    //Prepare OpenGL.
-   awaitClearGL(GLDATA | GLCONTROL, true);
+   if (awaitClearGL(GLDATA | GLCONTROL, true))
+      return;
 
    signal_InitGLDraw();
 
@@ -744,14 +745,9 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
                   signal_FlushGLToScreen();
                }
          }
-
-#ifdef DEBUG_THREAD
-         else
-         {
-            cout << "Draw interrupted." << endl;
-         }
-#endif
       }
+      else
+         pbkt_lock.release();
    }
 #ifdef DEBUG_THREAD
    cout << "Checking for drawing to make sure there is no \
@@ -1313,20 +1309,13 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       {
          Colour white (1.0, 1.0, 1.0);
          Point topleft, topright, botleft;
-         LidarPoint thispoint;
+         LidarPoint thispoint = (*pointvector)[bucketno]->getPoint(pointno, 0);
 
          // implements a minimum offset
          double boxoffset = 0.5 * pixelsToImageUnits(max(pointsize, 6.0));
 
-         {
-            Glib::Mutex::Lock lock (*global_pointbucket_mutex);
-
-            thispoint = (*pointvector)[bucketno]->getPoint(pointno, 0);
-         }
-
          // make copies and transpose rather than insantiate everything perfectly
-         topleft = Point(thispoint.getX() - centre.getX(),
-            thispoint.getY() - centre.getY());
+         topleft = Point(thispoint.getX(), thispoint.getY());
 
          topright = topleft;
          botleft  = topleft;

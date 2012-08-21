@@ -637,13 +637,28 @@ void LagDisplay::update_background_colour()
 ================================================================================
  LagDisplay::overlayBox
 
+ overlayBox as in (verb) (noun), rather than (adjective) (noun)
  Overlays a box onto the image
+
+ TODO: In the future, overlayBox should simply update a list of boxes to be
+ drawn at the end of each frame, and the code that draws the BoxOverlays should
+ be responsible for drawing this list at the end of every frame.
+
+ Parameters:
+   major, minor - colours to draw the boxes with, with minor representing an
+      alternative colour to use for 1 face
+   corner, length, breadth - Point objects of which the location is absolute,
+      draws a quadrilateral based on these points, with the far corner being
+      inherent in the 3 points given
+
+ Returns:
+   Whether or not anything was drawn
 ================================================================================
 */
 bool LagDisplay::overlayBox(Colour major, Colour minor,
       Point corner, Point length, Point breadth)
 {
-   if (drawing_thread)
+   if (drawing_thread && ! (drawing_thread->isDrawing()))
    {
       // Note: Previous implementations would silently stop here if the drawing
       // thread were active, this implementation skips that step
@@ -652,6 +667,9 @@ bool LagDisplay::overlayBox(Colour major, Colour minor,
 
       if (awaitClearGL(GLCONTROL, true))
          return false;
+
+      glReadBuffer(GL_BACK);
+      glDrawBuffer(GL_FRONT);
 
       glBegin(GL_LINE_LOOP);
 
@@ -671,9 +689,13 @@ bool LagDisplay::overlayBox(Colour major, Colour minor,
          glVertex3d( corner.getX(),  corner.getY(), altitude);
 
       glEnd();
+      glFlush();
 
       clearGL(GLCONTROL);
+      return true;
    }
+
+   return false;
 }
 
 /******************************************************************************\
@@ -759,9 +781,9 @@ bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
    //    1) not interrupted
    //    2) reserves is true
    //    3) what includes the GLCONTROL bit
-   if (!interrupt_drawing)
-      GL_control_impede = reserves && (what & GLCONTROL);
-   
+   if (!interrupt_drawing && (what & GLCONTROL))
+      GL_control_impede = reserves;
+
    while (!interrupt_drawing && (what & GLDATA) && GL_data_impede)
       GL_data_condition.wait(GL_action);
 
@@ -770,10 +792,10 @@ bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
    //    2) reserves is true
    //    3) what includes the GLDATA bit
    // otherwise unlocks any previously locked rights
-   if (interrupt_drawing && (what & GLCONTROL) && reserves)
+   if (interrupt_drawing && (what & GLCONTROL))
       GL_control_impede = false;
-   else if (!interrupt_drawing)
-      GL_data_impede = reserves && (what & GLDATA);
+   else if (!interrupt_drawing && (what & GLDATA))
+      GL_data_impede = reserves;
 
    return interrupt_drawing;
 }
@@ -785,8 +807,6 @@ bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
  Clears either/both of the GL locks in place
  
  Parameters:
-   data    - whether to clear the rights to manipulate GL data
-   control - whether to clear the rights to control GL
 ================================================================================
 */
 void LagDisplay::clearGL(LagDisplayGLbits clears)
