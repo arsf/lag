@@ -1324,7 +1324,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          topright.translate( boxoffset, -boxoffset, 0);
           botleft.translate(-boxoffset,  boxoffset, 0);
 
-         overlayBox(white, white, topleft, topright, botleft);]
+         overlayBox(white, white, topleft, topright, botleft);
 
          // Box is now overlayed, now set up text label
 
