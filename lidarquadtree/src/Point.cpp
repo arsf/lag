@@ -101,3 +101,18 @@ void Point::move(double x, double y, double z)
    z_ = z;
 }
 
+const Point Point::operator+(Point& other) const
+{
+   return Point(
+      x_ + other.getX(),
+      y_ + other.getY(),
+      z_ + other.getZ() );
+}
+
+const Point Point::operator-(Point& other) const
+{
+   return Point(
+      x_ - other.getX(),
+      y_ - other.getY(),
+      z_ - other.getZ() );
+}

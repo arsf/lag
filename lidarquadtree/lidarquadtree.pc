@@ -1,12 +1,12 @@
-prefix=/tmp/besm/local
-exec_prefix=/tmp/besm/local
-libdir=/tmp/besm/local/lib
-includedir=/tmp/besm/local/include/lidar/quadtree
+prefix=/users/rsg/besm/.build
+exec_prefix=/users/rsg/besm/.build
+libdir=/users/rsg/besm/.build/lib
+includedir=/users/rsg/besm/.build/include/lidar/quadtree
 
 Name: lidarquadtree
 Description: Library to handle LIDAR data using a quad tree structure with paging to disk
 URL: http://rsg.pml.ac.uk/
-Version: 1.1 
+Version: 1.2 
 Requires: laslib
 Libs: -L${libdir} -llidarquadtree
 Cflags: -I${includedir}
