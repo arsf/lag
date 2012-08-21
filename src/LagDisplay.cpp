@@ -808,20 +808,28 @@ bool LagDisplay::awaitClearGL(LagDisplayGLbits what, bool reserves)
  
  Parameters:
    clears   - Which components to clear the rights to
+ Returns:
+   false, unless a bit what cleared that was already cleared, which could
+   indicate a race-condition, for debugging purposes
 ================================================================================
 */
-void LagDisplay::clearGL(LagDisplayGLbits clears)
+bool LagDisplay::clearGL(LagDisplayGLbits clears)
 {
    Glib::Mutex::Lock lock (GL_action);
+   bool r = false;
 
    if (clears & GLDATA)
    {
+      r |= !GL_data_impede;
       GL_data_impede = false;
       GL_data_condition.signal();
    }
    if (clears & GLCONTROL)
    {
+      r |= !GL_control_impede;
       GL_control_impede = false;
       GL_control_condition.signal();
    }
+
+   return r;
 }

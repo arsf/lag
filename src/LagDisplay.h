@@ -93,7 +93,7 @@ public:
    // Thread control functions
    void stopDrawingThread();
    bool awaitClearGL(LagDisplayGLbits what, bool reserves);
-   void clearGL(LagDisplayGLbits clears);
+   bool clearGL(LagDisplayGLbits clears);
 
    // Reads from subset of quadtree and prepares variables for 
    // colouring etc..
