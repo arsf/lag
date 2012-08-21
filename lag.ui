@@ -6,7 +6,7 @@
     <property name="can_focus">True</property>
     <property name="title" translatable="yes">LAG Overview</property>
     <property name="window_position">center</property>
-    <property name="default_width">1024</property>
+    <property name="default_width">1280</property>
     <property name="default_height">768</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">icons/lagicon_small.png</property>
@@ -696,7 +696,7 @@
   </object>
   <object class="GtkWindow" id="profilewindow">
     <property name="title" translatable="yes">LAG Profile</property>
-    <property name="default_width">1024</property>
+    <property name="default_width">1280</property>
     <property name="default_height">768</property>
     <property name="destroy_with_parent">True</property>
     <property name="icon">icons/lagicon_small.png</property>
