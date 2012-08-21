@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([LiDAR QuadTree Library], [1.1] , [arsf-processing@pml.ac.uk])
+AC_INIT([LiDAR QuadTree Library], [1.2] , [arsf-processing@pml.ac.uk])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE([liblidarquadtree], [1.11])
 AC_CONFIG_HEADERS([config.h])

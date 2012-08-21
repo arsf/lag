@@ -245,15 +245,7 @@ void TwoDeeOverview::InitGLDraw()
    glwindow->gl_end();
 
    // The GL extension is now ready for use
-   {
-      Glib::Mutex::Lock lock (GL_action);
-
-      GL_data_impede = false;
-      GL_control_impede = false;
-
-      GL_data_condition.signal();
-      GL_control_condition.signal();
-   }
+   clearGL(GLDATA | GLCONTROL);
 }
 
 /*
@@ -301,12 +293,7 @@ void TwoDeeOverview::DrawGLToCard()
    glwindow->gl_end();
 
    // The GL data arrays may now be used again
-   {
-      Glib::Mutex::Lock lock (GL_action);
-
-      GL_data_impede = false;
-      GL_data_condition.signal();
-   }
+   clearGL(GLDATA);
 }
 
 /*
@@ -336,12 +323,7 @@ void TwoDeeOverview::FlushGLToScreen()
    glwindow->gl_end();
 
    // The GL extension may now be used again
-   {
-      Glib::Mutex::Lock lock (GL_action);
-
-      GL_control_impede = false;
-      GL_control_condition.signal();
-   }
+   clearGL(GLCONTROL);
 }
 
 /*
@@ -374,13 +356,7 @@ void TwoDeeOverview::EndGLDraw()
    glwindow->gl_end();
 
    // The GL extension may now be used again
-   {
-      Glib::Mutex::Lock lock (GL_action);
-
-      GL_control_impede = false;
-
-      GL_control_condition.signal();
-   }
+   clearGL(GLCONTROL);
 }
 
 /*
@@ -419,20 +395,8 @@ void TwoDeeOverview::mainimage(PointBucket** buckets,int numbuckets)
    drawneverything = false;
 
    //Prepare OpenGL.
-
-   if (awaitClearGLData(true))
+   if (awaitClearGL(GLDATA | GLCONTROL, true))
       return;
-
-   // grabbed one but not the other, make sure both are released
-   if (awaitClearGLControl(true))
-   {
-      Glib::Mutex::Lock lock (GL_action);
-
-      GL_data_impede = false;
-      GL_data_condition.signal();
-
-      return;
-   }
 
    signal_InitGLDraw();
 
@@ -584,7 +548,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 
          // Do not pass go, do not collect 200 dollars. The parent method will 
          // handle the fallout, just STOP!
-         if(awaitClearGLData(true))
+         if(awaitClearGL(GLDATA, true))
          {
 #ifdef THREAD_DEBUG
             cout << "Draw interrupted" << endl;
@@ -762,15 +726,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 #endif
 
          if (interrupt_drawing)
-         {
-            Glib::Mutex::Lock lock (GL_action);
-
-            // release access to GL data
-            GL_data_impede = false;
-            GL_data_condition.signal();
-
-            return false;
-         }
+            clearGL(GLDATA);
          
          else
          {
@@ -784,19 +740,14 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 #ifdef DEBUG_THREAD
                   cout << "Sending flush signal." << endl;
 #endif
-                  if (awaitClearGLControl(true))
+                  if (awaitClearGL(GLCONTROL, true))
                      return false;
                   signal_FlushGLToScreen();
                }
          }
-
-#ifdef DEBUG_THREAD
-         else
-         {
-            cout << "Draw interrupted." << endl;
-         }
-#endif
       }
+      else
+         pbkt_lock.release();
    }
 #ifdef DEBUG_THREAD
    cout << "Checking for drawing to make sure there is no \
@@ -804,7 +755,7 @@ bool TwoDeeOverview::drawpointsfrombuckets(PointBucket** buckets,int numbuckets,
 #endif
 
    // Asserts that GL is finished sending data
-   //if (awaitClearGLData(false))
+   //if (awaitClearGL(GLDATA, false))
    //   return false;
 
    return true;
@@ -832,7 +783,7 @@ void TwoDeeOverview::threadend(PointBucket** buckets)
    // For the sake of neatness, clear up. This comes before allowing the main 
    // thread to create another thread like this to ensure that this signal is 
    // processed before, say, a signal to prepare OpenGL for drawing again.
-   if (awaitClearGLControl(true))
+   if (awaitClearGL(GLCONTROL, true))
       return;
    signal_EndGLDraw();
 
@@ -1356,64 +1307,26 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       }
       if(anypoint)
       {
-         // NOTE: This functionality has been retired for the time being, as it
-         // seemed fairly pointless and used the old boolean race-condition
-         // solving system. In future reimplementations, consider expanding
-         // the selection from 2x2 pixels, as the 2x2 pixels are barely visible
-         // (which warranted retiring this functionality in the first place)
+         Colour white (1.0, 1.0, 1.0);
+         Point topleft, topright, botleft;
+         LidarPoint thispoint = (*pointvector)[bucketno]->getPoint(pointno, 0);
 
-         //if(drawing_to_GL ||
-         //   initialising_GL_draw ||
-         //   flushing ||
-         //   thread_existsthread ||
-         //   thread_existsmain);
-         //else
-         //{
-         //   drawviewable(2);
-         //   Glib::RefPtr<Gdk::GL::Window> glwindow = get_gl_window();
-         //   if (!glwindow->gl_begin(get_gl_context()))
-         //      return false;
+         // implements a minimum offset
+         double boxoffset = 0.5 * pixelsToImageUnits(max(pointsize, 6.0));
 
-         //   // This makes sure the highlight is drawn over the top of the 
-         //   // flightlines.
-         //   double altitude = rmaxz+1000;
-         //   glReadBuffer(GL_BACK);
-         //   glDrawBuffer(GL_FRONT);
-         //   glColor3f(1.0,1.0,1.0);
-         //   glBegin(GL_LINE_LOOP);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() -
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //      glVertex3d((*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getX()-centre.getX() +
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  (*pointvector)[bucketno]->
-         //                  getPoint(pointno,0).getY()-centre.getY() - 
-         //                  0.5*pixelsToImageUnits(pointsize),
-         //                  altitude);
-         //   glEnd();
-         //   glDrawBuffer(GL_BACK);
-         //   glFlush();
-         //   glwindow->gl_end();
-         //}
+         // make copies and transpose rather than insantiate everything perfectly
+         topleft = Point(thispoint.getX() - centre.getX(), thispoint.getY() - centre.getY());
+
+         topright = topleft;
+         botleft  = topleft;
+
+          topleft.translate(-boxoffset, -boxoffset, 0);
+         topright.translate( boxoffset, -boxoffset, 0);
+          botleft.translate(-boxoffset,  boxoffset, 0);
+
+         overlayBox(white, white, topleft, topright, botleft);
+
+         // Box is now overlayed, now set up text label
 
          //Returns the filepath.
          boost::filesystem::path flightline(lidardata->

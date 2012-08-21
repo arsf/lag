@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([LiDAR Analysis GUI], [1.0] , [mark1@pml.ac.uk])
+AC_INIT([LiDAR Analysis GUI], [1.1] , [mark1@pml.ac.uk])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define])
 AC_CONFIG_HEADERS([config.h])
@@ -29,7 +29,7 @@ PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
 # strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
 # and fails silently in the makefile.  This makes it explicit
 PKG_CHECK_MODULES([laslib], [laslib])
-PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.1])
+PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.2])
 
 
 # Checks for header files.

@@ -42,6 +42,14 @@
 const unsigned int FONT_CHAR_WIDTH = 7;
 const unsigned int FONT_CHAR_HEIGHT = 12;
 
+/*
+================================================================================
+ LagDisplayGLbits - type to represent collections of actions with GL
+================================================================================
+*/
+typedef int LagDisplayGLbits;
+#define GLDATA 1
+#define GLCONTROL 2
 
 /*
 ===============================================================================
@@ -84,8 +92,8 @@ public:
 
    // Thread control functions
    void stopDrawingThread();
-   bool awaitClearGLData   (bool reserves);
-   bool awaitClearGLControl(bool reserves);
+   bool awaitClearGL(LagDisplayGLbits what, bool reserves);
+   bool clearGL(LagDisplayGLbits clears);
 
    // Reads from subset of quadtree and prepares variables for 
    // colouring etc..
@@ -93,6 +101,9 @@ public:
 
    //Prepare colour and brightness arrays.
    void coloursandshades(double maxz, double minz, int maxintensity, int minintensity);
+
+   bool overlayBox(Colour major, Colour minor,
+      Point corner, Point length, Point breadth);
 
    // This is how the pixels in the drawing area are coloured.
    enum brightnessBy_t {brightnessByNone, 
