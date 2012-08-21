@@ -1315,14 +1315,14 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          double boxoffset = 0.5 * pixelsToImageUnits(max(pointsize, 6.0));
 
          // make copies and transpose rather than insantiate everything perfectly
-         topleft = Point(thispoint.getX(), thispoint.getY());
+         topleft = Point(thispoint.getX() - centre.getX(), thispoint.getY() - centre.getY());
 
          topright = topleft;
          botleft  = topleft;
 
-         topleft.move (-boxoffset, -boxoffset, 0);
-         topright.move( boxoffset, -boxoffset, 0);
-         botleft.move (-boxoffset,  boxoffset, 0);
+          topleft.translate(-boxoffset, -boxoffset, 0);
+         topright.translate( boxoffset, -boxoffset, 0);
+          botleft.translate(-boxoffset,  boxoffset, 0);
 
          overlayBox(white, white, topleft, topright, botleft);
 
