@@ -117,6 +117,10 @@ public:
              int capacity, int cacheSize, int depth, int resolutionBase, 
              int numberOfResolutionLevels, fs::path cacheFolder);
 
+    Quadtree(double minX, double minY, double maxX, double maxY, 
+             int capacity, int cacheSize, int depth, int resolutionBase, 
+             int numberOfResolutionLevels);
+
     ~Quadtree();
 
     /**
