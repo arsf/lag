@@ -66,8 +66,7 @@ Quadtree::Quadtree(double minX, double minY, double maxX, double maxY, int cap,
 		int numberOfResolutionLevels)
 {
 	emptyTreeInit(minX, minY, maxX, maxY, cap, cacheSize, depth, resolutionBase,
-			numberOfResolutionLevels, NULL,
-         fs::temp_directory_path() / fs::unique_path("quadtree_%%%%-%%%%"));
+			numberOfResolutionLevels, NULL, fs::temp_directory_path());
 
 }
 
@@ -100,7 +99,7 @@ void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 	guessBucket_ = NULL;
    
 	// assuming the OS provides a suitable unique path
-   instanceDirectory_ = cacheFolder / fs::unique_path("lag_%%%%-%%%%");
+   instanceDirectory_ = cacheFolder / fs::unique_path("quadtree_%%%%-%%%%");
 	fs::create_directory(instanceDirectory_);
 
 	MCP_ = new CacheMinder(cacheSize);
