@@ -61,6 +61,16 @@ Quadtree::Quadtree(double minX, double minY, double maxX, double maxY, int cap,
 
 }
 
+Quadtree::Quadtree(double minX, double minY, double maxX, double maxY, int cap,
+		int cacheSize, int depth, int resolutionBase,
+		int numberOfResolutionLevels)
+{
+	emptyTreeInit(minX, minY, maxX, maxY, cap, cacheSize, depth, resolutionBase,
+			numberOfResolutionLevels, NULL,
+         fs::temp_directory_path() / fs::unique_path("quadtree_%%%%-%%%%"));
+
+}
+
 void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 		int resolutionBase, int numberOfResolutionLevels,
 		ostringstream *errorStream, fs::path cacheFolder)
