@@ -140,26 +140,13 @@ hr {
 
 /* Images */
 
-div.img {
-  display: inline-block; 
+img {
+  position: relative;
+  margin: 0 auto;
   max-width: 650px;
-  padding: 3px;
-  margin: 5px 0 5px 0;
-  border: 1px solid #ffffff;  
-}
-div.img img {
-  padding: 2px;
+  padding: 5px;
+  margin: 10px 0 32px 0;
   border: 1px solid #ccc;
-}
-div.desc {
-  text-align:center;
-  font-weight:normal;
-  font-size:80%;
-  width:196px;
-  margin:1px;
-}
-div.img:hover {
-  border: 1px solid #ccc; 
 }
 
 
@@ -335,7 +322,7 @@ footer {
   float:left;
   position:fixed;
   bottom:10px;
-  padding-left: 50px;
+	padding-left: 50px;
 }
 
 @media print, screen and (max-width: 960px) {
