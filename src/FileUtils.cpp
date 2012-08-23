@@ -41,8 +41,10 @@
 */
 filetype_t test_filename(std::string const& filename)
 {
-	if (filename.find(".las", filename.length() - 4) != std::string::npos
-		|| filename.find(".LAS", filename.length() - 4) != std::string::npos)
+	if (  filename.find(".las", filename.length() - 4) != std::string::npos
+		|| filename.find(".LAS", filename.length() - 4) != std::string::npos
+      || filename.find(".laz", filename.length() - 4) != std::string::npos
+      || filename.find(".LAZ", filename.length() - 4) != std::string::npos )
 	{
 		return LAS_FILE;
 	}
