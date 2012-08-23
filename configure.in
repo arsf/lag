@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([LiDAR Analysis GUI], [1.1] , [mark1@pml.ac.uk])
+AC_INIT([LiDAR Analysis GUI], [1.1] , [arsf-processing@pml.co.uk])
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE([1.10 -Wall no-define])
 AC_CONFIG_HEADERS([config.h])
