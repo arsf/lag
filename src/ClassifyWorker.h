@@ -44,11 +44,12 @@ class Profile;
 class ClassifyWorker : public Worker
 {
 public:
-	ClassifyWorker(Profile* prof, uint8_t clas);
+	ClassifyWorker(Profile* prof);
 
 protected:
 	void run();
 
+private:
 	Profile* profile;
 	uint8_t classification;
 };

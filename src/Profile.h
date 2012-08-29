@@ -41,6 +41,7 @@
 #include <utility>
 
 typedef pair<Point,Point> FenceType;
+typedef pair<FenceType,uint8_t> ClassificationJob;
 
 /*
 ===============================================================================
@@ -61,7 +62,7 @@ public:
    void clearProfile();
 
    //This classifies the points selected by the profile fence.
-   bool classify(uint8_t classification);
+   bool classify(Point fenceStart, Point fenceEnd, uint8_t classification);
 
    //Moves the view using keyboard input.
    bool on_pan_key(GdkEventKey *event,double scrollspeed);
@@ -92,7 +93,7 @@ public:
 
    // Methods managing the classification queue
    void enqueueClassify(FenceType f);
-   FenceType popNextClassify();
+   ClassificationJob popNextClassify();
 
    //Gets the parameters of the profile and then draws it to the screen.
    bool loadprofile(std::vector<double> profxs, std::vector<double> profys,int profps);
@@ -325,7 +326,7 @@ protected:
    // second: end of fence
    //pair <Point,Point> activeFence;
    FenceType activeFence;
-   list <FenceType> classificationQueue;
+   list <ClassificationJob> classificationQueue;
    //Point fenceStart;
    //Point fenceEnd;
 

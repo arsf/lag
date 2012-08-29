@@ -137,15 +137,16 @@ Profile::~Profile()
 
  Parameters:
    FenceType f - FenceType to enqueue
+   uint8_t c   - Classification to apply
 ================================================================================
 */
-void Profile::enqueueClassify(FenceType f)
+void Profile::enqueueClassify(FenceType f, uint8_t c)
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
    
    // an assertion could be made that <NULL,NULL> is never enqueued
 
-   classificationQueue.push_back(f);
+   classificationQueue.push_back(make_pair(f,c));
 }
 
 /*
@@ -156,13 +157,13 @@ void Profile::enqueueClassify(FenceType f)
  no elements are available
 
  Returns:
-   FenceType from the front of the queue, or just a pair of NULL,NULL
+   ClassificationJob from the front of the queue, or just a pair of NULL,NULL
 ================================================================================
 */
-FenceType Profile::popNextClassify()
+ClassificationJob Profile::popNextClassify()
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
-   FenceType popped;
+   ClassificationJob popped;
 
    if (classificationQueue.empty())
       popped = make_pair(NULL,NULL);
@@ -807,14 +808,13 @@ void Profile::classify_bucket(double *xs, double *ys, double *zs,
 }
 
 /*
-==================================
+================================================================================
  Profile::classify
 
- This takes the points selected by the fence and then classifies them as
- the type sent.
-==================================
+ Classifies points within a given fence as the given classification
+================================================================================
 */
-bool Profile::classify(uint8_t classification)
+bool Profile::classify(Point fenceStart, Point fenceEnd, uint8_t classification)
 {
 	// If there should not be any points there or if the fence covers no
 	// area/volume, do nothing. Otherwise get a divide by zero error in the i
