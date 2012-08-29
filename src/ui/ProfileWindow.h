@@ -63,7 +63,6 @@ public:
    ProfileWorker* profileworker;
    void profile_loaded();
 
-   ClassifyWorker* classifyworker;
    void points_classified();
 
 
@@ -71,6 +70,8 @@ private:
    Profile *prof;
    TwoDeeOverview *tdo;
    AdvancedOptionsWindow *aow;
+
+   ClassifyWorker* classifyworker;
 
    // This contains the profile area and takes keyboard input for it.
    Gtk::EventBox *eventboxprof;
