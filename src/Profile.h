@@ -33,11 +33,14 @@
 #include "Quadtree.h"
 #include "SelectionBox.h"
 #include "PointBucket.h"
-#include <vector>
 #include <boost/bind.hpp>
 #include "LagDisplay.h"
-#include <list>
 
+#include <vector>
+#include <list>
+#include <utility>
+
+typedef pair<Point,Point> FenceType;
 
 /*
 ===============================================================================
@@ -86,6 +89,11 @@ public:
    bool drawviewable(int imagetype);
 
    //Public methods:
+
+   // Methods managing the classification queue
+   void enqueueClassify(FenceType f);
+   FenceType popNextClassify();
+
    //Gets the parameters of the profile and then draws it to the screen.
    bool loadprofile(std::vector<double> profxs, std::vector<double> profys,int profps);
 
@@ -312,11 +320,16 @@ protected:
 
    //Fencing:
 
-   //The start coordinates for the fence.
-   Point fenceStart;
+   // Co-ordinates of either side of the fence
+   // first: start of fence
+   // second: end of fence
+   //pair <Point,Point> activeFence;
+   FenceType activeFence;
+   list <FenceType> classificationQueue;
+   //Point fenceStart;
+   //Point fenceEnd;
 
-   //The end coordinates for the fence.
-   Point fenceEnd;
+   Glib::Mutex classificationQueue_mutex;
 
    //Determines whether or not the fence should be drawn.
    bool fencing;

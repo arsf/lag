@@ -130,6 +130,52 @@ Profile::~Profile()
 }
 
 /*
+================================================================================
+ Profile::enqueueClassify
+
+ Enqueues a classification that will happen when ready
+
+ Parameters:
+   FenceType f - FenceType to enqueue
+================================================================================
+*/
+void enqueueClassify(FenceType f)
+{
+   Glib::Mutex::Lock lock (classificationQueue_mutex);
+   
+   // an assertion could be made that <NULL,NULL> is never enqueued
+
+   classificationQueue.push_back(f);
+}
+
+/*
+================================================================================
+ Profile::popNextClassify
+
+ Removes an item from the classification queue and returns it, or a NULL pair if
+ no elements are available
+
+ Returns:
+   FenceType from the front of the queue, or just a pair of NULL,NULL
+================================================================================
+*/
+FenceType popNextClassify()
+{
+   Glib::Mutex::Lock lock (classificationQueue_mutex);
+   FenceType popped;
+
+   if (classificationQueue.empty())
+      popped = make_pair(NULL,NULL);
+   else
+   {
+      popped = classificationQueue.front();
+      classificationQueue.pop_front();
+   }
+
+   return popped;
+}
+
+/*
 ==================================
  Profile::resetview
 
