@@ -163,11 +163,9 @@ void Profile::enqueueClassify(FenceType f, uint8_t c)
 ClassificationJob Profile::popNextClassify()
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
-   ClassificationJob popped;
+   ClassificationJob popped = NULL;
 
-   if (classificationQueue.empty())
-      popped = make_pair(NULL,NULL);
-   else
+   if (!(classificationQueue.empty()))
    {
       popped = classificationQueue.front();
       classificationQueue.pop_front();

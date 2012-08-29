@@ -35,19 +35,75 @@
 ==================================
 */
 ClassifyWorker::ClassifyWorker(Profile* prof, uint8_t clas) : Worker(),
-		profile	(prof),
-		classification (clas)
+		profile	      (prof),
+		classification (clas),
+      stopFlag       (false)
 {
 }
 
 /*
-==================================
+================================================================================
+ ClassifyWorker::~ClassifyWorker
+================================================================================
+*/
+ClassifyWorker::~ClassifyWorker()
+{
+   stop();
+}
+
+/*
+================================================================================
+ ClassifyWorker::stop
+================================================================================
+*/
+void ClassifyWorker::stop()
+{
+   Glib::Mutex::Lock internal_lock (internal_mutex);
+
+   stopFlag = true;
+   classify_condition.signal();
+}
+
+/*
+================================================================================
+ ClassifyWorker::nudge
+
+ Indicates to this thread that jobs are/could be available
+================================================================================
+*/
+void ClassifyWorker::nudge()
+{
+   classify_condition.signal();
+}
+
+/*
+================================================================================
  ClassifyWorker::run
-==================================
+================================================================================
 */
 void ClassifyWorker::run()
 {
+   Glib::Mutex::Lock internal_lock (internal_mutex);
 
-	profile->classify(classification);
-	sig_done();
+   // internal copies
+   ClassificationJob thisjob = NULL;
+   FenceType thisfence;
+
+   while (!stopFlag)
+   {
+      for ( thisJob = popNextClassify(); thisJob == NULL || stopFlag;
+            thisJob = popNextClassify())
+         classify_condition.wait(internal_mutex);
+
+      if (!stopFlag)
+      {
+         thisfence = thisjob.first;
+
+            internal_lock.release();
+         profile->classify(thisfence.first, thisfence.second, thisjob.second);
+            internal_lock.acquire();
+
+         sig_done();
+      }
+   }
 }
