@@ -92,7 +92,7 @@ public:
    //Public methods:
 
    // Methods managing the classification queue
-   void enqueueClassify(FenceType f);
+   void enqueueClassify(FenceType f, uint8_t c);
    ClassificationJob popNextClassify();
 
    //Gets the parameters of the profile and then draws it to the screen.
