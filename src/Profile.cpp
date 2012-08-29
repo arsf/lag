@@ -139,7 +139,7 @@ Profile::~Profile()
    FenceType f - FenceType to enqueue
 ================================================================================
 */
-void enqueueClassify(FenceType f)
+void Profile::enqueueClassify(FenceType f)
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
    
@@ -159,7 +159,7 @@ void enqueueClassify(FenceType f)
    FenceType from the front of the queue, or just a pair of NULL,NULL
 ================================================================================
 */
-FenceType popNextClassify()
+FenceType Profile::popNextClassify()
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
    FenceType popped;
