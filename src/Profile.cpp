@@ -131,6 +131,18 @@ Profile::~Profile()
 
 /*
 ================================================================================
+ Profile::hasClassifyJobs
+================================================================================
+*/
+bool hasClassifyJobs()
+{
+   Glib::Mutex::Lock lock (classificationQueue_mutex);
+
+   return classificationQueue.size() > 0;
+}
+
+/*
+================================================================================
  Profile::enqueueClassify
 
  Enqueues a classification that will happen when ready

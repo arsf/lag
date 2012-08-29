@@ -92,6 +92,7 @@ public:
    //Public methods:
 
    // Methods managing the classification queue
+   bool hasClassifyJobs();
    void enqueueClassify(FenceType f, uint8_t c);
    ClassificationJob popNextClassify();
 
