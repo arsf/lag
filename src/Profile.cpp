@@ -134,7 +134,7 @@ Profile::~Profile()
  Profile::hasClassifyJobs
 ================================================================================
 */
-bool hasClassifyJobs()
+bool Profile::hasClassifyJobs()
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
 
@@ -165,19 +165,21 @@ void Profile::enqueueClassify(FenceType f, uint8_t c)
 ================================================================================
  Profile::popNextClassify
 
- Removes an item from the classification queue and returns it, or a NULL pair if
- no elements are available
+ Removes an item from the classification queue and returns it
 
  Returns:
-   ClassificationJob from the front of the queue, or just a pair of NULL,NULL
+   ClassificationJob from the front of the queue, classification is 255 when
+   there are no jobs available
 ================================================================================
 */
 ClassificationJob Profile::popNextClassify()
 {
    Glib::Mutex::Lock lock (classificationQueue_mutex);
-   ClassificationJob popped = NULL;
+   ClassificationJob popped;
 
-   if (!(classificationQueue.empty()))
+   if (classificationQueue.empty())
+      popped = make_pair(make_pair(Point(0),Point(0)),255);
+   else
    {
       popped = classificationQueue.front();
       classificationQueue.pop_front();

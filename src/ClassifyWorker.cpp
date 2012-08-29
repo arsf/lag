@@ -90,7 +90,7 @@ void ClassifyWorker::run()
 
    while (!stopFlag)
    {
-      for ( thisJob = popNextClassify(); thisJob == NULL || stopFlag;
+      for ( thisJob = popNextClassify(); thisJob.second == 255 && !stopFlag;
             thisJob = popNextClassify())
          classify_condition.wait(internal_mutex);
 
