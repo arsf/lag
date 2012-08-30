@@ -64,6 +64,7 @@ public:
    {
       if (thread)
          thread->join();
+      thread = 0;
    }
 
 	Glib::Dispatcher sig_done;
