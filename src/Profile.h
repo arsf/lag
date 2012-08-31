@@ -35,13 +35,11 @@
 #include "PointBucket.h"
 #include <boost/bind.hpp>
 #include "LagDisplay.h"
+#include "ProfileTypes.h"
 
 #include <vector>
 #include <list>
 #include <utility>
-
-typedef pair<Point,Point> FenceType;
-typedef pair<FenceType,uint8_t> ClassificationJob;
 
 /*
 ===============================================================================
@@ -96,6 +94,9 @@ public:
    bool hasClassifyJobs();
    void enqueueClassify(FenceType f, uint8_t c);
    ClassificationJob popNextClassify();
+
+   // Clear the (one) fence being processed
+   void clearProcessingFence();
 
    //Gets the parameters of the profile and then draws it to the screen.
    bool loadprofile(std::vector<double> profxs, std::vector<double> profys,int profps);
@@ -331,6 +332,10 @@ protected:
    list <ClassificationJob> classificationQueue;
 
    Glib::Mutex classificationQueue_mutex;
+
+   // Values for the fence being processed by the (one) classification job
+   bool isProcessingFence;
+   FenceType processingFence;
 
    //Determines whether or not the fence should be drawn.
    bool fencing;

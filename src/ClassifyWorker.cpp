@@ -27,6 +27,7 @@
 
 #include "ClassifyWorker.h"
 #include "Profile.h"
+#include "ProfileTypes.h"
 
 
 /*
@@ -38,6 +39,8 @@ ClassifyWorker::ClassifyWorker(Profile* prof) : Worker(),
 		profile  (prof),
       stopFlag (false)
 {
+   // dummy point
+   currentjob = make_pair(make_pair(Point(0),Point(0)), 255);
 }
 
 /*
@@ -77,6 +80,20 @@ void ClassifyWorker::nudge()
 
 /*
 ================================================================================
+ ClassifyWorker::getCurrentJob
+
+ Retrieve current job from this thread
+================================================================================
+*/
+ClassificationJob ClassifyWorker::getCurrentJob()
+{
+   Glib::Mutex::Lock internal_lock (internal_mutex);
+
+   return currentjob;
+}
+
+/*
+================================================================================
  ClassifyWorker::run
 ================================================================================
 */
@@ -85,24 +102,25 @@ void ClassifyWorker::run()
    Glib::Mutex::Lock internal_lock (internal_mutex);
 
    // internal copies
-   ClassificationJob thisjob = make_pair(make_pair(Point(0),Point(0)), 255);
    FenceType thisfence;
 
    while (!stopFlag)
    {
-      for ( thisjob = profile->popNextClassify();
-            thisjob.second == 255 && !stopFlag;
-            thisjob = profile->popNextClassify())
+      for ( currentjob = profile->popNextClassify();
+            currentjob.second == 255 && !stopFlag;
+            currentjob = profile->popNextClassify())
          classify_condition.wait(internal_mutex);
 
       if (!stopFlag)
       {
-         thisfence = thisjob.first;
+         thisfence = currentjob.first;
 
             internal_lock.release();
-         profile->classify(thisfence.first, thisfence.second, thisjob.second);
+         profile->classify(thisfence.first, thisfence.second, currentjob.second);
             internal_lock.acquire();
 
+         currentjob.second = 255;
+         profile->clearProcessingFence();
          sig_done();
       }
    }

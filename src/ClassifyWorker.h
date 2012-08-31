@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include "Worker.h"
+#include "ProfileTypes.h"
 
 class Profile;
 
@@ -49,12 +50,14 @@ public:
    void nudge();
    void stop();
 
+   ClassificationJob getCurrentJob();
+
 protected:
 	void run();
 
 private:
 	Profile* profile;
-
+   ClassificationJob currentjob;
    bool stopFlag;
 
    // Threading control

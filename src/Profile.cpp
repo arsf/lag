@@ -60,7 +60,8 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 		rulering			(false),
 		rulerwidth			(3),
 		fencing				(false),
-		hideProfNoise		(false)
+		hideProfNoise		(false),
+      isProcessingFence (false)
 {
 	brightnessBy = brightnessByNone;
 	zoompower = 0.7;
@@ -198,9 +199,25 @@ ClassificationJob Profile::popNextClassify()
    {
       popped = classificationQueue.front();
       classificationQueue.pop_front();
+
+      processingFence = popped.first;
+      isProcessingFence = true;
    }
 
    return popped;
+}
+
+/*
+================================================================================
+ Profile::clearProcessingFence
+
+ Assuming that only one fence is being processed at a time, indicates to this
+ profile that the fence being tracked as processed has been completed
+================================================================================
+*/
+void Profile::clearProcessingFence()
+{
+   isProcessingFence = false;
 }
 
 /*
@@ -1718,8 +1735,9 @@ void Profile::makerulerbox()
 void Profile::drawoverlays()
 {
    const Colour activeFenceColour (0.0, 0.0, 1.0);
-   const Colour queuedFenceColour (0.0, 0.5, 0.5);
-   list<ClassificationJob>::iterator it;
+   const Colour queuedFenceColour (0.0, 0.3, 0.3);
+   const Colour processingFenceColour (0.0, 0.6, 0.6);
+   ClassificationJob j;
 
 	if (rulering)
 		makerulerbox();
@@ -1737,6 +1755,11 @@ void Profile::drawoverlays()
           )
          makefencebox(it->first.first, it->first.second, queuedFenceColour);
    }
+
+   // active classification job
+   if (isProcessingFence)
+      makefencebox(processingFence.first, processingFence.second,
+         processingFenceColour);
 
 	if (showheightscale)
 		makeZscale();
