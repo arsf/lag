@@ -45,7 +45,7 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 {
 	profileworker = NULL;
 
-	classifyworker = new ClassifyWorker(this->prof, classificationselect->get_value_as_int());
+	classifyworker = new ClassifyWorker(this->prof);
 	classifyworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::points_classified));
 	classifyworker->start();
 
@@ -81,9 +81,6 @@ ProfileWindow::ProfileWindow(Profile *prof, TwoDeeOverview *tdo, Gtk::Window *pr
 */
 ProfileWindow::~ProfileWindow()
 {
-   classifyworker->stop();
-
-   delete classifyworker;
    delete classificationselect;
    delete showheightscalecheck;
    delete colourbyintensitymenuprof;
@@ -461,15 +458,15 @@ void ProfileWindow::on_movingaveragerangeselect()
 */
 void ProfileWindow::on_classbutton_clicked()
 {
-	if (classifyworker != NULL)
-		return;
+	//if (classifyworker != NULL)
+	//	return;
 
 	set_statusbar_label("Classifying...");
 
 	if(prof->is_realized())
 	{
-      prof->queueActiveFence();
-      classifyWorker.nudge();
+      prof->queueActiveFence(classificationselect->get_value_as_int());
+      classifyworker->nudge();
 
       if (prof->hasClassifyJobs())
 		   make_busy_cursor(true);

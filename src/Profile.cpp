@@ -131,6 +131,21 @@ Profile::~Profile()
 
 /*
 ================================================================================
+ Profile::queueActiveFence
+
+ Enqueues the active fence
+================================================================================
+*/
+bool Profile::queueActiveFence(uint8_t classification)
+{
+   if (fencing)
+      enqueueClassify(activeFence, classification);
+
+   return fencing;
+}
+
+/*
+================================================================================
  Profile::hasClassifyJobs
 ================================================================================
 */
@@ -366,23 +381,23 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 	{
 	case GDK_W:
 		centre.translate(diffaxis, sameaxis, 0);
-		fenceStart.translate(diffaxis, sameaxis, 0);
-		fenceEnd.translate(diffaxis, sameaxis, 0);
+		//fenceStart.translate(diffaxis, sameaxis, 0);
+		//fenceEnd.translate(diffaxis, sameaxis, 0);
 		break;
 	case GDK_S:
 		centre.translate(-diffaxis, -sameaxis, 0);
-		fenceStart.translate(-diffaxis, -sameaxis, 0);
-		fenceEnd.translate(-diffaxis, -sameaxis, 0);
+		//fenceStart.translate(-diffaxis, -sameaxis, 0);
+		//fenceEnd.translate(-diffaxis, -sameaxis, 0);
 		break;
 	case GDK_A:
 		centre.translate(-sameaxis, diffaxis, 0);
-		fenceStart.translate(-sameaxis, diffaxis, 0);
-		fenceEnd.translate(-sameaxis, diffaxis, 0);
+		//fenceStart.translate(-sameaxis, diffaxis, 0);
+		//fenceEnd.translate(-sameaxis, diffaxis, 0);
 		break;
 	case GDK_D:
 		centre.translate(sameaxis, -diffaxis, 0);
-		fenceStart.translate(sameaxis, -diffaxis, 0);
-		fenceEnd.translate(sameaxis, -diffaxis, 0);
+		//fenceStart.translate(sameaxis, -diffaxis, 0);
+		//fenceEnd.translate(sameaxis, -diffaxis, 0);
 		break;
 	default:
 		return false;
@@ -724,8 +739,8 @@ bool Profile::draw_profile(bool changeview)
 			// Reset the fence to prevent the situation where a fence is preserved
 			// from profile to profile in a warped fashion allowing accidental
 			// classification.
-			fenceStart.move(0, 0, 0);
-			fenceEnd.move(0, 0, 0);
+			activeFence.first.move(0, 0, 0);
+			activeFence.second.move(0, 0, 0);
 			return returntostart();
 		}
 		// Otherwise trust that any changes (like with scrolling) are dealt with
@@ -1332,13 +1347,11 @@ bool Profile::on_fence_start(GdkEventButton* event)
 
 		//The horizontal distance is a combination of x and y so:
 		double hypotenuse = pixelsToImageUnits(event->x - get_width() / 2);
-		fenceEnd.move(
-				centre.getX() + viewer.getX() + hypotenuse * breadth / length,
-				centre.getY() + viewer.getY() + hypotenuse * height / length,
-				centre.getZ() + viewer.getZ()
-						- pixelsToImageUnits(event->y - get_height() / 2));
-
-		fenceStart = fenceEnd;
+      activeFence.second = centre + viewer;
+      activeFence.second.translate(  hypotenuse * breadth / length,
+                              hypotenuse * height  / length,
+                              -pixelsToImageUnits(event->y - get_height() / 2));
+		activeFence.first = activeFence.second;
 
 		// This causes the event box containing the profile to grab the focus,
 		// and so to allow keyboard control of the profile (this is not done
@@ -1372,11 +1385,10 @@ bool Profile::on_fence(GdkEventMotion* event)
 
 		//The horizontal distance is a combination of x and y so:
 		double hypotenuse = pixelsToImageUnits(event->x - get_width() / 2);
-		fenceEnd.move(
-				centre.getX() + viewer.getX() + hypotenuse * breadth / length,
-				centre.getY() + viewer.getY() + hypotenuse * height / length,
-				centre.getZ() + viewer.getZ()
-						- pixelsToImageUnits(event->y - get_height() / 2));
+      activeFence.second = centre + viewer;
+      activeFence.second.translate(  hypotenuse * breadth / length,
+                              hypotenuse * height  / length,
+                              -pixelsToImageUnits(event->y - get_height() / 2));
 		return drawviewable(2);
 	}
 	else if ((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)
@@ -1424,26 +1436,26 @@ bool Profile::on_fence_key(GdkEventKey *event, double scrollspeed)
 	switch (event->keyval)
 	{
 	case GDK_W: // Up
-		fenceStart.translate(0, 0, hypotenuse);
-		fenceEnd.translate(0, 0, hypotenuse);
+		activeFence.first.translate(0, 0, hypotenuse);
+		activeFence.second.translate(0, 0, hypotenuse);
 		break;
 	case GDK_S: // Down
-		fenceStart.translate(0, 0, -hypotenuse);
-		fenceEnd.translate(0, 0, -hypotenuse);
+		activeFence.first.translate(0, 0, -hypotenuse);
+		activeFence.second.translate(0, 0, -hypotenuse);
 		break;
 	case GDK_A: // Left
-		fenceStart.translate(-hypotenuse * breadth / length,
+		activeFence.first.translate(-hypotenuse * breadth / length,
 				-hypotenuse * height / length, 0);
 
-		fenceEnd.translate(-hypotenuse * breadth / length,
+		activeFence.second.translate(-hypotenuse * breadth / length,
 				-hypotenuse * height / length, 0);
 		break;
 	case GDK_D: // Right
 
-		fenceStart.translate(hypotenuse * breadth / length,
+		activeFence.first.translate(hypotenuse * breadth / length,
 				hypotenuse * height / length, 0);
 
-		fenceEnd.translate(hypotenuse * breadth / length,
+		activeFence.second.translate(hypotenuse * breadth / length,
 				hypotenuse * height / length, 0);
 		;
 		break;
@@ -1459,9 +1471,9 @@ bool Profile::on_fence_key(GdkEventKey *event, double scrollspeed)
  Profile::makefencebox
 ==================================
 */
-void Profile::makefencebox()
+void Profile::makefencebox(Point fenceStart, Point fenceEnd, Colour c)
 {
-	glColor3f(0.0, 0.0, 1.0);
+   glColor3f(c.getR(), c.getG(), c.getB());
 	if (slanted)
 	{
 		double breadth = fenceEnd.getX() - fenceStart.getX();
@@ -1703,7 +1715,7 @@ void Profile::drawoverlays()
 	if (rulering)
 		makerulerbox();
 	if (fencing)
-		makefencebox();
+		makefencebox(activeFence.first, activeFence.second, Colour(0.0, 0.0, 1.0));
 	if (showheightscale)
 		makeZscale();
 }

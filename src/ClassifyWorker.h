@@ -45,15 +45,15 @@ class ClassifyWorker : public Worker
 {
 public:
 	ClassifyWorker(Profile* prof);
-
-protected:
-	void run();
+   ~ClassifyWorker();
    void nudge();
    void stop();
 
+protected:
+	void run();
+
 private:
 	Profile* profile;
-	uint8_t classification;
 
    bool stopFlag;
 

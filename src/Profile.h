@@ -92,6 +92,7 @@ public:
    //Public methods:
 
    // Methods managing the classification queue
+   bool queueActiveFence(uint8_t);
    bool hasClassifyJobs();
    void enqueueClassify(FenceType f, uint8_t c);
    ClassificationJob popNextClassify();
@@ -392,7 +393,7 @@ protected:
    void makerulerbox();
 
    //Make rectangle showing where the fence is.
-   void makefencebox();
+   void makefencebox(Point fenceStart, Point fenceEnd, Colour c);
 
    //This makes a height scale.
    void makeZscale();

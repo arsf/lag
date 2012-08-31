@@ -85,13 +85,14 @@ void ClassifyWorker::run()
    Glib::Mutex::Lock internal_lock (internal_mutex);
 
    // internal copies
-   ClassificationJob thisjob = NULL;
+   ClassificationJob thisjob = make_pair(make_pair(Point(0),Point(0)), 255);
    FenceType thisfence;
 
    while (!stopFlag)
    {
-      for ( thisJob = popNextClassify(); thisJob.second == 255 && !stopFlag;
-            thisJob = popNextClassify())
+      for ( thisjob = profile->popNextClassify();
+            thisjob.second == 255 && !stopFlag;
+            thisjob = profile->popNextClassify())
          classify_condition.wait(internal_mutex);
 
       if (!stopFlag)
