@@ -1717,10 +1717,27 @@ void Profile::makerulerbox()
 */
 void Profile::drawoverlays()
 {
+   const Colour activeFenceColour (0.0, 0.0, 1.0);
+   const Colour queuedFenceColour (0.0, 0.5, 0.5);
+   list<ClassificationJob>::iterator it;
+
 	if (rulering)
 		makerulerbox();
 	if (fencing)
-		makefencebox(activeFence.first, activeFence.second, Colour(0.0, 0.0, 1.0));
+		makefencebox(activeFence.first, activeFence.second, activeFenceColour);
+
+   // queued classification jobs
+   {
+      Glib::Mutex::Lock lock (classificationQueue_mutex);
+
+      for (
+            list<ClassificationJob>::iterator it=classificationQueue.begin();
+            it != classificationQueue.end();
+            it++
+          )
+         makefencebox(it->first.first, it->first.second, queuedFenceColour);
+   }
+
 	if (showheightscale)
 		makeZscale();
 }
