@@ -377,27 +377,32 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 	// moving a slanted profile.
 	double sameaxis = shiftspeed * breadth / length;
 	double diffaxis = -shiftspeed * height / length;
+
+   // translations on fence points here have been ommitted due to work on
+   // issue #17 (see github), unknown whether program would need to perform
+   // translation on all queued classification jobs, which could lead to
+   // race conditions
 	switch (event->keyval)
 	{
 	case GDK_W:
 		centre.translate(diffaxis, sameaxis, 0);
-		//fenceStart.translate(diffaxis, sameaxis, 0);
-		//fenceEnd.translate(diffaxis, sameaxis, 0);
+		//activeFence.first.translate(diffaxis, sameaxis, 0);
+		//activeFence.second.translate(diffaxis, sameaxis, 0);
 		break;
 	case GDK_S:
 		centre.translate(-diffaxis, -sameaxis, 0);
-		//fenceStart.translate(-diffaxis, -sameaxis, 0);
-		//fenceEnd.translate(-diffaxis, -sameaxis, 0);
+		//activeFence.first.translate(-diffaxis, -sameaxis, 0);
+		//activeFence.second.translate(-diffaxis, -sameaxis, 0);
 		break;
 	case GDK_A:
 		centre.translate(-sameaxis, diffaxis, 0);
-		//fenceStart.translate(-sameaxis, diffaxis, 0);
-		//fenceEnd.translate(-sameaxis, diffaxis, 0);
+		//activeFence.first.translate(-sameaxis, diffaxis, 0);
+		//activeFence.second.translate(-sameaxis, diffaxis, 0);
 		break;
 	case GDK_D:
 		centre.translate(sameaxis, -diffaxis, 0);
-		//fenceStart.translate(sameaxis, -diffaxis, 0);
-		//fenceEnd.translate(sameaxis, -diffaxis, 0);
+		//activeFence.first.translate(sameaxis, -diffaxis, 0);
+		//activeFence.second.translate(sameaxis, -diffaxis, 0);
 		break;
 	default:
 		return false;

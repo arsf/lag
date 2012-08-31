@@ -329,8 +329,6 @@ protected:
    //pair <Point,Point> activeFence;
    FenceType activeFence;
    list <ClassificationJob> classificationQueue;
-   //Point fenceStart;
-   //Point fenceEnd;
 
    Glib::Mutex classificationQueue_mutex;
 

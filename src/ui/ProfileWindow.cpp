@@ -458,9 +458,6 @@ void ProfileWindow::on_movingaveragerangeselect()
 */
 void ProfileWindow::on_classbutton_clicked()
 {
-	//if (classifyworker != NULL)
-	//	return;
-
 	set_statusbar_label("Classifying...");
 
 	if(prof->is_realized())
