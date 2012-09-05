@@ -61,7 +61,10 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 		rulerwidth			(3),
 		fencing				(false),
 		hideProfNoise		(false),
-      isProcessingFence (false)
+      isProcessingFence (false),
+      flightlinepoints  (NULL),
+      vertices          (NULL),
+      colours           (NULL)
 {
 	brightnessBy = brightnessByNone;
 	zoompower = 0.7;
