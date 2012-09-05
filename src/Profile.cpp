@@ -62,7 +62,6 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 		fencing				(false),
 		hideProfNoise		(false),
       isProcessingFence (false),
-      flightlinepoints  (NULL),
       vertices          (NULL),
       colours           (NULL)
 {
