@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>LAG - LiDAR Analysis GUI</title>
+    <title>LAG by arsf</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
     <script src="javascripts/scale.fix.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    
+    <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-   
+    <![endif]-->
   </head>
   <body>
     <div class="wrapper">
@@ -32,17 +32,17 @@
       <section>
         <h3>Welcome to LAG</h3>
 
-<p>LiDAR Analysis GUI (LAG) is a tool for visualisation, inspection and classification of LiDAR point clouds.</p>
+<p>LiDAR Analysis GUI (LAG) is a tool for visualisation, inspection and classification of LiDAR point clouds. It currently supports LAS and ASCII file formats.  </p>
 
-<p>LAG has initially been created for Airborne Research and Survey Facility - Data analysis Node at <a href="http://www.pml.ac.uk/">Plymouth Marine Laboratory</a> as a tool to help with processing big volumes of LiDAR data. As the project has grown we decided to realease it to the public as the open source software.  </p>
+<p>LAG was initially created for Airborne Research and Survey Facility - Data analysis Node at <a href="http://www.pml.ac.uk/">Plymouth Marine Laboratory</a> to assist with processing LiDAR data internally, as the project has developed and stabilized we have decided it is ready to release to the public. It is licensed under the GPL, as LiDAR is an evolving technology, and this will enable more parties to openly contribute new ways of handling, processing and analysing LiDAR data.</p>
 
 <p>For more details about LiDAR processing at ARSF please visit this link:<br><a href="http://arsf-dan.nerc.ac.uk/trac/wiki/ProcessingAtDAN/Lidar">http://arsf-dan.nerc.ac.uk/trac/wiki/ProcessingAtDAN/Lidar</a></p>
 
 <h3>Features</h3>
 
 <ul>
-<li>Two perspectives for visualising points: top-down and profile</li>
-<li>Support for LAS and ASCII file formats</li>
+<li>Two perspectives for visualising points: top-down and profile (from the side)</li>
+<li>Support for ASCII and LAS files</li>
 <li>Support for UTM and latlong projections with an option to convert between the two</li>
 <li>Filtering of points by various criteria</li>
 <li>Points classification</li>
@@ -87,27 +87,27 @@
 
 <h3>Installation</h3>
 
-<p>LAG currently only runs on linux but windows version is in the works. To use lag please download the source code and follow the instruction in the README.</p>
+<p>LAG currently only runs on Linux but a Windows port is in the works. To use lag please download the source code and follow the instruction in the README.</p>
 
-<p>You are also going to need <a href="http://www.cs.unc.edu/%7Eisenburg/lastools/">laslib</a> library for LAG to work, which you'll have to build as a <a href="https://github.com/arsf/lag/wiki/Developers-FAQ#wiki-2.5">shared library</a>.</p>
+<p>You'll also need <a href="http://www.cs.unc.edu/%7Eisenburg/lastools/">laslib</a>.</p>
 
 <h3>Documentation</h3>
 
-<p>For a user guide please see the wiki:
-<a href="https://github.com/arsf/lag/wiki/Lag-User-Guide">https://github.com/arsf/lag/wiki/Lag-User-Guide</a></p>
+<p>For a brief user's guide please see our wiki at:
+<a href="http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide">http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide</a></p>
 
-<p>If you're a developer and would like to contribute to the project or are interested in the internal design of LAG please see LAG developers FAQ at:
-<a href="https://github.com/arsf/lag/wiki/Developers-FAQ">https://github.com/arsf/lag/wiki/Developers-FAQ</a></p>
+<p>If you're a developer and would like to contribute to the project or are just interested in the internal design of LAG please see LAG developers FAQ at:
+<a href="http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq">http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq</a></p>
 
 <h3>Support and Contact</h3>
 
-<p>LAG is released as is and we don't provide any additional support for its users. If you'd like to contribute or have some specific questions about the code please contact one of the developers. If you'd like to know more about LiDAR processing at ARSF please contact <a href="mailto:arsf-processing@pml.co.uk">arsf-processing@pml.co.uk</a>.</p>
+<p>LAG is provided as-is and without warranty, and even though we cannot guarantee that we have the time to make it work on your system in the way that you want it to, we are interested in the problems and use-cases associated with LAG. For the time being, e-mail <a href="mailto:arsf-processing@pml.co.uk">arsf-processing@pml.co.uk</a> for issues related to LAG development. If you'd like to know more about LiDAR processing at ARSF please contact <a href="mailto:arsf-processing@pml.co.uk">arsf-processing@pml.co.uk</a>.</p>
       </section>
       <footer>
         <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
-    <script>fixScale(document);</script>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
 		
   </body>
 </html>
