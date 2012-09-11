@@ -1,0 +1,6 @@
+405c405,407
+< 	$(lag_LINK) $(lag_OBJECTS) $(lag_LDADD) $(LIBS)
+---
+> 	$(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(lag_LDFLAGS) \
+> 	$(LDFLAGS) -o $@ $(lag_OBJECTS) $(lag_LDADD) $(LIBS) \
+> 	$(lag_LDADD) $(lag_LDFLAGS)

@@ -25,7 +25,6 @@ PKG_CHECK_MODULES([GTKmm], [gtkmm-2.4])
 #PKG_CHECK_MODULES([GTKmm], [gtkmm-3.0])
 PKG_CHECK_MODULES([GTKGLextmm], [gtkglextmm-1.2])
 PKG_CHECK_MODULES([GThread], [gthread-2.0])
-PKG_CHECK_MODULES([libgeotiff], [libgeotiff])
 # strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
 # and fails silently in the makefile.  This makes it explicit
 PKG_CHECK_MODULES([laslib], [laslib])
