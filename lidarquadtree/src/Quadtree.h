@@ -38,19 +38,15 @@
 #include <string>
 #include <tr1/unordered_map>
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 #include "QuadtreeNode.h"
 #include "QuadtreeExceptions.h"
 #include "CacheMinder.h"
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 // Keep strings for now - may be fixed downstream per OS
-//typedef tr1::unordered_map<uint8_t, fs::path> flighthash;
-typedef tr1::unordered_map<uint8_t, fs::path> flighthash;
+//typedef tr1::unordered_map<uint8_t, string> flighthash;
+typedef tr1::unordered_map<uint8_t, string> flighthash;
 
 
 /**
@@ -93,7 +89,7 @@ public:
      */
     Quadtree(Boundary *boundary, int capacity, int cacheSize, int depth, 
              int resolutionBase, int numberOfResolutionLevels, 
-             fs::path cacheFolder);
+             string cacheFolder);
 
     /**
      * a constructor that builds a new quadtree with user defined dimensions
@@ -115,7 +111,7 @@ public:
      */
     Quadtree(double minX, double minY, double maxX, double maxY, 
              int capacity, int cacheSize, int depth, int resolutionBase, 
-             int numberOfResolutionLevels, fs::path cacheFolder);
+             int numberOfResolutionLevels, string cacheFolder);
 
     Quadtree(double minX, double minY, double maxX, double maxY, 
              int capacity, int cacheSize, int depth, int resolutionBase, 
@@ -258,18 +254,18 @@ protected:
     flighthash flightTable_;
     int prebuildDepth_;
     //string instanceDirectory_;
-    fs::path instanceDirectory_;
+    string instanceDirectory_;
     int resolutionBase_;
     int numberOfResolutionLevels_;
     CacheMinder *MCP_;
     int numberOfPoints_;
     void initiliseValues(int cap, int cacheSize, int depth, 
                          int resolutionBase, int numberOfResolutionLevels, 
-                         ostringstream *errorStream, fs::path cacheFolder);
+                         ostringstream *errorStream, string cacheFolder);
     void emptyTreeInit(double minX, double minY, double maxX, double maxY, 
                        int cap, int cacheSize, int depth, int resolutionBase, 
                        int numberOfResolutionLevels, 
-                       ostringstream *errorStream, fs::path cacheFolder);
+                       ostringstream *errorStream, string cacheFolder);
 
     /**
      * a method thats expands the quadtree to encompass new points
@@ -283,9 +279,17 @@ protected:
      *
      * @return pointer to the new root of the tree
      */
-    QuadtreeNode* expandBoundary(QuadtreeNode* oldNode, 
+   QuadtreeNode* expandBoundary(QuadtreeNode* oldNode, 
                                  Boundary* newPointsBoundary);
-
+private:
+   /**
+    * Internal method to recursively remove directories, used for cleanup
+    *
+    * @param target , the directory/file to remove
+    *
+    * @return false unless something could not be deleted
+    */
+   bool removeInstanceDir(const char* target);
 };
 
 

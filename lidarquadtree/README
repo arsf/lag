@@ -21,7 +21,6 @@ Dependencies
 ------------
 
 A few libraries are required to make this library compile.
-   * boost
    * liblzo2
    * laslib
 

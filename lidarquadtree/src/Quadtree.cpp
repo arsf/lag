@@ -1,6 +1,6 @@
 /*
  * File:   Quadtree.cpp
- * Authors: chrfi, jaho
+ * Authors: chrfi, jaho, Berin Smaldon
  *
  * Created on October 8, 2009, 10:43 AM
  *
@@ -33,20 +33,26 @@
 #include <stdlib.h>
 #include <sstream>
 #include <cmath>
-#include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iostream>
+#include <cstdio>
+#include <sys/stat.h>
+
 #include "time.h"
 #include "Quadtree.h"
 #include "CollisionDetection.h"
+#include "QuadtreeExceptions.h"
 
 using namespace std;
-namespace fs = boost::filesystem;
 
+#ifndef __WIN32
+#define DEFAULT_TEMP_DIRECTORY "/tmp"
+#else
+#define DEFAULT_TEMP_DIRECTORY "C:\\Temp"
+#endif
 
 Quadtree::Quadtree(Boundary *b, int cap, int cacheSize, int depth,
 		int resolutionBase, int numberOfResolutionLevels,
-		fs::path cacheFolder)
+		string cacheFolder)
 {
 	emptyTreeInit(b->minX, b->minY, b->maxX, b->maxY, cap, cacheSize, depth,
 			resolutionBase, numberOfResolutionLevels, NULL, cacheFolder);
@@ -54,7 +60,7 @@ Quadtree::Quadtree(Boundary *b, int cap, int cacheSize, int depth,
 
 Quadtree::Quadtree(double minX, double minY, double maxX, double maxY, int cap,
 		int cacheSize, int depth, int resolutionBase,
-		int numberOfResolutionLevels, fs::path cacheFolder)
+		int numberOfResolutionLevels, string cacheFolder)
 {
 	emptyTreeInit(minX, minY, maxX, maxY, cap, cacheSize, depth, resolutionBase,
 			numberOfResolutionLevels, NULL, cacheFolder);
@@ -66,13 +72,12 @@ Quadtree::Quadtree(double minX, double minY, double maxX, double maxY, int cap,
 		int numberOfResolutionLevels)
 {
 	emptyTreeInit(minX, minY, maxX, maxY, cap, cacheSize, depth, resolutionBase,
-			numberOfResolutionLevels, NULL, fs::temp_directory_path());
-
+			numberOfResolutionLevels, NULL, string(DEFAULT_TEMP_DIRECTORY));
 }
 
 void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 		int resolutionBase, int numberOfResolutionLevels,
-		ostringstream *errorStream, fs::path cacheFolder)
+		ostringstream *errorStream, string cacheFolder)
 {
 	if (resolutionBase < 1)
 	{
@@ -99,8 +104,22 @@ void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 	guessBucket_ = NULL;
    
 	// assuming the OS provides a suitable unique path
-   instanceDirectory_ = cacheFolder / fs::unique_path("quadtree_%%%%-%%%%");
-	fs::create_directory(instanceDirectory_);
+   char instance_template [] = "quadtree_XXXXXX";
+#ifndef __WIN32
+   mktemp(instance_template);
+#else
+   _mktemp(instance_template);
+#endif
+
+   instanceDirectory_ = cacheFolder + instance_template;
+#ifndef __WIN32
+   if (mkdir(instanceDirectory_.c_str(), S_IRWXU))
+#else
+   if (CreateDirectory(instanceDirectory_.c_str(), NULL) == 0)
+#endif
+   {
+      throw QuadtreeIOException();
+   }
 
 	MCP_ = new CacheMinder(cacheSize);
 	flightLineNumber_ = 0;
@@ -110,7 +129,7 @@ void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 
 void Quadtree::emptyTreeInit(double minX, double minY, double maxX, double maxY,
 		int cap, int cacheSize, int depth, int resolutionBase,
-		int numberOfResolutionLevels, ostringstream *errorStream, fs::path cacheFolder)
+		int numberOfResolutionLevels, ostringstream *errorStream, string cacheFolder)
 {
 	initiliseValues(cap, cacheSize, depth, resolutionBase,
 			numberOfResolutionLevels, errorStream, cacheFolder);
@@ -328,8 +347,50 @@ Quadtree::~Quadtree()
 	PointBucket::clean_up();
 
 	// Remove temporary files
-	//fs::path qt_path = instanceDirectory_.c_str();
-	fs::remove_all(instanceDirectory_);
+   removeInstanceDir(instanceDirectory_.c_str());
+}
+
+bool Quadtree::removeInstanceDir(const char* target)
+{
+#ifndef __WIN32
+   if (rmdir(target))
+   {
+      // failed, check why
+      if (errno == ENOTEMPTY)
+      {
+         // directory contains stuff, enter and delete it
+         DIR* openD;
+         struct dirent* entry;
+
+         openD = opendir(target);
+
+         if (openD == NULL)
+            return true;
+
+         entry = readdir(openD);
+         while (entry)
+         {
+            if (removeInstanceDir(entry->d_name()))
+               return true;
+         }
+
+         // then delete directory
+         return ( rmdir(target) == -1 );
+      }
+
+      else if (errno == ENOTDIR)
+      {
+         // is file, unlink
+         return ( unlink(target) == -1 );
+      }
+   }
+
+   // succeeded, return false
+   return false;
+#else
+
+   return true; // not implemented
+#endif
 }
 
 // this is for debugging only usefull for tiny trees (<50)

@@ -35,12 +35,10 @@
 #include <iostream>
 
 using namespace std;
-namespace fs = boost::filesystem;
-
 
 QuadtreeNode::QuadtreeNode(double minX, double minY, double maxX, double maxY,
                      int capacity, CacheMinder *MCP,
-                     fs::path instanceDirectory, int resolutionBase,
+                     string instanceDirectory, int resolutionBase,
                      int numberOfResolutionLevels)
 :
 		a_					(NULL),
@@ -65,7 +63,7 @@ QuadtreeNode::QuadtreeNode(double minX, double minY, double maxX, double maxY,
 QuadtreeNode::QuadtreeNode(double minX, double minY, double maxX, double maxY,
                            int capacity, QuadtreeNode* a, QuadtreeNode* b,
                            QuadtreeNode* c, QuadtreeNode* d, CacheMinder *MCP,
-                           fs::path instanceDirectory, int resolutionbase,
+                           string instanceDirectory, int resolutionbase,
                            int numberOfResolutionLevels)
 :
 		a_					(a),

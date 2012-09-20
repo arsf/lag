@@ -1,6 +1,6 @@
 /* 
  * File:   QuadtreeExceptions.h
- * Author: chrfi
+ * Author: chrfi, Berin Smaldon
  *
  * Created on February 10, 2010, 4:10 PM
  *
@@ -37,6 +37,20 @@
 
 using namespace std;
 
+/**
+ * @author Berin Smaldon
+ * @version 1.0
+ *
+ * a pretty vanilla exception to indicate some regular I/O error
+ */
+class QuadtreeIOException : public exception
+{
+public:
+   virtual const char* what() const throw ()
+    {
+        return "Quadtree I/O failed critically";
+    }
+};
 
 /**
  * @author Christopher Stanley Finerty

@@ -1,6 +1,6 @@
 /* 
  * File:   PointBucket.h
- * Authors: chrfi, jaho
+ * Authors: chrfi, jaho, Berin Smaldon
  *
  * Created on February 11, 2010, 12:08 PM
  *
@@ -40,9 +40,6 @@
 #include <stdint.h>
 #include "lzo/lzo1b.h"
 #include "QuadtreeExceptions.h"
-
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
 
 using namespace std;
 
@@ -101,7 +98,7 @@ public:
      */
     PointBucket(int capacity, double minX, double minY, 
                 double maxX, double maxY, CacheMinder *MCP, 
-                boost::filesystem::path instanceDirectory, 
+                string instanceDirectory, 
                 int resolutionBase, 
                 int numberOfResolutionLevels);
 
@@ -229,14 +226,14 @@ protected:
     int resolutionBase_;
     int numberOfResolutionLevels_;
     int capacity_;
-    boost::filesystem::path instanceDirectory_;
+    string instanceDirectory_;
     static unsigned char *workingMemory;
     static unsigned char *compressedData;
 
     // arrays containing different values for these attributes for each subset 
     // of points
     int *numberOfPoints_;
-    boost::filesystem::path *filePath_;
+    string *filePath_;
     bool *updated_;
     int *numberOfSerializedPoints_;
     bool *serialized_;

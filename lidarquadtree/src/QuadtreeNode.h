@@ -36,11 +36,8 @@
 #include "PointBucket.h"
 #include <vector>
 #include <string>
-#include <boost/filesystem.hpp>
 
 using namespace std;
-namespace fs = boost::filesystem;
-
 
 /**
  * @author Christopher Stanley Finerty
@@ -70,7 +67,7 @@ protected:
     PointBucket *bucket_;
     bool leaf_;
     CacheMinder *MCP_;
-    fs::path instanceDirectory_;
+    string instanceDirectory_;
     int resolutionBase_;
     int numberOfResolutionLevels_;
 
@@ -98,7 +95,7 @@ protected:
      * \link PointBucket \endlink detailed description for explanation
      */
     QuadtreeNode(double minX, double minY, double maxX, double maxY, 
-                 int capacity, CacheMinder *MCD, fs::path instanceDirectory, 
+                 int capacity, CacheMinder *MCD, string instanceDirectory, 
                  int resolutionBase, int numberOfResolutionLevels);
 
 
@@ -131,7 +128,7 @@ protected:
     QuadtreeNode(double minX, double minY, double maxX, double maxY, 
                  int capacity, QuadtreeNode* a, QuadtreeNode* b, 
                  QuadtreeNode* c, QuadtreeNode* d, CacheMinder *MCD, 
-                 fs::path instanceDirectory, int resolutionBase, 
+                 string instanceDirectory, int resolutionBase, 
                  int numberOfResolutionLevels);
     ~QuadtreeNode();
     
