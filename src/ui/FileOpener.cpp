@@ -72,8 +72,6 @@ FileOpener::FileOpener(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gt
 	numlines = 0;
 
 	// Set folder for storing quadtree cache to OS tmp folder by default
-	// NOTE: this becomes available in boost version 1.46
-	// cache_folder_select->set_current_folder(fs::temp_directory_path());
 #ifdef __WIN32
    cache_folder_select->set_current_folder("C:\\Temp"); // not ideal
 #else

@@ -145,7 +145,7 @@ void SaveWorker::save_points_wf(int n, LidarPoint* points)
 	point->init(&reader->header, reader->header.point_data_format, reader->header.point_data_record_length, &reader->header);
 
 	// waveform stuff
-	fs::path data_filename;
+	string data_filename;
 	FILE* datafile = 0;
 	char* buffer = 0;
 

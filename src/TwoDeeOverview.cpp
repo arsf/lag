@@ -33,9 +33,6 @@
 #include "MathFuncs.h"
 #include "geoprojectionconverter.hpp"
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 // define for thread debugging
 //#define THREAD_DEBUG
 
@@ -1326,11 +1323,15 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
          // Box is now overlayed, now set up text label
 
          //Returns the filepath.
-         boost::filesystem::path flightline(lidardata->
+         string flightline(lidardata->
             getFileName((*pointvector)[bucketno]->
             getPoint(pointno,0).getFlightline()));
 
-         flightline = flightline.filename();
+#ifndef __WIN32
+         flightline.erase(0, flightline.rfind("/")+1);
+#else
+         flightline.erase(0, flightline.rfind("\\")+1);
+#endif
 
          ostringstream x,y,z,time,intensity,classification,
                        rnumber,flightlinenumber;
@@ -1371,7 +1372,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
                          ", Time: " + time.str() + 
               ",\n" + "Intensity: " + intensity.str() + 
                ", Classification: " + classification.str() + 
-             ",\n" + "Flightline: " + flightline.string() + 
+             ",\n" + "Flightline: " + flightline + 
                                " (" + flightlinenumber.str() + 
                "), Return number: " + rnumber.str() + ".";
 

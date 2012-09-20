@@ -33,11 +33,7 @@
 #include "PointData.h"
 #include <cstdio>
 
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
-
 using namespace std;
-namespace fs = boost::filesystem;
 
 std::vector<int> LoadWorker::point_number;
 tr1::unordered_map<uint8_t, std::string> LoadWorker::point_data_paths;

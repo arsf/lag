@@ -28,9 +28,7 @@
 #include <iostream>
 #include <gtkmm.h>
 #include <gtkglmm.h>
-
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem.hpp>
+#include <sys/stat.h>
 
 #include "Quadtree.h"
 #include "TwoDeeOverview.h"
@@ -45,8 +43,6 @@
 #endif
 
 using namespace std;
-namespace fs = boost::filesystem;
-
 
 /*
 ==================================
@@ -55,9 +51,18 @@ namespace fs = boost::filesystem;
  Returns true if a file exists.
 ==================================
 */
-bool glade_exists(fs::path const& filename)
+bool glade_exists(string const& filename)
 {
-	return fs::exists(filename);
+#ifndef __WIN32
+   struct stat sb;
+
+   if (stat(filename.c_str(), &sb) == 0)
+      return true;
+   else
+      return false;
+#else
+   return false; // fix me
+#endif
 }
 
 /*
@@ -75,8 +80,6 @@ string findgladepath(char* programpath)
 	//       i.e., C:\Program Files\PML\Lag\bin, now produces something
 	//             like C:\Program Files\PML\Lag\share\lag\lag.ui
 
-	string exepath;
-
 	// Find the path of the executable
 	char buff[1024];
 	ssize_t len;
@@ -90,43 +93,52 @@ string findgladepath(char* programpath)
 	if (len > 0) // len = -1 for linux failure, 0 for windows failure
 	{
 		buff[len] = '\0';
-		exepath = string(buff);
 	}
 
-	fs::path gladepath(exepath);
-	gladepath = fs::system_complete(gladepath).remove_filename();
-   // TODO: Check this works on windows
-	gladepath /= "../share/lag/lag.ui";
+	string gladepath(buff);
+#ifndef __WIN32
+   gladepath.erase(gladepath.rfind("/")+1, gladepath.size());
+	gladepath += "../share/lag/lag.ui";
+#else
+   gladepath.erase(gladepath.rfind("\\")+1, gladepath.size());
+   gladepath += "lag.ui";
+#endif
 
 	if (glade_exists(gladepath))
 	{
-		return gladepath.string();
+		return gladepath;
 	}
 
 	// For lag not installed:
 
 	//The path of the executable.
-	fs::path mypath(programpath);
+	string mypath(programpath);
 
-	fs::path gladename1 = fs::system_complete(mypath).remove_filename();
-	fs::path gladename2 = gladename1;
+#ifndef __WIN32
+   mypath.erase(mypath.rfind("/")+1, mypath.size());
+#else
+   mypath.erase(mypath.rfind("\\")+1, mypath.size());
+#endif
 
-	gladename1 /= ("../lag.ui");
-	gladename2 /= ("lag.ui");
+	string gladename1(mypath);
+	string gladename2(mypath);
+
+	gladename1 += "../lag.ui";
+	gladename2 += "lag.ui";
 
 	if (glade_exists(gladename1))
 	{
-		return gladename1.string();
+		return gladename1;
 	}
 	else if (glade_exists(gladename2))
 	{
-		return gladename2.string();
+		return gladename2;
 	}
 	else
 	{
 		std::cerr << "No lag.ui glade file found" << std::endl << "Tried: "
-				<< std::endl << gladename1.string() << std::endl
-				<< gladename2.string();
+				<< std::endl << gladename1 << std::endl
+				<< gladename2;
 		exit(1);
 	}
 }
