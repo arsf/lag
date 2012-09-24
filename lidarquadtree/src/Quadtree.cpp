@@ -35,7 +35,14 @@
 #include <cmath>
 #include <iostream>
 #include <cstdio>
+
+#ifdef __WIN32
+#else
 #include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+#include <dirent.h>
+#endif
 
 #include "time.h"
 #include "Quadtree.h"
@@ -104,10 +111,11 @@ void Quadtree::initiliseValues(int capacity, int cacheSize, int depth,
 	guessBucket_ = NULL;
    
 	// assuming the OS provides a suitable unique path
-   char instance_template [] = "quadtree_XXXXXX";
 #ifndef __WIN32
+   char instance_template [] = "/quadtree_XXXXXX";
    mktemp(instance_template);
 #else
+   char instance_template [] = "\\quadtree_XXXXXX";
    _mktemp(instance_template);
 #endif
 
@@ -370,8 +378,9 @@ bool Quadtree::removeInstanceDir(const char* target)
          entry = readdir(openD);
          while (entry)
          {
-            if (removeInstanceDir(entry->d_name()))
+            if (removeInstanceDir(entry->d_name))
                return true;
+            entry = readdir(openD);
          }
 
          // then delete directory

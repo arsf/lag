@@ -43,6 +43,7 @@
 #include <windows.h>
 #else
 #include <sys/stat.h>
+#include <errno.h>
 #endif
 
 using namespace std;
@@ -95,26 +96,26 @@ PointBucket::PointBucket(int capacity, double minX, double minY, double maxX,
 
    // append the PointBuckets 'this' pointer value to the filename with 
    // each pair of digits as a sub folder of the previous
-   for (int k = s.size(); k > 2; k = k - 2)
+   for (int k = s.size(); k >= 2; k = k - 2)
    {
 #ifndef __WIN32
-      instancedirectory += "/";
+      instanceDirectory_ += "/";
 #else
-      instancedirectory += "\\";
+      instanceDirectory_ += "\\";
 #endif
 
-      instancedirectory += s.substr(k - 2, 2);
+      instanceDirectory_ += s.substr(k - 2, 2);
 
 #ifndef __WIN32
-      e = mkdir(instancedirectory.c_str(), S_IRWXU);
+      e = mkdir(instanceDirectory_.c_str(), S_IRWXU);
 #else
-      if (CreateDirectory(instancedirectory.c_str(), NULL))
+      if (CreateDirectory(instanceDirectory_.c_str(), NULL))
          e = 0;
       else
          e = -1;
 #endif
 
-      if (e)
+      if (e && errno != EEXIST)
          throw QuadtreeIOException();
    }
 
@@ -126,10 +127,17 @@ PointBucket::PointBucket(int capacity, double minX, double minY, double maxX,
       "XXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXX_XXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXXXXXX_1_";
    char buffer[16];
 
-   snprintf(&resolution_string[ 0], 20, "%.40g", minX_);
-   snprintf(&resolution_string[21], 20, "%.40g", minY_);
-   snprintf(&resolution_string[42], 20, "%.40g", maxY_);
-   snprintf(&resolution_string[63], 20, "%.40g", maxX_);
+   // populates resolution_string, then regenerates -s and _s that were overwritten
+   snprintf(&resolution_string[ 0], 21, "%.40g", minX_);
+   snprintf(&resolution_string[21], 21, "%.40g", minY_);
+   snprintf(&resolution_string[42], 21, "%.40g", maxY_);
+   snprintf(&resolution_string[63], 21, "%.40g", maxX_);
+
+   resolution_string[20] = '-';
+   resolution_string[41] = '_';
+   resolution_string[62] = '-';
+   resolution_string[83] = '_';
+
    for (int k = 0; k < numberOfResolutionLevels; ++k)
    {
 	   pointInterval_[k] = int(pow(resolutionBase_, k));
@@ -143,7 +151,7 @@ PointBucket::PointBucket(int capacity, double minX, double minY, double maxX,
 	   points_[k] = NULL;
 
       snprintf(buffer, 16, "%d", pointInterval_[k]);
-	   filePath_[k] = instancedirectory +
+	   filePath_[k] = instanceDirectory_ +
          resolution_string + buffer;
    }
 
