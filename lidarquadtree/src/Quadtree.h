@@ -289,7 +289,7 @@ private:
     *
     * @return false unless something could not be deleted
     */
-   bool removeInstanceDir(const char* target);
+   bool removeInstanceDir(string target);
 };
 
 

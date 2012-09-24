@@ -53,8 +53,10 @@ using namespace std;
 
 #ifndef __WIN32
 #define DEFAULT_TEMP_DIRECTORY "/tmp"
+#define FILE_SEPERATOR_STRING "/"
 #else
 #define DEFAULT_TEMP_DIRECTORY "C:\\Temp"
+#define FILE_SEPERATOR_STRING "\\"
 #endif
 
 Quadtree::Quadtree(Boundary *b, int cap, int cacheSize, int depth,
@@ -355,14 +357,14 @@ Quadtree::~Quadtree()
 	PointBucket::clean_up();
 
 	// Remove temporary files
-   removeInstanceDir(instanceDirectory_.c_str());
+   removeInstanceDir(instanceDirectory_);
 }
 
-bool Quadtree::removeInstanceDir(const char* target)
+bool Quadtree::removeInstanceDir(string target)
 {
 #ifndef __WIN32
    // try to treat target as directory first, if that fails: check why
-   if (rmdir(target))
+   if (rmdir(target.c_str()))
    {
       // failed, check why
       if (errno == ENOTEMPTY)
@@ -370,8 +372,9 @@ bool Quadtree::removeInstanceDir(const char* target)
          // directory contains stuff, enter and delete it
          DIR* openD;
          struct dirent* entry;
+         string s;
 
-         openD = opendir(target);
+         openD = opendir(target.c_str());
 
          if (openD == NULL)
             return true;
@@ -379,19 +382,25 @@ bool Quadtree::removeInstanceDir(const char* target)
          entry = readdir(openD);
          while (entry)
          {
-            if (removeInstanceDir(entry->d_name))
-               return true;
+            s = target + FILE_SEPERATOR_STRING + entry->d_name;
+
+            if (entry->d_name[0] != '.')
+            {
+               if (removeInstanceDir(s.c_str()))
+                  return true;
+            }
+
             entry = readdir(openD);
          }
 
          // then delete directory
-         return ( rmdir(target) == -1 );
+         return ( rmdir(target.c_str()) == -1 );
       }
 
       else if (errno == ENOTDIR)
       {
          // is file, unlink
-         return ( unlink(target) == -1 );
+         return ( unlink(target.c_str()) == -1 );
       }
    }
 
