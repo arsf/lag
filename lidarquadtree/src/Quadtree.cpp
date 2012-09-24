@@ -361,6 +361,7 @@ Quadtree::~Quadtree()
 bool Quadtree::removeInstanceDir(const char* target)
 {
 #ifndef __WIN32
+   // try to treat target as directory first, if that fails: check why
    if (rmdir(target))
    {
       // failed, check why
