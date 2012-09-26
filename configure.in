@@ -28,7 +28,7 @@ PKG_CHECK_MODULES([GThread], [gthread-2.0])
 # strictly speaking, this is a sub-dependency of lidarquadtree, but automake doesn't check it
 # and fails silently in the makefile.  This makes it explicit
 PKG_CHECK_MODULES([laslib], [laslib])
-PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.2])
+PKG_CHECK_MODULES([lidarquadtree], [lidarquadtree >= 1.3])
 
 # Checks for header files.
 AC_HEADER_STDC
