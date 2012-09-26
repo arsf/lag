@@ -150,6 +150,9 @@ void FileOpener::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 	builder->get_widget("loadadvanceddialog",loadadvanceddialog);
 	builder->get_widget("loadadvancedcancel",loadadvancedcancel);
 	builder->get_widget("cachefolderselect",cache_folder_select);
+
+   // Defaults
+   filechooserdialog->set_current_folder(".");
 }
 
 /*
