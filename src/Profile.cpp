@@ -63,7 +63,8 @@ Profile::Profile(const Glib::RefPtr<const Gdk::GL::Config>& config, int bucketli
 		hideProfNoise		(false),
       isProcessingFence (false),
       vertices          (NULL),
-      colours           (NULL)
+      colours           (NULL),
+      classificationsHappening   (0)
 {
 	brightnessBy = brightnessByNone;
 	zoompower = 0.7;
@@ -204,9 +205,27 @@ ClassificationJob Profile::popNextClassify()
 
       processingFence = popped.first;
       isProcessingFence = true;
+      classificationsHappening++;
    }
 
    return popped;
+}
+
+/*
+================================================================================
+ Profile::points_classified
+
+ Indicates to the profile when a classify worker is finished working
+================================================================================
+*/
+void Profile::points_classified()
+{
+   {
+      Glib::Mutex::Lock lock (classificationQueue_mutex);
+      classificationsHappening--;
+   }
+
+   this->draw_profile(false);
 }
 
 /*
@@ -480,6 +499,13 @@ bool Profile::shift_viewing_parameters(GdkEventKey* event, double shiftspeed)
 bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int profps)
 {
 	Glib::Mutex::Lock lock(profile_mainimage_mutex);
+
+   // Assert that classifications are not happening, as that causes a segfault
+   if (classificationsHappening > 0 || hasClassifyJobs())
+   {
+      cout << "\b";
+      return false;
+   }
 
 	//Defining profile parameters (used elsewhere only)
 	start.move((profxs[0] + profxs[1]) / 2, (profys[0] + profys[1]) / 2, 0);

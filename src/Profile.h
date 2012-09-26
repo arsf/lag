@@ -95,6 +95,8 @@ public:
    void enqueueClassify(FenceType f, uint8_t c);
    ClassificationJob popNextClassify();
 
+   void points_classified();
+
    // Clear the (one) fence being processed
    void clearProcessingFence();
 
@@ -332,6 +334,9 @@ protected:
    list <ClassificationJob> classificationQueue;
 
    Glib::Mutex classificationQueue_mutex;
+
+   // number of classification jobs being processed at any given moment in time
+   int classificationsHappening;
 
    // Values for the fence being processed by the (one) classification job
    bool isProcessingFence;

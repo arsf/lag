@@ -477,7 +477,7 @@ void ProfileWindow::on_classbutton_clicked()
 */
 void ProfileWindow::points_classified()
 {
-   prof->draw_profile(false);
+   prof->points_classified();
 
 	// Set cursor back to normal
    if (!(prof->hasClassifyJobs()))
