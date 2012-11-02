@@ -1634,11 +1634,11 @@ bool Profile::on_ruler_start(GdkEventButton* event)
 
 		rulerStart = rulerEnd;
 		ostringstream zpos;
-		zpos << rulerEnd.getZ();
-		rulerlabel->set_text(
-				"Distance: 0\nX: 0\nY: 0\nHoriz: \
-                            0\nZ: 0 Pos: "
-						+ zpos.str());
+      zpos.precision(4);
+		zpos  << "Distance: n/a"
+            << "\nXYZ: n/a"
+            << "\nXY: n/a, Hght: " << rulerEnd.getZ();
+		rulerlabel->set_text(zpos.str());
 
 		// This causes the event box containing the profile to grab the focus,
 		// and so to allow keyboard control of the profile (this is not done
@@ -1691,18 +1691,13 @@ bool Profile::on_ruler(GdkEventMotion* event)
 
 		//Combined horizontal and vertical distance.
 		d = sqrt(hd * hd + zd * zd);
-		ostringstream dist, xdist, ydist, horizdist, zdist, zpos;
-		dist << d;
-		xdist << xd;
-		ydist << yd;
-		horizdist << hd;
-		zdist << zd;
-		zpos << rulerEnd.getZ();
-		string rulerstring = "Distance: " + dist.str() + "\nX: " + xdist.str()
-				+ "\nY: " + ydist.str() + "\nHoriz: " + horizdist.str()
-				+ "\nZ: " + zdist.str() + " Pos: " + zpos.str();
+      ostringstream format_str;
+      format_str.precision(4);
+      format_str  << "Distance: " << d
+                  << "\nXYZ:" << xd << ", " << yd << ", " << zd
+                  << "\nXY: " << hd << ", Hght: " << rulerEnd.getZ();
 
-		rulerlabel->set_text(rulerstring);
+		rulerlabel->set_text(format_str.str());
 		return drawviewable(1);
 	}
 	else if ((event->state & Gdk::BUTTON2_MASK) == Gdk::BUTTON2_MASK)

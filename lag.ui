@@ -282,7 +282,7 @@
               <object class="GtkToolbar" id="toolbar2">
                 <property name="visible">True</property>
                 <property name="toolbar_style">both</property>
-                <property name="icon_size">2</property>
+                <property name="icon_size">1</property>
                 <child>
                   <object class="GtkToolButton" id="openbutton">
                     <property name="visible">True</property>
@@ -844,11 +844,12 @@
               <object class="GtkToolbar" id="toolbar3">
                 <property name="visible">True</property>
                 <property name="toolbar_style">both</property>
+                <property name="icon_size">1</property>
                 <child>
                   <object class="GtkToolButton" id="showprofilebutton">
                     <property name="visible">True</property>
                     <property name="is_important">True</property>
-                    <property name="label" translatable="yes">Get profile</property>
+                    <property name="label" translatable="yes">Get</property>
                     <property name="stock_id">gtk-goto-bottom</property>
                   </object>
                   <packing>
@@ -896,17 +897,17 @@
                     <property name="expand">False</property>
                   </packing>
                 </child>
-                <child>
+                <!--<child>
                   <object class="GtkToolItem" id="toolitem2">
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkVBox" id="vbox8">
                         <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
+                        <property name="orientation">vertical</property>-->
                         <child>
                           <object class="GtkToggleToolButton" id="pointshowtoggle">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Show points</property>
+                            <property name="label" translatable="yes">Points</property>
                             <property name="stock_id">gtk-yes</property>
                             <property name="active">True</property>
                           </object>
@@ -917,28 +918,20 @@
                         <child>
                           <object class="GtkToggleToolButton" id="lineshowtoggle">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Show lines</property>
+                            <property name="label" translatable="yes">Lines</property>
                             <property name="stock_id">gtk-apply</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
                           </packing>
-                        </child>
+                        </child><!--
                       </object>
                     </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                   </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem5">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
+                </child>-->
                 <child>
                   <object class="GtkToolItem" id="toolitem1">
                     <property name="visible">True</property>
@@ -968,14 +961,6 @@
                         </child>
                       </object>
                     </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparatorToolItem" id="separatortoolitem6">
-                    <property name="visible">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -1217,8 +1202,6 @@ Noise</property>
                         <property name="xalign">0</property>
                         <property name="yalign">0</property>
                         <property name="label" translatable="yes">0
-0
-0
 0
 0</property>
                       </object>
