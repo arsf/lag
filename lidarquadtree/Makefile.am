@@ -27,4 +27,4 @@ lidarquadtree.pc: $(srcdir)/lidarquadtree.pc.in
        -e 's![@]libdir[@]!$(libdir)!g' \
        -e 's![@]PACKAGE_VERSION[@]!$(PACKAGE_VERSION)!g' \
        $(srcdir)/lidarquadtree.pc.in > $@
-AM_LDFLAGS = -version-info 0:1:0 -llzo2 -llaslib -ljemalloc
+AM_LDFLAGS = -version-info 0:1:0 -llzo2 -ljemalloc
