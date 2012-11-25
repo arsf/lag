@@ -1,0 +1,32 @@
+SET(LAG_VERSION_MAJOR "1")
+SET(LAG_VERSION_MINOR "1")
+SET(LAG_VERSION_PATCH "1")
+set(VERSION "${LAG_VERSION_MAJOR}.${LAG_VERSION_MINOR}.${LAG_VERSION_PATCH}")
+
+SET(LAG_SRC_DIR  "src")
+SET(lag_SOURCES  ${LAG_SRC_DIR}/lag.cpp 
+                 ${LAG_SRC_DIR}/ui/AdvancedOptionsWindow.cpp
+                 ${LAG_SRC_DIR}/ui/FileOpener.cpp 
+                 ${LAG_SRC_DIR}/MathFuncs.cpp 
+                 ${LAG_SRC_DIR}/TwoDeeOverview.cpp
+                 ${LAG_SRC_DIR}/BoxOverlay.cpp 
+                 ${LAG_SRC_DIR}/ui/FileSaver.cpp 
+                 ${LAG_SRC_DIR}/Profile.cpp
+                 ${LAG_SRC_DIR}/ui/TwoDeeOverviewWindow.cpp 
+                 ${LAG_SRC_DIR}/LagDisplay.cpp 
+                 ${LAG_SRC_DIR}/ui/ProfileWindow.cpp
+                 ${LAG_SRC_DIR}/Colour.cpp 
+                 ${LAG_SRC_DIR}/SelectionBox.cpp 
+                 ${LAG_SRC_DIR}/LoadWorker.cpp 
+                 ${LAG_SRC_DIR}/SaveWorker.cpp
+                 ${LAG_SRC_DIR}/ProfileWorker.cpp 
+                 ${LAG_SRC_DIR}/ClassifyWorker.cpp 
+                 ${LAG_SRC_DIR}/Worker.h 
+                 ${LAG_SRC_DIR}/FileUtils.cpp
+                 ${LAG_SRC_DIR}/ui/AdvancedLoadDialog.cpp 
+                 ${LAG_SRC_DIR}/geoprojectionconverter.cpp
+                 ${LAG_SRC_DIR}/DrawWorker.cpp )
+
+
+#lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @laslib_CFLAGS@ @lidarquadtree_CFLAGS@
+#lag_LDFLAGS =  @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @laslib_LIBS@ @lidarquadtree_LIBS@ -ljemalloc #-lboost_system
