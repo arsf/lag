@@ -32,8 +32,23 @@ The following libraries are required to make LAG compile.
    * GTKGLextmm
    * GThread
    * libgeotiff
+
    * laslib
    * lidarquadtree
+
+Ubuntu Linux Users
+------------------
+
+Ubuntu linux users will find, and other linux users dependent on distribution,
+may find that ubuntu fails to compile towards the end of the process, with a
+lot of messages including "undefined reference to" about halfway through.
+
+This has been seen in Ubuntu 11.10 and 12.04.
+
+If this happens, you have two options:
+1) Install the binutils-gold package before compiling
+2) After ./configure and before running make, apply the provided patch:
+   patch Makefile < ubuntu-Makefile.patch
 
 Compiling on GNU/Linux x86
 --------------------------
