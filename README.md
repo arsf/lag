@@ -36,6 +36,35 @@ The following libraries are required to make LAG compile.
    * laslib
    * lidarquadtree
 
+laslib
+------
+
+LASlib, courtesy of Martin Isenburg, is a component of LAStools used in LAG for
+handling LAS reading and writing. However, the version provided on the LAStools
+website (http://www.cs.unc.edu/~isenburg/lastools/) is not made or intended for
+use as a standard linux library. This means that every program intending to use
+it must bundle the entire library with every distribution.
+
+In keeping with a more standard linux/gnu build+release process, a patched
+version of LAStools has been bundled with LAG. This patch changes only the
+Makefiles used to build LASlib, to support both static and dynamic linking, and
+an installation procedure which allows other programs to utilise laslib as
+though it were a standard linux library.
+
+This also renames "liblas" to "liblaslib" to be more distinct from the
+(unsupported) libLAS library. This should make it possible to use libLAS and
+laslib alongside each other on the same system, but as a side effect, also
+breaks backwards compatibility with any existing laslib programs.
+
+lidarquadtree
+-------------
+
+Lidarquadtree is a library originally built and used for LAG. It features disk
+caching of points to allow it to load potentially very huge datasets and still
+support spatial indexing, meaning it can be using for LAS processing.
+
+It will need to be built and installed before LAG can be compiled.
+
 Ubuntu Linux Users
 ------------------
 

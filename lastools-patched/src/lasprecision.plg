@@ -1,0 +1,2002 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: LASlib - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCE9.tmp" with contents
+[
+/nologo /ML /W3 /GX /O2 /I "inc" /I "stl" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /Fp"Release/LASlib.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\laslib\src\arithmeticdecoder.cpp"
+"C:\released_code\lastools\laslib\src\arithmeticencoder.cpp"
+"C:\released_code\lastools\laslib\src\arithmeticmodel.cpp"
+"C:\released_code\lastools\laslib\src\fopen_compressed.cpp"
+"C:\released_code\lastools\laslib\src\integercompressor.cpp"
+"C:\released_code\lastools\laslib\src\lasfilter.cpp"
+"C:\released_code\lastools\laslib\src\lasindex.cpp"
+"C:\released_code\lastools\laslib\src\lasinterval.cpp"
+"C:\released_code\lastools\laslib\src\lasquadtree.cpp"
+"C:\released_code\lastools\laslib\src\lasreader.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_asc.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_bil.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_bin.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_las.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_qfit.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_shp.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_txt.cpp"
+"C:\released_code\lastools\laslib\src\lasreaderbuffered.cpp"
+"C:\released_code\lastools\laslib\src\lasreadermerged.cpp"
+"C:\released_code\lastools\laslib\src\lasreaderpipeon.cpp"
+"C:\released_code\lastools\laslib\src\lasreaditemcompressed_v1.cpp"
+"C:\released_code\lastools\laslib\src\lasreaditemcompressed_v2.cpp"
+"C:\released_code\lastools\laslib\src\lasreadpoint.cpp"
+"C:\released_code\lastools\laslib\src\lasspatial.cpp"
+"C:\released_code\lastools\laslib\src\lastransform.cpp"
+"C:\released_code\lastools\laslib\src\lasunzipper.cpp"
+"C:\released_code\lastools\laslib\src\lasutility.cpp"
+"C:\released_code\lastools\laslib\src\laswaveform13reader.cpp"
+"C:\released_code\lastools\laslib\src\laswaveform13writer.cpp"
+"C:\released_code\lastools\laslib\src\laswriteitemcompressed_v1.cpp"
+"C:\released_code\lastools\laslib\src\laswriteitemcompressed_v2.cpp"
+"C:\released_code\lastools\laslib\src\laswritepoint.cpp"
+"C:\released_code\lastools\laslib\src\laswriter.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_bin.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_las.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_qfit.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_txt.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_wrl.cpp"
+"C:\released_code\lastools\laslib\src\laszip.cpp"
+"C:\released_code\lastools\laslib\src\laszipper.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCE9.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEA.tmp" with contents
+[
+/nologo /out:"Release\LASlib.lib" 
+.\Release\arithmeticdecoder.obj
+.\Release\arithmeticencoder.obj
+.\Release\arithmeticmodel.obj
+.\Release\fopen_compressed.obj
+.\Release\integercompressor.obj
+.\Release\lasfilter.obj
+.\Release\lasindex.obj
+.\Release\lasinterval.obj
+.\Release\lasquadtree.obj
+.\Release\lasreader.obj
+.\Release\lasreader_asc.obj
+.\Release\lasreader_bil.obj
+.\Release\lasreader_bin.obj
+.\Release\lasreader_las.obj
+.\Release\lasreader_qfit.obj
+.\Release\lasreader_shp.obj
+.\Release\lasreader_txt.obj
+.\Release\lasreaderbuffered.obj
+.\Release\lasreadermerged.obj
+.\Release\lasreaderpipeon.obj
+.\Release\lasreaditemcompressed_v1.obj
+.\Release\lasreaditemcompressed_v2.obj
+.\Release\lasreadpoint.obj
+.\Release\lasspatial.obj
+.\Release\lastransform.obj
+.\Release\lasunzipper.obj
+.\Release\lasutility.obj
+.\Release\laswaveform13reader.obj
+.\Release\laswaveform13writer.obj
+.\Release\laswriteitemcompressed_v1.obj
+.\Release\laswriteitemcompressed_v2.obj
+.\Release\laswritepoint.obj
+.\Release\laswriter.obj
+.\Release\laswriter_bin.obj
+.\Release\laswriter_las.obj
+.\Release\laswriter_qfit.obj
+.\Release\laswriter_txt.obj
+.\Release\laswriter_wrl.obj
+.\Release\laszip.obj
+.\Release\laszipper.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEA.tmp"
+<h3>Output Window</h3>
+Compiling...
+arithmeticdecoder.cpp
+arithmeticencoder.cpp
+arithmeticmodel.cpp
+fopen_compressed.cpp
+integercompressor.cpp
+lasfilter.cpp
+lasindex.cpp
+lasinterval.cpp
+lasquadtree.cpp
+lasreader.cpp
+lasreader_asc.cpp
+lasreader_bil.cpp
+lasreader_bin.cpp
+lasreader_las.cpp
+lasreader_qfit.cpp
+lasreader_shp.cpp
+lasreader_txt.cpp
+lasreaderbuffered.cpp
+lasreadermerged.cpp
+lasreaderpipeon.cpp
+lasreaditemcompressed_v1.cpp
+lasreaditemcompressed_v2.cpp
+lasreadpoint.cpp
+lasspatial.cpp
+lastransform.cpp
+lasunzipper.cpp
+lasutility.cpp
+laswaveform13reader.cpp
+laswaveform13writer.cpp
+laswriteitemcompressed_v1.cpp
+laswriteitemcompressed_v2.cpp
+laswritepoint.cpp
+laswriter.cpp
+laswriter_bin.cpp
+laswriter_las.cpp
+laswriter_qfit.cpp
+laswriter_txt.cpp
+laswriter_wrl.cpp
+laszip.cpp
+laszipper.cpp
+Creating library...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEC.bat" with contents
+[
+@echo off
+copy Release\LASlib.lib lib\LASlib.lib
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEC.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+LASlib.lib - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: LASlib - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCED.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /I "inc" /I "stl" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/LASlib.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\released_code\lastools\laslib\src\arithmeticdecoder.cpp"
+"C:\released_code\lastools\laslib\src\arithmeticencoder.cpp"
+"C:\released_code\lastools\laslib\src\arithmeticmodel.cpp"
+"C:\released_code\lastools\laslib\src\fopen_compressed.cpp"
+"C:\released_code\lastools\laslib\src\integercompressor.cpp"
+"C:\released_code\lastools\laslib\src\lasfilter.cpp"
+"C:\released_code\lastools\laslib\src\lasindex.cpp"
+"C:\released_code\lastools\laslib\src\lasinterval.cpp"
+"C:\released_code\lastools\laslib\src\lasquadtree.cpp"
+"C:\released_code\lastools\laslib\src\lasreader.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_asc.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_bil.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_bin.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_las.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_qfit.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_shp.cpp"
+"C:\released_code\lastools\laslib\src\lasreader_txt.cpp"
+"C:\released_code\lastools\laslib\src\lasreaderbuffered.cpp"
+"C:\released_code\lastools\laslib\src\lasreadermerged.cpp"
+"C:\released_code\lastools\laslib\src\lasreaderpipeon.cpp"
+"C:\released_code\lastools\laslib\src\lasreaditemcompressed_v1.cpp"
+"C:\released_code\lastools\laslib\src\lasreaditemcompressed_v2.cpp"
+"C:\released_code\lastools\laslib\src\lasreadpoint.cpp"
+"C:\released_code\lastools\laslib\src\lasspatial.cpp"
+"C:\released_code\lastools\laslib\src\lastransform.cpp"
+"C:\released_code\lastools\laslib\src\lasunzipper.cpp"
+"C:\released_code\lastools\laslib\src\lasutility.cpp"
+"C:\released_code\lastools\laslib\src\laswaveform13reader.cpp"
+"C:\released_code\lastools\laslib\src\laswaveform13writer.cpp"
+"C:\released_code\lastools\laslib\src\laswriteitemcompressed_v2.cpp"
+"C:\released_code\lastools\laslib\src\laswritepoint.cpp"
+"C:\released_code\lastools\laslib\src\laswriter.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_bin.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_las.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_qfit.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_txt.cpp"
+"C:\released_code\lastools\laslib\src\laswriter_wrl.cpp"
+"C:\released_code\lastools\laslib\src\laszip.cpp"
+"C:\released_code\lastools\laslib\src\laszipper.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCED.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEE.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /I "inc" /I "stl" /I "..\..\src_full\stl" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/LASlib.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\released_code\lastools\laslib\src\laswriteitemcompressed_v1.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEE.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEF.tmp" with contents
+[
+/nologo /out:"Debug\LASlib.lib" 
+.\Debug\arithmeticdecoder.obj
+.\Debug\arithmeticencoder.obj
+.\Debug\arithmeticmodel.obj
+.\Debug\fopen_compressed.obj
+.\Debug\integercompressor.obj
+.\Debug\lasfilter.obj
+.\Debug\lasindex.obj
+.\Debug\lasinterval.obj
+.\Debug\lasquadtree.obj
+.\Debug\lasreader.obj
+.\Debug\lasreader_asc.obj
+.\Debug\lasreader_bil.obj
+.\Debug\lasreader_bin.obj
+.\Debug\lasreader_las.obj
+.\Debug\lasreader_qfit.obj
+.\Debug\lasreader_shp.obj
+.\Debug\lasreader_txt.obj
+.\Debug\lasreaderbuffered.obj
+.\Debug\lasreadermerged.obj
+.\Debug\lasreaderpipeon.obj
+.\Debug\lasreaditemcompressed_v1.obj
+.\Debug\lasreaditemcompressed_v2.obj
+.\Debug\lasreadpoint.obj
+.\Debug\lasspatial.obj
+.\Debug\lastransform.obj
+.\Debug\lasunzipper.obj
+.\Debug\lasutility.obj
+.\Debug\laswaveform13reader.obj
+.\Debug\laswaveform13writer.obj
+.\Debug\laswriteitemcompressed_v1.obj
+.\Debug\laswriteitemcompressed_v2.obj
+.\Debug\laswritepoint.obj
+.\Debug\laswriter.obj
+.\Debug\laswriter_bin.obj
+.\Debug\laswriter_las.obj
+.\Debug\laswriter_qfit.obj
+.\Debug\laswriter_txt.obj
+.\Debug\laswriter_wrl.obj
+.\Debug\laszip.obj
+.\Debug\laszipper.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCEF.tmp"
+<h3>Output Window</h3>
+Compiling...
+arithmeticdecoder.cpp
+arithmeticencoder.cpp
+arithmeticmodel.cpp
+fopen_compressed.cpp
+integercompressor.cpp
+lasfilter.cpp
+lasindex.cpp
+lasinterval.cpp
+lasquadtree.cpp
+lasreader.cpp
+lasreader_asc.cpp
+lasreader_bil.cpp
+lasreader_bin.cpp
+lasreader_las.cpp
+lasreader_qfit.cpp
+lasreader_shp.cpp
+lasreader_txt.cpp
+lasreaderbuffered.cpp
+lasreadermerged.cpp
+lasreaderpipeon.cpp
+lasreaditemcompressed_v1.cpp
+lasreaditemcompressed_v2.cpp
+lasreadpoint.cpp
+lasspatial.cpp
+lastransform.cpp
+lasunzipper.cpp
+lasutility.cpp
+laswaveform13reader.cpp
+laswaveform13writer.cpp
+laswriteitemcompressed_v2.cpp
+laswritepoint.cpp
+laswriter.cpp
+laswriter_bin.cpp
+laswriter_las.cpp
+laswriter_qfit.cpp
+laswriter_txt.cpp
+laswriter_wrl.cpp
+laszip.cpp
+laszipper.cpp
+Compiling...
+laswriteitemcompressed_v1.cpp
+Creating library...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF0.bat" with contents
+[
+@echo off
+copy Debug\LASlib.lib libD\LASlib.lib
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF0.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+LASlib.lib - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: blast2dem - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Release/lastool.res" /i "../src" /d "NDEBUG" "C:\released_code\lastools\src_full\lastool.rc"" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF1.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "zlib_api" /I "geotiff_api" /I "tiff_api" /D "NDEBUG" /D "COMPILE_WITH_GUI" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /Fp"Release/blast2dem.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\blast2dem.cpp"
+"C:\released_code\lastools\src_full\blast2dem_gui.cpp"
+"C:\released_code\lastools\src\geoprojectionconverter.cpp"
+"C:\released_code\lastools\src_full\laslicense.cpp"
+"C:\released_code\lastools\src_full\lasoccupancy.cpp"
+"C:\released_code\lastools\src_full\lastools_gui.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbufferinmemory.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbufferrowbands.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbufferrows.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbufferrowslong.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbuffersimple.cpp"
+"C:\released_code\lastools\src_full\sr_api\srbuffertiles.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriteopener.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_asc.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_bil.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_dtm.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_flt.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_img.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_jpg.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_png.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_tif.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwriter_xyz.cpp"
+"C:\released_code\lastools\src_full\sr_api\srwritetiled.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF1.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF2.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib img_api/libimg.lib jpg_api/libjpeg.lib png_api/libpng.lib zlib_api/zlib.lib tiff_api/tiff.lib geotiff_api/geotiff.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/blast2dem.pdb" /machine:I386 /out:"Release/blast2dem.exe" 
+.\Release\blast2dem.obj
+.\Release\blast2dem_gui.obj
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\srbufferinmemory.obj
+.\Release\srbufferrowbands.obj
+.\Release\srbufferrows.obj
+.\Release\srbufferrowslong.obj
+.\Release\srbuffersimple.obj
+.\Release\srbuffertiles.obj
+.\Release\srwriteopener.obj
+.\Release\srwriter.obj
+.\Release\srwriter_asc.obj
+.\Release\srwriter_bil.obj
+.\Release\srwriter_dtm.obj
+.\Release\srwriter_flt.obj
+.\Release\srwriter_img.obj
+.\Release\srwriter_jpg.obj
+.\Release\srwriter_png.obj
+.\Release\srwriter_tif.obj
+.\Release\srwriter_xyz.obj
+.\Release\srwritetiled.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF2.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+blast2dem.cpp
+blast2dem_gui.cpp
+geoprojectionconverter.cpp
+laslicense.cpp
+lasoccupancy.cpp
+lastools_gui.cpp
+srbufferinmemory.cpp
+srbufferrowbands.cpp
+srbufferrows.cpp
+srbufferrowslong.cpp
+srbuffersimple.cpp
+srbuffertiles.cpp
+srwriteopener.cpp
+srwriter.cpp
+srwriter_asc.cpp
+srwriter_bil.cpp
+srwriter_dtm.cpp
+srwriter_flt.cpp
+srwriter_img.cpp
+srwriter_jpg.cpp
+srwriter_png.cpp
+srwriter_tif.cpp
+srwriter_xyz.cpp
+srwritetiled.cpp
+Linking...
+   Creating library Release/blast2dem.lib and object Release/blast2dem.exp
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF7.bat" with contents
+[
+@echo off
+copy Release\blast2dem.exe ..\bin\blast2dem.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF7.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+blast2dem.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2dem - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF8.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "zlib_api" /I "geotiff_api" /I "tiff_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2dem.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\contriangulate.cpp"
+"C:\released_code\lastools\src_full\las2dem.cpp"
+"C:\released_code\lastools\src_full\las2dem_gui.cpp"
+"C:\released_code\lastools\src_full\las2dem_multi_core.cpp"
+"C:\released_code\lastools\src_full\lastools_multi_core.cpp"
+"C:\released_code\lastools\src_full\predicates.cpp"
+"C:\released_code\lastools\src_full\shpreader.cpp"
+"C:\released_code\lastools\src_full\shpwriter.cpp"
+"C:\released_code\lastools\src_full\triangulate.cpp"
+"C:\released_code\lastools\src_full\txtreader.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF8.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF9.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib img_api/libimg.lib jpg_api/libjpeg.lib png_api/libpng.lib zlib_api/zlib.lib tiff_api/tiff.lib geotiff_api/geotiff.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2dem.pdb" /machine:I386 /out:"Release/las2dem.exe" 
+.\Release\contriangulate.obj
+.\Release\geoprojectionconverter.obj
+.\Release\las2dem.obj
+.\Release\las2dem_gui.obj
+.\Release\las2dem_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\predicates.obj
+.\Release\shpreader.obj
+.\Release\shpwriter.obj
+.\Release\srbufferinmemory.obj
+.\Release\srbufferrowbands.obj
+.\Release\srbufferrows.obj
+.\Release\srbufferrowslong.obj
+.\Release\srbuffersimple.obj
+.\Release\srbuffertiles.obj
+.\Release\srwriteopener.obj
+.\Release\srwriter.obj
+.\Release\srwriter_asc.obj
+.\Release\srwriter_bil.obj
+.\Release\srwriter_dtm.obj
+.\Release\srwriter_flt.obj
+.\Release\srwriter_img.obj
+.\Release\srwriter_jpg.obj
+.\Release\srwriter_png.obj
+.\Release\srwriter_tif.obj
+.\Release\srwriter_xyz.obj
+.\Release\srwritetiled.obj
+.\Release\triangulate.obj
+.\Release\txtreader.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCF9.tmp"
+<h3>Output Window</h3>
+Compiling...
+contriangulate.cpp
+las2dem.cpp
+las2dem_gui.cpp
+las2dem_multi_core.cpp
+lastools_multi_core.cpp
+predicates.cpp
+shpreader.cpp
+shpwriter.cpp
+triangulate.cpp
+txtreader.cpp
+Linking...
+   Creating library Release/las2dem.lib and object Release/las2dem.exp
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFD.bat" with contents
+[
+@echo off
+copy Release\las2dem.exe ..\bin\las2dem.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFD.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2dem.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2iso - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFE.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2iso.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\kmlwriter.cpp"
+"C:\released_code\lastools\src_full\las2iso.cpp"
+"C:\released_code\lastools\src_full\las2iso_multi_core.cpp"
+"C:\released_code\lastools\src_full\linewriter.cpp"
+"C:\released_code\lastools\src_full\txtwriter.cpp"
+"C:\released_code\lastools\src_full\wktwriter.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFE.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFF.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2iso.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\las2iso_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPCFF.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD00.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2iso.pdb" /machine:I386 /out:"Release/las2iso.exe" 
+.\Release\contriangulate.obj
+.\Release\geoprojectionconverter.obj
+.\Release\kmlwriter.obj
+.\Release\las2iso.obj
+.\Release\las2iso_gui.obj
+.\Release\las2iso_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\linewriter.obj
+.\Release\predicates.obj
+.\Release\shpreader.obj
+.\Release\shpwriter.obj
+.\Release\triangulate.obj
+.\Release\txtreader.obj
+.\Release\txtwriter.obj
+.\Release\wktwriter.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD00.tmp"
+<h3>Output Window</h3>
+Compiling...
+kmlwriter.cpp
+las2iso.cpp
+las2iso_multi_core.cpp
+linewriter.cpp
+txtwriter.cpp
+wktwriter.cpp
+Compiling...
+las2iso_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD02.bat" with contents
+[
+@echo off
+copy Release\las2iso.exe ..\bin\las2iso.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD02.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2iso.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2las - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Release/lastool.res" /i "../src" /i "\released_code\lastools\src_full" /d "NDEBUG" "C:\released_code\lastools\src_full\lastool.rc"" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD03.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2las.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\geoprojectionconverter.cpp"
+"C:\released_code\lastools\src\las2las.cpp"
+"C:\released_code\lastools\src_full\las2las_gui.cpp"
+"C:\released_code\lastools\src_full\las2las_multi_core.cpp"
+"C:\released_code\lastools\src_full\laslicense.cpp"
+"C:\released_code\lastools\src_full\lasoccupancy.cpp"
+"C:\released_code\lastools\src_full\lastools_gui.cpp"
+"C:\released_code\lastools\src_full\lastools_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD03.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD04.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2las.pdb" /machine:I386 /out:"Release/las2las.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\las2las.obj
+.\Release\las2las_gui.obj
+.\Release\las2las_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD04.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+geoprojectionconverter.cpp
+las2las.cpp
+las2las_gui.cpp
+las2las_multi_core.cpp
+laslicense.cpp
+lasoccupancy.cpp
+lastools_gui.cpp
+lastools_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD06.bat" with contents
+[
+@echo off
+copy Release\las2las.exe ..\bin\las2las.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD06.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2las.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2shp - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD07.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2shp.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\las2shp.cpp"
+"C:\released_code\lastools\src_full\las2shp_gui.cpp"
+"C:\released_code\lastools\src_full\las2shp_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD07.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD08.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2shp.pdb" /machine:I386 /out:"Release/las2shp.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\las2shp.obj
+.\Release\las2shp_gui.obj
+.\Release\las2shp_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\shpwriter.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD08.tmp"
+<h3>Output Window</h3>
+Compiling...
+las2shp.cpp
+las2shp_gui.cpp
+las2shp_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0A.bat" with contents
+[
+@echo off
+copy Release\las2shp.exe ..\bin\las2shp.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0A.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2shp.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2tin - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0B.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2tin.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\las2tin.cpp"
+"C:\released_code\lastools\src_full\las2tin_gui.cpp"
+"C:\released_code\lastools\src_full\las2tin_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0B.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0C.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2tin.pdb" /machine:I386 /out:"Release/las2tin.exe" 
+.\Release\contriangulate.obj
+.\Release\geoprojectionconverter.obj
+.\Release\las2tin.obj
+.\Release\las2tin_gui.obj
+.\Release\las2tin_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\predicates.obj
+.\Release\shpreader.obj
+.\Release\shpwriter.obj
+.\Release\triangulate.obj
+.\Release\txtreader.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0C.tmp"
+<h3>Output Window</h3>
+Compiling...
+las2tin.cpp
+las2tin_gui.cpp
+las2tin_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0E.bat" with contents
+[
+@echo off
+copy Release\las2tin.exe ..\bin\las2tin.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0E.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2tin.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: las2txt - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0F.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/las2txt.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\las2txt.cpp"
+"C:\released_code\lastools\src_full\las2txt_gui.cpp"
+"C:\released_code\lastools\src_full\las2txt_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD0F.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD10.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/las2txt.pdb" /machine:I386 /out:"Release/las2txt.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\las2txt.obj
+.\Release\las2txt_gui.obj
+.\Release\las2txt_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD10.tmp"
+<h3>Output Window</h3>
+Compiling...
+las2txt.cpp
+las2txt_gui.cpp
+las2txt_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD12.bat" with contents
+[
+@echo off
+copy Release\las2txt.exe ..\bin\las2txt.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD12.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+las2txt.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasboundary - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD13.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasboundary.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasboundary.cpp"
+"C:\released_code\lastools\src_full\lasboundary_multi_core.cpp"
+"C:\released_code\lastools\src_full\lasraster.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD13.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD14.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasboundary.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasboundary_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD14.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD15.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasboundary.pdb" /machine:I386 /out:"Release/lasboundary.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\kmlwriter.obj
+.\Release\lasboundary.obj
+.\Release\lasboundary_gui.obj
+.\Release\lasboundary_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\linewriter.obj
+.\Release\predicates.obj
+.\Release\shpwriter.obj
+.\Release\triangulate.obj
+.\Release\txtwriter.obj
+.\Release\wktwriter.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD15.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasboundary.cpp
+lasboundary_multi_core.cpp
+lasraster.cpp
+Compiling...
+lasboundary_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD17.bat" with contents
+[
+@echo off
+copy Release\lasboundary.exe ..\bin\lasboundary.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD17.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasboundary.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasclassify - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD18.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasclassify.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasclassify.cpp"
+"C:\released_code\lastools\src_full\lasclassify_multi_core.cpp"
+"C:\released_code\lastools\src_full\laswriterunlicensed.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD18.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD19.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasclassify.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasclassify_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD19.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1A.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasclassify.pdb" /machine:I386 /out:"Release/lasclassify.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasclassify.obj
+.\Release\lasclassify_gui.obj
+.\Release\lasclassify_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1A.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasclassify.cpp
+lasclassify_multi_core.cpp
+laswriterunlicensed.cpp
+Compiling...
+lasclassify_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1C.bat" with contents
+[
+@echo off
+copy Release\lasclassify.exe ..\bin\lasclassify.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1C.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasclassify.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasclip - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1D.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasclip.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasclip.cpp"
+"C:\released_code\lastools\src_full\lasclip_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1D.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1E.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasclip.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasclip_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1E.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1F.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasclip.pdb" /machine:I386 /out:"Release/lasclip.exe" 
+.\Release\contriangulate.obj
+.\Release\geoprojectionconverter.obj
+.\Release\lasclip.obj
+.\Release\lasclip_gui.obj
+.\Release\lasclip_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\predicates.obj
+.\Release\shpreader.obj
+.\Release\shpwriter.obj
+.\Release\txtreader.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD1F.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasclip.cpp
+lasclip_multi_core.cpp
+Compiling...
+lasclip_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD21.bat" with contents
+[
+@echo off
+copy Release\lasclip.exe ..\bin\lasclip.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD21.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasclip.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lascontrol - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD22.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lascontrol.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lascontrol.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD22.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD23.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lascontrol.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lascontrol_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD23.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD24.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lascontrol.pdb" /machine:I386 /out:"Release/lascontrol.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lascontrol.obj
+.\Release\lascontrol_gui.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\predicates.obj
+.\Release\triangulate.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD24.tmp"
+<h3>Output Window</h3>
+Compiling...
+lascontrol.cpp
+Compiling...
+lascontrol_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD26.bat" with contents
+[
+@echo off
+copy Release\lascontrol.exe ..\bin\lascontrol.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD26.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lascontrol.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasdiff - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD27.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasdiff.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\lasdiff.cpp"
+"C:\released_code\lastools\src_full\lasdiff_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD27.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD28.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasdiff.pdb" /machine:I386 /out:"Release/lasdiff.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasdiff.obj
+.\Release\lasdiff_gui.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD28.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasdiff.cpp
+lasdiff_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2A.bat" with contents
+[
+@echo off
+copy Release\lasdiff.exe ..\bin\lasdiff.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2A.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasdiff.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasduplicate - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2B.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasduplicate.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasduplicate.cpp"
+"C:\released_code\lastools\src_full\lasduplicate_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2B.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2C.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasduplicate.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasduplicate_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2C.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2D.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasduplicate.pdb" /machine:I386 /out:"Release/lasduplicate.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasduplicate.obj
+.\Release\lasduplicate_gui.obj
+.\Release\lasduplicate_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2D.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasduplicate.cpp
+lasduplicate_multi_core.cpp
+Compiling...
+lasduplicate_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2F.bat" with contents
+[
+@echo off
+copy Release\lasduplicate.exe ..\..\lastools\bin\lasduplicate.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD2F.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasduplicate.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasgrid - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD30.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "geotiff_api" /I "tiff_api" /I "zlib_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasgrid.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasgrid.cpp"
+"C:\released_code\lastools\src_full\lasgrid_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD30.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD31.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "geotiff_api" /I "tiff_api" /I "zlib_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasgrid.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasgrid_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD31.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD32.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib img_api/libimg.lib jpg_api/libjpeg.lib png_api/libpng.lib zlib_api/zlib.lib tiff_api/tiff.lib geotiff_api/geotiff.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasgrid.pdb" /machine:I386 /out:"Release/lasgrid.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasgrid.obj
+.\Release\lasgrid_gui.obj
+.\Release\lasgrid_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\srbufferinmemory.obj
+.\Release\srbufferrowbands.obj
+.\Release\srbufferrows.obj
+.\Release\srbufferrowslong.obj
+.\Release\srbuffersimple.obj
+.\Release\srbuffertiles.obj
+.\Release\srwriteopener.obj
+.\Release\srwriter.obj
+.\Release\srwriter_asc.obj
+.\Release\srwriter_bil.obj
+.\Release\srwriter_dtm.obj
+.\Release\srwriter_flt.obj
+.\Release\srwriter_img.obj
+.\Release\srwriter_jpg.obj
+.\Release\srwriter_png.obj
+.\Release\srwriter_tif.obj
+.\Release\srwriter_xyz.obj
+.\Release\srwritetiled.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD32.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasgrid.cpp
+lasgrid_multi_core.cpp
+Compiling...
+lasgrid_gui.cpp
+Linking...
+   Creating library Release/lasgrid.lib and object Release/lasgrid.exp
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD36.bat" with contents
+[
+@echo off
+copy Release\lasgrid.exe  ..\..\lastools\bin\lasgrid.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD36.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasgrid.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasground - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD37.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasground.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasground.cpp"
+"C:\released_code\lastools\src_full\lasground_multi_core.cpp"
+"C:\released_code\lastools\src_full\triangulate_new.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD37.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD38.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasground.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasground_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD38.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD39.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /I "..\laslib\src" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasground.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasmodify.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD39.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3A.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasground.pdb" /machine:I386 /out:"Release/lasground.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasground.obj
+.\Release\lasground_gui.obj
+.\Release\lasground_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasmodify.obj
+.\Release\lasoccupancy.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\predicates.obj
+.\Release\triangulate_new.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3A.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasground.cpp
+lasground_multi_core.cpp
+triangulate_new.cpp
+Compiling...
+lasground_gui.cpp
+Compiling...
+lasmodify.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3C.bat" with contents
+[
+@echo off
+copy Release\lasground.exe ..\bin\lasground.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3C.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasground.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasheight - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3D.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasheight.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasheight.cpp"
+"C:\released_code\lastools\src_full\lasheight_gui.cpp"
+"C:\released_code\lastools\src_full\lasheight_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3D.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3E.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasheight.pdb" /machine:I386 /out:"Release/lasheight.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasheight.obj
+.\Release\lasheight_gui.obj
+.\Release\lasheight_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\predicates.obj
+.\Release\triangulate.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD3E.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasheight.cpp
+lasheight_gui.cpp
+lasheight_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD40.bat" with contents
+[
+@echo off
+copy Release\lasheight.exe ..\bin\lasheight.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD40.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasheight.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasindex - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD41.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasindex.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\lasindex.cpp"
+"C:\released_code\lastools\src_full\lasindex_gui.cpp"
+"C:\released_code\lastools\src_full\lasindex_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD41.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD42.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasindex.pdb" /machine:I386 /out:"Release/lasindex.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasindex.obj
+.\Release\lasindex_gui.obj
+.\Release\lasindex_multi_core.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD42.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasindex.cpp
+lasindex_gui.cpp
+lasindex_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD44.bat" with contents
+[
+@echo off
+copy Release\lasindex.exe ..\..\lastools\bin\lasindex.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD44.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasindex.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasinfo - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD45.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasinfo.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\lasinfo.cpp"
+"C:\released_code\lastools\src_full\lasinfo_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD45.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD46.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasinfo.pdb" /machine:I386 /out:"Release/lasinfo.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\lasinfo.obj
+.\Release\lasinfo_gui.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD46.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasinfo.cpp
+lasinfo_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD48.bat" with contents
+[
+@echo off
+copy Release\lasinfo.exe ..\bin\lasinfo.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD48.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasinfo.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasmerge - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD49.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasmerge.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\lasmerge.cpp"
+"C:\released_code\lastools\src_full\lasmerge_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD49.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4A.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasmerge.pdb" /machine:I386 /out:"Release/lasmerge.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasmerge.obj
+.\Release\lasmerge_gui.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4A.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasmerge.cpp
+lasmerge_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4C.bat" with contents
+[
+@echo off
+copy Release\lasmerge.exe ..\bin\lasmerge.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4C.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasmerge.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasoverage - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4D.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasoverage.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasoverage.cpp"
+"C:\released_code\lastools\src_full\lasoverage_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4D.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4E.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasoverage.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasoverage_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4E.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4F.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasoverage.pdb" /machine:I386 /out:"Release/lasoverage.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasoverage.obj
+.\Release\lasoverage_gui.obj
+.\Release\lasoverage_multi_core.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD4F.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasoverage.cpp
+lasoverage_multi_core.cpp
+Compiling...
+lasoverage_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD51.bat" with contents
+[
+@echo off
+copy Release\lasoverage.exe ..\bin\lasoverage.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD51.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasoverage.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasoverlap - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD52.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "geotiff_api" /I "tiff_api" /I "zlib_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasoverlap.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasoverlap.cpp"
+"C:\released_code\lastools\src_full\lasoverlap_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD52.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD53.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /I "sr_api" /I "img_api" /I "jpg_api" /I "png_api" /I "geotiff_api" /I "tiff_api" /I "zlib_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasoverlap.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasoverlap_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD53.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD54.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib img_api/libimg.lib jpg_api/libjpeg.lib png_api/libpng.lib zlib_api/zlib.lib tiff_api/tiff.lib geotiff_api/geotiff.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasoverlap.pdb" /machine:I386 /out:"Release/lasoverlap.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasoverlap.obj
+.\Release\lasoverlap_gui.obj
+.\Release\lasoverlap_multi_core.obj
+.\Release\lasraster.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\srbufferinmemory.obj
+.\Release\srbufferrowbands.obj
+.\Release\srbufferrows.obj
+.\Release\srbufferrowslong.obj
+.\Release\srbuffersimple.obj
+.\Release\srbuffertiles.obj
+.\Release\srwriteopener.obj
+.\Release\srwriter.obj
+.\Release\srwriter_asc.obj
+.\Release\srwriter_bil.obj
+.\Release\srwriter_dtm.obj
+.\Release\srwriter_flt.obj
+.\Release\srwriter_img.obj
+.\Release\srwriter_jpg.obj
+.\Release\srwriter_png.obj
+.\Release\srwriter_tif.obj
+.\Release\srwriter_xyz.obj
+.\Release\srwritetiled.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD54.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasoverlap.cpp
+lasoverlap_multi_core.cpp
+Compiling...
+lasoverlap_gui.cpp
+Linking...
+   Creating library Release/lasoverlap.lib and object Release/lasoverlap.exp
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD58.bat" with contents
+[
+@echo off
+copy Release\lasoverlap.exe  ..\..\lastools\bin\lasoverlap.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD58.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasoverlap.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasprecision - Win32 Release With GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD59.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasprecision.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\lasprecision.cpp"
+"C:\released_code\lastools\src_full\lasprecision_gui.cpp"
+"C:\released_code\lastools\src_full\lasprecision_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD59.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5A.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasprecision.pdb" /machine:I386 /out:"Release/lasprecision.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasprecision.obj
+.\Release\lasprecision_gui.obj
+.\Release\lasprecision_multi_core.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5A.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasprecision.cpp
+lasprecision_gui.cpp
+lasprecision_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5C.bat" with contents
+[
+@echo off
+copy Release\lasprecision.exe ..\bin\lasprecision.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5C.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasprecision.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lassort - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5D.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lassort.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\laslib\src\lasquadtree.cpp"
+"C:\released_code\lastools\src_full\lassort.cpp"
+"C:\released_code\lastools\src_full\lassort_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5D.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5E.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lassort.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lassort_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5E.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5F.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lassort.pdb" /machine:I386 /out:"Release/lassort.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasquadtree.obj
+.\Release\lassort.obj
+.\Release\lassort_gui.obj
+.\Release\lassort_multi_core.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD5F.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasquadtree.cpp
+lassort.cpp
+lassort_multi_core.cpp
+Compiling...
+lassort_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD61.bat" with contents
+[
+@echo off
+copy Release\lassort.exe ..\bin\lassort.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD61.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lassort.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lassplit - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD62.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lassplit.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lassplit.cpp"
+"C:\released_code\lastools\src_full\lassplit_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD62.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD63.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lassplit.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lassplit_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD63.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD64.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lassplit.pdb" /machine:I386 /out:"Release/lassplit.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lassplit.obj
+.\Release\lassplit_gui.obj
+.\Release\lassplit_multi_core.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD64.tmp"
+<h3>Output Window</h3>
+Compiling...
+lassplit.cpp
+lassplit_multi_core.cpp
+Compiling...
+lassplit_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD66.bat" with contents
+[
+@echo off
+copy Release\lassplit.exe ..\..\lastools\bin\lassplit.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD66.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lassplit.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasthin - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD67.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasthin.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasthin.cpp"
+"C:\released_code\lastools\src_full\lasthin_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD67.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD68.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/lasthin.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasthin_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD68.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD69.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasthin.pdb" /machine:I386 /out:"Release/lasthin.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lasthin.obj
+.\Release\lasthin_gui.obj
+.\Release\lasthin_multi_core.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD69.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasthin.cpp
+lasthin_multi_core.cpp
+Compiling...
+lasthin_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6B.bat" with contents
+[
+@echo off
+copy Release\lasthin.exe ..\bin\lasthin.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6B.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasthin.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lastile - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6C.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lastile.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lastile.cpp"
+"C:\released_code\lastools\src_full\laswritertiled.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6C.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6D.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lastile.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lastile_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6D.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6E.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lastile.pdb" /machine:I386 /out:"Release/lastile.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastile.obj
+.\Release\lastile_gui.obj
+.\Release\lastools_gui.obj
+.\Release\laswritertiled.obj
+.\Release\laswriterunlicensed.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD6E.tmp"
+<h3>Output Window</h3>
+Compiling...
+lastile.cpp
+laswritertiled.cpp
+Compiling...
+lastile_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD70.bat" with contents
+[
+@echo off
+copy Release\lastile.exe ..\bin\lastile.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD70.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lastile.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lastool - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD71.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glut_api" /I "glui_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /Fp"Release/lastool.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lastool.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD71.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD72.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lastool.pdb" /machine:I386 /out:"Release/lastool.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastool.obj
+.\Release\shpreader.obj
+.\Release\txtreader.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD72.tmp"
+<h3>Output Window</h3>
+Compiling...
+lastool.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD74.bat" with contents
+[
+@echo off
+copy Release\lastool.exe ..\bin\lastool.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD74.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lastool.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: lasview - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD75.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\laslib\stl" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasview.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasview.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD75.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD76.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasview.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\lasview_gui.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD76.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD77.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasview.pdb" /machine:I386 /out:"Release/lasview.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lasview.obj
+.\Release\lasview_gui.obj
+.\Release\predicates.obj
+.\Release\triangulate.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD77.tmp"
+<h3>Output Window</h3>
+Compiling...
+lasview.cpp
+Compiling...
+lasview_gui.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD79.bat" with contents
+[
+@echo off
+copy Release\lasview.exe ..\bin\lasview.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD79.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+lasview.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: laszip - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7A.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /Fp"Release/laszip.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\laszip.cpp"
+"C:\released_code\lastools\src_full\laszip_gui.cpp"
+"C:\released_code\lastools\src_full\laszip_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7A.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7B.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/laszip.pdb" /machine:I386 /out:"Release/laszip.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laszip.obj
+.\Release\laszip_gui.obj
+.\Release\laszip_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7B.tmp"
+<h3>Output Window</h3>
+Compiling...
+laszip.cpp
+laszip_gui.cpp
+laszip_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7D.bat" with contents
+[
+@echo off
+copy Release\laszip.exe ..\bin\laszip.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7D.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+laszip.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: shp2las - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7E.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "glui_api" /I "glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/shp2las.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src_full\shp2las.cpp"
+"C:\released_code\lastools\src_full\shp2las_gui.cpp"
+"C:\released_code\lastools\src_full\shp2las_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7E.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7F.tmp" with contents
+[
+../laslib/lib/LASlib.lib glui_api/glui32.lib glut_api/glutstatic.lib glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/shp2las.pdb" /machine:I386 /out:"Release/shp2las.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\laswriterunlicensed.obj
+.\Release\shp2las.obj
+.\Release\shp2las_gui.obj
+.\Release\shp2las_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD7F.tmp"
+<h3>Output Window</h3>
+Compiling...
+shp2las.cpp
+shp2las_gui.cpp
+shp2las_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD81.bat" with contents
+[
+@echo off
+copy Release\shp2las.exe ..\bin\shp2las.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD81.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+shp2las.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: txt2las - Win32 Release with GUI--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD82.tmp" with contents
+[
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/txt2las.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\txt2las.cpp"
+"C:\released_code\lastools\src_full\txt2las_gui.cpp"
+"C:\released_code\lastools\src_full\txt2las_multi_core.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD82.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD83.tmp" with contents
+[
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/txt2las.pdb" /machine:I386 /out:"Release/txt2las.exe" 
+.\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
+.\Release\txt2las.obj
+.\Release\txt2las_gui.obj
+.\Release\txt2las_multi_core.obj
+.\Release\lastool.res
+]
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD83.tmp"
+<h3>Output Window</h3>
+Compiling...
+txt2las.cpp
+txt2las_gui.cpp
+txt2las_multi_core.cpp
+Linking...
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD85.bat" with contents
+[
+@echo off
+copy Release\txt2las.exe ..\bin\txt2las.exe
+]
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPD85.bat"
+
+        1 file(s) copied.
+
+
+
+<h3>Results</h3>
+txt2las.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
