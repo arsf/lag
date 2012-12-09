@@ -33,3 +33,11 @@ SET(LIBLIDARQUADTREE_HEADERS ${LIBQUADTREE_SRC_DIR}/Boundary.h
                              ${LIBQUADTREE_SRC_DIR}/Quadtree.h
                              ${LIBQUADTREE_SRC_DIR}/QuadtreeNode.h
                              ${LIBQUADTREE_SRC_DIR}/PointData.h)
+                             
+include_directories( ${LIBQUADTREE_SRC_DIR})
+include_directories( ${LASTOOLS_INCLUDE_DIRS})
+include_directories( ${LZO_INCLUDE_DIR})
+
+add_library(lidarquatree STATIC ${LIBLIDARQUADTREE_SRC} ${LIBLIDARQUADTREE_HEADERS} )
+target_link_libraries(lidarquatree ${LASTOOLS_LIBRARIES} ${LZO_LIBRARIES})
+

@@ -10,6 +10,10 @@
 #  Redistribution and use is allowed according to the terms of the New
 #  BSD license.
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
+
+INCLUDE(FindPackageHandleStandardArgs)
+
+
 FIND_PATH(LASTOOLS_INCLUDE_DIRS lasreader.hpp 
                            PATH ${LASTOOLS_ROOT}/laslib/inc
                                 ${CMAKE_SOURCE_DIR}/lastools/laslib/inc
@@ -24,3 +28,8 @@ FIND_PATH(LASTOOLS_SOURCE_DIRS lasreader.cpp
                            PATH ${LASTOOLS_ROOT}/laslib/src
                                 ${CMAKE_SOURCE_DIR}/lastools/laslib/src
                                 ${CMAKE_SOURCE_DIR}/../lastools/laslib/src)
+
+find_package_handle_standard_args(LASTOOLS DEFAULT_MSG
+        LASTOOLS_LIBRARIES LASTOOLS_INCLUDE_DIRS)
+        
+mark_as_advanced(LASTOOLS_INCLUDE_DIRS LASTOOLS_LIBRARIES)

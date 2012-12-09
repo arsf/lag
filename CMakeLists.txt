@@ -13,7 +13,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 message(STATUS "CMAKE_LIBRARY_ARCHITECTURE ${CMAKE_LIBRARY_ARCHITECTURE}")
 message(STATUS "CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
 
-set(GT2_DEBUG 1)
 find_package(GTK2 2.6 REQUIRED gtkmm)
 if(NOT GTK2_FOUND)
     message(SEND_ERROR "gtkmm not found")
@@ -32,8 +31,21 @@ if(NOT GTKGLEXTMM_FOUND)
     message(SEND_ERROR "gtkglextmm-1.2 not found")
 endif()
 
-include(FindLastools.cmake)
-#add_subdirectory(lidarquadtree)
-#add_subdirectory(src)
+find_package(LASTOOLS  REQUIRED)
+if(NOT LASTOOLS_FOUND)
+    message(SEND_ERROR "lastools not found, set LASTOOLS_ROOT to the root\ 
+    directory of the lastools install path" )
+endif()
 
+find_package(LZO  REQUIRED)
+if(NOT LZO_FOUND)
+    message(SEND_ERROR "lzo2 not found" )
+endif()
 
+add_subdirectory(lidarquadtree)
+add_subdirectory(src)
+
+add_custom_command(TARGET all PRE_BUILD
+                              COMMAND ${CMAKE_COMMAND} -E copy_directory
+                                        ${LASTOOLS_INCLUDE_DIRS} 
+                                        ${LASTOOLS_INCLUDE_DIRS}/laslib)
