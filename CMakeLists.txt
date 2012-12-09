@@ -36,16 +36,21 @@ if(NOT LASTOOLS_FOUND)
     message(SEND_ERROR "lastools not found, set LASTOOLS_ROOT to the root\ 
     directory of the lastools install path" )
 endif()
+add_custom_target(laslib_include)
+add_custom_command(
+      TARGET laslib_include
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory 
+              ${LASTOOLS_INCLUDE_DIRS}
+              ${LASTOOLS_INCLUDE_DIRS}/laslib)
 
 find_package(LZO  REQUIRED)
 if(NOT LZO_FOUND)
     message(SEND_ERROR "lzo2 not found" )
 endif()
 
+
+
 add_subdirectory(lidarquadtree)
 add_subdirectory(src)
 
-add_custom_command(TARGET all PRE_BUILD
-                              COMMAND ${CMAKE_COMMAND} -E copy_directory
-                                        ${LASTOOLS_INCLUDE_DIRS} 
-                                        ${LASTOOLS_INCLUDE_DIRS}/laslib)

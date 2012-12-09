@@ -43,7 +43,7 @@ target_link_libraries(lag ${GTK2_LIBRARIES}
                           ${GTKGLEXTMM_LIBRARIES}
                           ${GTHREAD2_LIBRARIES}
                           ${LASTOOLS_LIBRARIES}
-                          lidarquatree)
+                          lidarquadtree)
 set_target_properties(lag PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_custom_command(TARGET lag POST_BUILD
                               COMMAND ${CMAKE_COMMAND} -E copy 
@@ -57,5 +57,8 @@ add_custom_command(TARGET lag POST_BUILD
                               COMMAND ${CMAKE_COMMAND} -E copy_directory 
                                        ${CMAKE_SOURCE_DIR}/lagfonts 
                                        ${CMAKE_BINARY_DIR}/bin/lagfonts)
+                                       
+add_dependencies(lag laslib_include)
+
 #lag_CPPFLAGS = @GTKmm_CFLAGS@ @GTKGLextmm_CFLAGS@ @GThread_CFLAGS@ @laslib_CFLAGS@ @lidarquadtree_CFLAGS@
 #lag_LDFLAGS =  @GTKmm_LIBS@ @GTKGLextmm_LIBS@ @GThread_LIBS@ @laslib_LIBS@ @lidarquadtree_LIBS@ -ljemalloc #-lboost_system

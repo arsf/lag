@@ -38,6 +38,9 @@ include_directories( ${LIBQUADTREE_SRC_DIR})
 include_directories( ${LASTOOLS_INCLUDE_DIRS})
 include_directories( ${LZO_INCLUDE_DIR})
 
-add_library(lidarquatree STATIC ${LIBLIDARQUADTREE_SRC} ${LIBLIDARQUADTREE_HEADERS} )
-target_link_libraries(lidarquatree ${LASTOOLS_LIBRARIES} ${LZO_LIBRARIES})
+add_library(lidarquadtree STATIC ${LIBLIDARQUADTREE_SRC} ${LIBLIDARQUADTREE_HEADERS} )
+target_link_libraries(lidarquadtree ${LASTOOLS_LIBRARIES} ${LZO_LIBRARIES})
+
+add_dependencies(lidarquadtree laslib_include)
+
 
