@@ -1,21 +1,21 @@
 LAG - LiDAR Analysis GUI
-========================  
+========================
 
-This file contains the following sections:  
-
-GENERAL NOTES  
-INSTALLATION  
-LICENSE  
+This file contains the following sections:
 
 GENERAL NOTES
-=============  
+INSTALLATION
+LICENSE
+
+GENERAL NOTES
+=============
 LAG is a software for visualisation, analysis and processing of LiDAR data. It has
 been initially created at Airborne Reasearch and Survey faciliy in Plymouth Marine
-Laboratory to help with data processing.  
+Laboratory to help with data processing.
 
-For more information see: http://arsf.github.com/lag  
-For user's guide see: https://github.com/arsf/lag/wiki/Lag-User-Guide 
-If you are a developer see: https://github.com/arsf/lag/wiki/Developers-FAQ  
+For more information see: [website?]
+For user's guide see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide
+If you are a developer see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq
 
 INSTALLATION
 ============
@@ -32,8 +32,52 @@ The following libraries are required to make LAG compile.
    * GTKGLextmm
    * GThread
    * libgeotiff
+
    * laslib
    * lidarquadtree
+
+laslib
+------
+
+LASlib, courtesy of Martin Isenburg, is a component of LAStools used in LAG for
+handling LAS reading and writing. However, the version provided on the LAStools
+website (http://www.cs.unc.edu/~isenburg/lastools/) is not made or intended for
+use as a standard linux library. This means that every program intending to use
+it must bundle the entire library with every distribution.
+
+In keeping with a more standard linux/gnu build+release process, a patched
+version of LAStools has been bundled with LAG. This patch changes only the
+Makefiles used to build LASlib, to support both static and dynamic linking, and
+an installation procedure which allows other programs to utilise laslib as
+though it were a standard linux library.
+
+This also renames "liblas" to "liblaslib" to be more distinct from the
+(unsupported) libLAS library. This should make it possible to use libLAS and
+laslib alongside each other on the same system, but as a side effect, also
+breaks backwards compatibility with any existing laslib programs.
+
+lidarquadtree
+-------------
+
+Lidarquadtree is a library originally built and used for LAG. It features disk
+caching of points to allow it to load potentially very huge datasets and still
+support spatial indexing, meaning it can be using for LAS processing.
+
+It will need to be built and installed before LAG can be compiled.
+
+Ubuntu Linux Users
+------------------
+
+Ubuntu linux users will find, and other linux users dependent on distribution,
+may find that ubuntu fails to compile towards the end of the process, with a
+lot of messages including "undefined reference to" about halfway through.
+
+This has been seen in Ubuntu 11.10 and 12.04.
+
+If this happens, you have two options:
+1) Install the binutils-gold package before compiling
+2) After ./configure and before running make, apply the provided patch:
+   patch Makefile < ubuntu-Makefile.patch
 
 Compiling on GNU/Linux x86
 --------------------------
@@ -41,18 +85,18 @@ Compiling on GNU/Linux x86
 This codebase uses the GNU packaging tools.  To get things to a sane state
 after checkout, do:
 
-    libtoolize && autoheader && aclocal && automake --add-missing && autoconf
+libtoolize && autoheader && aclocal && automake --add-missing && autoconf
 
 Depending on where you've installed laslib, you may need to do the following 
 to allow configure to find it:
 
-    export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig/
+export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig/
 
 Then you can do the normal:
 
-    ./configure
-    make
-    make install
+./configure
+make
+make install
 
 Compiling on win32
 ------------------
@@ -63,3 +107,4 @@ LICENSE
 =======
 
 LAG is licensed under the GNU General Public License, version 2. 
+Read the file COPYING in the source distribution for details.

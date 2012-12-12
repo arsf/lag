@@ -10,7 +10,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 # we want things to break quickly
-: ${CXXFLAGS="-O3"}
+: ${CXXFLAGS="-O2"}
 
 # Debugging purposes
 #: ${CXXFLAGS="-g"}
