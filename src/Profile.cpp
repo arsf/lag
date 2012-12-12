@@ -502,7 +502,7 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 
    // Assert that classifications are not happening, as that causes a segfault
    if (  equal(this->profxs.begin(), this->profxs.end(), profxs.begin()) &&
-         equal(this->profys.begin(), this->profxs.end(), profys.begin()) &&
+         equal(this->profys.begin(), this->profys.end(), profys.begin()) &&
          (classificationsHappening > 0 || hasClassifyJobs()))
    {
       cout << "\b";
