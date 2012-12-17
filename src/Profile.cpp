@@ -501,8 +501,11 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	Glib::Mutex::Lock lock(profile_mainimage_mutex);
 
    // Assert that classifications are not happening, as that causes a segfault
-   if (  equal(this->profxs.begin(), this->profxs.end(), profxs.begin()) &&
-         equal(this->profys.begin(), this->profys.end(), profys.begin()) &&
+   if (  !( // but skip this check if profxs and profys match current versions
+            // AKA, true iff (profxs or profys is different to stored version)
+            equal(this->profxs.begin(), this->profxs.end(), profxs.begin()) &&
+            equal(this->profys.begin(), this->profys.end(), profys.begin())
+         ) &&
          (classificationsHappening > 0 || hasClassifyJobs()))
    {
       cout << "\b";
