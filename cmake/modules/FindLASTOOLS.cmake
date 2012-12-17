@@ -20,9 +20,9 @@ FIND_PATH(LASTOOLS_INCLUDE_DIRS lasreader.hpp
                                 ${CMAKE_SOURCE_DIR}/../lastools/laslib/inc)
 
 FIND_LIBRARY(LASTOOLS_LIBRARIES laslib 
-                           PATH ${LASTOOLS_ROOT}/laslib/inc
-                                ${CMAKE_SOURCE_DIR}/lastools/laslib/inc
-                                ${CMAKE_SOURCE_DIR}/../lastools/laslib/inc)
+                           PATH ${LASTOOLS_ROOT}/laslib/lib
+                                ${CMAKE_SOURCE_DIR}/lastools/laslib/lib
+                                ${CMAKE_SOURCE_DIR}/../lastools/laslib/lib)
                                 
 FIND_PATH(LASTOOLS_SOURCE_DIRS lasreader.cpp 
                            PATH ${LASTOOLS_ROOT}/laslib/src

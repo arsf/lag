@@ -103,6 +103,51 @@ Compiling on win32
 
 Hopefully in the future. :-)
 
+
+INSTALLATION WITH CMAKE (ALPHA)
+===============================
+
+Required Dependencies
+---------------------
+
+To be able to build LAG the following libraries are required to be installed.
+   * GTKmm
+   * GTKGLextmm
+   * GThread
+   * lzo2
+
+you basiccaly have to do :
+   $ sudo apt-get install libglib2.0-dev libgtkmm-2.4-dev libgtkglextmm-x11-1.2-dev liblzo2-dev
+
+Installing laslib
+--------------------
+
+Go to http://www.cs.unc.edu/~isenburg/lastools/ and download lastools. If 
+you want that lag find automatically lastools, install lastools next to lag source directory.
+
+Then compile laslib and rename liblas.a to liblaslib.a. You can do normal :
+
+    cd lastools/laslib
+    make
+    cp lastools/laslib/liblas.a lastools/laslib/liblaslib.a
+
+
+Compiling with CMake
+--------------------------
+
+use cmake-gui or ccmake.
+
+with ccmake do :
+
+    cd lag
+    mkdir build_cmake
+    cd build_cmake
+    ccmake ../ -D LASTOOLS_ROOT="/dir/to/lastools/"
+    make
+
+lag is then installing into build_cmake/bin
+
+
 LICENSE
 =======
 
