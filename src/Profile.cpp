@@ -2081,6 +2081,8 @@ std::vector<double> Profile::get_averages(bool exclude_noise)
 */
 void Profile::make_moving_average()
 {
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
+
 	if (linez != NULL)
 	{
 		for (int i = 0; i < linezsize; ++i)
