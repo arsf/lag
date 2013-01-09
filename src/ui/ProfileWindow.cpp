@@ -316,12 +316,28 @@ void ProfileWindow::on_showprofilebutton_clicked()
 
    if(!profxs.empty()  && !profys.empty())
    {
-      profileworker = new ProfileWorker(this->prof, profxs, profys, profps);
-      profileworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::profile_loaded));
-      profileworker->start();
+      // TODO: FIX ME
+      //       ProfileWorker is now unused - this is to avoid a race condition
+      //       that so far has been present for months and still isn't
+      //       understood. I'm not sure what concurrent loading of the profile
+      //       really brought to LAG, as the user typically no longer needs to
+      //       do anything until the profile is finished loading anyway once
+      //       they express that they wish a new profile to be loaded.
+      //
+      //profileworker = new ProfileWorker(this->prof, profxs, profys, profps);
+      //profileworker->sig_done.connect(sigc::mem_fun(*this, &ProfileWindow::profile_loaded));
+      //profileworker->start();
 
       // Change cursor to busy
       make_busy_cursor(true);
+
+      // START TEMPORARY CODE
+      prof->loadprofile(profxs,profys,profps);
+      prof->draw_profile(true);
+
+      set_statusbar_label("");
+      make_busy_cursor(false);
+      // END TEMPORARY CODE
    }
 }
 

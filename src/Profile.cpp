@@ -539,7 +539,10 @@ bool Profile::loadprofile(vector<double> profxs, vector<double> profys, int prof
 	vector<PointBucket*> *pointvector = NULL;
 
 	//Get data.
-	imageexists = advsubsetproc(pointvector, profxs, profys, profps);
+   {
+      Glib::Mutex::Lock pbkt_lock (*global_pointbucket_mutex);
+	   imageexists = advsubsetproc(pointvector, profxs, profys, profps);
+   }
 
 	// Drawing from a null vector would be bad, and a zero vector pointless.
 	// imageexists being false will prevent drawing.
@@ -2081,6 +2084,8 @@ std::vector<double> Profile::get_averages(bool exclude_noise)
 */
 void Profile::make_moving_average()
 {
+	Glib::Mutex::Lock lock(profile_mainimage_mutex);
+
 	if (linez != NULL)
 	{
 		for (int i = 0; i < linezsize; ++i)
