@@ -376,9 +376,11 @@ void SaveWorker::run()
 		return;
 	}
 
-
-	LidarPoint *points = new LidarPoint[1048576];
+   // cache points from the quadtree here before saving them
+	LidarPoint *points = new LidarPoint[SAVEWORKER_CACHE_POINTS];
 	int counter = 0;
+
+   // describes data to be saved
 	vector<PointBucket*> *buckets;
 	Boundary *b = filesaver->lidardata->getBoundary();
 
@@ -422,7 +424,7 @@ void SaveWorker::run()
             {
                points[counter] = current->getPoint(i, 0);
                counter++;
-               if (counter == 1048576)
+               if (counter == SAVEWORKER_CACHE_POINTS)
                {
                   (this->*save_points_fun)(counter, points);
                   counter = 0;

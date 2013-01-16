@@ -32,6 +32,8 @@
 #include "geoprojectionconverter.hpp"
 #include "laslib/lasdefinitions.hpp"
 
+#define SAVEWORKER_CACHE_POINTS 1048576
+
 class FileSaver;
 class LASreader;
 class LASwriter;
