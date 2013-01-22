@@ -63,9 +63,10 @@ public:
 	void stop();
 
 	Glib::Dispatcher sig_message;		// Signals the GUI to display a message
-	Glib::Dispatcher sig_file_loaded;	// Signals that a file has been loaded
+	Glib::Dispatcher sig_file_loaded;// Signals that a file has been loaded
 	Glib::Dispatcher sig_fail;			// Signals failure
-	Glib::Dispatcher sig_progress;      // Signals that 1% of the loading has completed
+	Glib::Dispatcher sig_progress;   // Signals when loading (1%, typically)
+	Glib::Dispatcher sig_ascii;      // Signals when not possible to estimate sig_progress
 
 	// This stores location of PointData files with 1.3 point attributes
 	static std::tr1::unordered_map<uint8_t, std::string> point_data_paths;

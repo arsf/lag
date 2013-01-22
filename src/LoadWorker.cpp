@@ -147,6 +147,7 @@ Boundary LoadWorker::get_boundary()
 int LoadWorker::load_points(Quadtree* qt)
 {
 	int points_loaded = 0;
+   int points_inserted = 0;
 	int points_to_load = reader->header.number_of_point_records
 			/ (point_offset + 1);
 	int flightline_number = qt->getFlightlinesNumber();
@@ -155,12 +156,20 @@ int LoadWorker::load_points(Quadtree* qt)
 
 	int skip_counter = 0;
 	int progress_counter = 0;
-	int progress_step = int((points_to_load + 1) / 100);
+   int progress_step;
+
+   if (points_to_load == 0)
+   {
+      // invalid LAS header or ASCII file
+      sig_ascii();
+      progress_step = 10000;
+   }
+   else
+	   progress_step = int((points_to_load + 1) / 100);
 
 	try
 	{
-		while (!stopped && points_loaded < points_to_load
-				&& reader->read_point())
+		while (!stopped && reader->read_point())
 		{
 			if (skip_counter != point_offset)
 			{
@@ -201,7 +210,8 @@ int LoadWorker::load_points(Quadtree* qt)
 			++points_loaded;
 			skip_counter = 0;
 
-			qt->insert(temp_point);
+			if (qt->insert(temp_point))
+            points_inserted++;
 		}
 	} catch (DescriptiveException& e)
 	{
@@ -209,7 +219,8 @@ int LoadWorker::load_points(Quadtree* qt)
 				<< e.why() << std::endl;
 	}
 
-	return points_loaded;
+	//return points_loaded;
+   return points_inserted;
 }
 
 /*

@@ -229,6 +229,10 @@ private:
    //Whether or not any files have already been loaded in this session.
    bool loadedanyfiles;
 
+   // Whether to treat the current file in LoadWorker as a headerless (ascii)
+   // file, or to take on_progress as an indication of 1% of progress
+   bool ascii_progress;
+
    void load_xml(const Glib::RefPtr<Gtk::Builder>&);
    void connect_signals();
    void on_usedefault_changed();
@@ -248,6 +252,7 @@ private:
    void files_loaded();
    void load_failed();
    void on_progress();
+   void on_ascii();
    void on_loadcancelbutton_clicked();
 
    // Advanced dialog

@@ -28,6 +28,8 @@
 #include "FileOpener.h"
 #include "../SelectionBox.h"
 
+#define DEFAULT_PULSE_STEP (double)0.01
+
 /*
 ==================================
  FileOpener::FileOpener
@@ -342,12 +344,16 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 	   o << "Loading file 1 of " << num_files_loading;
 	   filelabel->set_text(o.str());
 
+      // no reason to believe the first line will have no header
+      ascii_progress = false;
+
 	   // Connect signals
 	   loadworker->sig_done.connect(sigc::mem_fun(*this, &FileOpener::files_loaded));
 	   loadworker->sig_message.connect(sigc::mem_fun(*this, &FileOpener::show_thread_message));
 	   loadworker->sig_file_loaded.connect(sigc::mem_fun(*this, &FileOpener::add_line));
 	   loadworker->sig_fail.connect(sigc::mem_fun(*this, &FileOpener::load_failed));
 	   loadworker->sig_progress.connect(sigc::mem_fun(*this, &FileOpener::on_progress));
+      loadworker->sig_progress.connect(sigc::mem_fun(*this, &FileOpener::on_ascii));
 
 	   // Start thread
 	   loadworker->start();
@@ -378,16 +384,39 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 */
 void FileOpener::on_progress()
 {
-	double file_progress = fileprogressbar->get_fraction() + 0.01;
-	double total_progress = totalprogressbar->get_fraction() + (0.01 / num_files_loading);
+   if (ascii_progress)
+   {
+      // no header available
+      fileprogressbar->pulse();
+   }
 
-	if (file_progress > 1.0)
-		file_progress = 1.0;
-	if (total_progress > 1.0)
-		total_progress = 1.0;
+   else
+   {
+      double file_progress = fileprogressbar->get_fraction() + 0.01;
+      double total_progress = totalprogressbar->get_fraction() + (0.01 / num_files_loading);
 
-	fileprogressbar->set_fraction(file_progress);
-	totalprogressbar->set_fraction(total_progress);
+      if (file_progress > 1.0)
+         file_progress = 1.0;
+      if (total_progress > 1.0)
+         total_progress = 1.0;
+
+      fileprogressbar->set_fraction(file_progress);
+      totalprogressbar->set_fraction(total_progress);
+   }
+}
+
+/*
+================================================================================
+ FileOpener::on_ascii
+
+ Indicates to this FileOpener when a LoadWorker will not produce accurate
+ estimates for its current flightline
+================================================================================
+*/
+void FileOpener::on_ascii()
+{
+   fileprogressbar->set_pulse_step(DEFAULT_PULSE_STEP);
+   ascii_progress = true;
 }
 
 /*
@@ -417,11 +446,18 @@ void FileOpener::show_thread_message()
 void FileOpener::add_line()
 {
 	++numlines;
+
+   double total_progress = (double)numlines / num_files_loading;
 	ostringstream o;
+
 	o << "Loading file " << ((numlines + 1) > num_files_loading ? num_files_loading : (numlines + 1))
 			<< " of " << num_files_loading;
+
+   ascii_progress = false; // no reason to believe the next line will have no header
+
 	filelabel->set_text(o.str());
 	fileprogressbar->set_fraction(0);
+   totalprogressbar->set_fraction(total_progress);
 }
 
 /*
