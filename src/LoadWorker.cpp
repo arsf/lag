@@ -108,16 +108,67 @@ Boundary LoadWorker::get_boundary()
 {
 	Boundary newboundary;
 
-	if (latlong)
+   const double min_x = reader->header.min_x;
+   const double min_y = reader->header.min_y;
+   const double min_z = reader->header.min_z;
+   const double max_x = reader->header.max_x;
+   const double max_y = reader->header.max_y;
+   const double max_z = reader->header.max_z;
+   
+   // First if statement checks for invalid LAS headers
+   if ( false // the many ways in which LASlib might fail follow..
+         || min_x == 0
+         || max_x == 0
+         || min_y == 0
+         || max_y == 0
+         || min_y == max_y // no idea why LASlib does this: it just does
+         || min_x == max_x
+      )
+   {
+      LidarPoint temp_point;
+      send_message("WARNING: Invalid header detected, scanning file for bounding box, this may take a while");
+
+      // get first point
+      if (reader->read_point())
+      {
+         temp_point = reader->point;
+         newboundary.minX = newboundary.maxX = temp_point.getX();
+         newboundary.minY = newboundary.maxY = temp_point.getY();
+      }
+
+      // check all points
+      while (!stopped && reader->read_point())
+      {
+	      temp_point = reader->point;
+         const double x = temp_point.getX();
+         const double y = temp_point.getY();
+
+         if (x < newboundary.minX)
+            newboundary.minX = x;
+         else if (x > newboundary.maxX)
+            newboundary.maxX = x;
+
+         if (y < newboundary.minY)
+            newboundary.minY = y;
+         else if (y > newboundary.maxY)
+            newboundary.maxY = y;
+      }
+
+      // rewind to start
+      // otherwise breaks assertions elsewhere in the program
+      reader->seek(0);
+   }
+
+	else if (latlong)
 	{
 		double min[3];
 		double max[3];
-		min[0] = reader->header.min_x;
-		min[1] = reader->header.min_y;
-		min[2] = reader->header.min_z;
-		max[0] = reader->header.max_x;
-		max[1] = reader->header.max_y;
-		max[2] = reader->header.max_z;
+		min[0] = min_x;
+		min[1] = min_y;
+		min[2] = min_z;
+		max[0] = max_x;
+		max[1] = max_y;
+		max[2] = max_z;
 		gpc.to_target(min);
 		gpc.to_target(max);
 
@@ -125,13 +176,14 @@ Boundary LoadWorker::get_boundary()
 		newboundary.minY = min[1] - 1;
 		newboundary.maxX = max[0] + 1;
 		newboundary.maxY = max[1] + 1;
-	}
+   }
+
 	else
 	{
-		newboundary.minX = reader->header.min_x;
-		newboundary.minY = reader->header.min_y;
-		newboundary.maxX = reader->header.max_x;
-		newboundary.maxY = reader->header.max_y;
+		newboundary.minX = min_x;
+		newboundary.minY = min_y;
+		newboundary.maxX = max_x;
+		newboundary.maxY = max_y;
 	}
 
 	return newboundary;
@@ -162,6 +214,7 @@ int LoadWorker::load_points(Quadtree* qt)
    {
       // invalid LAS header or ASCII file
       sig_ascii();
+      send_message("WARNING: no point record count in LAS header");
       progress_step = 10000;
    }
    else
@@ -321,6 +374,7 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 
 			// Create temp_point
 			temp_point = reader->point;
+			temp_point.setFlightlineNumber(flightline_number);
 
 			// 1.3 stuff
 			temp_data = reader->point.wavepacket;
