@@ -353,7 +353,7 @@ void FileOpener::on_filechooserdialogresponse(int response_id)
 	   loadworker->sig_file_loaded.connect(sigc::mem_fun(*this, &FileOpener::add_line));
 	   loadworker->sig_fail.connect(sigc::mem_fun(*this, &FileOpener::load_failed));
 	   loadworker->sig_progress.connect(sigc::mem_fun(*this, &FileOpener::on_progress));
-      loadworker->sig_progress.connect(sigc::mem_fun(*this, &FileOpener::on_ascii));
+      loadworker->sig_ascii.connect(sigc::mem_fun(*this, &FileOpener::on_ascii));
 
 	   // Start thread
 	   loadworker->start();
