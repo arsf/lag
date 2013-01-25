@@ -644,6 +644,9 @@ void LagDisplay::update_background_colour()
  drawn at the end of each frame, and the code that draws the BoxOverlays should
  be responsible for drawing this list at the end of every frame.
 
+ WARNING: Be warned, programmer, here be dragons. Using overlayBox may incur
+ the dreaded #issue25 as detailed on github.
+
  Parameters:
    major, minor - colours to draw the boxes with, with minor representing an
       alternative colour to use for 1 face
