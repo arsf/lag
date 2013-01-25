@@ -403,6 +403,10 @@ protected:
    //SelectionBox profileSelectionBox;
    BoxOverlay* profbox;
 
+   // Point Information box (shows which points is being queried)
+   BoxOverlay* pointinfobox;
+   bool draw_pointinfo;
+
    //Fencing:
 
    //Determines whether or not the fence should be drawn.
@@ -522,12 +526,14 @@ protected:
    void set_overlay_zoomlevels(double zoomlevel){ 
       profbox->setzoomlevel(zoomlevel);
       fencebox->setzoomlevel(zoomlevel); 
+      pointinfobox->setzoomlevel(zoomlevel);
    }
 
    //Set centres of the overlays.
    void set_overlay_centres(Point centre){ 
       profbox->setcentre(centre);
       fencebox->setcentre(centre); 
+      pointinfobox->setcentre(centre); 
    }
 
    //Panning control:   

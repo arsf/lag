@@ -66,6 +66,9 @@ public:
    // on slantedness and directionality.
    bool on_key(GdkEventKey* event,double scrollspeed,bool fractionalshift);
 
+   // Directly defines both start and end
+   void directly_place(Point, Point, double areawidth, double areaheight);
+
    //Outputs coordinate information to the label.
    void drawinfo();
    

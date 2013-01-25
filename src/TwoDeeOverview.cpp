@@ -84,7 +84,8 @@ TwoDeeOverview::TwoDeeOverview(
 		panningRefresh		(1),
 		slicing				(false),
 		latlong				(false),
-		superzoom			(false)
+		superzoom			(false),
+      draw_pointinfo    (false)
 {
    // Arrays for openGL input
    vertices = new float[3*bucketlimit];
@@ -95,15 +96,23 @@ TwoDeeOverview::TwoDeeOverview(
    maindetailmod = 0.01;
 
    //Profiling:
-   Colour red = Colour("red");
-   Colour white = Colour("white");
+   const Colour red = Colour("red");
+   const Colour white = Colour("white");
    profbox = new BoxOverlay(rulerlabel,white,red);
    profbox->setcentre(centre);
 
    //Fencing:
-   Colour blue = Colour("blue");
+   const Colour blue = Colour("blue");
    fencebox = new BoxOverlay(rulerlabel,blue,blue);
    fencebox->setcentre(centre);
+
+   // Point Information:
+   pointinfobox = new BoxOverlay(NULL, white, white);
+   pointinfobox->setcentre(centre);
+
+   // Point information set-up..
+   pointinfobox->setorthogonalshape(true);
+   pointinfobox->setslantedshape(false);
 
    //Events and signals:
    add_events(Gdk::SCROLL_MASK |
@@ -205,6 +214,10 @@ void TwoDeeOverview::drawoverlays()
    //Draw the fence box if fence mode is on.
    if(fencing||showfence)
       fencebox->makebox(rmaxz);
+
+   // Draw the point info box (showing what point is being queried)
+   if (draw_pointinfo)
+      pointinfobox->makebox(rmaxz);
 
    //Draw the ruler if ruler mode is on.
    if(rulering)
@@ -1150,6 +1163,7 @@ bool TwoDeeOverview::returntostart()
    ratio *= 1.1;
    profbox->setratio(ratio);
    fencebox->setratio(ratio);
+   pointinfobox->setratio(ratio);
    //Image should be centred at its centre.
    centre.move(lidarboundary->minX+xdif/2, lidarboundary->minY+ydif/2, 0);
 
@@ -1216,7 +1230,7 @@ void TwoDeeOverview::resetview()
 */
 bool TwoDeeOverview::pointinfo(double eventx,double eventy)
 {
-   string meh = "0\n0\n0";
+   const string no_data_string = "0\n0\n0";
 
    //This offset exists because, in world coordinates, 0 is the centre.
    double pointeroffx = eventx - get_width()/2;
@@ -1301,24 +1315,21 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       }
       if(anypoint)
       {
-         Colour white (1.0, 1.0, 1.0);
-         Point topleft, topright, botleft;
-         LidarPoint thispoint = (*pointvector)[bucketno]->getPoint(pointno, 0);
+         Point topleft, botright;
 
          // implements a minimum offset
-         double boxoffset = 0.5 * pixelsToImageUnits(max(pointsize, 6.0));
+         double boxoffset = 0.5 * max(pointsize, 6.0);
 
          // make copies and transpose rather than insantiate everything perfectly
-         topleft = Point(thispoint.getX() - centre.getX(), thispoint.getY() - centre.getY());
-
-         topright = topleft;
-         botleft  = topleft;
+         topleft  = Point(eventx, eventy);
+         botright = topleft;
 
           topleft.translate(-boxoffset, -boxoffset, 0);
-         topright.translate( boxoffset, -boxoffset, 0);
-          botleft.translate(-boxoffset,  boxoffset, 0);
+         botright.translate( boxoffset,  boxoffset, 0);
 
-         overlayBox(white, white, topleft, topright, botleft);
+         pointinfobox->directly_place( topleft, botright,
+                                       get_width(), get_height());
+         draw_pointinfo = true;
 
          // Box is now overlayed, now set up text label
 
@@ -1380,7 +1391,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       }
       else
       {
-         rulerlabel->set_text(meh);
+         rulerlabel->set_text(no_data_string);
+         draw_pointinfo = false;
          //if(drawing_to_GL ||
          //   initialising_GL_draw ||
          //   flushing ||
@@ -1391,7 +1403,8 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
    }
    else
    {
-      rulerlabel->set_text(meh);
+      rulerlabel->set_text(no_data_string);
+      draw_pointinfo = false;
       //if(drawing_to_GL ||
       //   initialising_GL_draw ||
       //   flushing ||
@@ -1399,6 +1412,7 @@ bool TwoDeeOverview::pointinfo(double eventx,double eventy)
       //   thread_existsmain);
       //else drawviewable(2);
    }
+   drawviewable(2);
    delete pointvector;
 
    // This causes the event box containing the overview to grab the focus, 

@@ -160,6 +160,20 @@ bool BoxOverlay::on_key(GdkEventKey* event,double scrollspeed,bool fractionalshi
 
 /*
 ==================================
+ BoxOverlay::directly_place
+
+ Places the box as specified at once
+==================================
+*/
+void BoxOverlay::directly_place( Point start, Point end,
+                     double areawidth, double areaheight)
+{
+   this->on_start(start, areawidth, areaheight);
+   this->on_(end, areawidth, areaheight);
+}
+
+/*
+==================================
  BoxOverlay::makeboundaries
 
  Calculate the boundaries based on whether or not the box is orthogonal or
@@ -223,7 +237,12 @@ void BoxOverlay::makeboundaries()
 */
 void BoxOverlay::drawinfo()
 {
-   if(orthogonalshape)
+   if (label == NULL)
+   {
+      return;
+   }
+
+   else if (orthogonalshape)
    {
       Point min = start, max = end;
 
@@ -253,7 +272,8 @@ void BoxOverlay::drawinfo()
                   "\n-----";
       label->set_text(text);
    }
-   else if(slantedshape)
+
+   else if (slantedshape)
    {
       ostringstream StartX,StartY,EndX,EndY,Width;
       StartX << start.getX();
