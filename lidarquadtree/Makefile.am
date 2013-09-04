@@ -12,6 +12,8 @@ src/CacheMinder.h src/CollisionDetection.h \
 src/LidarPoint.h \
 src/PointBucket.h src/Point.h src/QuadtreeExceptions.h src/Quadtree.h \
 src/QuadtreeNode.h src/PointData.h
+liblidarquadtree_la_CPPFLAGS = $(laslib_CFLAGS)
+liblidarquadtree_la_LIBADD = $(laslib_LIBS)
 # pkgconfig creation and installation
 # see http://www.eyrie.org/~eagle/notes/style/build.html
 pkgconfigdir = $(libdir)/pkgconfig
