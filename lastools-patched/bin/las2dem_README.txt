@@ -15,6 +15,7 @@
   '-gray', or '-false' coloring, or for the '-rgb' raster. The
   particular range of values to be color mapped can be clamped
   using '-set_min_max 10 100' or can be set '-compute_min_max'.
+  The color ramps can be inverted with '-invert_ramp'.
 
   If you use filters such as '-last_only' or '-keep_class 2' you
   may use the '-extra_pass' option to first determine how many
@@ -37,7 +38,7 @@
   raster extend can also be defined by setting '-ll min_x min_y'
   together with '-ncols 512' and '-nrows 512'.    
 
-  Optionally, a KML file is generated that allows the resulting
+  Automatically a KML file is generated to allow the resulting
   DEM to be displayed inside Google Earth (for TIF/PNG/JPG). In
   case the LAS/LAZ file contains projection information (i.e. a
   VLR with geokeys) this is used for georeferencing the KML file.

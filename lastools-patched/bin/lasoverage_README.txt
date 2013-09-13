@@ -237,7 +237,7 @@ Supported LAS Outputs
 LAStools (by martin.isenburg@gmail.com) version 120712 (commercial)
 usage:
 lasoverage -i tile.las -o out.las
-lasoverage -i tile.laz -o out.laz -foot
+lasoverage -i tile.laz -o out.laz -feet
 lasoverage -i tile.las -o out.laz -flag_as_withheld
 lasoverage -i tile.laz -o out.las -remove_from_output
 lasoverage -i *.las -files_are_flightlines

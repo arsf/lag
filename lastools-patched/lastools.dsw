@@ -27,6 +27,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "blast2iso"=.\src_full\blast2iso.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "las2dem"=.\src_full\las2dem.dsp - Package Owner=<4>
 
 Package=<5>
@@ -255,6 +267,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "lasnoise"=.\src_full\lasnoise.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "lasoverage"=.\src_full\lasoverage.dsp - Package Owner=<4>
 
 Package=<5>
@@ -364,18 +388,6 @@ Package=<4>
 ###############################################################################
 
 Project: "laszip"=.\src\laszip.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "laszippertest"=.\laslib\test\laszippertest.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

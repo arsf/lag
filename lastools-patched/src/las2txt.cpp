@@ -12,12 +12,12 @@
     beginning of the file each line preceeded by some comment symbol.
 
   PROGRAMMERS:
-
-    martin.isenburg@gmail.com  -  http://rapidlasso.com
-
+  
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+  
   COPYRIGHT:
-
-    (c) 2007-2012, martin isenburg, rapidlasso - tools to catch reality
+  
+    (c) 2007-12, martin isenburg, rapidlasso - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"-help") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       usage();
     }
     else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"-verbose") == 0)
@@ -383,7 +383,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-version") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       byebye();
     }
     else if (strcmp(argv[i],"-gui") == 0)
@@ -540,7 +540,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef COMPILE_WITH_MULTI_CORE
-  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.get_merged()))
+  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.is_merged()))
   {
     return las2txt_multi_core(argc, argv, &lasreadopener, &laswriteopener, cores);
   }

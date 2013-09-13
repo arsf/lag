@@ -132,11 +132,11 @@ compressed to out.laz.
 clips all points of compressed in.laz whose scan angle is above 15 or
 below -15 and stores surviving points compressed to out.laz.
 
->> las2las -i in.las -o out.las -clip_intensity_below 1000 -remove_extra_header
+>> las2las -i in.las -o out.las -clip_intensity_below 1000 -remove_extra
 
-clips all points of in.las whose intensity is below 1000 and
-stores surviving points to out.las. in addition all variable headers
-and any additional user headers are stripped from the file.
+clips all points of in.las whose intensity is below 1000 and stores
+surviving points to out.las. in addition any additional user data after
+the LAS header or after the VLR block are stripped from the file.
 
 >> las2las -i in.laz -o out.laz -last_only
 
@@ -183,12 +183,25 @@ point.z).
 
 other commandline arguments are
 
+-auto_reoffset          : puts a meaning
+-reoffset 10000 40000 0 : puts a new offset into the header and translates the points accordingly
+-rescale 0.01 0.01 0.01 : puts a new scale into the header and rescales the points accordingly
+-clip_to_bounding_box : removes all points that falls outsize the bouding box specified in the LAS header 
+-repair_zero_returns  : sets return counts and number of returns that are zero to one
+-start_at_point 100   : skips all points until point number 100
+-start_at_point 900   : omits all points after point number 900
 -subseq 20 100        : extract a subsequence of 100 points starting from point 20
 -point_type 0         : force point type to be 0
 -point_size 26        : force point size to be 26
+-set_classification 0 : sets all classifications fields to zero
+-set_user_data 0      : sets all user_data fields to zero
 -remove_all_vlrs      : remove all VLRs
 -remove_vlr 2         : remove VLR number 2
--remove_extra         : remove extra bytes before and after the header 
+-remove_extra         : remove extra bytes before and after the header
+-week_to_adjusted     : converts time stamps from GPS week to Adjusted Standard GPS 
+-adjusted_to_week     : converts time stamps from Adjusted Standard GPS to GPS week
+-scale_rgb_up         : multiplies all RGB values by 256 (to go from 8 bit to 16 bit numbers)
+-scale_rgb_down       : divides all RGB values by 256 (to go from 16 bit to 8 bit numbers)
 -set_version 1.2      : set LAS version number to 1.2
 -wgs84                : use the WGS-84 ellipsoid
 -wgs72                : use the WGS-72 ellipsoid

@@ -4,6 +4,7 @@ You find the individual LAStools in the .\lastools\bin directory. Start
 them by double-clicking or run them in the DOS command line. The ArcGIS
 toolbox can be found in the .\lastools\ArcGIS_toolbox directory.
 
+compant page:    http://rapidlasso.com
 latest updates:  http://lastools.org
 user group:      http://groups.google.com/group/lastools
 twitter feed:    http://twitter.com/lastools
@@ -15,8 +16,8 @@ linkedin group:  http://linkedin.com/groups?gid=4408378
 * lasground.exe extracts the bare-earth by classifying all ground points
 * lasoverlap.exe checks overlap & vertical/horizontal alignment of flight lines
 * lascontrol.exe quality checks elevations for a list of control points 
-* lasclassify.exe find buildings and the trees above the ground
-* lasgrid.exe rasters very large LAS files into elevation or intensity grids
+* lasclassify.exe finds buildings and the vegetation above the ground
+* lasgrid.exe grids onto min/max/avg/std elevation, intensity, or density rasters
 * lascanopy.exe computes basic raster metrics for forestry applications
 * lasboundary.exe extracts a boundary polygon that encloses the points
 * lasheight.exe computes for each point its height above the ground
@@ -34,7 +35,7 @@ linkedin group:  http://linkedin.com/groups?gid=4408378
 * lasduplicate.exe removes duplicate points (with identical x and y, z optional) 
 * lasthin.exe thins lowest / highest / random LAS points via a grid
 * las2tin.exe triangulates the points of a LAS file into a TIN
-* las2dem.exe rasters (via temporary TIN) to hillshade/elevation/intensity/rgb
+* las2dem.exe rasters (via a TIN) into elevation/slope/intensity/rgb DEMs
 * las2iso.exe extracts, optionally simplified, elevation contours
 * lasview.exe visualizes a LAS file with a simple OpenGL viewer
 * lasprecision.exe analyses the actual precision of the LIDAR points
@@ -60,4 +61,4 @@ Please read the "LICENSE.txt" file for information on the legal use and licensin
 of LAStools. I would also really like it if you would send me an email and tell me
 what you use LAStools for and what features and improvements you could need. 
 
-(c) 2007-2012 martin.isenburg@gmail.com - @lastools - http://rapidlasso.com
+(c) 2007-2013 martin.isenburg@rapidlasso.com - http://rapidlasso.com

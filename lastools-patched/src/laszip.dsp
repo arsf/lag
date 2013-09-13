@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laszip\src" /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /i "../src" /d "NDEBUG"
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ PostBuild_Cmds=copy Release\laszip.exe ..\bin\laszip.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laszip\src" /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 BSC32=bscmake.exe
@@ -101,7 +101,7 @@ PostBuild_Cmds=copy Debug\laszip.exe ..\bin\laszip.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /I "..\laszip\src" /I "..\laslib\inc" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 # ADD RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 BSC32=bscmake.exe
@@ -130,7 +130,7 @@ PostBuild_Cmds=copy Debug\laszip.exe ..\bin\laszip.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /w /W0 /GX /O2 /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /I "..\laszip\src" /I "..\laslib\inc" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /i "../src" /d "NDEBUG"
 # ADD RSC /l 0x409 /i "../src" /d "NDEBUG"
 BSC32=bscmake.exe
@@ -350,14 +350,6 @@ SOURCE=..\laslib\inc\laswaveform13writer.hpp
 # Begin Source File
 
 SOURCE=..\laslib\inc\laswriter.hpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\laslib\inc\laszip.hpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\laslib\inc\mydefs.hpp
 # End Source File
 # Begin Source File
 

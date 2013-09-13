@@ -9,12 +9,12 @@
     losslessly compressed LAZ format.
 
   PROGRAMMERS:
-
-    martin.isenburg@gmail.com
-
+  
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+  
   COPYRIGHT:
-
-    (c) 2007-2011, Martin Isenburg, LASSO - tools to catch reality
+  
+    (c) 2007-12, martin isenburg, rapidlasso - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"-help") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       usage();
     }
     else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"-verbose") == 0)
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-version") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       byebye();
     }
     else if (strcmp(argv[i],"-gui") == 0)
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef COMPILE_WITH_MULTI_CORE
-  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.get_merged()))
+  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.is_merged()))
   {
     return laszip_multi_core(argc, argv, &geoprojectionconverter, &lasreadopener, &laswriteopener, cores);
   }
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
           {
             lasindex.add(&lasreader->point, (U32)(laswriter->p_count));
           }
-          if (!lasreadopener.has_populated_header())
+          if (!lasreadopener.is_header_populated())
           {
             laswriter->update_inventory(&lasreader->point);
           }
@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
 
         if (verbose && ((laswriter->p_count % 1000000) == 0)) fprintf(stderr,"written %d referenced %d of %d points\n", waves_written, waves_referenced, (I32)laswriter->p_count);
 
-        if (!lasreadopener.has_populated_header())
+        if (!lasreadopener.is_header_populated())
         {
           laswriter->update_header(&lasreader->header, TRUE);
         }
@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
       {
         // loop over points
 
-        if (lasreadopener.has_populated_header())
+        if (lasreadopener.is_header_populated())
         {
           if (lax) // should we also create a spatial indexing file
           {

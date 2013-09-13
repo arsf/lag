@@ -122,4 +122,4 @@ Directory of C:\lastools\bin
 
 ---------------
 
-if you find bugs let me (martin.isenburg@gmail.com) know.
+if you find bugs let me (martin.isenburg@rapidlasso.com) know.

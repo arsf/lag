@@ -18,11 +18,11 @@
 
   PROGRAMMERS:
   
-    martin.isenburg@gmail.com
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
   
   COPYRIGHT:
   
-    (c) 2007-2012, Martin Isenburg, LASSO - rapid tools to catch reality
+    (c) 2007-12, martin isenburg, rapidlasso - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -142,6 +142,8 @@ int main(int argc, char *argv[])
   bool remove_extra_header = false;
   bool remove_all_variable_length_records = false;
   int remove_variable_length_record = -1;
+  int remove_variable_length_record_from = -1;
+  int remove_variable_length_record_to = -1;
   bool remove_tiling_vlr = false;
   bool remove_original_vlr = false;
   // extract a subsequence
@@ -197,7 +199,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"-help") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       usage();
     }
     else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"-verbose") == 0)
@@ -206,7 +208,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-version") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       byebye();
     }
     else if (strcmp(argv[i],"-gui") == 0)
@@ -305,7 +307,7 @@ int main(int argc, char *argv[])
     {
       remove_extra_header = true;
     }
-    else if (strcmp(argv[i],"-remove_all_vlrs") == 0 || strcmp(argv[i],"-remove_all_vlr") == 0)
+    else if (strcmp(argv[i],"-remove_all_vlrs") == 0)
     {
       remove_all_variable_length_records = true;
     }
@@ -317,7 +319,21 @@ int main(int argc, char *argv[])
         byebye(true);
       }
       remove_variable_length_record = atoi(argv[i+1]);
+      remove_variable_length_record_from = -1;
+      remove_variable_length_record_to = -1;
       i++;
+    }
+    else if (strcmp(argv[i],"-remove_vlrs_from_to") == 0)
+    {
+      if ((i+2) >= argc)
+      {
+        fprintf(stderr,"ERROR: '%s' needs 2 arguments: start end\n", argv[i]);
+        byebye(true);
+      }
+      remove_variable_length_record = -1;
+      remove_variable_length_record_from = atoi(argv[i+1]);
+      remove_variable_length_record_to = atoi(argv[i+2]);
+      i+=2;
     }
     else if (strcmp(argv[i],"-remove_tiling_vlr") == 0)
     {
@@ -329,7 +345,7 @@ int main(int argc, char *argv[])
       remove_original_vlr = true;
       i++;
     }
-    else if (strcmp(argv[i],"-point_type") == 0) 
+    else if (strcmp(argv[i],"-set_point_type") == 0 || strcmp(argv[i],"-set_point_data_format") == 0 || strcmp(argv[i],"-point_type") == 0) 
     {
       if ((i+1) >= argc)
       {
@@ -339,7 +355,7 @@ int main(int argc, char *argv[])
       set_point_data_format = atoi(argv[i+1]);
       i++;
     }
-    else if (strcmp(argv[i],"-point_size") == 0) 
+    else if (strcmp(argv[i],"-set_point_data_record_length") == 0 || strcmp(argv[i],"-set_point_size") == 0 || strcmp(argv[i],"-point_size") == 0) 
     {
       if ((i+1) >= argc)
       {
@@ -349,7 +365,7 @@ int main(int argc, char *argv[])
       set_point_data_record_length = atoi(argv[i+1]);
       i++;
     }
-    else if (strcmp(argv[i],"-clip_to_bounding_box") == 0 || strcmp(argv[i],"-clip_to_bbox") == 0) 
+    else if (strcmp(argv[i],"-clip_to_bounding_box") == 0) 
     {
       clip_to_bounding_box = true;
     }
@@ -373,7 +389,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef COMPILE_WITH_MULTI_CORE
-  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.get_merged()))
+  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.is_merged()))
   {
     return las2las_multi_core(argc, argv, &geoprojectionconverter, &lasreadopener, &laswriteopener, cores);
   }
@@ -487,6 +503,7 @@ int main(int argc, char *argv[])
       }
       lasreader->header.version_major = (U8)set_version_major;
     }
+
     if (set_version_minor >= 0)
     {
       if (set_version_minor > 4)
@@ -535,6 +552,52 @@ int main(int argc, char *argv[])
           lasreader->header.offset_to_point_data += 140;
         }
       }
+
+      if ((set_version_minor <= 3) && (lasreader->header.version_minor >= 4))
+      {
+        if (lasreader->header.point_data_format > 5)
+        {
+          switch (lasreader->header.point_data_format)
+          {
+          case 6:
+            fprintf(stderr, "WARNING: downgrading point_data_format from %d to 1\n", lasreader->header.point_data_format);
+            lasreader->header.point_data_format = 1;
+            fprintf(stderr, "         and point_data_record_length from %d to %d\n", lasreader->header.point_data_record_length, lasreader->header.point_data_record_length - 2);
+            lasreader->header.point_data_record_length -= 2;
+            break;
+          case 7:
+            fprintf(stderr, "WARNING: downgrading point_data_format from %d to 3\n", lasreader->header.point_data_format);
+            lasreader->header.point_data_format = 3;
+            fprintf(stderr, "         and point_data_record_length from %d to %d\n", lasreader->header.point_data_record_length, lasreader->header.point_data_record_length - 2);
+            lasreader->header.point_data_record_length -= 2;
+            break;
+          case 8:
+            fprintf(stderr, "WARNING: downgrading point_data_format from %d to 3\n", lasreader->header.point_data_format);
+            lasreader->header.point_data_format = 3;
+            fprintf(stderr, "         and point_data_record_length from %d to %d\n", lasreader->header.point_data_record_length, lasreader->header.point_data_record_length - 4);
+            lasreader->header.point_data_record_length -= 4;
+            break;
+          case 9:
+            fprintf(stderr, "WARNING: downgrading point_data_format from %d to 4\n", lasreader->header.point_data_format);
+            lasreader->header.point_data_format = 4;
+            fprintf(stderr, "         and point_data_record_length from %d to %d\n", lasreader->header.point_data_record_length, lasreader->header.point_data_record_length - 2);
+            lasreader->header.point_data_record_length -= 2;
+            break;
+          case 10:
+            fprintf(stderr, "WARNING: downgrading point_data_format from %d to 5\n", lasreader->header.point_data_format);
+            lasreader->header.point_data_format = 5;
+            fprintf(stderr, "         and point_data_record_length from %d to %d\n", lasreader->header.point_data_record_length, lasreader->header.point_data_record_length - 4);
+            lasreader->header.point_data_record_length -= 4;
+            break;
+          default:
+            fprintf(stderr, "ERROR: unknown point_data_format %d\n", lasreader->header.point_data_format);
+            byebye(true);
+          }
+        }
+        point = new LASpoint;
+        point->init(&lasreader->header, lasreader->header.point_data_format, lasreader->header.point_data_record_length);
+      }
+
       lasreader->header.version_minor = (U8)set_version_minor;
     }
 
@@ -550,7 +613,7 @@ int main(int argc, char *argv[])
       // depending on the conversion we may need to copy the point
       if (convert_point_type_from_to[lasreader->header.point_data_format][set_point_data_format])
       {
-        point = new LASpoint;
+        if (point == 0) point = new LASpoint;
       }
       lasreader->header.point_data_format = (U8)set_point_data_format;
       lasreader->header.clean_laszip();
@@ -635,10 +698,20 @@ int main(int argc, char *argv[])
     {
       lasreader->header.clean_vlrs();
     }
-
-    if (remove_variable_length_record != -1)
+    else
     {
-      lasreader->header.remove_vlr(remove_variable_length_record);
+      if (remove_variable_length_record != -1)
+      {
+        lasreader->header.remove_vlr(remove_variable_length_record);
+      }
+    
+      if (remove_variable_length_record_from != -1)
+      {
+        for (i = remove_variable_length_record_to; i >= remove_variable_length_record_from; i--)
+        {
+          lasreader->header.remove_vlr(i);
+        }
+      }
     }
 
     if (remove_tiling_vlr)

@@ -14,8 +14,14 @@
 
   By default the output of lasinfo goes to stderr. The output can
   be suppressed with '-quiet' or changed to '-stdout'. To write
-  into a file use '-o output.txt' or '-otxt' which, for example,
-  will write to "lidar_info.txt" for a file named "lidar.las".
+  to a particular file use '-o output.txt' or '-otxt' which stores
+  the lasinfo report to "lidar.txt" assuming the file has the name
+  "lidar.las". With the option '-odix _info' you change the name
+  to "lidar_info.txt" and with '-odir E:\reports' you choose a
+  particular directory. These options are especially useful in
+  batch mode such as:
+
+  lasinfo -i *.laz -otxt -odir ..\reports -odix _info -cores 3
 
   The tool can also be used to modify various other entries in
   the header as described below. This needs to be done with care
@@ -52,24 +58,24 @@ example usage:
 
 reports all information to stderr.
 
->> lasinfo -i lidar1.las lidar2.las
+>> lasinfo -i lidar1.las lidar2.las -merged
 
 reports all information for a merged LAS file that contains the
 merged contents of lidar1.las and lidar2.las to stderr.
 
->> lasinfo -i lidar1.las lidar2.las -single
+>> lasinfo -i lidar1.las lidar2.las
 
 reports the information of the two files individually to stderr.
 
->> lasinfo *.las -stdout
+>> lasinfo *.las -merged -stdout
 
 reports information for all files merged to stdout.
 
->> lasinfo *.las -single -stdout
+>> lasinfo *.las -stdout
 
 reports information for all files individually to stdout.
 
->> lasinfo *.las -single -otxt
+>> lasinfo *.las -odix _info
 
 reports information for all files individually to *_info.txt
 
@@ -302,7 +308,7 @@ Supported LAS Inputs
   -i lidar.laz
   -i lidar1.las lidar2.las lidar3.las -merged
   -i *.las
-  -i flight0??.laz flight1??.laz -single
+  -i flight0??.laz flight1??.laz
   -i terrasolid.bin
   -i esri.shp
   -i nasa.qi
@@ -315,12 +321,12 @@ Supported LAS Inputs
 LAStools (by martin.isenburg@gmail.com) version 120206
 usage:
 lasinfo -i lidar.las
-lasinfo -i lidar.las -compute_density -o lidar_info.txt
-lasinfo -i *.las
-lasinfo -i *.las -single -otxt
+lasinfo -i *.laz -merged -compute_density -o lidar_info.txt
+lasinfo -i *.las -odir E:\reports
+lasinfo -i *.las -odix _info
 lasinfo -no_header -no_vlrs -i lidar.laz
 lasinfo -nv -nc -stdout lidar.las
-lasinfo -nv -nc -stdout *.laz -single | grep version
+lasinfo -nv -nc -stdout *.laz | grep version
 lasinfo -i *.las -repair
 lasinfo -i *.laz -repair_bb -set_file_creation 8 2007
 lasinfo -i *.las -repair_counters -set_version 1.2

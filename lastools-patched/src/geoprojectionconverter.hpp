@@ -20,13 +20,13 @@
 
   PROGRAMMERS:
   
-    martin.isenburg@gmail.com
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
     chuck.gantz@globalstar.com
     gpotts@imagelinks.com
   
   COPYRIGHT:
   
-    (c) 2007-2011, Martin Isenburg, LASSO - tools to catch reality
+    (c) 2007-2012, martin isenburg, rapidlasso - tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -207,11 +207,17 @@ public:
   void set_coordinates_in_survey_feet(bool source=true);
   void set_coordinates_in_feet(bool source=true);
   void set_coordinates_in_meter(bool source=true);
+
+  void reset_coordinate_units(bool source=true);
+  bool has_coordinate_units(bool source=true) const;
   const char* get_coordinate_unit_description_string(bool abrev=true, bool source=true);
 
   void set_elevation_in_survey_feet(bool source=true);
   void set_elevation_in_feet(bool source=true);
   void set_elevation_in_meter(bool source=true);
+
+  void reset_elevation_units(bool source=true);
+  bool has_elevation_units(bool source=true) const;
   const char* get_elevation_unit_description_string(bool abrev=true, bool source=true);
 
   void set_elevation_offset_in_meter(float elevation_offset);
@@ -267,7 +273,9 @@ private:
   short vertical_geokey;
 
   // parameters for coordinate scaling
+  bool coordinate_units_set[2];
   double coordinates2meter, meter2coordinates;
+  bool elevation_units_set[2];
   double elevation2meter, meter2elevation;
   float elevation_offset_in_meter;
 

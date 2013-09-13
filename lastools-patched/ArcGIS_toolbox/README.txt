@@ -2,7 +2,7 @@
 
   The LAStools LiDAR processing Toolbox for ArcGIS 9.3 - 10.1
 
-  (c) 2012 - martin.isenburg@gmail.com
+  (c) 2012 - martin.isenburg@rapidlasso.com
 
   rapidlasso GmbH - fast tools to catch reality
 

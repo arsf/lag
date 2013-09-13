@@ -9,13 +9,13 @@
   
   PROGRAMMERS:
   
-    martin.isenburg@gmail.com  -  http://rapidlasso.com
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
     chuck.gantz@globalstar.com
     gpotts@imagelinks.com
   
   COPYRIGHT:
   
-    (c) 2007-2011, martin isenburg, rapidlasso - fast tools to catch reality
+    (c) 2007-2012, martin isenburg, rapidlasso - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -785,13 +785,19 @@ bool GeoProjectionConverter::get_geo_keys_from_projection(int& num_geo_keys, Geo
         (*geo_keys)[8].tiff_tag_location = 34736;
         (*geo_keys)[8].count = 1;
         (*geo_keys)[8].value_offset = 4;
-        (*geo_double_params)[4] = lcc->lcc_false_easting_meter / coordinates2meter;
+        if (source)
+          (*geo_double_params)[4] = lcc->lcc_false_easting_meter / coordinates2meter;
+        else
+          (*geo_double_params)[4] = lcc->lcc_false_easting_meter * meter2coordinates;
 
         (*geo_keys)[9].key_id = 3083; // ProjFalseNorthingGeoKey
         (*geo_keys)[9].tiff_tag_location = 34736;
         (*geo_keys)[9].count = 1;
         (*geo_keys)[9].value_offset = 5;
-        (*geo_double_params)[5] = lcc->lcc_false_northing_meter / coordinates2meter;
+        if (source)
+          (*geo_double_params)[5] = lcc->lcc_false_northing_meter / coordinates2meter;
+        else
+          (*geo_double_params)[5] = lcc->lcc_false_northing_meter * meter2coordinates;
 
         // ellipsoid
         (*geo_keys)[10].key_id = 2056; // GeogEllipsoidGeoKey
@@ -872,13 +878,19 @@ bool GeoProjectionConverter::get_geo_keys_from_projection(int& num_geo_keys, Geo
         (*geo_keys)[7].tiff_tag_location = 34736;
         (*geo_keys)[7].count = 1;
         (*geo_keys)[7].value_offset = 3;
-        (*geo_double_params)[3] = tm->tm_false_easting_meter / coordinates2meter;
+        if (source)
+          (*geo_double_params)[3] = tm->tm_false_easting_meter / coordinates2meter;
+        else
+          (*geo_double_params)[3] = tm->tm_false_easting_meter * meter2coordinates;
 
         (*geo_keys)[8].key_id = 3083; // ProjFalseNorthingGeoKey
         (*geo_keys)[8].tiff_tag_location = 34736;
         (*geo_keys)[8].count = 1;
         (*geo_keys)[8].value_offset = 4;
-        (*geo_double_params)[4] = tm->tm_false_northing_meter / coordinates2meter;
+        if (source)
+          (*geo_double_params)[4] = tm->tm_false_northing_meter / coordinates2meter;
+        else
+          (*geo_double_params)[4] = tm->tm_false_northing_meter * meter2coordinates;
 
         // ellipsoid
         (*geo_keys)[9].key_id = 2056; // GeogEllipsoidGeoKey
@@ -1614,8 +1626,12 @@ short GeoProjectionConverter::get_GeogEllipsoidGeoKey(bool source)
     return 7019;
   case 12: // Ellipse_Helmert1906
     return 7020;
+  case 14: // Ellipse_International1924
+    return 7022;
   case 15: // Ellipse_Krassowsky1940
     return 7024;
+  case 16: // Ellipse_Airy_Modified_1849
+    return 7002;
   case 23: // Ellipse_WGS_84
     return 7030;
   default:
@@ -2325,6 +2341,9 @@ bool GeoProjectionConverter::set_ProjectedCSTypeGeoKey(short value, char* descri
     break;
   case 26998: // PCS_NAD83_Missouri_West
     sp_nad27 = false; sp = "MO_W";
+    break;
+  case 27700:
+
     break;
   case 28348: // PCS_GDA94_MGA_zone_48
   case 28349:
@@ -3159,6 +3178,21 @@ bool GeoProjectionConverter::set_ProjectedCSTypeGeoKey(short value, char* descri
       }
     }
   }
+
+  if (value == 27700)
+  {
+    set_transverse_mercator_projection( 400000.0, -100000.0, 49.0, -2.0, 0.9996012717, "OSGB 1936 / British National Grid");
+    set_reference_ellipsoid(1); // Airy 1830
+    set_coordinates_in_meter();
+    return true;
+  }
+  else if (value == 2180)
+  {
+    set_transverse_mercator_projection( 500000.0, -5300000.0, 0.0, 19.0, 0.9993, "ETRS89 / Poland CS92");
+    set_reference_ellipsoid(GEO_ELLIPSOID_NAD83); // GRS 1830
+    set_coordinates_in_meter();
+    return true;
+  }
   return false;
 }
 
@@ -3471,11 +3505,15 @@ short GeoProjectionConverter::get_VerticalUnitsGeoKey(bool source)
 
 void GeoProjectionConverter::set_VerticalCSTypeGeoKey(short value)
 {
-  if ((5001 <= value) && (value <= 5033))
+  if ((5000 <= value) && (value <= 5099))      // [5000, 5099] = EPSG Ellipsoid Vertical CS Codes
   {
     vertical_geokey = value;
   }
-  else if ((5101 <= value) && (value <= 5106))
+  else if ((5101 <= value) && (value <= 5199)) // [5100, 5199] = EPSG Orthometric Vertical CS Codes
+  {
+    vertical_geokey = value;
+  }
+  else if ((5200 <= value) && (value <= 5999)) // [5200, 5999] = Reserved EPSG
   {
     vertical_geokey = value;
   }
@@ -4067,6 +4105,7 @@ bool GeoProjectionConverter::compute_utm_zone(const double LatDegree, const doub
 {
   // Make sure the longitude is between -180.00 .. 179.9
   double LongTemp = (LongDegree+180)-int((LongDegree+180)/360)*360-180; // -180.00 .. 179.9;
+  utm->utm_northern_hemisphere = (LatDegree >= 0);
   utm->utm_zone_number = (int)((LongTemp + 180)/6) + 1;
   if( LatDegree >= 56.0 && LatDegree < 64.0 && LongTemp >= 3.0 && LongTemp < 12.0 ) utm->utm_zone_number = 32;
   // Special zones for Svalbard
@@ -4077,6 +4116,7 @@ bool GeoProjectionConverter::compute_utm_zone(const double LatDegree, const doub
     else if( LongTemp >= 21.0 && LongTemp < 33.0 ) utm->utm_zone_number = 35;
     else if( LongTemp >= 33.0 && LongTemp < 42.0 ) utm->utm_zone_number = 37;
   }
+  utm->utm_long_origin = (utm->utm_zone_number - 1) * 6 - 180 + 3;  // + 3 puts origin in middle of zone
   if((84 >= LatDegree) && (LatDegree >= 72)) utm->utm_zone_letter = 'X';
   else if((72 > LatDegree) && (LatDegree >= 64)) utm->utm_zone_letter = 'W';
   else if((64 > LatDegree) && (LatDegree >= 56)) utm->utm_zone_letter = 'V';
@@ -4128,7 +4168,7 @@ bool GeoProjectionConverter::LLtoUTM(const double LatDegree, const double LongDe
   UTMNorthingMeter = (double)(k0*(M+N*tan(LatRad)*(A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24
          + (61-58*T+T*T+600*C-330*ellipsoid->eccentricity_prime_squared)*A*A*A*A*A*A/720)));
 
-  if(LatDegree < 0)
+  if (LatDegree < 0)
   {
     UTMNorthingMeter += 10000000.0; //10000000 meter offset for southern hemisphere
   }
@@ -4662,8 +4702,12 @@ GeoProjectionConverter::GeoProjectionConverter()
 
   vertical_geokey = 0;
 
+  coordinate_units_set[0] = false;
+  coordinate_units_set[1] = false;
   coordinates2meter = 1.0;
   meter2coordinates = 1.0;
+  elevation_units_set[0] = false;
+  elevation_units_set[1] = false;
   elevation2meter = 1.0;
   meter2elevation = 1.0;
  
@@ -4789,32 +4833,35 @@ bool GeoProjectionConverter::parse(int argc, char* argv[])
       }
       *argv[i]='\0'; *argv[i+1]='\0'; i+=1;
     }
-    else if (strcmp(argv[i],"-lcc") == 0 || strcmp(argv[i],"-lambert_conic_conformal") == 0 || strcmp(argv[i],"-target_lcc") == 0)
+    else if (strcmp(argv[i],"-lcc") == 0 || strcmp(argv[i],"-target_lcc") == 0)
     {
-      bool source = (strcmp(argv[i],"-lcc") == 0 || strcmp(argv[i],"-lambert_conic_conformal") == 0);
+      bool source = (strcmp(argv[i],"-lcc") == 0);
       double falseEasting; sscanf(argv[i+1], "%lf", &falseEasting);
       double falseNorthing; sscanf(argv[i+2], "%lf", &falseNorthing);
-      if (strcmp(argv[i+3],"survey_feet") == 0 || strcmp(argv[i+3],"survey_foot") == 0 || strcmp(argv[i+3],"surveyfeet") == 0 || strcmp(argv[i+3],"surveyfoot") == 0)
+      if (strcmp(argv[i+3],"survey_feet") == 0 || strcmp(argv[i+3],"surveyfeet") == 0)
       {
+        set_coordinates_in_survey_feet(source);
         // the definition of the projection was in survey feet but we always calculate in meters
         falseEasting *= 0.3048006096012;
         falseNorthing *= 0.3048006096012;
       }
-      else if (strcmp(argv[i+3],"feet") == 0 || strcmp(argv[i+3],"foot") == 0 || strcmp(argv[i+3],"ft") == 0)
+      else if (strcmp(argv[i+3],"feet") == 0 || strcmp(argv[i+3],"ft") == 0)
       {
+        set_coordinates_in_feet(source);
         // the definition of the projection was in feet but we always calculate in meters
         falseEasting *= 0.3048;
         falseNorthing *= 0.3048;
       }
-      else if (strcmp(argv[i+3],"meters") == 0 || strcmp(argv[i+3],"meter") == 0 || strcmp(argv[i+3],"m") == 0)
+      else if (strcmp(argv[i+3],"meter") == 0 || strcmp(argv[i+3],"m") == 0)
       {
+        set_coordinates_in_meter(source);
       }
       else
       {
         fprintf(stderr,"ERROR: wrong options for '-lcc'. use like shown in these examples:\n");
-        fprintf(stderr,"  -lcc 609601.22 0 meter 33.75 -79 34.33333 36.16666\n");
-        fprintf(stderr,"  -lcc 1640416.666667 0 survey_feet 47.000000 -120.833333 47.5 48.733333\n");
-        fprintf(stderr,"  -lcc 1500000 0 feet 47.000000 -120.833333 47.5 48.733333\n");
+        fprintf(stderr,"  %s 609601.22 0 meter 33.75 -79 34.33333 36.16666\n", argv[i]);
+        fprintf(stderr,"  %s 1640416.666667 0 survey_feet 47.000000 -120.833333 47.5 48.733333\n", argv[i]);
+        fprintf(stderr,"  %s 1500000 0 feet 47.000000 -120.833333 47.5 48.733333\n", argv[i]);
         return false;
       }
       double latOfOriginDeg = atof(argv[i+4]);
@@ -4870,20 +4917,23 @@ bool GeoProjectionConverter::parse(int argc, char* argv[])
       bool source = (strcmp(argv[i],"-tm") == 0 || strcmp(argv[i],"-transverse_mercator") == 0);
       double falseEasting; sscanf(argv[i+1], "%lf", &falseEasting);
       double falseNorthing; sscanf(argv[i+2], "%lf", &falseNorthing);
-      if (strcmp(argv[i+3],"survey_feet") == 0 || strcmp(argv[i+3],"survey_foot") == 0 || strcmp(argv[i+3],"surveyfeet") == 0 || strcmp(argv[i+3],"surveyfoot") == 0)
+      if (strcmp(argv[i+3],"survey_feet") == 0 || strcmp(argv[i+3],"surveyfeet") == 0)
       {
+        set_coordinates_in_survey_feet(source);
         // the definition of the projection was in survey feet but we always calculate in meters
         falseEasting *= 0.3048006096012;
         falseNorthing *= 0.3048006096012;
       }
-      else if (strcmp(argv[i+3],"feet") == 0 || strcmp(argv[i+3],"foot") == 0 || strcmp(argv[i+3],"ft") == 0)
+      else if (strcmp(argv[i+3],"feet") == 0 || strcmp(argv[i+3],"ft") == 0)
       {
-        // the definition of the projection was in survey feet but we always calculate in meters
+        set_coordinates_in_feet(source);
+        // the definition of the projection was in feet but we always calculate in meters
         falseEasting *= 0.3048;
         falseNorthing *= 0.3048;
       }
-      else if (strcmp(argv[i+3],"meters") == 0 || strcmp(argv[i+3],"meter") == 0 || strcmp(argv[i+3],"m") == 0)
+      else if (strcmp(argv[i+3],"meter") == 0 || strcmp(argv[i+3],"m") == 0)
       {
+        set_coordinates_in_meter(source);
       }
       else
       {
@@ -4900,62 +4950,62 @@ bool GeoProjectionConverter::parse(int argc, char* argv[])
       fprintf(stderr, "using TM %s '%s'\n", (source ? "projection" : "target projection"), tmp);
       *argv[i]='\0'; *argv[i+1]='\0';  *argv[i+2]='\0';  *argv[i+3]='\0';  *argv[i+4]='\0';  *argv[i+5]='\0';  *argv[i+6]='\0'; i+=6;
     }
-    else if (strcmp(argv[i],"-surveyfeet") == 0 || strcmp(argv[i],"-surveyfoot") == 0 || strcmp(argv[i],"-survey_feet") == 0 || strcmp(argv[i],"-survey_foot") == 0)
+    else if (strcmp(argv[i],"-surveyfeet") == 0 || strcmp(argv[i],"-survey_feet") == 0)
     {
       set_coordinates_in_survey_feet();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_surveyfeet") == 0 || strcmp(argv[i],"-target_surveyfoot") == 0 || strcmp(argv[i],"-target_survey_feet") == 0 || strcmp(argv[i],"-target_survey_foot") == 0)
+    else if (strcmp(argv[i],"-target_surveyfeet") == 0 || strcmp(argv[i],"-target_survey_feet") == 0)
     {
       set_coordinates_in_survey_feet(false);
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-feet") == 0 || strcmp(argv[i],"-foot") == 0)
+    else if (strcmp(argv[i],"-feet") == 0)
     {
       set_coordinates_in_feet();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_feet") == 0 || strcmp(argv[i],"-target_foot") == 0)
+    else if (strcmp(argv[i],"-target_feet") == 0)
     {
       set_coordinates_in_feet(false);
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-meters") == 0 || strcmp(argv[i],"-meter") == 0)
+    else if (strcmp(argv[i],"-meter") == 0)
     {
       set_coordinates_in_meter();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_meters") == 0 || strcmp(argv[i],"-target_meter") == 0)
+    else if (strcmp(argv[i],"-target_meter") == 0)
     {
       set_coordinates_in_meter(false);
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-elevation_surveyfeet") == 0 || strcmp(argv[i],"-elevation_surveyfoot") == 0 || strcmp(argv[i],"-elevation_survey_feet") == 0 || strcmp(argv[i],"-elevation_survey_foot") == 0)
+    else if (strcmp(argv[i],"-elevation_surveyfeet") == 0 || strcmp(argv[i],"-elevation_survey_feet") == 0)
     {
       set_elevation_in_survey_feet();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_elevation_surveyfeet") == 0 || strcmp(argv[i],"-target_elevation_surveyfoot") == 0 || strcmp(argv[i],"-target_elevation_survey_feet") == 0 || strcmp(argv[i],"-target_elevation_survey_foot") == 0)
+    else if (strcmp(argv[i],"-target_elevation_surveyfeet") == 0 || strcmp(argv[i],"-target_elevation_survey_feet") == 0)
     {
       set_elevation_in_survey_feet(false);
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-elevation_feet") == 0 || strcmp(argv[i],"-elevation_foot") == 0)
+    else if (strcmp(argv[i],"-elevation_feet") == 0)
     {
       set_elevation_in_feet();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_elevation_feet") == 0 || strcmp(argv[i],"-target_elevation_foot") == 0)
+    else if (strcmp(argv[i],"-target_elevation_feet") == 0)
     {
       set_elevation_in_feet(false);
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-elevation_meters") == 0 || strcmp(argv[i],"-elevation_meter") == 0)
+    else if (strcmp(argv[i],"-elevation_meter") == 0)
     {
       set_elevation_in_meter();
       *argv[i]='\0';
     }
-    else if (strcmp(argv[i],"-target_elevation_meters") == 0 || strcmp(argv[i],"-target_elevation_meter") == 0)
+    else if (strcmp(argv[i],"-target_elevation_meter") == 0)
     {
       set_elevation_in_meter(false);
       *argv[i]='\0';
@@ -5092,6 +5142,7 @@ void GeoProjectionConverter::set_coordinates_in_survey_feet(bool source)
     coordinates2meter = 0.3048006096012;
   else
     meter2coordinates = 1.0/0.3048006096012;
+  coordinate_units_set[(int)source] = true;
 }
 
 void GeoProjectionConverter::set_coordinates_in_feet(bool source)
@@ -5100,6 +5151,7 @@ void GeoProjectionConverter::set_coordinates_in_feet(bool source)
     coordinates2meter = 0.3048;
   else
     meter2coordinates = 1.0/0.3048;
+  coordinate_units_set[(int)source] = true;
 }
 
 void GeoProjectionConverter::set_coordinates_in_meter(bool source)
@@ -5108,14 +5160,40 @@ void GeoProjectionConverter::set_coordinates_in_meter(bool source)
     coordinates2meter = 1.0;
   else
     meter2coordinates = 1.0;
+  coordinate_units_set[(int)source] = true;
+}
+
+bool GeoProjectionConverter::has_coordinate_units(bool source) const
+{
+  return coordinate_units_set[(int)source];
 }
 
 const char* GeoProjectionConverter::get_coordinate_unit_description_string(bool abrev, bool source)
 {
-  if (source)
-    return (coordinates2meter == 1.0 ? (abrev ? "m" : "meter") : (coordinates2meter == 0.3048 ? (abrev ? "ft" : "feet") : (abrev ? "sft" : "surveyfeet")));
+  if (coordinate_units_set[(int)source])
+  {
+    if (source)
+      return (coordinates2meter == 1.0 ? (abrev ? "m" : "meter") : (coordinates2meter == 0.3048 ? (abrev ? "ft" : "feet") : (abrev ? "sft" : "surveyfeet")));
+    else
+      return (meter2coordinates == 1.0 ? (abrev ? "m" : "meter") : (meter2coordinates == 0.3048 ? (abrev ? "ft" : "feet") : (abrev ? "sft" : "surveyfeet")));
+  }
   else
-    return (meter2coordinates == 1.0 ? (abrev ? "m" : "meter") : (meter2coordinates == 0.3048 ? (abrev ? "ft" : "feet") : (abrev ? "sft" : "surveyfeet")));
+  {
+    return "units";
+  }
+}
+
+void GeoProjectionConverter::reset_coordinate_units(bool source)
+{
+  coordinate_units_set[(int)source] = false;
+  if (source)
+  {
+    coordinates2meter = 1.0;
+  }
+  else
+  {
+    meter2coordinates = 1.0;
+  }
 }
 
 void GeoProjectionConverter::set_elevation_in_survey_feet(bool source)
@@ -5124,6 +5202,7 @@ void GeoProjectionConverter::set_elevation_in_survey_feet(bool source)
     elevation2meter = 0.3048006096012;
   else
     meter2elevation = 1.0/0.3048006096012;
+  elevation_units_set[(int)source] = true;
 }
 
 void GeoProjectionConverter::set_elevation_in_feet(bool source)
@@ -5132,6 +5211,7 @@ void GeoProjectionConverter::set_elevation_in_feet(bool source)
     elevation2meter = 0.3048;
   else
     meter2elevation = 1.0/0.3048;
+  elevation_units_set[(int)source] = true;
 }
 
 void GeoProjectionConverter::set_elevation_in_meter(bool source)
@@ -5140,14 +5220,40 @@ void GeoProjectionConverter::set_elevation_in_meter(bool source)
     elevation2meter = 1.0;
   else
     meter2elevation = 1.0;
+  elevation_units_set[(int)source] = true;
+}
+
+bool GeoProjectionConverter::has_elevation_units(bool source) const
+{
+  return elevation_units_set[(int)source];
 }
 
 const char* GeoProjectionConverter::get_elevation_unit_description_string(bool abrev, bool source)
 {
-  if (source)
-    return (elevation2meter == 1.0 ? (abrev ? "m" : "meter") : (abrev ? "ft" : "feet"));
+  if (elevation_units_set[(int)source])
+  {
+    if (source)
+      return (elevation2meter == 1.0 ? (abrev ? "m" : "meter") : (abrev ? "ft" : "feet"));
+    else
+      return (meter2elevation == 1.0 ? (abrev ? "m" : "meter") : (abrev ? "ft" : "feet"));
+  }
   else
-    return (meter2elevation == 1.0 ? (abrev ? "m" : "meter") : (abrev ? "ft" : "feet"));
+  {
+    return "units";
+  }
+}
+
+void GeoProjectionConverter::reset_elevation_units(bool source)
+{
+  elevation_units_set[(int)source] = false;
+  if (source)
+  {
+    elevation2meter = 1.0;
+  }
+  else
+  {
+    meter2elevation = 1.0;
+  }
 }
 
 void GeoProjectionConverter::set_elevation_offset_in_meter(float elevation_offset_in_meter)

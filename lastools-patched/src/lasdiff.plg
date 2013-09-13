@@ -6,13 +6,19 @@
 --------------------Configuration: lasdiff - Win32 Release with GUI--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP195F.tmp" with contents
+Creating command line "rc.exe /l 0x409 /fo"Release/lastool.res" /i "../src" /i "\released_code\lastools\src_full" /d "NDEBUG" "C:\released_code\lastools\src_full\lastool.rc"" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP544.tmp" with contents
 [
 /nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /Fp"Release/lasdiff.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\released_code\lastools\src\geoprojectionconverter.cpp"
 "C:\released_code\lastools\src\lasdiff.cpp"
+"C:\released_code\lastools\src_full\lasdiff_gui.cpp"
+"C:\released_code\lastools\src_full\laslicense.cpp"
+"C:\released_code\lastools\src_full\lasoccupancy.cpp"
+"C:\released_code\lastools\src_full\lastools_gui.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP195F.tmp" 
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP1960.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP544.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP545.tmp" with contents
 [
 ../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/lasdiff.pdb" /machine:I386 /out:"Release/lasdiff.exe" 
 .\Release\geoprojectionconverter.obj
@@ -23,17 +29,23 @@ Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP1960.tmp" wit
 .\Release\lastools_gui.obj
 .\Release\lastool.res
 ]
-Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP1960.tmp"
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP545.tmp"
 <h3>Output Window</h3>
+Compiling resources...
 Compiling...
+geoprojectionconverter.cpp
 lasdiff.cpp
+lasdiff_gui.cpp
+laslicense.cpp
+lasoccupancy.cpp
+lastools_gui.cpp
 Linking...
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP1962.bat" with contents
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP547.bat" with contents
 [
 @echo off
 copy Release\lasdiff.exe ..\bin\lasdiff.exe
 ]
-Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP1962.bat"
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP547.bat"
 
         1 file(s) copied.
 

@@ -15,10 +15,21 @@
   usually at breast height. The default is 1.37 and it can be
   changed with the option '-height_cutoff 0.75'.
 
-  In addition, the tool can also concurrently compute several
+  The tool can also produce the canopy cover using option '-cov'.
+  The canopy cover is computed as the number of first returns
+  above the height cutoff divided by the number of all first
+  returns and output as a percentage. Similarly, with the option
+  '-dns' the canopy density can be produced. The canopy density
+  is computed as the number of points above the height cutoff
+  divided by the number of all returns. 
+
+  In addition, the tool can also concurrently produce several
   height count rasters. The option '-c 0.5 2 4 10 50', for example,
-  would compute four height count rasters for heights falling
-  into these intervals: [0.5, 2), [2, 4), [4, 10), [10, 50)
+  would compute four rasters that count the points whose heights
+  are falling into the intervals: [0.5, 2), [2, 4), [4, 10), and
+  [10, 50). In the same manner the option '-d 0.5 2 4 10 50' will
+  produce a relative height density raster in which the counts are
+  divided by the total number of points and scaled to a percentage.
 
   By default the generated raster spans the extend of the header
   bounding box. You can use the bounding box of the tile with
@@ -32,7 +43,7 @@
   It is very important (at the moment) that the input files are
   height normalized, meaning that the z coordinate of each point
   corresponds to the height above ground and not the elevation of
-  the point. With 'lasheight -i in.laz -replace_z -i out.laz' you
+  the point. With 'lasheight -i in.laz -replace_z -o out.laz' you
   can height-normalize a ground classified LiDAR file.
 
   Let me know which other metrics you would like to see ...
@@ -42,13 +53,13 @@
 
   For updates check the website or join the LAStools mailing list.
 
-  http://lastools.org/
+  http://rapidlasso.com/
   http://groups.google.com/group/lastools/
   http://twitter.com/lastools/
   http://facebook.com/lastools/
   http://linkedin.com/groups?gid=4408378
 
-  Martin @lastools
+  Martin @rapidlasso
  
 ****************************************************************
 
@@ -116,9 +127,10 @@ Filter points based on their coordinates.
   -clip_y_below 4834500.25 (min_y)
   -clip_x_above 630500.50 (max_x)
   -clip_y_above 4836000.75 (max_y)
-  -clip_z 11.125 130.725 (min_z, max_z)
+  -clip_z 11.125 130.725 (min_z max_z)
   -clip_z_below 11.125 (min_z)
   -clip_z_above 130.725 (max_z)
+  -clip_z_between 11.125 130.725 (min_z max_z)
 Filter points based on their return number.
   -first_only -keep_first -drop_first
   -last_only -keep_last -drop_last
@@ -250,13 +262,15 @@ Supported Raster Outputs
   -odir C:\data\hillshade (specify output directory)
   -odix _small (specify file name appendix)
   -ocut 2 (cut the last two characters from name)
-LAStools (by martin.isenburg@gmail.com) version 120914 (unlicensed)
+LAStools (by martin@rapidlasso.com) version 130402 (unlicensed)
 usage:
 lascanopy -i *.las -max -avg
 lascanopy -i *.laz -p 1 5 10 25 50 75 90 95 99
+lascanopy -i *.laz -c 2.0 5.0 10.0 20.0 -cov -dns -otif
 lascanopy -i *.laz -merged -max -avg -p 20 40 60 80 -o merged.dtm
+lascanopy -i *.laz -d 2.0 10.0 20.0 40.0 -cov -height_offset 2.0
 lascanopy -h
 
 ---------------
 
-if you find bugs let me (martin.isenburg@gmail.com) know
+if you find bugs let me (martin@rapidlasso.com) know

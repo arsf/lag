@@ -5,30 +5,41 @@
   This tool can reads billion of LIDAR points from the LAS/LAZ
   format, triangulates them a seamless TIN, and rasters the TIN
   onto a DEM that can optionally be tiled. The output is either
-  in BIL, ASC, IMG, XYZ, DTM, TIF, PNG or JPG format.
+  in BIL, ASC, IMG, XYZ, DTM, TIF, PNG or JPG format. The color
+  ramps can be inverted with '-invert_ramp'.
 
   For BIL, ASC, IMG, DTM, and XYZ output one typically stores
   the actual '-elevation' or '-intensity' values whereas the
   TIF, PNG, and JPG formats are usually used for a '-hillshade',
-  or '-gray' coloring. The particular range of values to be
-  color mapped can be clamped using '-set_min_max 10 100'.
+  '-gray', or '-false' coloring, or for the '-rgb' raster. The
+  particular range of values to be color mapped can be clamped
+  using '-set_min_max 10 100' or can be set '-compute_min_max'.
+  The color ramps can be inverted with '-invert_ramp'.
 
   This is part of the BLAST extension pack of LAStools that is
   built on streaming TINs via spatial finalization & streaming
-  Delaunay. Please license from martin.isenburg@gmail.com before
+  Delaunay. Please license from martin@rapidlasso.com before
   you use blast2dem commercially.
 
   By default the generated raster is sized based on the extend
   of the bounding box. If the LAS/LAZ file was generated using
   lastile, its extend can be set to that of the tile using the
-  '-use_tile_bb' option. Any "border buffer" that the tile may
-  have had is then not rastered. This allows to avoid boundary
-  artifacts and yet create matching tiles in parallel. The exact
-  raster extend can also be defined by setting '-ll min_x min_y'
-  together with '-ncols 512' and '-nrows 512'.    
+  '-use_tile_bb' option. Any lastile-generated buffer that the
+  tile may have had is then not rastered. This allows to avoid
+  boundary artifacts and yet create matching tiles in parallel.
+  It is also possible to define the raster extend with setting
+  '-ll min_x min_y' and '-ncols 512' and '-nrows 512'.
+
+  Automatically a KML file is generated to allow the resulting
+  DEM to be displayed inside Google Earth (for TIF/PNG/JPG). In
+  case the LAS/LAZ file contains projection information (i.e. a
+  VLR with geokeys) this is used for georeferencing the KML file.
+  It is also possible to provide the georeferencing information
+  in the command-line.
 
   For updates check the website or join the LAStools mailing list.
 
+  http://rapidlasso.com/
   http://lastools.org/
   http://groups.google.com/group/lastools/
   http://twitter.com/lastools/

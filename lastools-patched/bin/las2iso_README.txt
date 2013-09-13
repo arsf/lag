@@ -34,7 +34,7 @@
   it is sampled with ('-creeks roads.shp', '-creeks creeks.txt')
   and while they can be open they must also have elevations.
 
-  Please license from martin.isenburg@gmail.com to use las2iso
+  Please license from martin.isenburg@rapidlasso.com to use las2iso
   commercially.
 
   For updates check the website or join the LAStools mailing list.

@@ -28,11 +28,11 @@
 
   PROGRAMMERS:
   
-    martin.isenburg@gmail.com
+    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
   
   COPYRIGHT:
   
-    (c) 2011, Martin Isenburg, LASSO - tools to catch reality
+    (c) 2011-12, martin isenburg, rapidlasso - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
     terms of the GNU Lesser General Licence as published by the Free Software
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
   I32 cores = 1;
 #endif
   bool verbose = false;
-  U32 tile_size = 100;
+  U32 tile_size = 0;
   U32 threshold = 1000;
   U32 minimum_points = 100000;
   I32 maximum_intervals = -20;
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"-help") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       usage();
     }
     else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"-verbose") == 0)
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[i],"-version") == 0)
     {
-      fprintf(stderr, "LAStools (by martin.isenburg@gmail.com) version %d\n", LAS_TOOLS_VERSION);
+      fprintf(stderr, "LAStools (by martin@rapidlasso.com) version %d\n", LAS_TOOLS_VERSION);
       byebye();
     }
     else if (strcmp(argv[i],"-gui") == 0)
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef COMPILE_WITH_MULTI_CORE
-  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.get_merged()))
+  if ((cores > 1) && (lasreadopener.get_file_name_number() > 1) && (!lasreadopener.is_merged()))
   {
     return lasindex_multi_core(argc, argv, &lasreadopener, cores);
   }
@@ -304,7 +304,36 @@ int main(int argc, char *argv[])
 
     // setup the quadtree
     LASquadtree* lasquadtree = new LASquadtree;
-    lasquadtree->setup(lasreader->header.min_x, lasreader->header.max_x, lasreader->header.min_y, lasreader->header.max_y, tile_size);
+    if (tile_size == 0)
+    {
+      F32 t;
+      if (((lasreader->header.max_x - lasreader->header.min_x) < 1000) && ((lasreader->header.max_y - lasreader->header.min_y) < 1000))
+      {
+        t = 10.0f;
+      }
+      else if (((lasreader->header.max_x - lasreader->header.min_x) < 10000) && ((lasreader->header.max_x - lasreader->header.min_x) < 10000))
+      {
+        t = 100.0f;
+      }
+      else if (((lasreader->header.max_x - lasreader->header.min_x) < 100000) && ((lasreader->header.max_x - lasreader->header.min_x) < 100000))
+      {
+        t = 1000.0f;
+      }
+      else if (((lasreader->header.max_x - lasreader->header.min_x) < 1000000) && ((lasreader->header.max_x - lasreader->header.min_x) < 1000000))
+      {
+        t = 10000.0f;
+      }
+      else
+      {
+        t = 100000.0f;
+      }
+      if (verbose) fprintf(stderr,"no tile size specified. setting it to %g ...\n", t);
+      lasquadtree->setup(lasreader->header.min_x, lasreader->header.max_x, lasreader->header.min_y, lasreader->header.max_y, t);
+    }
+    else
+    {
+      lasquadtree->setup(lasreader->header.min_x, lasreader->header.max_x, lasreader->header.min_y, lasreader->header.max_y, tile_size);
+    }
 
     // create index and add points
     LASindex lasindex;

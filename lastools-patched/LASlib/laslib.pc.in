@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+Name: laslib
+Version: @VERSION@
+Description: Library (C/C++) and tools for the LAS LiDAR format
+Libs: -L@libdir@ -llaslib
+Cflags: -I@includedir@
+

@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laszip\src" /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /i "../src" /d "NDEBUG"
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ PostBuild_Cmds=copy Release\lasinfo.exe ..\bin\lasinfo.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laszip\src" /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 BSC32=bscmake.exe
@@ -101,7 +101,7 @@ PostBuild_Cmds=copy Debug\lasinfo.exe ..\bin\lasinfo.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /YX /FD /c
+# ADD CPP /nologo /w /W0 /GX /O2 /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /I "..\laszip\src" /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /YX /FD /c
 # ADD BASE RSC /l 0x409 /i "../src" /d "NDEBUG"
 # ADD RSC /l 0x409 /i "../src" /d "NDEBUG"
 BSC32=bscmake.exe
@@ -130,7 +130,7 @@ PostBuild_Cmds=copy Release\lasinfo.exe ..\bin\lasinfo.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /YX /FD /GZ /c
+# ADD CPP /nologo /w /W0 /Gm /GX /ZI /Od /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /I "..\laszip\src" /I "..\laslib\inc" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 # ADD RSC /l 0x409 /i "..\..\src" /d "_DEBUG"
 BSC32=bscmake.exe
@@ -199,6 +199,25 @@ SOURCE=..\src_full\lasinfo_gui.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src_full\lasinfo_multi_core.cpp
+
+!IF  "$(CFG)" == "lasinfo - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Release with GUI"
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Debug with GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\src_full\laslicense.cpp
 
 !IF  "$(CFG)" == "lasinfo - Win32 Release"
@@ -238,6 +257,25 @@ SOURCE=..\src_full\lasoccupancy.cpp
 # Begin Source File
 
 SOURCE=..\src_full\lastools_gui.cpp
+
+!IF  "$(CFG)" == "lasinfo - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Release with GUI"
+
+!ELSEIF  "$(CFG)" == "lasinfo - Win32 Debug with GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src_full\lastools_multi_core.cpp
 
 !IF  "$(CFG)" == "lasinfo - Win32 Release"
 

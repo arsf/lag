@@ -1,13 +1,36 @@
-31 October 2012 -- fixed two bugs in lascanopy that would slightly miss-compute percentiles
-21 October 2012 -- added lasinfo to the lastool GUI and fixed extremely rare lasground bug
+29 July 2013 -- LASzip: created an easy-to-use DLL interface for LASzip integration
+29 July 2013 -- lasground: improved handling of non-airborne LiDAR via option '-not_airborne'
+29 July 2013 -- lascanopy: added kurtosis (-kur) and skewness (-ske) as new raster products 
+29 July 2013 -- NEW: blast2iso for creating seamless contours for up to 2 billion LiDAR points
+29 July 2013 -- NEW: lasnoise for removing or flagging isolated points
+6 May 2013 -- improved lasinfo handling of LAS 1.4 files
+1 May 2013 -- fixed LAZ reading bug (50000 points only) for download-truncated LAZ files
+18 April 2013 -- fixed broken 32 bit integer mode of TIF writer in las2dem, lasgrid, blast2dem
+9 April 2013 -- fixed broken 8 and 16 bit output modes for las2dem, lasgrid, blast2dem
+9 April 2013 -- output a WARNING if the option -odir "c:\" or -odir "..\lidar\" is used
+4 April 2013 -- las2las: fixed missbehaving '-target_utm auto' function (uninitialized variable)
+4 April 2013 -- las2dem, lasgrid, blast2dem: fixed corrupted GeoTIFF projection tags 
+29 March 2013 -- lasground: fixed a serious bug for '-replace_z' and '-compute_height'
+25 March 2013 -- fixed a serious bug for '-thin_with_grid 0.5' when looping over files
+15 March 2013 -- stdin for lasinfo, BIL & ASC output fix, lasground & lasheight copy skipped files
+25 February 2013 -- fixes for lasheight, las2dem, blast2dem, lastile, and lascanopy
+13 February 2013 -- many little bug fixes (lasheight, lasgrid, las2dem, blast2dem, ...)
+28 December 2012 -- added '-clip_z_between 12 14.51' and '-clip_raw_z_between 1200 1451'
+12 December 2012 -- blast2dem: cool new options '-slope', '-false', '-invert_ramp, and '-rgb'
+12 December 2012 -- lasground: added options '-replace_z' and '-compute_height'
+8 December 2012 -- lasinfo: added '-cores 6' capability and options '-odir' and '-odix'
+2 December 2012 -- las2las: down-converts true LAS 1.4 files to LAS 1.2 with '-set_version 1.2'
+26 November 2012 -- lascanopy added '-c 2 4 10 20 100' to compute multiple count rasters 
+11 November 2012 -- NEW: e572las converts LiDAR in E57 format to the LAS/LAZ/ASCII files
+31 October 2012 -- lascanopy: fixed two bugs that would slightly miss-compute percentiles
+21 October 2012 -- lasinfo: added to the lastool GUI and fixed extremely rare lasground bug
 30 September 2012 -- NEW: lascanopy computes metrics such as height percentiles for forestry
-13 September 2012 -- improved lasinfo output and fixed laszip bug for LAS 1.4 point types
-9 September 2012 -- fixed constraint triangulation bug in lasclip, las2dem, las2iso, las2tin
+13 September 2012 -- lasinfo: improved output and fixed laszip bug for LAS 1.4 point types
+9 September 2012 -- lasclip, las2dem, las2iso, las2tin: fixed constraint triangulation bug 
 22 August 2012 -- added the '-pipe_on' option for a multi-stage LAStools pipeline
 11 August 2012 -- added on-the-fly buffered reading of LiDAR files (efficient with LAX)
 13 July 2012 -- NEW: lasoverage finds and flags overage points in the flightline overlap
-9 July 2012 -- fixed crash that occured when input had a corrupt VLRs without payload
-28 June 2012 -- blast2dem: ability to handle rasters with more than 65336 rows or cols
+9 July 2012 -- fixed crash that occured when input had a corrupt VLRs without payload28 June 2012 -- blast2dem: ability to handle rasters with more than 65336 rows or cols
 12 June 2012 -- lasground: preserve classification by excluding points with '-ignore_class'
 12 June 2012 -- las2dem & blast2dem: removed limitation of maximal ncol being 65536
 1 June 2012 -- lassplit: the files may now be split based on various other point attributes 

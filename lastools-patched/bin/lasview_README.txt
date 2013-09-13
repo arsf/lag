@@ -5,8 +5,8 @@
   a simple OpenGL-based viewer for LIDAR in LAS/LAZ/ASCII format
   that can compute and display a TIN and a few other neat tricks.
 
-  Please contact martin.isenburg@gmail.com if you use lasview
-  commercially.
+  Please contact martin.isenburg@rapidlasso.com if you want to
+  use lasview commercially.
 
   For updates check the website or join the LAStools mailing list.
 
@@ -16,7 +16,7 @@
   http://facebook.com/lastools/
   http://linkedin.com/groups?gid=4408378
 
-  Martin @lastools
+  Martin @rapidlasso
 
 ****************************************************************
 
@@ -39,9 +39,9 @@ converts an ASCII file on-the-fly with parse string 'xyzc' and displays it
 
 same as above but with a larger display window
 
->> lasview -i lidar.las -steps 10 -points 200000
+>> lasview -i lidar.las -steps 10 -points 10000000
 
-reads around 200000 subsampled lidar points and displays in 11 steps
+reads around 10 million subsampled lidar points and displays in 11 steps
 
 interactive options:
 
@@ -197,4 +197,4 @@ lasview -h
 
 ----
 
-if you find bugs let me (martin.isenburg@gmail.com) know.
+if you find bugs let me (martin.isenburg@rapidlasso.com) know

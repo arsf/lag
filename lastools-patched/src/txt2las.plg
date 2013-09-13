@@ -3,32 +3,43 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: txt2las - Win32 Release--------------------
+--------------------Configuration: txt2las - Win32 Release with GUI--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBB.tmp" with contents
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AB.tmp" with contents
 [
-/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /Fp"Release/txt2las.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+/nologo /ML /w /W0 /GX /O2 /I "..\laslib\inc" /I "..\src" /I "..\src_full\glui_api" /I "..\src_full\glut_api" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "COMPILE_WITH_GUI" /D "COMPILE_WITH_MULTI_CORE" /Fp"Release/txt2las.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
 "C:\released_code\lastools\src\txt2las.cpp"
+"C:\released_code\lastools\src_full\txt2las_gui.cpp"
+"C:\released_code\lastools\src_full\txt2las_multi_core.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBB.tmp" 
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBC.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AB.tmp" 
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AC.tmp" with contents
 [
-../laslib/lib/LASlib.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/txt2las.pdb" /machine:I386 /out:"Release/txt2las.exe" 
+../laslib/lib/LASlib.lib ../src_full/glui_api/glui32.lib ../src_full/glut_api/glutstatic.lib ../src_full/glut_api/glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/txt2las.pdb" /machine:I386 /out:"Release/txt2las.exe" 
 .\Release\geoprojectionconverter.obj
+.\Release\laslicense.obj
+.\Release\lasoccupancy.obj
+.\Release\lastools_gui.obj
+.\Release\lastools_multi_core.obj
 .\Release\txt2las.obj
+.\Release\txt2las_gui.obj
+.\Release\txt2las_multi_core.obj
+.\Release\lastool.res
 ]
-Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBC.tmp"
+Creating command line "link.exe @C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AC.tmp"
 <h3>Output Window</h3>
 Compiling...
 txt2las.cpp
+txt2las_gui.cpp
+txt2las_multi_core.cpp
 Linking...
-Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBE.bat" with contents
+Creating temporary file "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AE.bat" with contents
 [
 @echo off
 copy Release\txt2las.exe ..\bin\txt2las.exe
 ]
-Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSPEBE.bat"
+Creating command line "C:\DOCUME~1\ISENBU~1.ISE\LOCALS~1\Temp\RSP17AE.bat"
 
         1 file(s) copied.
 
