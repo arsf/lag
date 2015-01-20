@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  ClassifyWorker.h
 
@@ -22,8 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef CLASSIFYWORKER_H_
 #define CLASSIFYWORKER_H_
@@ -34,36 +34,34 @@
 
 class Profile;
 
-
 /*
-===============================================================================
+ ===============================================================================
 
  ClassifyWorker - a worker class for points classification.
 
-===============================================================================
-*/
-class ClassifyWorker : public Worker
+ ===============================================================================
+ */
+class ClassifyWorker: public Worker
 {
-public:
-	ClassifyWorker(Profile* prof);
-   ~ClassifyWorker();
-   void nudge();
-   void stop();
+   public:
+      ClassifyWorker(Profile* prof);
+      ~ClassifyWorker();
+      void nudge();
+      void stop();
 
-   ClassificationJob getCurrentJob();
+      ClassificationJob getCurrentJob();
 
-protected:
-	void run();
+   protected:
+      void run();
 
-private:
-	Profile* profile;
-   ClassificationJob currentjob;
-   bool stopFlag;
+   private:
+      Profile* profile;
+      ClassificationJob currentjob;
+      bool stopFlag;
 
-   // Threading control
-   Glib::Cond classify_condition;
-   Glib::Mutex internal_mutex;
+      // Threading control
+      Glib::Cond classify_condition;
+      Glib::Mutex internal_mutex;
 };
-
 
 #endif /* CLASSIFYWORKER_H_ */

@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  MathFuncs.h
 
@@ -22,8 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef MATHFUNCS_H
 #define MATHFUNCS_H
@@ -36,14 +36,11 @@
 
 using namespace std;
 
-double percentilevalue(double* data, int datasize, double percentile,
-		double minval, double maxval);
+double percentilevalue(double* data, int datasize, double percentile, double minval, double maxval);
 
-bool* vetpoints(PointBucket* points, std::vector<double> xs,
-		std::vector<double> ys, int numberofcorners, bool profileNoisePoints);
+bool* vetpoints(PointBucket* points, std::vector<double> xs, std::vector<double> ys, int numberofcorners, bool profileNoisePoints);
 
-bool* vetpoints_slice(PointBucket* points, std::vector<double> xs,
-		std::vector<double> ys, int numberofcorners, bool profileNoisePoints,
-		double minz, double maxz);
+bool* vetpoints_slice(PointBucket* points, std::vector<double> xs, std::vector<double> ys, int numberofcorners, bool profileNoisePoints, double minz,
+                      double maxz);
 
 #endif

@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  PointFilter.h
 
@@ -22,27 +22,33 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef POINTFILTER_H_
 #define POINTFILTER_H_
 
-
 /*
-===============================================================================
+ ===============================================================================
 
  PointFilter - a structure to hold filter arguments in a commandline-like string.
- 	 	 	   If argc = 0 the filter is inactive.
+ If argc = 0 the filter is inactive.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 struct PointFilter
 {
-	PointFilter(): argc(0) {};
-	~PointFilter() {};
-	int argc;
-	std::vector<std::string> args;
+      PointFilter() :
+            argc(0)
+      {
+      }
+      ;
+      ~PointFilter()
+      {
+      }
+      ;
+      int argc;
+      std::vector<std::string> args;
 };
 
 #endif /* POINTFILTER_H_ */

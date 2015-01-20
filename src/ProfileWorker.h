@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  PriofileWorker.h
 
@@ -22,38 +22,35 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef PROFILEWORKER_H_
 #define PROFILEWORKER_H_
-
 
 #include "Worker.h"
 
 class Profile;
 
-
 /*
-===============================================================================
+ ===============================================================================
 
  ProfileWorker - a worker class for loading points into the profile.
 
-===============================================================================
-*/
-class ProfileWorker : public Worker
+ ===============================================================================
+ */
+class ProfileWorker: public Worker
 {
-public:
-	ProfileWorker(Profile* prof, std::vector<double> xs, std::vector<double> ys, int ps);
+   public:
+      ProfileWorker(Profile* prof, std::vector<double> xs, std::vector<double> ys, int ps);
 
-protected:
-	void run();
+   protected:
+      void run();
 
-	Profile* profile;
-	std::vector<double> profxs;
-	std::vector<double> profys;
-	int profps;
+      Profile* profile;
+      std::vector<double> profxs;
+      std::vector<double> profys;
+      int profps;
 };
-
 
 #endif /* PROFILEWORKER_H_ */

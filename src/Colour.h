@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  Colour.h
 
@@ -22,64 +22,64 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef _COLOUR_H_
 #define _COLOUR_H_
 
 #include <string>
 
-
 /*
-===============================================================================
+ ===============================================================================
 
  Colour - class to hold information about a colour. This will hold a red, green,
  and blue value.
 
-===============================================================================
-*/
-class Colour {
+ ===============================================================================
+ */
+class Colour
+{
+      
+   public:
+      Colour();
+      Colour(float, float, float);
+      Colour(const std::string&);
+      ~Colour();
 
-public:
-   Colour();
-   Colour(float, float, float);
-   Colour(const std::string&);
-   ~Colour();
+      // Comparison operators
+      friend bool operator==(Colour& lhs, Colour& rhs);
+      friend bool operator!=(Colour& lhs, Colour& rhs);
 
-   // Comparison operators
-   friend bool operator== (Colour& lhs, Colour& rhs);
-   friend bool operator!= (Colour& lhs, Colour& rhs);
+      // Multiply
+      void multiply(Colour);
+      void multiply(float);
+      void multiply(float, float, float);
 
-   // Multiply
-   void multiply(Colour);
-   void multiply(float);
-   void multiply(float, float, float);
+      // Add
+      void add(Colour);
+      void add(float);
+      void add(float, float, float);
 
-   // Add
-   void add(Colour);
-   void add(float);
-   void add(float, float, float);
+      // Subtract
+      void subtract(Colour);
+      void subtract(float);
+      void subtract(float, float, float);
 
-   // Subtract
-   void subtract(Colour);
-   void subtract(float);
-   void subtract(float, float, float);
+      // Getters
+      float getR();
+      float getG();
+      float getB();
+      float* getRGB();
 
-   // Getters
-   float getR();
-   float getG();
-   float getB();
-   float* getRGB();
+      // Setters
+      void setR(float);
+      void setG(float);
+      void setB(float);
+      void setRGB(float, float, float);
 
-   // Setters
-   void setR(float);
-   void setG(float);
-   void setB(float);
-   void setRGB(float, float, float);
-
-private:
-   float colourValues[3];
+   private:
+      float colourValues[3];
 };
 
 #endif

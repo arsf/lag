@@ -1,5 +1,5 @@
 /*
-==================================
+ ==================================
 
  FileOpener.h
 
@@ -22,8 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-==================================
-*/
+ ==================================
+ */
 
 #ifndef _FILEOPENER_H_
 #define _FILEOPENER_H_
@@ -38,226 +38,217 @@
 #include "../Profile.h"
 #include "../LoadWorker.h"
 
-
 /*
-===============================================================================
+ ===============================================================================
 
  FileOpener - a file chooser dialog for loading files.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 class FileOpener
 {
-public:
-   FileOpener(TwoDeeOverview*,
-              Profile*,
-              const Glib::RefPtr<Gtk::Builder>&,
-              AdvancedOptionsWindow*,
-              FileSaver*,
-              int,
-              Gtk::EventBox*,
-              Gtk::EventBox*,
-              TwoDeeOverviewWindow*,
-              AdvancedLoadDialog*);
+   public:
+      FileOpener(TwoDeeOverview*, Profile*, const Glib::RefPtr<Gtk::Builder>&, AdvancedOptionsWindow*, FileSaver*, int, Gtk::EventBox*, Gtk::EventBox*,
+                 TwoDeeOverviewWindow*, AdvancedLoadDialog*);
 
-   ~FileOpener();
+      ~FileOpener();
 
-   void show()
-   {
-      filechooserdialog->present();
-   }
+      void show()
+      {
+         filechooserdialog->present();
+      }
+      
+      void set_lidardata(Quadtree* lidardata)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->lidardata = lidardata;
+      }
+      
+      Quadtree* get_lidardata()
+      {
+         Glib::Mutex::Lock lock(mutex);
+         return this->lidardata;
+      }
+      
+      void delete_lidardata()
+      {
+         Glib::Mutex::Lock lock(mutex);
+         if(lidardata != NULL)
+            delete lidardata;
+         lidardata = NULL;
+      }
+      
+      void set_newQuadtree(bool newqt)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->newQuadtree = newqt;
+      }
+      
+      void set_loadedanyfiles(bool loaded)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->loadedanyfiles = loaded;
+      }
+      
+      bool get_loadedanyfiles()
+      {
+         Glib::Mutex::Lock lock(mutex);
+         return this->loadedanyfiles;
+      }
+      
+      void set_thread_message(std::string message)
+      {
+         // Glib::Mutex::Lock lock (mutex);
+         this->thread_message = message;
+      }
+      
+      void set_minZ(double z)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->minZ = z;
+      }
+      
+      double get_minZ()
+      {
+         Glib::Mutex::Lock lock(mutex);
+         return this->minZ;
+      }
+      
+      void set_maxZ(double z)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->maxZ = z;
+      }
+      
+      double get_maxZ()
+      {
+         Glib::Mutex::Lock lock(mutex);
+         return this->maxZ;
+      }
+      
+      void set_utm_zone(std::string zone)
+      {
+         Glib::Mutex::Lock lock(mutex);
+         this->utm_zone = zone;
+      }
+      
+      double minZ, maxZ;
+      std::string utm_zone;
 
-   void set_lidardata(Quadtree* lidardata)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   this->lidardata=lidardata;
-   }
+   private:
+      Quadtree *lidardata;
+      int numlines;
+      TwoDeeOverview *tdo;
+      Profile* prof;
+      TwoDeeOverviewWindow *tdow;
+      AdvancedOptionsWindow *aow;
+      FileSaver *fs;
+      AdvancedLoadDialog* ald;
 
-   Quadtree* get_lidardata()
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   return this->lidardata;
-   }
+      //For opening files.
+      Gtk::FileChooserDialog *filechooserdialog;
 
-   void delete_lidardata()
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   if (lidardata != NULL)
-		   delete lidardata;
-	   lidardata = NULL;
-   }
+      //How many points to skip while loading one.
+      Gtk::SpinButton *pointskipselect;
 
-   void set_newQuadtree(bool newqt)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   this->newQuadtree = newqt;
-   }
+      // Check button determining whether the (overview) fence is used for 
+      // loading flightlines.
+      Gtk::CheckButton *fenceusecheck;
 
-   void set_loadedanyfiles(bool loaded)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   this->loadedanyfiles = loaded;
-   }
+      //The type code for opening ASCII files.
+      Gtk::Entry *asciicodeentry;
 
-   bool get_loadedanyfiles()
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   return this->loadedanyfiles;
-   }
+      // Scale factor entries and check box
+      Gtk::Entry* scaleFactorEntryX;
+      Gtk::Entry* scaleFactorEntryY;
+      Gtk::Entry* scaleFactorEntryZ;
+      Gtk::CheckButton* btnUseDefault;
 
-   void set_thread_message(std::string message)
-   {
-	   // Glib::Mutex::Lock lock (mutex);
-	   this->thread_message = message;
-   }
+      //The maximumum number of points to hold in cache.
+      Gtk::SpinButton *cachesizeselect;
 
-   void set_minZ(double z)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   this->minZ = z;
-   }
+      //This displays the cache size in terms of gigabytes, approximately.
+      Gtk::Label *cachesizeGBlabel;
 
-   double get_minZ()
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   return this->minZ;
-   }
+      //This displays the errors and so on that occur in loading.
+      Gtk::Label *loadoutputlabel;
 
-   void set_maxZ(double z)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-   	   this->maxZ = z;
-   }
+      //Contains the overview.
+      Gtk::EventBox *eventboxtdo;
 
-   double get_maxZ()
-   {
-   	   Glib::Mutex::Lock lock (mutex);
-   	   return this->maxZ;
-   }
+      //Contains the profile.
+      Gtk::EventBox *eventboxprof;
+      Gtk::SpinButton *resbaseselect;
+      Gtk::SpinButton *resdepthselect;
 
-   void set_utm_zone(std::string zone)
-   {
-	   Glib::Mutex::Lock lock (mutex);
-	   this->utm_zone = zone;
-   }
+      Gtk::MenuItem* openfilemenuitem;
+      Gtk::ToolButton* openbutton;
 
-   double minZ, maxZ;
-   std::string utm_zone;
+      //Stringstream getting error messages from the quadtree.
+      ostringstream *loaderrorstream;
 
-private:
-   Quadtree *lidardata;
-   int numlines;
-   TwoDeeOverview *tdo;
-   Profile* prof;
-   TwoDeeOverviewWindow *tdow;
-   AdvancedOptionsWindow *aow;
-   FileSaver *fs;
-   AdvancedLoadDialog* ald;
+      Gtk::FileChooserButton* cache_folder_select;
 
-   //For opening files.
-   Gtk::FileChooserDialog *filechooserdialog;
+      //How many points to hold in cache. 1 GB ~= 25000000 points.
+      int cachelimit;
 
-   //How many points to skip while loading one.
-   Gtk::SpinButton *pointskipselect;
+      //How many points in each bucket, maximum.
+      int bucketlimit;
 
-   // Check button determining whether the (overview) fence is used for 
-   // loading flightlines.
-   Gtk::CheckButton *fenceusecheck;
+      // Advanced loading options
+      Gtk::Dialog* loadadvanceddialog;
+      Gtk::Button* loadadvancedbutton;
+      Gtk::Button* loadadvancedcancel;
 
-   //The type code for opening ASCII files.
-   Gtk::Entry *asciicodeentry;
+      // Threading
+      LoadWorker* loadworker;
+      Glib::Mutex mutex;
 
-   // Scale factor entries and check box
-   Gtk::Entry* scaleFactorEntryX;
-   Gtk::Entry* scaleFactorEntryY;
-   Gtk::Entry* scaleFactorEntryZ;
-   Gtk::CheckButton* btnUseDefault;
+      // Loading dialog
+      Gtk::Dialog* loaddialog;
+      Gtk::Label* filelabel;
+      Gtk::ProgressBar* fileprogressbar;
+      Gtk::Label* totallabel;
+      Gtk::ProgressBar* totalprogressbar;
+      Gtk::Button* loadcancelbutton;
+      int num_files_loading;
 
-   //The maximumum number of points to hold in cache.
-   Gtk::SpinButton *cachesizeselect;
+      // Members accessed from other thread (need thread-safe get/set methods)
+      bool newQuadtree;
+      std::string thread_message;
 
-   //This displays the cache size in terms of gigabytes, approximately.
-   Gtk::Label *cachesizeGBlabel;
+      //Whether or not any files have already been loaded in this session.
+      bool loadedanyfiles;
 
-   //This displays the errors and so on that occur in loading.
-   Gtk::Label *loadoutputlabel;
+      // Whether to treat the current file in LoadWorker as a headerless (ascii)
+      // file, or to take on_progress as an indication of 1% of progress
+      bool ascii_progress;
 
-   //Contains the overview.
-   Gtk::EventBox *eventboxtdo;
+      void load_xml(const Glib::RefPtr<Gtk::Builder>&);
+      void connect_signals();
+      void on_usedefault_changed();
+      void on_filechooserdialogresponse(int response_id);
+      void on_cachesize_changed();
+      void on_resolutionbase_changed();
 
-   //Contains the profile.
-   Gtk::EventBox *eventboxprof;
-   Gtk::SpinButton *resbaseselect;
-   Gtk::SpinButton *resdepthselect;
+      //When selected from the menu, the file chooser opens.
+      void on_openfilemenuactivated();
 
-   Gtk::MenuItem* openfilemenuitem;
-   Gtk::ToolButton* openbutton;
+      //Clean up on quit.
+      int on_quit();
 
-   //Stringstream getting error messages from the quadtree.
-   ostringstream *loaderrorstream;
+      // Methods used called by another thread, through signals
+      void show_thread_message();
+      void add_line();
+      void files_loaded();
+      void load_failed();
+      void on_progress();
+      void on_ascii();
+      void on_loadcancelbutton_clicked();
 
-   Gtk::FileChooserButton* cache_folder_select;
-
-   //How many points to hold in cache. 1 GB ~= 25000000 points.
-   int cachelimit;
-
-   //How many points in each bucket, maximum.
-   int bucketlimit;
-
-   // Advanced loading options
-   Gtk::Dialog* loadadvanceddialog;
-   Gtk::Button* loadadvancedbutton;
-   Gtk::Button* loadadvancedcancel;
-
-   // Threading
-   LoadWorker* loadworker;
-   Glib::Mutex mutex;
-
-   // Loading dialog
-   Gtk::Dialog* loaddialog;
-   Gtk::Label* filelabel;
-   Gtk::ProgressBar* fileprogressbar;
-   Gtk::Label* totallabel;
-   Gtk::ProgressBar* totalprogressbar;
-   Gtk::Button* loadcancelbutton;
-   int num_files_loading;
-
-   // Members accessed from other thread (need thread-safe get/set methods)
-   bool newQuadtree;
-   std::string thread_message;
-
-   //Whether or not any files have already been loaded in this session.
-   bool loadedanyfiles;
-
-   // Whether to treat the current file in LoadWorker as a headerless (ascii)
-   // file, or to take on_progress as an indication of 1% of progress
-   bool ascii_progress;
-
-   void load_xml(const Glib::RefPtr<Gtk::Builder>&);
-   void connect_signals();
-   void on_usedefault_changed();
-   void on_filechooserdialogresponse(int response_id);
-   void on_cachesize_changed();
-   void on_resolutionbase_changed();
-
-   //When selected from the menu, the file chooser opens.
-   void on_openfilemenuactivated();
-
-   //Clean up on quit.
-   int on_quit();
-
-   // Methods used called by another thread, through signals
-   void show_thread_message();
-   void add_line();
-   void files_loaded();
-   void load_failed();
-   void on_progress();
-   void on_ascii();
-   void on_loadcancelbutton_clicked();
-
-   // Advanced dialog
-   void on_loadadvancedbutton_clicked();
-   void on_loadadvancedcancel_clicked();
+      // Advanced dialog
+      void on_loadadvancedbutton_clicked();
+      void on_loadadvancedcancel_clicked();
 };
 
 #endif

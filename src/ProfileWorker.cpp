@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  PriofileWorker.cpp
 
@@ -22,33 +22,30 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #include "ProfileWorker.h"
 #include "Profile.h"
 
-
 /*
-==================================
+ ==================================
  ProfileWorker::ProfileWorker
-==================================
-*/
-ProfileWorker::ProfileWorker(Profile* prof, vector<double> xs, vector<double> ys, int ps) : Worker(),
-		profile		(prof),
-		profxs		(xs),
-		profys		(ys),
-		profps		(ps)
-{}
+ ==================================
+ */
+ProfileWorker::ProfileWorker(Profile* prof, vector<double> xs, vector<double> ys, int ps) :
+      Worker(), profile(prof), profxs(xs), profys(ys), profps(ps)
+{
+}
 
 /*
-==================================
+ ==================================
  ProfileWorker::run
-==================================
-*/
+ ==================================
+ */
 void ProfileWorker::run()
 {
-	// Improve this
-	profile->loadprofile(profxs,profys,profps);
-	sig_done();
+   // Improve this
+   profile->loadprofile(profxs, profys, profps);
+   sig_done();
 }

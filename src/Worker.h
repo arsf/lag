@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  Worker.h
 
@@ -22,9 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
-
+ ===============================================================================
+ */
 
 #ifndef WORKER_H_
 #define WORKER_H_
@@ -32,50 +31,49 @@
 #include <gtkmm.h>
 
 /*
-===============================================================================
+ ===============================================================================
 
  Worker - a generic worker class.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 class Worker
 {
-public:
-	Worker() :
-		thread(0),
-		stopped(false)
-	{}
+   public:
+      Worker() :
+            thread(0), stopped(false)
+      {
+      }
+      
+      virtual ~Worker()
+      {
+         {
+            Glib::Mutex::Lock lock(mutex);
+            stopped = true;
+         }
+         this->join();
+      }
+      
+      void start()
+      {
+         thread = Glib::Thread::create(sigc::mem_fun(*this, &Worker::run), true);
+      }
+      
+      void join()
+      {
+         if(thread)
+            thread->join();
+         thread = 0;
+      }
+      
+      Glib::Dispatcher sig_done;
 
-	virtual ~Worker()
-	{
-		{
-			Glib::Mutex::Lock lock (mutex);
-			stopped = true;
-		}
-      this->join();
-	}
+   protected:
+      virtual void run() = 0;
 
-	void start()
-	{
-		thread = Glib::Thread::create(sigc::mem_fun(*this, &Worker::run), true);
-	}
-
-   void join()
-   {
-      if (thread)
-         thread->join();
-      thread = 0;
-   }
-
-	Glib::Dispatcher sig_done;
-
-protected:
-	virtual void run() = 0;
-
-	Glib::Thread* thread;
-	Glib::Mutex mutex;
-	bool stopped;
+      Glib::Thread* thread;
+      Glib::Mutex mutex;
+      bool stopped;
 };
-
 
 #endif /* WORKER_H_ */
