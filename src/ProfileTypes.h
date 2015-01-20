@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  ProfileTypes.h
 
@@ -22,8 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef PROFILETYPES_H_
 #define PROFILETYPES_H_
@@ -37,23 +37,23 @@
  */
 
 /*
-================================================================================
+ ================================================================================
  FenceType
 
  Defines a box (or fence) from two points
-================================================================================
-*/
-typedef std::pair<Point,Point> FenceType;
+ ================================================================================
+ */
+typedef std::pair<Point, Point> FenceType;
 
 /*
-================================================================================
+ ================================================================================
  ClassificationJob
 
  ClassifyWorker(s) takes jobs from a respective Profile as and when ready.
  ClassificationJob is a type which bundles all the necessary data to specify a
  job into one object, handy for things like forming lists
-================================================================================
-*/
-typedef std::pair<FenceType,uint8_t> ClassificationJob;
+ ================================================================================
+ */
+typedef std::pair<FenceType, uint8_t> ClassificationJob;
 
 #endif /* #ifdef PROFILETYPES_H_ */

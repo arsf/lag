@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  FileUtils.h
 
@@ -25,8 +25,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #ifndef FILEUTILS_H_
 #define FILEUTILS_H_
@@ -35,21 +35,17 @@
 #include "laslib/lasdefinitions.hpp"
 #include "geoprojectionconverter.hpp"
 
-
 class LASreader;
 
 // Supported file types
 typedef enum
 {
-	LAS_FILE,
-	ASCII_FILE,
-	UNKNOWN_FILE
-}  filetype_t;
+   LAS_FILE, ASCII_FILE, UNKNOWN_FILE
+} filetype_t;
 
 filetype_t test_filename(std::string const& filename);
 bool has_waveform(LASreader const* reader);
 bool is_latlong(LASreader const* reader);
 char* convert_string(std::string const& str);
-
 
 #endif /* FILEUTILS_H_ */

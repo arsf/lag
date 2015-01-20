@@ -1,5 +1,5 @@
 /*
-===============================================================================
+ ===============================================================================
 
  FileSaver.cpp
 
@@ -22,35 +22,30 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-===============================================================================
-*/
+ ===============================================================================
+ */
 
 #include "FileSaver.h"
 
-
 /*
-==================================
+ ==================================
  FileSaver::FileSaver
-==================================
-*/
-FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder)
-:
-		lidardata	(NULL),
-		tdo			(tdo),
-		prof		(prof),
-		saveworker	(NULL)
+ ==================================
+ */
+FileSaver::FileSaver(TwoDeeOverview *tdo, Profile *prof, const Glib::RefPtr<Gtk::Builder>& builder) :
+      lidardata(NULL), tdo(tdo), prof(prof), saveworker(NULL)
 
 {
-  load_xml(builder);
-  connect_signals();
-  utmselect->set_active(true);
+   load_xml(builder);
+   connect_signals();
+   utmselect->set_active(true);
 }
 
 /*
-==================================
+ ==================================
  FileSaver::~FileSaver
-==================================
-*/
+ ==================================
+ */
 FileSaver::~FileSaver()
 {
    delete flightlinelistlabel;
@@ -72,220 +67,220 @@ FileSaver::~FileSaver()
 }
 
 /*
-==================================
+ ==================================
  FileSaver::load_xml
-==================================
-*/
+ ==================================
+ */
 void FileSaver::load_xml(const Glib::RefPtr<Gtk::Builder>& builder)
 {
-	builder->get_widget("filesaverdialog",filesaverdialog);
-	builder->get_widget("flightlinelistlabel",flightlinelistlabel);
-	builder->get_widget("flightlinesaveselect",flightlinesaveselect);
-	builder->get_widget("parsestringentry", parsestringentry);
-	builder->get_widget("scaleFactorEntryX1", scaleFactorEntryX);
-	builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
-	builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
-	builder->get_widget("btnUseDefault1", btnUseDefault);
-	builder->get_widget("utmselect", utmselect);
-	builder->get_widget("latlongselect", latlongselect);
-	builder->get_widget("savedialog", savedialog);
-	builder->get_widget("saveprogressbar", saveprogressbar);
-	builder->get_widget("savecancelbutton", savecancelbutton);
-	builder->get_widget("waveformdialog", waveformdialog);
-	builder->get_widget("waveformprogressbar", waveformprogressbar);
-	builder->get_widget("waveformcancelbutton", waveformcancelbutton);
+   builder->get_widget("filesaverdialog", filesaverdialog);
+   builder->get_widget("flightlinelistlabel", flightlinelistlabel);
+   builder->get_widget("flightlinesaveselect", flightlinesaveselect);
+   builder->get_widget("parsestringentry", parsestringentry);
+   builder->get_widget("scaleFactorEntryX1", scaleFactorEntryX);
+   builder->get_widget("scaleFactorEntryY1", scaleFactorEntryY);
+   builder->get_widget("scaleFactorEntryZ1", scaleFactorEntryZ);
+   builder->get_widget("btnUseDefault1", btnUseDefault);
+   builder->get_widget("utmselect", utmselect);
+   builder->get_widget("latlongselect", latlongselect);
+   builder->get_widget("savedialog", savedialog);
+   builder->get_widget("saveprogressbar", saveprogressbar);
+   builder->get_widget("savecancelbutton", savecancelbutton);
+   builder->get_widget("waveformdialog", waveformdialog);
+   builder->get_widget("waveformprogressbar", waveformprogressbar);
+   builder->get_widget("waveformcancelbutton", waveformcancelbutton);
 }
 
 /*
-==================================
+ ==================================
  FileSaver::connect_signals
-==================================
-*/
+ ==================================
+ */
 void FileSaver::connect_signals()
 {
-	filesaverdialog->signal_response().connect(sigc::mem_fun(*this,&FileSaver::on_filesaverdialogresponse));
-	btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
-	//flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
-	savecancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileSaver::on_savecancelbutton_clicked));
-	waveformcancelbutton->signal_clicked().connect(sigc::mem_fun(*this,&FileSaver::on_savecancelbutton_clicked));
+   filesaverdialog->signal_response().connect(sigc::mem_fun(*this, &FileSaver::on_filesaverdialogresponse));
+   btnUseDefault->signal_toggled().connect(sigc::mem_fun(*this, &FileSaver::on_usedefault_changed));
+   //flightlinesaveselect->signal_value_changed().connect(sigc::mem_fun(*this,&FileSaver::on_flightlinesaveselected));
+   savecancelbutton->signal_clicked().connect(sigc::mem_fun(*this, &FileSaver::on_savecancelbutton_clicked));
+   waveformcancelbutton->signal_clicked().connect(sigc::mem_fun(*this, &FileSaver::on_savecancelbutton_clicked));
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_usedefault_changed
 
  Whether library deafult scale factor values should be used.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_usedefault_changed()
 {
-	bool temp = !(btnUseDefault->get_active());
-
-	scaleFactorEntryX->set_sensitive(temp);
-	scaleFactorEntryY->set_sensitive(temp);
-	scaleFactorEntryZ->set_sensitive(temp);
+   bool temp = !(btnUseDefault->get_active());
+   
+   scaleFactorEntryX->set_sensitive(temp);
+   scaleFactorEntryY->set_sensitive(temp);
+   scaleFactorEntryZ->set_sensitive(temp);
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_filesaverdialogresponse
 
  If Save button has been pressed creates a SaveWorker which
  saves selected flightline.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_filesaverdialogresponse(int response_id)
 {
    if(response_id == Gtk::RESPONSE_CLOSE)
    {
       //filesaverdialog->set_filename("");
       filesaverdialog->hide_all();
-   }
-   else if(response_id == 1)
+   } else if(response_id == 1)
    {
-      if (lidardata==NULL)
-    	  return;
-
-      if (saveworker != NULL)
-    	  return;
-
+      if(lidardata == NULL)
+         return;
+      
+      if(saveworker != NULL)
+         return;
+      
       double scale_factor[3];
-      if (!btnUseDefault->get_active())
+      if(!btnUseDefault->get_active())
       {
-    	  const char* temp;
-    	  temp = scaleFactorEntryX->get_text().c_str();
-    	  scale_factor[0] = atof(temp);
-    	  temp = scaleFactorEntryY->get_text().c_str();
-    	  scale_factor[1] = atof(temp);
-    	  temp = scaleFactorEntryZ->get_text().c_str();
-    	  scale_factor[2] = atof(temp);
-      }
-      else
+         const char* temp;
+         temp = scaleFactorEntryX->get_text().c_str();
+         scale_factor[0] = atof(temp);
+         temp = scaleFactorEntryY->get_text().c_str();
+         scale_factor[1] = atof(temp);
+         temp = scaleFactorEntryZ->get_text().c_str();
+         scale_factor[2] = atof(temp);
+      } else
       {
-    	  scale_factor[0] = scale_factor[1] = scale_factor[2] = 0;
+         scale_factor[0] = scale_factor[1] = scale_factor[2] = 0;
       }
-
+      
       // tdo and prof should have the same pointbucket mutex
       Glib::Mutex* pbkt_mutex = tdo->getPointBucketMutex();
-
-      saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()), flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(), btnUseDefault->get_active(), scale_factor, pbkt_mutex);
+      
+      saveworker = new SaveWorker(this, filesaverdialog->get_filename(), lidardata->getFileName(flightlinesaveselect->get_value_as_int()),
+                                  flightlinesaveselect->get_value_as_int(), parsestringentry->get_text(), latlongselect->get_active(),
+                                  btnUseDefault->get_active(), scale_factor, pbkt_mutex);
       saveworker->start();
       saveworker->sig_done.connect(sigc::mem_fun(*this, &FileSaver::files_saved));
       saveworker->sig_progress.connect(sigc::mem_fun(*this, &FileSaver::on_progress));
       saveworker->sig_waveform.connect(sigc::mem_fun(*this, &FileSaver::waveform_started));
       saveworker->sig_waveform_progress.connect(sigc::mem_fun(*this, &FileSaver::on_waveform_progress));
-
+      
       // Show saving dialog
       savedialog->show_all();
       saveprogressbar->set_fraction(0);
-
-	  // Change cursor to busy
-	  GdkDisplay* display;
-	  GdkCursor* cursor;
-	  GdkWindow* window;
-
-	  cursor = gdk_cursor_new(GDK_WATCH);
-	  display = gdk_display_get_default();
-	  window = (GdkWindow*) filesaverdialog->get_window()->gobj();
-
-	  gdk_window_set_cursor(window, cursor);
-	  gdk_display_sync(display);
-	  gdk_cursor_unref(cursor);
+      
+      // Change cursor to busy
+      GdkDisplay* display;
+      GdkCursor* cursor;
+      GdkWindow* window;
+      
+      cursor = gdk_cursor_new(GDK_WATCH);
+      display = gdk_display_get_default();
+      window = (GdkWindow*) filesaverdialog->get_window()->gobj();
+      
+      gdk_window_set_cursor(window, cursor);
+      gdk_display_sync(display);
+      gdk_cursor_unref(cursor);
    }
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_progress
 
  Moves saving progress bar by 1%.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_progress()
 {
-	saveprogressbar->set_fraction((saveprogressbar->get_fraction() + 0.01) > 1 ? 1 : (saveprogressbar->get_fraction() + 0.01));
+   saveprogressbar->set_fraction((saveprogressbar->get_fraction() + 0.01) > 1 ? 1 : (saveprogressbar->get_fraction() + 0.01));
 }
 
 /*
-==================================
+ ==================================
  FileSaver::waveform_started
 
  Displays a dialog showing progress for copying
  full waveform data.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::waveform_started()
 {
-	waveformdialog->show_all();
-	waveformprogressbar->set_fraction(0);
+   waveformdialog->show_all();
+   waveformprogressbar->set_fraction(0);
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_waveform_progress
 
  Moves waveform progress bar by 1%.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_waveform_progress()
 {
-	waveformprogressbar->set_fraction((waveformprogressbar->get_fraction() + 0.01) > 1 ? 1 : (waveformprogressbar->get_fraction() + 0.01));
+   waveformprogressbar->set_fraction((waveformprogressbar->get_fraction() + 0.01) > 1 ? 1 : (waveformprogressbar->get_fraction() + 0.01));
 }
 
 /*
-==================================
+ ==================================
  FileSaver::files_saved
 
  Called once the files has been saved.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::files_saved()
 {
-	delete saveworker;
-	saveworker = NULL;
-
-	savedialog->hide_all();
-
-	if (waveformdialog->get_realized())
-		waveformdialog->hide_all();
-
-	// Set cursor back to normal
-	GdkDisplay* display;
-	GdkCursor* cursor;
-	GdkWindow* window;
-
-	cursor = gdk_cursor_new(GDK_LEFT_PTR);
-	display = gdk_display_get_default();
-	window = (GdkWindow*) filesaverdialog->get_window()->gobj();
-
-	gdk_window_set_cursor(window, cursor);
-	gdk_display_sync(display);
-	gdk_cursor_unref(cursor);
+   delete saveworker;
+   saveworker = NULL;
+   
+   savedialog->hide_all();
+   
+   if(waveformdialog->get_realized())
+      waveformdialog->hide_all();
+   
+   // Set cursor back to normal
+   GdkDisplay* display;
+   GdkCursor* cursor;
+   GdkWindow* window;
+   
+   cursor = gdk_cursor_new(GDK_LEFT_PTR);
+   display = gdk_display_get_default();
+   window = (GdkWindow*) filesaverdialog->get_window()->gobj();
+   
+   gdk_window_set_cursor(window, cursor);
+   gdk_display_sync(display);
+   gdk_cursor_unref(cursor);
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_savecancelbutton_clicked
 
  Stops saving.
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_savecancelbutton_clicked()
 {
-	if (saveworker != NULL)
-		saveworker->stop();
+   if(saveworker != NULL)
+      saveworker->stop();
 }
 
 /*
-==================================
+ ==================================
  FileSaver::on_flightlinesaveselected
 
  Not used?
-==================================
-*/
+ ==================================
+ */
 void FileSaver::on_flightlinesaveselected()
 {
-   if(lidardata!=NULL)
+   if(lidardata != NULL)
       filesaverdialog->set_filename(lidardata->getFileName(flightlinesaveselect->get_value_as_int()));
 }
 

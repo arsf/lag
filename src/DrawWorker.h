@@ -1,5 +1,5 @@
 /*
-================================================================================
+ ================================================================================
 
  DrawWorker.h
 
@@ -22,8 +22,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-================================================================================
-*/
+ ================================================================================
+ */
 
 #ifndef DRAWWORKER_H_
 #define DRAWWORKER_H_
@@ -34,43 +34,43 @@
 class LagDisplay;
 
 /*
-================================================================================
+ ================================================================================
 
  DrawWorker - a worker class for drawing lag information in gtkglextmm viewports
 
-================================================================================
-*/
-class DrawWorker : public Worker
+ ================================================================================
+ */
+class DrawWorker: public Worker
 {
-public:
-   DrawWorker(LagDisplay* disp);
+   public:
+      DrawWorker(LagDisplay* disp);
 
-   ~DrawWorker();
+      ~DrawWorker();
 
-   void stop();
-   void run();
+      void stop();
+      void run();
 
-   void draw(PointBucket** buckets, int numbuckets);
+      void draw(PointBucket** buckets, int numbuckets);
 
-   bool isDrawing();
+      bool isDrawing();
 
-private:
-   bool goFlag;
-   bool stopFlag;
-   bool drawing;
+   private:
+      bool goFlag;
+      bool stopFlag;
+      bool drawing;
 
-   LagDisplay* display;
+      LagDisplay* display;
 
-   // arguments for draw
-   PointBucket** internal_buckets;
-   int internal_numbuckets;
+      // arguments for draw
+      PointBucket** internal_buckets;
+      int internal_numbuckets;
 
-   // Signal to indicate to the drawing thread to wake up and check the goFlag
-   // to proceed to draw a frame
-   Glib::Cond draw_frame;
+      // Signal to indicate to the drawing thread to wake up and check the goFlag
+      // to proceed to draw a frame
+      Glib::Cond draw_frame;
 
-   // Exclusive access to internal values
-   Glib::Mutex internal_mutex;
+      // Exclusive access to internal values
+      Glib::Mutex internal_mutex;
 };
 
 #endif /* DRAWWORKER_H_ */
