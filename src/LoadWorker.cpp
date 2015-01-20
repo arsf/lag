@@ -242,7 +242,7 @@ int LoadWorker::load_points(Quadtree* qt)
 				reader->header = *saved_quantizer;
 				reader->point.compute_coordinates();
 				gpc.to_target(reader->point.coordinates);
-				reader->point.compute_xyz(reproject_quantizer);
+				reader->point.compute_XYZ(reproject_quantizer);
 				reader->header = *reproject_quantizer;
 			}
 
@@ -357,7 +357,7 @@ int LoadWorker::load_points_wf(Quadtree* qt)
 				reader->header = *saved_quantizer;
 				reader->point.compute_coordinates();
 				gpc.to_target(reader->point.coordinates);
-				reader->point.compute_xyz(reproject_quantizer);
+				reader->point.compute_XYZ(reproject_quantizer);
 				reader->header = *reproject_quantizer;
 			}
 

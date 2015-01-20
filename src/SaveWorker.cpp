@@ -110,7 +110,7 @@ void SaveWorker::save_points(int n, LidarPoint* points)
 
 		point->edge_of_flight_line = points[k].getScanEdge();
 		point->intensity = points[k].getIntensity();
-		point->number_of_returns_of_given_pulse = points[k].getNumberOfReturns();
+		point->number_of_returns = points[k].getNumberOfReturns();
 		point->point_source_ID = points[k].getPointSourceId();
 		point->return_number = points[k].getReturn();
 		point->scan_angle_rank = points[k].getScanAngle();
@@ -121,7 +121,7 @@ void SaveWorker::save_points(int n, LidarPoint* points)
 		{
 			point->compute_coordinates();
 			gpc.to_target(point->coordinates);
-			point->compute_xyz(reproject_quantizer);
+			point->compute_XYZ(reproject_quantizer);
 		}
 
 		writer->write_point(point);
@@ -194,7 +194,7 @@ void SaveWorker::save_points_wf(int n, LidarPoint* points)
 
 		point->edge_of_flight_line = points[k].getScanEdge();
 		point->intensity = points[k].getIntensity();
-		point->number_of_returns_of_given_pulse = points[k].getNumberOfReturns();
+		point->number_of_returns = points[k].getNumberOfReturns();
 		point->point_source_ID = points[k].getPointSourceId();
 		point->return_number = points[k].getReturn();
 		point->scan_angle_rank = points[k].getScanAngle();
@@ -221,7 +221,7 @@ void SaveWorker::save_points_wf(int n, LidarPoint* points)
 		{
 			point->compute_coordinates();
 			gpc.to_target(point->coordinates);
-			point->compute_xyz(reproject_quantizer);
+			point->compute_XYZ(reproject_quantizer);
 		}
 
 		writer->write_point(point);
