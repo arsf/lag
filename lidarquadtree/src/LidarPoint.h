@@ -118,7 +118,7 @@ inline LidarPoint& LidarPoint::operator=(LASpoint const& laspoint)
 	scanAngle = laspoint.scan_angle_rank;
 	pointSourceId = laspoint.point_source_ID;
 
-	packedByte = packedByte | laspoint.number_of_returns_of_given_pulse << 3;
+	packedByte = packedByte | laspoint.number_of_returns << 3;
 	packedByte = packedByte | laspoint.scan_direction_flag << 6;
 	packedByte = packedByte | laspoint.edge_of_flight_line << 7;
 

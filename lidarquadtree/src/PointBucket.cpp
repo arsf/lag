@@ -80,7 +80,7 @@ PointBucket::PointBucket(int capacity, double minX, double minY, double maxX,
    char pointer_string[13];
    int e;
 
-   snprintf(pointer_string, 13, "%012x", (unsigned long)this);
+   snprintf(pointer_string, 13, "%012lu", (unsigned long)this);
    s = string(pointer_string);
 
    // all attributes which have a value for each resolution level
