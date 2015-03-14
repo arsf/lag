@@ -46,10 +46,13 @@ use as a standard linux library. This means that every program intending to use
 it must bundle the entire library with every distribution.
 
 In keeping with a more standard linux/gnu build+release process, a patched
-version of LAStools has been bundled with LAG. This patch changes only the
-Makefiles used to build LASlib, to support both static and dynamic linking, and
-an installation procedure which allows other programs to utilise laslib as
-though it were a standard linux library.
+version of LAStools, forked from the main version, is available from:
+
+https://github.com/arsf/LAStools
+
+This patch changes only the Makefiles used to build LASlib, to support both 
+static and dynamic linking, and an installation procedure which allows other 
+programs to utilise laslib as though it were a standard linux library.
 
 This also renames "liblas" to "liblaslib" to be more distinct from the
 (unsupported) libLAS library. This should make it possible to use libLAS and
