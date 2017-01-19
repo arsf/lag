@@ -179,10 +179,10 @@ int main(int argc, char** argv)
    Glib::RefPtr < Gdk::GL::Config > glconfig;
    
    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH | Gdk::GL::MODE_DOUBLE);
-   if(glconfig == 0)
+   if(!glconfig)
    {
       glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB | Gdk::GL::MODE_DEPTH);
-      if(glconfig == 0)
+      if(!glconfig)
       {
          cout << "Cannot intialise OpenGL. Exiting." << endl;
          std::exit(1);
