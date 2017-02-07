@@ -5,6 +5,8 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects
 lib_LTLIBRARIES = liblidarquadtree.la
 AM_CXXFLAGS=-Wall -Wextra -DLINUX
+liblidarquadtree_la_CPPFLAGS = @laslib_CFLAGS@
+liblidarquadtree_la_LIBADD = @laslib_LIBS@
 liblidarquadtree_la_SOURCES = src/CollisionDetection.cpp src/LidarPoint.cpp src/Point.cpp src/PointBucket.cpp src/QuadtreeNode.cpp src/CacheMinder.cpp src/Quadtree.cpp src/PointData.h
 liblidarquadtree_ladir= $(includedir)/lidar/quadtree
 liblidarquadtree_la_HEADERS = src/Boundary.h \
@@ -25,4 +27,4 @@ lidarquadtree.pc: $(srcdir)/lidarquadtree.pc.in
        -e 's![@]libdir[@]!$(libdir)!g' \
        -e 's![@]PACKAGE_VERSION[@]!$(PACKAGE_VERSION)!g' \
        $(srcdir)/lidarquadtree.pc.in > $@
-AM_LDFLAGS = -version-info 0:1:0 -llzo2 -llaslib -ljemalloc
+AM_LDFLAGS = -version-info 0:1:0 -llzo2 -ljemalloc
