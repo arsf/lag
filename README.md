@@ -10,12 +10,11 @@ LICENSE
 GENERAL NOTES
 =============
 LAG is a software for visualisation, analysis and processing of LiDAR data. It has
-been initially created at Airborne Reasearch and Survey faciliy in Plymouth Marine
+been initially created at NERC Airborne Reasearch Faciliy Data Analysis Node (NERC-ARF-DAN) in Plymouth Marine
 Laboratory to help with data processing.
 
-For more information see: [website?]
-For user's guide see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/laguserguide
-If you are a developer see: http://arsf-dan.nerc.ac.uk/trac/wiki/Processing/lagdevelopersfaq
+For user's guide see: https://nerc-arf-dan.pml.ac.uk/trac/wiki/Processing/laguserguide
+If you are a developer see: https://nerc-arf-dan.pml.ac.uk/trac/wiki/Processing/lagdevelopersfaq
 
 INSTALLATION
 ============
